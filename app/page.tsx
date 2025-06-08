@@ -17,21 +17,22 @@ export default function Home() {
 
       {/* Content container */}
       <div className="max-w-2xl mx-auto text-center space-y-8">
+        {/* Coming Soon badge */}
+        <div className="inline-block px-4 py-1 rounded-full bg-primary text-white text-sm font-semibold tracking-wide mb-2">
+          Coming Soon
+        </div>
         {/* Brand Name */}
         <h1 className="text-5xl font-extrabold text-gray-900">
           LocalCity<span className="text-primary">Walks</span>
         </h1>
 
-        {/* Main headline */}
-        <h2 className="text-2xl sm:text-3xl font-semibold text-gray-800">
-          <span className="text-primary">Walk Local.</span> Discover True
-          Culture.
-        </h2>
-
         {/* Subtext */}
         <p className="text-lg text-gray-600 max-w-xl mx-auto">
-          Experience your city like never before. Enjoy personalized walking
-          tours, tailored to your interests and preferences.
+          Small group walks led by locals. Real stories, real connections, real
+          cities.
+        </p>
+        <p className="text-primary font-semibold">
+          Leave nothing but footsteps.
         </p>
       </div>
     </main>
