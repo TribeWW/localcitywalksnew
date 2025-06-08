@@ -16,22 +16,22 @@ export default function Home() {
       <div className="absolute inset-0 z-[-2] bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(255,102,0,0.10),rgba(255,255,255,0))]" />
 
       {/* Content container */}
-      <div className="max-w-2xl mx-auto text-center space-y-8">
+      <div className="max-w-2xl mx-auto text-center space-y-12">
         {/* Coming Soon badge */}
-        <div className="inline-block px-4 py-1 rounded-full bg-primary text-white text-sm font-semibold tracking-wide mb-2">
+        <div className="inline-block px-6 py-2 rounded-full bg-primary text-white text-lg font-bold tracking-wide mb-4">
           Coming Soon
         </div>
         {/* Brand Name */}
-        <h1 className="text-5xl font-extrabold text-gray-900">
+        <h1 className="text-6xl md:text-7xl font-extrabold text-gray-900">
           LocalCity<span className="text-primary">Walks</span>
         </h1>
 
         {/* Subtext */}
-        <p className="text-lg text-gray-600 max-w-xl mx-auto">
+        <p className="text-2xl md:text-3xl text-gray-600 max-w-2xl mx-auto font-medium">
           Small group walks led by locals. Real stories, real connections, real
           cities.
         </p>
-        <p className="text-primary font-semibold">
+        <p className="text-primary font-bold text-xl md:text-2xl">
           Leave nothing but footsteps.
         </p>
       </div>
