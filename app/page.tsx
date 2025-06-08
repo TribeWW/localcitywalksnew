@@ -1,14 +1,30 @@
+import { Twitter, Instagram, Linkedin } from "lucide-react";
+
 export default function Home() {
   return (
-    <>
-      <div className="flex justify-center items-center h-screen text-4xl font-bold">
-        <div className="text-center">
-          <div className="mb-8 text-xl">Coming Soon</div>
-          <div className="mb-8">LocalCityWalks</div>
-          <div className="text-2xl ">An amazing way to explore your city</div>
-        </div>
-        <div className="absolute top-0 z-[-2] h-screen w-screen bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
+    <main className="relative min-h-screen flex flex-col items-center justify-center px-4 bg-white">
+      {/* Background gradient */}
+      <div className="absolute inset-0 z-[-2] bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(255,102,0,0.10),rgba(255,255,255,0))]" />
+
+      {/* Content container */}
+      <div className="max-w-2xl mx-auto text-center space-y-8">
+        {/* Brand Name */}
+        <h1 className="text-5xl font-extrabold text-gray-900">
+          LocalCity<span className="text-[#FF6600]">Walks</span>
+        </h1>
+
+        {/* Main headline */}
+        <h2 className="text-2xl sm:text-3xl font-semibold text-gray-800">
+          <span className="text-[#FF6600]">Walk Local.</span> Discover True
+          Culture.
+        </h2>
+
+        {/* Subtext */}
+        <p className="text-lg text-gray-600 max-w-xl mx-auto">
+          Experience your city like never before. Enjoy personalized walking
+          tours, tailored to your interests and preferences.
+        </p>
       </div>
-    </>
+    </main>
   );
 }
