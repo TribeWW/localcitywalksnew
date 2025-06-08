@@ -1,5 +1,3 @@
-import { Twitter, Instagram, Linkedin } from "lucide-react";
-
 export default function Home() {
   return (
     <main className="relative min-h-screen flex flex-col items-center justify-center px-4 bg-white">
