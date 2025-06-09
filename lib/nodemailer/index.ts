@@ -62,7 +62,7 @@ export async function sendEmail(data: EmailContent) {
       `,
     };
 
-    const supportResult = await transporter.sendMail(supportMailOptions);
+    //const supportResult = await transporter.sendMail(supportMailOptions);
 
     return { success: true };
   } catch (error) {
