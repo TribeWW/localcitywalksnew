@@ -62,7 +62,8 @@ export async function sendEmail(data: EmailContent) {
       `,
     };
 
-    //const supportResult = await transporter.sendMail(supportMailOptions);
+    const supportResult = await transporter.sendMail(supportMailOptions);
+    console.log("Support email sent:", supportResult);
 
     return { success: true };
   } catch (error) {
