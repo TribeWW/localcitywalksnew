@@ -13,7 +13,7 @@ import {
 
 const MobileHeader = () => {
   return (
-    <div className="px-4 sm:px-6 bg-transparant border-red-500 border-2 sm:hidden">
+    <div className="px-4 sm:px-6 bg-transparant sm:hidden">
       <div className="flex justify-between items-center mx-auto w-full py-4">
         <Link href={"/"} className="text-2xl font-bold">
           LocalCityWalks
