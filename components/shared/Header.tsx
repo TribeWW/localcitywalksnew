@@ -10,6 +10,7 @@ const Header = () => {
         </Link>
         <div className="flex items-center gap-4">
           <Link href={"#about"}>About Us</Link>
+          <Link href={"#contact"}>Contact Us</Link>
         </div>
       </div>
     </div>

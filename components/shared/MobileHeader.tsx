@@ -39,6 +39,14 @@ const MobileHeader = () => {
                   About Us
                 </Link>
               </SheetClose>
+              <SheetClose asChild>
+                <Link
+                  href="#contact"
+                  className="hover:text-primary transition-colors"
+                >
+                  Contact Us
+                </Link>
+              </SheetClose>
             </div>
           </SheetContent>
         </Sheet>
