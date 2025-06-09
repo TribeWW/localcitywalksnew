@@ -28,7 +28,7 @@ async function verifyTransporter(transporter: nodemailer.Transporter) {
 }
 
 const transporter = nodemailer.createTransport({
-  host: "mail.localcitywalks.com",
+  host: "ams39.siteground.eu",
   port: 465,
   secure: true,
   auth: {
@@ -39,6 +39,8 @@ const transporter = nodemailer.createTransport({
 
 export async function sendEmail(data: EmailContent) {
   try {
+    console.log("SMTP user:", process.env.SUPPORT_EMAIL);
+    console.log("SMTP pass defined:", Boolean(process.env.SUPPORT_PASSWORD));
     // Verify transporter before sending
     const isVerified = await verifyTransporter(transporter);
     if (!isVerified) {
