@@ -59,10 +59,12 @@ const ContactForm = () => {
   }
 
   return (
-    <div className="w-full mx-auto px-4 mt-12 mb-20">
-      <div className="mb-10">
-        <h2 className="header-2 mb-6">Get in touch with us</h2>
-        <p className="body-large mx-auto">
+    <div className="w-full max-w-4xl  mx-auto space-y-12 mb-20">
+      <div className="text-center mb-10 space-y-4">
+        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
+          Get in touch <span className="text-primary"> with us</span>
+        </h2>
+        <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
           Contact LocalCityWalks for any questions or feedback.
         </p>
       </div>
