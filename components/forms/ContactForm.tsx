@@ -44,18 +44,14 @@ const ContactForm = () => {
         message: values.description,
       });
 
-      toast({
-        title: "Success!",
-        description:
-          "Your message has been sent. Please check your spam or junk folder if you don’t see our reply soon.",
-      });
+      toast(
+        "Success! Your message has been sent. Please check your spam or junk folder if you don't see our reply soon."
+      );
 
       form.reset();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again later. " + error,
-        variant: "destructive",
+      toast("Failed to send message. Please try again later. " + error, {
+        className: "bg-destructive text-white",
       });
     } finally {
       setIsSubmitting(false);
