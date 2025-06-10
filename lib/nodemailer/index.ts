@@ -1,3 +1,5 @@
+/* Its is important to make a password in Freshdesk to trigger the email flow! This password has to be the same as the one in the .env file */
+
 "use server";
 import nodemailer from "nodemailer";
 
