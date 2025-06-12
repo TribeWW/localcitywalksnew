@@ -78,46 +78,42 @@ const ContactForm = () => {
   return (
     <div
       id="contact"
-      className="w-full max-w-4xl mx-auto space-y-12 mb-20 px-4 sm:px-0"
+      className="w-full max-w-4xl mx-auto space-y-12 mb-20 p-8 bg-white rounded-2xl"
     >
-      <div className="text-center mb-10 space-y-4 ">
-        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
-          Get in touch <span className="text-tangerine"> with us</span>
-        </h2>
-        <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
-          Contact LocalCityWalks for any questions or feedback.
+      <div className="text-left mb-10 space-y-4 ">
+        <h2 className="text-3xl  font-medium text-[#1E1E1E]">Get in touch</h2>
+        <p className="text-lg text-[#1E1E1E] max-w-2xl mx-auto">
+          Looking for a personalized quote or have questions?
         </p>
       </div>
       <div className="max-w-4xl mx-auto">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {NAME_EMAIL_FIELDS.map((field) => (
-                <FormField
-                  key={field}
-                  control={form.control}
-                  name={field}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base">
-                        {FIELD_NAMES[field.name]}
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={`Enter your ${FIELD_NAMES[
-                            field.name
-                          ].toLowerCase()}`}
-                          className="h-11"
-                          type={FIELD_TYPES[field.name]}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ))}
-            </div>
+            {NAME_EMAIL_FIELDS.map((field) => (
+              <FormField
+                key={field}
+                control={form.control}
+                name={field}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base">
+                      {FIELD_NAMES[field.name]}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={`Enter your ${FIELD_NAMES[
+                          field.name
+                        ].toLowerCase()}`}
+                        className="h-11 text-[#6A6A6A]"
+                        type={FIELD_TYPES[field.name]}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ))}
 
             <FormField
               control={form.control}
@@ -130,8 +126,8 @@ const ContactForm = () => {
                     defaultValue={field.value}
                   >
                     <FormControl className="w-full">
-                      <SelectTrigger className="h-11 py-5">
-                        <SelectValue placeholder="Select a subject" />
+                      <SelectTrigger className="h-11 py-5 text-[#6A6A6A]">
+                        <SelectValue placeholder="Select a topic" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -155,8 +151,8 @@ const ContactForm = () => {
                   <FormLabel className="text-base">Message</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Enter your message"
-                      className="min-h-[150px] resize-none"
+                      placeholder="Write your message"
+                      className="min-h-[150px] resize-none text-[#6A6A6A]"
                       {...field}
                     />
                   </FormControl>
@@ -169,7 +165,7 @@ const ContactForm = () => {
               <Button
                 type="submit"
                 size="lg"
-                className="px-8 bg-tangerine text-white w-full sm:w-auto"
+                className="px-8 bg-tangerine text-white w-full "
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Sending..." : "Get in touch"}
