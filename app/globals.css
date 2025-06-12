@@ -44,7 +44,7 @@
   --radius-xl: calc(var(--radius) + 4px);
 
   /* LocalCityWalks Custom Colors */
-  --color-primary: #ff6600;
+  --color-tangerine: #ff6600;
 }
 
 :root {

@@ -7,7 +7,7 @@ const AboutUs = () => {
         {/* Main heading */}
         <div className="text-center space-y-4">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
-            About <span className="text-primary">LocalCityWalks</span>
+            About <span className="text-tangerine">LocalCityWalks</span>
           </h2>
           <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
             Travel deserves to be more personal, more meaningful, and more
