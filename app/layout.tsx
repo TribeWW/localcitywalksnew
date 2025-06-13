@@ -22,7 +22,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={outfit.className}>
-      <head></head>
       <body className={`${outfit.className} antialiased`}>
         {children}
         <Toaster />

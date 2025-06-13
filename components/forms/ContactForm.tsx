@@ -78,17 +78,19 @@ const ContactForm = () => {
   return (
     <div
       id="contact"
-      className="w-full max-w-4xl mx-auto space-y-12 mb-20 p-8 bg-white rounded-2xl"
+      className="w-full max-w-4xl mx-auto space-y-12 p-8 bg-white rounded-2xl"
     >
-      <div className="text-left mb-10 space-y-4 ">
-        <h2 className="text-3xl  font-medium text-[#1E1E1E]">Get in touch</h2>
+      <div className="text-left mb-8 ">
+        <h2 className="text-3xl mb-2 font-medium text-[#1E1E1E]">
+          Get in touch
+        </h2>
         <p className="text-lg text-[#1E1E1E] max-w-2xl mx-auto">
           Looking for a personalized quote or have questions?
         </p>
       </div>
       <div className="max-w-4xl mx-auto">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
             {NAME_EMAIL_FIELDS.map((field) => (
               <FormField
                 key={field}
@@ -96,7 +98,7 @@ const ContactForm = () => {
                 name={field}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base">
+                    <FormLabel className="text-sm">
                       {FIELD_NAMES[field.name]}
                     </FormLabel>
                     <FormControl>
@@ -104,7 +106,7 @@ const ContactForm = () => {
                         placeholder={`Enter your ${FIELD_NAMES[
                           field.name
                         ].toLowerCase()}`}
-                        className="h-11 text-[#6A6A6A]"
+                        className="h-10 text-[#6A6A6A] rounded-sm"
                         type={FIELD_TYPES[field.name]}
                         {...field}
                       />
@@ -120,13 +122,13 @@ const ContactForm = () => {
               name="subject"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base">Subject</FormLabel>
+                  <FormLabel className="text-sm">Subject</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
-                    <FormControl className="w-full">
-                      <SelectTrigger className="h-11 py-5 text-[#6A6A6A]">
+                    <FormControl className="w-full rounded-sm">
+                      <SelectTrigger className="py-[18px] text-[#6A6A6A]">
                         <SelectValue placeholder="Select a topic" />
                       </SelectTrigger>
                     </FormControl>
@@ -148,11 +150,11 @@ const ContactForm = () => {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base">Message</FormLabel>
+                  <FormLabel className="text-sm">Message</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Write your message"
-                      className="min-h-[150px] resize-none text-[#6A6A6A]"
+                      className="min-h-[110px] resize-none text-[#6A6A6A] rounded-sm"
                       {...field}
                     />
                   </FormControl>
@@ -161,11 +163,11 @@ const ContactForm = () => {
               )}
             />
 
-            <div className="flex justify-start mt-8">
+            <div className="flex justify-start mt-10">
               <Button
                 type="submit"
                 size="lg"
-                className="px-8 bg-tangerine text-white w-full "
+                className="px-8 bg-tangerine text-white w-full rounded-sm"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Sending..." : "Get in touch"}
