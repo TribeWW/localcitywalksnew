@@ -167,7 +167,7 @@ const ContactForm = () => {
               <Button
                 type="submit"
                 size="lg"
-                className="px-8 bg-tangerine text-white w-full rounded-sm"
+                className="px-8 bg-nightsky hover:bg- cursor-pointer text-white w-full rounded-sm"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Sending..." : "Get in touch"}
