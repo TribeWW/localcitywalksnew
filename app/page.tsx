@@ -4,17 +4,18 @@ import Image from "next/image";
 export default function Home() {
   return (
     <>
-      <main className="relative h-screen items-left justify-center bg-tangerine">
+      <main className="relative h-screen items-left justify-center bg-gradient-to-br from-tangerine to-grapefruit">
         {/* Flex container for content and form */}
 
         <div className="w-full max-w-6xl mx-auto flex flex-col justify-between h-screen py-8">
           {/* Content container on the left */}
-          <div className="flex items-center">
+          <div className="flex items-center pt-8">
             <Image
               src="/logo.png"
               alt="LocalCityWalks"
               width={300}
               height={300}
+              className="h-12 w-auto"
             />
           </div>
           <div className="flex flex-col sm:flex-row justify-center ">
