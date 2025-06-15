@@ -13,6 +13,24 @@ export const metadata: Metadata = {
   title: "LocalCityWalks",
   description:
     "Small group walks led by locals. Real stories, real connections, real cities. Leave nothing but footsteps.",
+  icons: {
+    icon: [
+      {
+        url: "/favicon.ico",
+        sizes: "any",
+      },
+      {
+        url: "/icon.png",
+        type: "image/png",
+        sizes: "32x32",
+      },
+    ],
+    apple: {
+      url: "/apple-icon.png",
+      type: "image/png",
+      sizes: "180x180",
+    },
+  },
 };
 
 export default function RootLayout({
