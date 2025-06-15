@@ -78,7 +78,7 @@ const ContactForm = () => {
   return (
     <div
       id="contact"
-      className="w-full max-w-4xl mx-auto space-y-12 p-8 bg-white rounded-2xl shadow-lg"
+      className="w-full max-w-4xl mx-auto space-y-12 p-8 bg-white sm:rounded-2xl shadow-lg"
     >
       <div className="text-left mb-8 ">
         <h2 className="text-3xl mb-2 font-medium text-[#1E1E1E]">

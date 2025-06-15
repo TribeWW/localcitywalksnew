@@ -9,7 +9,7 @@ export default function Home() {
 
         <div className="w-full max-w-6xl mx-auto flex flex-col justify-between h-screen py-8">
           {/* Content container on the left */}
-          <div className="flex items-center pt-8">
+          <div className="flex items-center pt-8 px-4 sm:px-0">
             <Image
               src="/logo.png"
               alt="LocalCityWalks"
@@ -18,8 +18,8 @@ export default function Home() {
               className="h-12 w-auto"
             />
           </div>
-          <div className="flex flex-col sm:flex-row justify-center ">
-            <div className="w-full sm:w-1/2 flex flex-col items-left  space-y-12">
+          <div className="flex flex-col sm:flex-row justify-center gap-12 sm:gap-0 px-4 sm:px-0">
+            <div className="w-full sm:w-1/2 flex flex-col items-left space-y-12">
               <div className="space-y-8">
                 {/* Brand Name */}
                 <h1 className="text-5xl  font-medium text-white leading-tight">
@@ -84,7 +84,7 @@ export default function Home() {
               <ContactForm />
             </div>
           </div>
-          <div className="text-center text-white text-base">
+          <div className="text-center py-12 sm:py-0 sm:text-white text-base">
             © 2025 LocalCityWalks | Made with ❤️ in Spain.
           </div>
         </div>
