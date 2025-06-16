@@ -25,6 +25,7 @@ import { FIELD_NAMES, FIELD_TYPES } from "@/constants";
 import { Textarea } from "../ui/textarea";
 import { toast } from "sonner";
 import { sendEmail } from "@/lib/nodemailer";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const NAME_EMAIL_FIELDS = ["fullName", "email"] as const;
 const OPTIONS = [
@@ -48,6 +49,7 @@ const ContactForm = () => {
       email: "",
       subject: "",
       description: "",
+      consent: false,
     },
   });
 
@@ -59,6 +61,7 @@ const ContactForm = () => {
         email: values.email,
         subject: values.subject,
         message: values.description,
+        consent: values.consent,
       });
 
       toast(
@@ -159,6 +162,28 @@ const ContactForm = () => {
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="consent"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-sm text-[#000]">
+                      I agree that LocalCityWalks may use my details to respond
+                      to my message.
+                    </FormLabel>
+                    <FormMessage />
+                  </div>
                 </FormItem>
               )}
             />

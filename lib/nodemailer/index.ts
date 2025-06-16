@@ -8,6 +8,7 @@ interface EmailContent {
   email: string;
   name: string;
   message: string;
+  consent: boolean;
 }
 
 interface EmailError {
@@ -62,6 +63,7 @@ export async function sendEmail(data: EmailContent) {
           <p><strong>Subject:</strong> ${data.subject}</p>
           <p><strong>Message:</strong></p>
           <p style="background: #f5f5f5; padding: 15px; border-radius: 5px;">${data.message}</p>
+          <p><strong>Consent:</strong> ${data.consent}</p>
         </div>
       `,
     };

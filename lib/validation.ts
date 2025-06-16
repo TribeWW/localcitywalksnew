@@ -5,4 +5,5 @@ export const ContactSchema = z.object({
   email: z.string().email(),
   subject: z.string().min(3),
   description: z.string().min(5),
+  consent: z.boolean(),
 });
