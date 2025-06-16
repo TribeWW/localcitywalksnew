@@ -4,12 +4,12 @@ import Image from "next/image";
 export default function Home() {
   return (
     <>
-      <main className="relative h-screen items-left justify-center bg-gradient-to-br from-tangerine to-grapefruit">
+      <main className="relative min-h-screen items-left justify-center bg-gradient-to-br from-tangerine to-grapefruit">
         {/* Flex container for content and form */}
 
-        <div className="w-full max-w-6xl mx-auto flex flex-col justify-between h-screen py-8">
+        <div className="w-full max-w-6xl mx-auto flex flex-col justify-between min-h-screen md:py-8">
           {/* Content container on the left */}
-          <div className="flex items-center pt-8 px-4 sm:px-0">
+          <div className="flex items-center pt-8 px-4 md:px-8 xl:px-0">
             <Image
               src="/logo.png"
               alt="LocalCityWalks"
@@ -18,15 +18,15 @@ export default function Home() {
               className="h-12 w-auto"
             />
           </div>
-          <div className="flex flex-col sm:flex-row justify-center gap-12 sm:gap-0 px-4 sm:px-0">
-            <div className="w-full sm:w-1/2 flex flex-col items-left space-y-12">
+          <div className="flex flex-col lg:flex-row justify-center gap-12 sm:gap-0 px-4  md:px-8 xl:px-0">
+            <div className="w-full lg:w-1/2 flex flex-col items-left space-y-12">
               <div className="space-y-8">
                 {/* Brand Name */}
-                <h1 className="text-5xl  font-medium text-white leading-tight">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-medium text-white leading-tight mt-8 lg:mt-0">
                   City walking tours led by trusted local guides
                 </h1>
                 {/* Subtext */}
-                <p className="text-xl sm:text-2xl md:text-3xl text-white max-w-2xl mx-auto font-regular ">
+                <p className="text-xl sm:text-2xl md:text-3xl text-white  mx-auto font-regular ">
                   LocalCityWalks connects you with trusted local guides for
                   personal, insightful city walks.
                 </p>
@@ -40,7 +40,7 @@ export default function Home() {
                     height={24}
                     className="inline-block"
                   />
-                  <p className="text-white font-medium text-2xl">
+                  <p className="text-white font-medium text-lg sm:text-xl md:text-2xl">
                     Vetted local guides
                   </p>
                 </div>
@@ -52,7 +52,7 @@ export default function Home() {
                     height={24}
                     className="inline-block"
                   />
-                  <p className="text-white font-medium text-2xl">
+                  <p className="text-white font-medium text-lg sm:text-xl md:text-2xl">
                     Small groups only
                   </p>
                 </div>
@@ -64,7 +64,7 @@ export default function Home() {
                     height={24}
                     className="inline-block"
                   />
-                  <p className="text-white font-medium text-2xl">
+                  <p className="text-white font-medium text-lg sm:text-xl md:text-2xl">
                     Real local insights
                   </p>
                 </div>
@@ -80,12 +80,12 @@ export default function Home() {
               </div>
             </div>
             {/* ContactForm on the right */}
-            <div className="w-full sm:w-1/2 flex items-center justify-center ">
+            <div className="w-full lg:w-1/2 flex items-center justify-center md:py-8 xl:py-0">
               <ContactForm />
             </div>
           </div>
-          <div className="text-center py-12 sm:py-0 sm:text-white text-base">
-            © 2025 LocalCityWalks | Made with ❤️ in Spain.
+          <div className="text-center py-12 sm:py-0 px-4 sm:px-0 text-white text-base">
+            © 2025 LocalCityWalks | Made with ❤️ in Spain.
           </div>
         </div>
       </main>

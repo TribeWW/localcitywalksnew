@@ -84,7 +84,7 @@ const ContactForm = () => {
         <h2 className="text-3xl mb-2 font-medium text-[#1E1E1E]">
           Get in touch
         </h2>
-        <p className="text-lg text-[#1E1E1E] max-w-2xl mx-auto">
+        <p className="text-lg text-[#1E1E1E] max-w-2xl ">
           Looking for a personalized quote or have questions?
         </p>
       </div>
