@@ -106,7 +106,7 @@ const ContactForm = () => {
                         placeholder={`Enter your ${FIELD_NAMES[
                           field.name
                         ].toLowerCase()}`}
-                        className="h-10 text-[#6A6A6A] rounded-sm"
+                        className="h-10 text-[#000] placeholder-[#6A6A6A] rounded-[4px]"
                         type={FIELD_TYPES[field.name]}
                         {...field}
                       />
@@ -127,8 +127,8 @@ const ContactForm = () => {
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
-                    <FormControl className="w-full rounded-sm">
-                      <SelectTrigger className="py-[18px] text-[#6A6A6A]">
+                    <FormControl className="w-full rounded-[4px]">
+                      <SelectTrigger className="py-[18px] text-[#000] placeholder-[#6A6A6A]">
                         <SelectValue placeholder="Select a topic" />
                       </SelectTrigger>
                     </FormControl>
@@ -154,7 +154,7 @@ const ContactForm = () => {
                   <FormControl>
                     <Textarea
                       placeholder="Write your message"
-                      className="min-h-[110px] resize-none text-[#6A6A6A] rounded-sm"
+                      className="min-h-[110px] resize-none text-[#000] placeholder-[#6A6A6A] rounded-[4px]"
                       {...field}
                     />
                   </FormControl>
@@ -167,7 +167,7 @@ const ContactForm = () => {
               <Button
                 type="submit"
                 size="lg"
-                className="px-8 bg-nightsky hover:bg- cursor-pointer text-white w-full rounded-sm"
+                className="px-8 bg-nightsky hover:bg- cursor-pointer text-white w-full rounded-[4px]"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Sending..." : "Get in touch"}
