@@ -193,7 +193,7 @@ const ContactForm = () => {
                 type="submit"
                 size="lg"
                 className="px-8 bg-nightsky hover:bg- cursor-pointer text-white w-full rounded-[4px]"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !form.watch("consent")}
               >
                 {isSubmitting ? "Sending..." : "Get in touch"}
               </Button>

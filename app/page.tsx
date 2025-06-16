@@ -85,7 +85,7 @@ export default function Home() {
             </div>
           </div>
           <div className="text-center py-12 sm:py-0 px-4 sm:px-0 text-white text-base">
-            © 2025 LocalCityWalks | Made with ❤️ in Spain.
+            © 2025 LocalCityWalks | Made with 🤍 in Spain.
           </div>
         </div>
       </main>
