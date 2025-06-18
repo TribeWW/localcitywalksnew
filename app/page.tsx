@@ -1,6 +1,14 @@
 import ContactForm from "@/components/forms/ContactForm";
 import Image from "next/image";
 
+export const metadata = {
+  title: "LocalCityWalks – Explore Like a Local",
+  description: "City walking tours led by trusted local guides",
+  alternates: {
+    canonical: "https://www.localcitywalks.com/",
+  },
+};
+
 export default function Home() {
   return (
     <>

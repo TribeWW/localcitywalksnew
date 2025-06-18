@@ -1,0 +1,16 @@
+# robots.txt for LocalCityWalks
+
+User-agent: *
+Disallow: /api/
+Disallow: /admin/
+Disallow: /private/
+Disallow: /server/
+Disallow: /lib/
+Disallow: /constants/
+Disallow: /node_modules/
+Disallow: /_next/
+Disallow: /favicon.ico
+
+Allow: /
+
+Sitemap: https://yourdomain.com/sitemap.xml 
