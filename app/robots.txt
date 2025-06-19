@@ -10,4 +10,4 @@ Disallow: /_next/
 
 Allow: /
 
-Sitemap: https://localcitywalks/sitemap.xml 
+Sitemap: https://localcitywalks.com/sitemap.xml 
