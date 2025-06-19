@@ -10,14 +10,15 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "LocalCityWalks – Book Guided Walking Tours with Locals",
+  title: "LocalCityWalks – Book Guided Walking Tours with Local Guides",
   description:
     "Discover cities like a local. Small group walking tours led by trusted local guides. Real stories, real connections, real cities.",
   alternates: {
     canonical: "https://www.localcitywalks.com/",
   },
   openGraph: {
-    title: "LocalCityWalks – Book Guided Walking Tours with Locals",
+    title:
+      "LocalCityWalks – Book Guided Walking Tours with trusted Local Guides",
     description:
       "Discover cities like a local. Small group walking tours led by trusted local guides. Real stories, real connections, real cities.",
     url: "https://www.localcitywalks.com/",
@@ -27,13 +28,14 @@ export const metadata: Metadata = {
       {
         url: "https://www.localcitywalks.com/guide.png",
         height: 630,
-        alt: "LocalCityWalks – Book Guided Walking Tours with Locals",
+        alt: "LocalCityWalks – Book Guided Walking Tours with Local Guides",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "LocalCityWalks – Book Guided Walking Tours with Locals",
+    title:
+      "LocalCityWalks – Book Guided Walking Tours with trusted Local Guides",
     description:
       "Discover cities like a local. Small group walking tours led by trusted local guides. Real stories, real connections, real cities.",
     images: ["https://www.localcitywalks.com/guide.png"], // Replace with your actual image
