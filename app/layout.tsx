@@ -10,9 +10,34 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "LocalCityWalks",
+  title: "LocalCityWalks – Book Guided Walking Tours with Locals",
   description:
-    "Small group walks led by locals. Real stories, real connections, real cities. Leave nothing but footsteps.",
+    "Discover cities like a local. Small group walking tours led by trusted local guides. Real stories, real connections, real cities.",
+  alternates: {
+    canonical: "https://www.localcitywalks.com/",
+  },
+  openGraph: {
+    title: "LocalCityWalks – Book Guided Walking Tours with Locals",
+    description:
+      "Discover cities like a local. Small group walking tours led by trusted local guides. Real stories, real connections, real cities.",
+    url: "https://www.localcitywalks.com/",
+    type: "website",
+    siteName: "LocalCityWalks",
+    images: [
+      {
+        url: "https://www.localcitywalks.com/guide.png",
+        height: 630,
+        alt: "LocalCityWalks – Book Guided Walking Tours with Locals",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LocalCityWalks – Book Guided Walking Tours with Locals",
+    description:
+      "Discover cities like a local. Small group walking tours led by trusted local guides. Real stories, real connections, real cities.",
+    images: ["https://www.localcitywalks.com/guide.png"], // Replace with your actual image
+  },
   icons: {
     icon: [
       {
@@ -49,6 +74,17 @@ export default function RootLayout({
               "@type": "Organization",
               url: "https://www.localcitywalks.com",
               logo: "https://www.localcitywalks.com/logo-icon.svg",
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              url: "https://www.localcitywalks.com",
+              name: "LocalCityWalks",
             }),
           }}
         />
