@@ -97,6 +97,25 @@ export default function Home() {
           </div>
         </div>
       </main>
+      <Head />
+    </>
+  );
+}
+
+export function Head() {
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            url: "https://www.localcitywalks.com",
+            logo: "https://www.localcitywalks.com/logo-icon.svg",
+          }),
+        }}
+      />
     </>
   );
 }
