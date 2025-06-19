@@ -40,6 +40,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={outfit.className}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              url: "https://www.localcitywalks.com",
+              logo: "https://www.localcitywalks.com/logo-icon.svg",
+            }),
+          }}
+        />
+      </head>
       <body className={`${outfit.className} antialiased`}>
         {children}
         <Toaster />
