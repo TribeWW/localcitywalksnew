@@ -1,8 +1,7 @@
 import Link from "next/link";
 import React from "react";
 import Image from "next/image";
-
-const NAV_LINKS: { label: string; href: string }[] = [];
+import { NAV_LINKS } from "@/constants";
 
 const Header = () => {
   return (
