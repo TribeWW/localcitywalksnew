@@ -4,12 +4,12 @@ import Image from "next/image";
 export default function Home() {
   return (
     <>
-      <main className="relative min-h-screen items-left justify-center bg-gradient-to-br from-tangerine to-grapefruit">
+      <main className="relative items-left justify-center bg-gradient-to-br from-tangerine to-grapefruit">
         {/* Flex container for content and form */}
 
-        <div className="w-full max-w-6xl mx-auto flex flex-col justify-between min-h-screen md:py-8">
+        <div className="w-full max-w-6xl mx-auto flex flex-col justify-between md:py-8">
           {/* Content container on the left */}
-          <div className="flex items-center pt-8 px-4 md:px-8 xl:px-0">
+          {/* <div className="flex items-center pt-8 px-4 md:px-8 xl:px-0">
             <Image
               src="/logo.png"
               alt="LocalCityWalks"
@@ -17,7 +17,7 @@ export default function Home() {
               height={300}
               className="h-12 w-auto"
             />
-          </div>
+          </div> */}
           <div className="flex flex-col lg:flex-row justify-center gap-12 sm:gap-0 px-4  md:px-8 xl:px-0">
             <div className="w-full lg:w-1/2 flex flex-col items-left space-y-12">
               <div className="space-y-8">
