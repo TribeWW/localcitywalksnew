@@ -4,7 +4,7 @@ import Image from "next/image";
 export default function Home() {
   return (
     <>
-      <main className="relative items-left justify-center bg-gradient-to-br from-tangerine to-grapefruit">
+      <main className="relative items-left justify-center bg-gradient-to-r from-tangerine to-grapefruit">
         {/* Flex container for content and form */}
 
         <div className="w-full max-w-6xl mx-auto flex flex-col justify-between md:py-8">

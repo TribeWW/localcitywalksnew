@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import React from "react";
-import { Button } from "../ui/button";
 import { Menu } from "lucide-react";
 import {
   Sheet,
@@ -21,15 +20,15 @@ const MobileHeader = () => {
           <Image
             src={"/logo-long-dark.svg"}
             alt="LocalCityWalks"
-            width={150}
-            height={100}
+            width={173}
+            height={40}
           />
         </Link>
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="default" size="icon">
-              <Menu className="h-5 w-5" />
-            </Button>
+            <div className="h-6 w-6 flex items-center justify-center cursor-pointer text-watermelon">
+              <Menu className="h-6 w-6" />
+            </div>
           </SheetTrigger>
           <SheetContent>
             <SheetTitle className="p-4">
@@ -37,8 +36,8 @@ const MobileHeader = () => {
                 <Image
                   src={"/logo-long-dark.svg"}
                   alt="LocalCityWalks"
-                  width={150}
-                  height={100}
+                  width={173}
+                  height={40}
                 />
               </Link>
             </SheetTitle>
