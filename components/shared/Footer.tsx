@@ -1,5 +1,5 @@
 import React from "react";
-import Image from "next/image";
+//import Image from "next/image";
 import { NAV_LINKS } from "@/constants";
 import Link from "next/link";
 //import { Separator } from "@/components/ui/separator";
