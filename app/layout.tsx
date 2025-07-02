@@ -97,7 +97,9 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${outfit.className} antialiased`}>
+      <body
+        className={`${outfit.className} antialiased h-screen min-h-screen bg-gradient-to-r from-tangerine to-grapefruit`}
+      >
         <Header />
         <MobileHeader />
         {children}
