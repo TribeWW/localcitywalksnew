@@ -12,8 +12,8 @@ const Header = () => {
             <Image
               src={"/logo-long-white.svg"}
               alt="LocalCityWalks"
-              width={216}
-              height={50}
+              width={173}
+              height={40}
             />
           </Link>
           <div className="flex items-center gap-4">

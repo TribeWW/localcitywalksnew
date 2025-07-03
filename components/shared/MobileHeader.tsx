@@ -15,10 +15,10 @@ import { NAV_LINKS } from "@/constants";
 const MobileHeader = () => {
   return (
     <div className="px-4 sm:px-6 bg-transparant sm:hidden">
-      <div className="flex justify-between items-center mx-auto w-full py-4">
+      <div className="flex justify-between items-center mx-auto w-full py-5">
         <Link href={"/"} className="text-2xl font-bold">
           <Image
-            src={"/logo-long-dark.svg"}
+            src={"/logo-long-white.svg"}
             alt="LocalCityWalks"
             width={173}
             height={40}

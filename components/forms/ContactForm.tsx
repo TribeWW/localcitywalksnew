@@ -81,7 +81,7 @@ const ContactForm = () => {
   return (
     <div
       id="contact"
-      className="w-full max-w-4xl mx-auto space-y-12 p-8 bg-white rounded-2xl shadow-lg"
+      className="w-full max-w-4xl mx-auto space-y-12 p-8 bg-pearl-gray rounded-2xl shadow-lg"
     >
       <div className="text-left mb-8 ">
         <h2 className="text-3xl mb-2 font-medium text-[#1E1E1E]">
@@ -109,7 +109,7 @@ const ContactForm = () => {
                         placeholder={`Enter your ${FIELD_NAMES[
                           field.name
                         ].toLowerCase()}`}
-                        className="h-10 text-[#000] placeholder-[#6A6A6A] rounded-[4px]"
+                        className="h-10 text-[#000] placeholder-[#6A6A6A] rounded-[4px] bg-white"
                         type={FIELD_TYPES[field.name]}
                         {...field}
                       />
@@ -131,7 +131,7 @@ const ContactForm = () => {
                     defaultValue={field.value}
                   >
                     <FormControl className="w-full rounded-[4px]">
-                      <SelectTrigger className="py-[18px] text-[#000] placeholder-[#6A6A6A]">
+                      <SelectTrigger className="py-[18px] text-[#000] placeholder-[#6A6A6A] bg-white">
                         <SelectValue placeholder="Select a topic" />
                       </SelectTrigger>
                     </FormControl>
@@ -157,7 +157,7 @@ const ContactForm = () => {
                   <FormControl>
                     <Textarea
                       placeholder="Write your message"
-                      className="min-h-[110px] resize-none text-[#000] placeholder-[#6A6A6A] rounded-[4px]"
+                      className="min-h-[110px] resize-none text-[#000] placeholder-[#6A6A6A] rounded-[4px] bg-white"
                       {...field}
                     />
                   </FormControl>
@@ -175,6 +175,7 @@ const ContactForm = () => {
                     <Checkbox
                       checked={field.value}
                       onCheckedChange={field.onChange}
+                      className="bg-white"
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
