@@ -7,7 +7,7 @@ const Header = () => {
   return (
     <div className="bg-gradient-to-r from-tangerine to-grapefruit">
       <div className="hidden px-4 md:px-8 xl:px-0 bg-transparant max-w-6xl mx-auto sm:flex">
-        <div className="flex justify-between items-center mx-auto w-full py-4">
+        <div className="flex justify-between items-center mx-auto w-full py-5">
           <Link href={"/"} className="text-2xl font-bold">
             <Image
               src={"/logo-long-white.svg"}
