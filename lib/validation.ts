@@ -8,7 +8,7 @@ export const ContactSchema = z.object({
     message: "Please enter a valid email address",
   }),
   subject: z.string().min(3, {
-    message: "Please enter a subject (at least 3 characters)",
+    message: "Please select a subject",
   }),
   description: z.string().min(5, {
     message: "Please provide a description (at least 5 characters)",
