@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import Header from "@/components/shared/Header";
+import MobileHeader from "@/components/shared/MobileHeader";
+import Footer from "@/components/shared/Footer";
+import Script from "next/script";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -94,8 +98,26 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${outfit.className} antialiased`}>
+      {/* Google tag (gtag.js) */}
+      <Script
+        src="https://www.googletagmanager.com/gtag/js?id=G-PQC1GK2TFT"
+        strategy="afterInteractive"
+      />
+      <Script id="google-analytics" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-PQC1GK2TFT');
+        `}
+      </Script>
+      <body
+        className={`${outfit.className} antialiased h-screen min-h-screen bg-gradient-to-r from-tangerine to-grapefruit`}
+      >
+        <Header />
+        <MobileHeader />
         {children}
+        <Footer />
         <Toaster />
       </body>
     </html>
