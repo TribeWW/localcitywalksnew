@@ -42,7 +42,7 @@ export const metadata: Metadata = {
       "Book Guided Walking Tours with Trusted Local Guides - LocalCityWalks",
     description:
       "Discover cities like a local. Small group walking tours led by trusted local guides. Real stories, real connections, real cities.",
-    images: ["https://www.localcitywalks.com/guide.png"], // Replace with your actual image
+    images: ["https://www.localcitywalks.com/guide.png"],
   },
   icons: {
     icon: [

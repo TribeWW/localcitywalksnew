@@ -1,16 +1,28 @@
 import Link from "next/link";
 import React from "react";
+import Image from "next/image";
+import { NAV_LINKS } from "@/constants";
 
 const Header = () => {
   return (
-    <div className="hidden px-4 sm:px-6 bg-transparant container mx-auto sm:flex">
-      <div className="flex justify-between items-center mx-auto w-full py-4">
-        <Link href={"/"} className="text-2xl font-bold">
-          LocalCityWalks
-        </Link>
-        <div className="flex items-center gap-4">
-          <Link href={"#about"}>About Us</Link>
-          <Link href={"#contact"}>Contact Us</Link>
+    <div className="bg-gradient-to-r from-tangerine to-grapefruit">
+      <div className="hidden px-4 md:px-8 xl:px-0 bg-transparant max-w-6xl mx-auto sm:flex">
+        <div className="flex justify-between items-center mx-auto w-full py-5">
+          <Link href={"/"} className="text-2xl font-bold">
+            <Image
+              src={"/logo-long-white.svg"}
+              alt="LocalCityWalks"
+              width={173}
+              height={40}
+            />
+          </Link>
+          <div className="flex items-center gap-4">
+            {NAV_LINKS.map((link) => (
+              <Link key={link.label} href={link.href}>
+                {link.label}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </div>
