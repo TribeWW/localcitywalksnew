@@ -1,4 +1,5 @@
 import ContactForm from "@/components/forms/ContactForm";
+import AboutUs from "@/components/home/AboutUs";
 import Image from "next/image";
 
 export default function Home() {
@@ -86,6 +87,7 @@ export default function Home() {
           </div>
         </div>
       </main>
+      <AboutUs />
     </>
   );
 }
