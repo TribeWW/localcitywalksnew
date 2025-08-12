@@ -42,7 +42,7 @@ const AboutUs = () => {
                 <div>
                   <p className="font-medium">Led by locals</p>
                   <p className="text-sm text-muted-foreground">
-                    Guides share personal routes, routines, and rituals.
+                    Walking tours hosted by local guides who know the city best.
                   </p>
                 </div>
               </li>
@@ -53,7 +53,8 @@ const AboutUs = () => {
                 <div>
                   <p className="font-medium">Small groups</p>
                   <p className="text-sm text-muted-foreground">
-                    Intimate sizes so you can ask questions and explore freely.
+                    Intimate small group tours for a personal, flexible
+                    experience.
                   </p>
                 </div>
               </li>
@@ -75,7 +76,8 @@ const AboutUs = () => {
                 <div>
                   <p className="font-medium">Authentic insights</p>
                   <p className="text-sm text-muted-foreground">
-                    Discover hidden cafes, local histories, and everyday life.
+                    Discover hidden cafés, local history, and authentic city
+                    life.
                   </p>
                 </div>
               </li>
@@ -86,7 +88,7 @@ const AboutUs = () => {
                 <div>
                   <p className="font-medium">Fair to guides</p>
                   <p className="text-sm text-muted-foreground">
-                    We champion fair pay and community-first experiences.
+                    Every walk supports local people, places, and businesses.
                   </p>
                 </div>
               </li>
@@ -97,7 +99,8 @@ const AboutUs = () => {
                 <div>
                   <p className="font-medium">Low impact</p>
                   <p className="text-sm text-muted-foreground">
-                    Explore on foot for a slower, greener way to travel.
+                    Explore the city on foot for an eco-friendly, slower-paced
+                    tour.
                   </p>
                 </div>
               </li>
