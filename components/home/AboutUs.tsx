@@ -24,13 +24,14 @@ const AboutUs = () => {
               id="about-title"
               className="text-3xl font-semibold tracking-tight sm:text-4xl"
             >
-              Real cities. Real locals. Walks you won’t find in a brochure.
+              Local insights, genuine encounters. See the city like a local,
+              with a local.
             </h2>
             <p className="text-muted-foreground text-lg">
-              LocalCityWalks enables people who actually live in a city to guide
-              travelers through the neighborhoods they love. Our walks focus on
-              authentic, lived experiences—helping you connect with places,
-              people, and stories that make each city unique.
+              LocalCityWalks connects you with people who live and breathe their
+              cities. They’ll guide you through neighborhoods they know by heart
+              - from bustling markets to quiet side streets - sharing the
+              places, stories, and traditions locals treasure most.
             </p>
 
             <ul className="grid gap-4 sm:grid-cols-2">
@@ -101,8 +102,8 @@ const AboutUs = () => {
                 </div>
               </li>
             </ul>
-
-            <div className="flex flex-wrap items-center gap-6 pt-2">
+            {/* TODO: Add stats */}
+            {/* <div className="flex flex-wrap items-center gap-6 pt-2">
               <div>
                 <p className="text-2xl font-semibold">120+</p>
                 <p className="text-sm text-muted-foreground">Cities</p>
@@ -115,7 +116,7 @@ const AboutUs = () => {
                 <p className="text-2xl font-semibold">1,500+</p>
                 <p className="text-sm text-muted-foreground">Local guides</p>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Right: Visuals */}
@@ -150,7 +151,8 @@ const AboutUs = () => {
               </div>
             </div>
 
-            <Card>
+            {/* TODO: Add join as a guide card */}
+            {/*  <Card>
               <CardContent className="flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-medium">Live here? Become a local guide</p>
@@ -162,7 +164,7 @@ const AboutUs = () => {
                   Join as a guide
                 </Button>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </div>
       </div>
