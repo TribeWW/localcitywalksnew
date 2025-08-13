@@ -4,10 +4,10 @@ import Image from "next/image";
 import {
   MapPin,
   Users,
-  ShieldCheck,
   Sparkles,
   HeartHandshake,
-  Leaf,
+  BadgeCheck,
+  LeafyGreen,
 } from "lucide-react";
 
 const AboutUs = () => {
@@ -16,7 +16,7 @@ const AboutUs = () => {
       aria-labelledby="about-title"
       className="w-full py-16 md:py-24 bg-white"
     >
-      <div className="mx-auto max-w-6xl px-4 md:px-6">
+      <div className="mx-auto max-w-6xl px-4 md:px-0">
         <div className="grid gap-10 md:grid-cols-2 md:gap-12">
           {/* Left: Story */}
           <div className="space-y-6">
@@ -24,14 +24,13 @@ const AboutUs = () => {
               id="about-title"
               className="text-3xl font-semibold tracking-tight sm:text-4xl"
             >
-              Local insights, genuine encounters. See the city like a local,
-              with a local.
+              Discover the heart of the city with a local guide.
             </h2>
-            <p className="text-muted-foreground text-lg">
-              LocalCityWalks connects you with people who live and breathe their
-              cities. They’ll guide you through neighborhoods they know by heart
-              - from bustling markets to quiet side streets - sharing the
-              places, stories, and traditions locals treasure most.
+            <p className="text-body-black text-lg">
+              LocalCityWalks connects travellers with local guides for walking
+              tours in cities across Europe. They’ll lead you through hidden
+              corners, everyday life, and authentic stories you can only get
+              from someone who truly calls the city home.
             </p>
 
             <ul className="grid gap-4 sm:grid-cols-2">
@@ -41,7 +40,7 @@ const AboutUs = () => {
                 </div>
                 <div>
                   <p className="font-medium">Led by locals</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-body-black">
                     Walking tours hosted by local guides who know the city best.
                   </p>
                 </div>
@@ -52,32 +51,34 @@ const AboutUs = () => {
                 </div>
                 <div>
                   <p className="font-medium">Small groups</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-body-black">
                     Intimate small group tours for a personal, flexible
                     experience.
                   </p>
                 </div>
               </li>
-              <li className="flex items-start gap-3">
-                <div className="mt-1 rounded-md bg-orange-50 p-2 text-orange-600">
-                  <ShieldCheck className="size-5" aria-hidden="true" />
-                </div>
-                <div>
-                  <p className="font-medium">Trusted & vetted</p>
-                  <p className="text-sm text-muted-foreground">
-                    Every guide is reviewed to ensure consistent quality.
-                  </p>
-                </div>
-              </li>
+
               <li className="flex items-start gap-3">
                 <div className="mt-1 rounded-md bg-orange-50 p-2 text-orange-600">
                   <Sparkles className="size-5" aria-hidden="true" />
                 </div>
                 <div>
                   <p className="font-medium">Authentic insights</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-body-black">
                     Discover hidden cafés, local history, and authentic city
                     life.
+                  </p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="mt-1 rounded-md bg-orange-50 p-2 text-orange-600">
+                  <BadgeCheck className="size-5" aria-hidden="true" />
+                </div>
+                <div>
+                  <p className="font-medium">Trusted & vetted</p>
+                  <p className="text-sm text-body-black">
+                    All guides reviewed for quality, safety, and great guest
+                    reviews.
                   </p>
                 </div>
               </li>
@@ -86,19 +87,19 @@ const AboutUs = () => {
                   <HeartHandshake className="size-5" aria-hidden="true" />
                 </div>
                 <div>
-                  <p className="font-medium">Fair to guides</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-medium">Community-driven</p>
+                  <p className="text-sm text-body-black">
                     Every walk supports local people, places, and businesses.
                   </p>
                 </div>
               </li>
               <li className="flex items-start gap-3">
                 <div className="mt-1 rounded-md bg-orange-50 p-2 text-orange-600">
-                  <Leaf className="size-5" aria-hidden="true" />
+                  <LeafyGreen className="size-5" aria-hidden="true" />
                 </div>
                 <div>
-                  <p className="font-medium">Low impact</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-medium">Sustainable travel</p>
+                  <p className="text-sm text-body-black">
                     Explore the city on foot for an eco-friendly, slower-paced
                     tour.
                   </p>
@@ -109,7 +110,7 @@ const AboutUs = () => {
             {/* <div className="flex flex-wrap items-center gap-6 pt-2">
               <div>
                 <p className="text-2xl font-semibold">120+</p>
-                <p className="text-sm text-muted-foreground">Cities</p>
+                <p className="text-sm text-body-black">Cities</p>
               </div>
               <div>
                 <p className="text-2xl font-semibold">4.9/5</p>

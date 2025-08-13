@@ -8,7 +8,7 @@ export default function Home() {
       <main className="relative items-left justify-center bg-gradient-to-r from-tangerine to-grapefruit">
         {/* Flex container for content and form */}
 
-        <div className="w-full max-w-6xl mx-auto flex flex-col justify-between py-8 pt-0">
+        <div className="w-full max-w-6xl mx-auto flex flex-col justify-between py-20 pt-0">
           {/* Content container on the left */}
           {/* <div className="flex items-center pt-8 px-4 md:px-8 xl:px-0">
             <Image
@@ -19,7 +19,7 @@ export default function Home() {
               className="h-12 w-auto"
             />
           </div> */}
-          <div className="flex flex-col lg:flex-row justify-center gap-12 sm:gap-0 px-4 md:px-8 xl:px-0 lg:pt-16">
+          <div className="flex flex-col lg:flex-row justify-center gap-12 sm:gap-12 px-4 md:px-8 xl:px-0 lg:pt-16">
             <div className="w-full lg:w-1/2 flex flex-col items-left space-y-12">
               <div className="space-y-8">
                 {/* Brand Name */}
