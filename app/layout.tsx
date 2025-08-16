@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import Header from "@/components/shared/Header";
 import MobileHeader from "@/components/shared/MobileHeader";
 import Footer from "@/components/shared/Footer";
+import Script from "next/script";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -71,6 +72,27 @@ export default function RootLayout({
   return (
     <html lang="en" className={outfit.className}>
       <head>
+        {/* Google Tag Manager */}
+        <Script id="google-tag-manager" strategy="beforeInteractive">
+          {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-MH3M476G');`}
+        </Script>
+        {/* Google tag (gtag.js) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-PQC1GK2TFT"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-PQC1GK2TFT');
+        `}
+        </Script>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -100,6 +122,16 @@ export default function RootLayout({
       <body
         className={`${outfit.className} antialiased h-screen min-h-screen bg-gradient-to-r from-tangerine to-grapefruit`}
       >
+        {/* Google Tag Manager (noscript) */}
+        <noscript>
+          <iframe
+            src="https://www.googletagmanager.com/ns.html?id=GTM-MH3M476G"
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+          />
+        </noscript>
+        {/* End Google Tag Manager (noscript) */}
         <Header />
         <MobileHeader />
         {children}

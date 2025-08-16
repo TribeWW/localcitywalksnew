@@ -126,25 +126,25 @@ const AboutUs = () => {
           {/* Right: Visuals */}
           <div className="flex flex-col gap-6">
             <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-2 row-span-2 overflow-hidden rounded-lg">
+              <div className="col-span-2 row-span-2 overflow-hidden rounded-lg md:min-h-[350px]">
                 <Image
-                  src="/guiding.jpg"
+                  src="/guiding1.jpg"
                   alt="Local guide leading a small group through a neighborhood"
                   width={780}
                   height={520}
                   className="h-full w-full object-cover"
                 />
               </div>
-              <div className="overflow-hidden rounded-lg">
+              <div className="overflow-hidden rounded-lg hidden sm:block">
                 <Image
-                  src="/guiding1.jpg"
+                  src="/guiding4.png"
                   alt="Travelers chatting with a local at a cafe"
                   width={380}
                   height={260}
                   className="h-full w-full object-cover"
                 />
               </div>
-              <div className="overflow-hidden rounded-lg">
+              <div className="overflow-hidden rounded-lg hidden sm:block">
                 <Image
                   src="/guiding2.jpg"
                   alt="Hidden alley with street art discovered on a walk"
