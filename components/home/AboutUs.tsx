@@ -26,7 +26,7 @@ const AboutUs = () => {
             >
               Discover the heart of the city with a local guide.
             </h2>
-            <p className="text-body-black text-lg">
+            <p className="text-nightsky text-lg">
               LocalCityWalks connects travellers with local guides for walking
               tours in cities across Europe. They’ll lead you through hidden
               corners, everyday life, and authentic stories you can only get
@@ -40,7 +40,7 @@ const AboutUs = () => {
                 </div>
                 <div>
                   <p className="font-medium">Led by locals</p>
-                  <p className="text-sm text-body-black">
+                  <p className="text-sm text-nightsky">
                     Walking tours hosted by local guides who know the city best.
                   </p>
                 </div>
@@ -51,7 +51,7 @@ const AboutUs = () => {
                 </div>
                 <div>
                   <p className="font-medium">Small groups</p>
-                  <p className="text-sm text-body-black">
+                  <p className="text-sm text-nightsky">
                     Intimate small group tours for a personal, flexible
                     experience.
                   </p>
@@ -64,7 +64,7 @@ const AboutUs = () => {
                 </div>
                 <div>
                   <p className="font-medium">Authentic insights</p>
-                  <p className="text-sm text-body-black">
+                  <p className="text-sm text-nightsky">
                     Discover hidden cafés, local history, and authentic city
                     life.
                   </p>
@@ -76,7 +76,7 @@ const AboutUs = () => {
                 </div>
                 <div>
                   <p className="font-medium">Trusted & vetted</p>
-                  <p className="text-sm text-body-black">
+                  <p className="text-sm text-nightsky">
                     All guides reviewed for quality, safety, and great guest
                     reviews.
                   </p>
@@ -88,7 +88,7 @@ const AboutUs = () => {
                 </div>
                 <div>
                   <p className="font-medium">Community-driven</p>
-                  <p className="text-sm text-body-black">
+                  <p className="text-sm text-nightsky">
                     Every walk supports local people, places, and businesses.
                   </p>
                 </div>
@@ -99,7 +99,7 @@ const AboutUs = () => {
                 </div>
                 <div>
                   <p className="font-medium">Sustainable travel</p>
-                  <p className="text-sm text-body-black">
+                  <p className="text-sm text-nightsky">
                     Explore the city on foot for an eco-friendly, slower-paced
                     tour.
                   </p>
@@ -110,7 +110,7 @@ const AboutUs = () => {
             {/* <div className="flex flex-wrap items-center gap-6 pt-2">
               <div>
                 <p className="text-2xl font-semibold">120+</p>
-                <p className="text-sm text-body-black">Cities</p>
+                <p className="text-sm text-nightsky">Cities</p>
               </div>
               <div>
                 <p className="text-2xl font-semibold">4.9/5</p>
