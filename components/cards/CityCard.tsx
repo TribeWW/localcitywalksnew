@@ -1,6 +1,15 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const CITIES = [
   {
@@ -25,15 +34,18 @@ const CITIES = [
   },
   {
     title: "Lourdes",
-    image: "/placeholder-city.jpg",
+    image:
+      "https://images.unsplash.com/photo-1641070496002-8077aefba51c?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   },
   {
     title: "Biarritz",
-    image: "/placeholder-city.jpg",
+    image:
+      "https://images.unsplash.com/photo-1603061624410-810aa248dd19?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   },
   {
     title: "Marseille",
-    image: "/placeholder-city.jpg",
+    image:
+      "https://images.unsplash.com/photo-1566838217578-1903568a76d9?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   },
   {
     title: "Toledo",
@@ -42,23 +54,28 @@ const CITIES = [
   },
   {
     title: "Cádiz",
-    image: "/placeholder-city.jpg",
+    image:
+      "https://images.unsplash.com/photo-1626037552355-9c9efef3b2ae?q=80&w=1169&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   },
   {
     title: "Salamanca",
-    image: "/placeholder-city.jpg",
+    image:
+      "https://images.unsplash.com/photo-1616854611267-0257c5526de2?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   },
   {
     title: "Girona",
-    image: "/placeholder-city.jpg",
+    image:
+      "https://images.unsplash.com/photo-1515974448560-3e45c9d51f95?q=80&w=1138&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   },
   {
     title: "San Sebastian",
-    image: "/placeholder-city.jpg",
+    image:
+      "https://images.unsplash.com/photo-1594305548608-df04461f1b28?q=80&w=1612&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   },
   {
     title: "Santiago de Compostella",
-    image: "/placeholder-city.jpg",
+    image:
+      "https://images.unsplash.com/photo-1662917625298-50b4d1520b11?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   },
   {
     title: "Bilbao",
@@ -87,30 +104,126 @@ const CITIES = [
 ];
 
 const CityCard = () => {
+  const [selectedCity, setSelectedCity] = useState<string | null>(null);
+
+  const handleOpenModal = (cityName: string) => {
+    setSelectedCity(cityName);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedCity(null);
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
-      {CITIES.map((city, index) => (
-        <div
-          key={index}
-          className="bg-white rounded-xl shadow-sm overflow-hidden w-full max-w-[250px]"
-        >
-          <div className="relative h-48 w-full">
-            <Image
-              src={city.image}
-              alt={city.title}
-              fill
-              className="object-cover"
-            />
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
+        {CITIES.map((city, index) => (
+          <div
+            key={index}
+            className="bg-white rounded-xl shadow-sm overflow-hidden w-full max-w-[250px]"
+          >
+            <div className="relative h-48 w-full">
+              <Image
+                src={city.image}
+                alt={city.title}
+                fill
+                className="object-cover"
+              />
+            </div>
+            <div className="p-6">
+              <h3 className="text-xl font-semibold text-nightsky mb-4">
+                {city.title}
+              </h3>
+              <Button
+                className="w-full"
+                onClick={() => handleOpenModal(city.title)}
+              >
+                Request this tour
+              </Button>
+            </div>
           </div>
-          <div className="p-6">
-            <h3 className="text-xl font-semibold text-nightsky mb-4">
-              {city.title}
-            </h3>
-            <Button className="w-full">Request this tour</Button>
+        ))}
+      </div>
+
+      <Dialog open={!!selectedCity} onOpenChange={handleCloseModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-semibold text-nightsky">
+              Request tour in {selectedCity}
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Contact us to plan your walking tour
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-nightsky mb-2"
+              >
+                Name
+              </label>
+              <input
+                id="name"
+                type="text"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
+                placeholder="Your full name"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-nightsky mb-2"
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
+                placeholder="your.email@example.com"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="message"
+                className="block text-sm font-medium text-nightsky mb-2"
+              >
+                Message
+              </label>
+              <textarea
+                id="message"
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
+                placeholder="Tell us about your tour preferences"
+              />
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
+
+          <div className="flex gap-3 mt-6">
+            <Button
+              className="flex-1"
+              onClick={() => {
+                // TODO: Handle form submission
+                console.log("Form submitted for", selectedCity);
+              }}
+            >
+              Send request
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={handleCloseModal}
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
