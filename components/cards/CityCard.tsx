@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import TourRequestForm from "@/components/forms/TourRequestForm";
 
 const CITIES = [
   {
@@ -79,27 +80,33 @@ const CITIES = [
   },
   {
     title: "Bilbao",
-    image: "/placeholder-city.jpg",
+    image:
+      "https://images.unsplash.com/photo-1544041510-c6127fc6853d?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   },
   {
     title: "Faro",
-    image: "/placeholder-city.jpg",
+    image:
+      "https://images.unsplash.com/photo-1656937970151-ee7350ca10d0?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   },
   {
-    title: "Lagos PT",
-    image: "/placeholder-city.jpg",
+    title: "Lagos",
+    image:
+      "https://images.unsplash.com/photo-1602148715106-e4d088175c9f?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   },
   {
     title: "Coimbra",
-    image: "/placeholder-city.jpg",
+    image:
+      "https://images.unsplash.com/photo-1672995259409-f749336b646b?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   },
   {
     title: "Funchal",
-    image: "/placeholder-city.jpg",
+    image:
+      "https://images.unsplash.com/photo-1620455397193-1de548320817?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   },
   {
     title: "Albufeira",
-    image: "/placeholder-city.jpg",
+    image:
+      "https://images.unsplash.com/photo-1605385257286-424abb08013b?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   },
 ];
 
@@ -156,71 +163,12 @@ const CityCard = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-nightsky mb-2"
-              >
-                Name
-              </label>
-              <input
-                id="name"
-                type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
-                placeholder="Your full name"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-nightsky mb-2"
-              >
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
-                placeholder="your.email@example.com"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="message"
-                className="block text-sm font-medium text-nightsky mb-2"
-              >
-                Message
-              </label>
-              <textarea
-                id="message"
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
-                placeholder="Tell us about your tour preferences"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-3 mt-6">
-            <Button
-              className="flex-1"
-              onClick={() => {
-                // TODO: Handle form submission
-                console.log("Form submitted for", selectedCity);
-              }}
-            >
-              Send request
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={handleCloseModal}
-            >
-              Cancel
-            </Button>
-          </div>
+          {selectedCity && (
+            <TourRequestForm
+              cityName={selectedCity}
+              onClose={handleCloseModal}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </>
