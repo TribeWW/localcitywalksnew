@@ -20,7 +20,7 @@ const ParticipantCounter = ({
   value,
   onChange,
   min = 0,
-  max = 20,
+  max = 15,
   disabled = false,
   className,
 }: ParticipantCounterProps) => {
