@@ -16,6 +16,10 @@ interface TourRequestEmailContent {
   email: string;
   city: string;
   message: string;
+  phoneNumber?: string;
+  adults: number;
+  youth: number;
+  children: number;
   consent: boolean;
 }
 
@@ -121,6 +125,21 @@ export async function sendTourRequestEmail(data: TourRequestEmailContent) {
             <p><strong>🏙️ City:</strong> ${data.city}</p>
             <p><strong>👤 Requested by:</strong> ${data.fullName}</p>
             <p><strong>📧 Email:</strong> ${data.email}</p>
+            <p><strong>📞 Phone:</strong> ${
+              data.phoneNumber || "Not provided"
+            }</p>
+          </div>
+          
+          <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">
+            <h3 style="color: #333; margin-top: 0;">👥 Participants</h3>
+            <p><strong>👨‍💼 Adults (18+):</strong> ${data.adults}</p>
+            <p><strong>🧑‍🎓 Youth (13-17):</strong> ${data.youth}</p>
+            <p><strong>👶 Children (0-12):</strong> ${data.children}</p>
+            <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ccc;">
+              <strong>📊 Total:</strong> ${
+                data.adults + data.youth + data.children
+              } participants
+            </p>
           </div>
           
           <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">

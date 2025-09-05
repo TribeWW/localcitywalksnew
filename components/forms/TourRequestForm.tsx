@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import ParticipantCounter from "@/components/ui/participant-counter";
 import { TourRequestSchema } from "@/lib/validation";
 import { sendTourRequestEmail } from "@/lib/nodemailer";
 import { toast } from "sonner";
@@ -35,6 +36,10 @@ const TourRequestForm = ({ cityName, onClose }: TourRequestFormProps) => {
       email: "",
       city: cityName,
       message: "",
+      phoneNumber: "",
+      adults: 1,
+      youth: 0,
+      children: 0,
       consent: false,
     },
   });
@@ -48,6 +53,10 @@ const TourRequestForm = ({ cityName, onClose }: TourRequestFormProps) => {
         email: values.email,
         city: values.city,
         message: values.message,
+        phoneNumber: values.phoneNumber,
+        adults: values.adults,
+        youth: values.youth,
+        children: values.children,
         consent: values.consent,
       });
 
@@ -109,6 +118,88 @@ const TourRequestForm = ({ cityName, onClose }: TourRequestFormProps) => {
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name="phoneNumber"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-nightsky">
+                Phone Number (Optional)
+              </FormLabel>
+              <FormControl>
+                <Input
+                  type="tel"
+                  placeholder="+1 234 567 8900 (optional)"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-nightsky">Participants</h3>
+
+          <FormField
+            control={form.control}
+            name="adults"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <ParticipantCounter
+                    label="Adults (18+)"
+                    value={field.value}
+                    onChange={field.onChange}
+                    min={0}
+                    max={20}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="youth"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <ParticipantCounter
+                    label="Youth (13-17)"
+                    value={field.value}
+                    onChange={field.onChange}
+                    min={0}
+                    max={20}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="children"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <ParticipantCounter
+                    label="Children (0-12)"
+                    value={field.value}
+                    onChange={field.onChange}
+                    min={0}
+                    max={20}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}
