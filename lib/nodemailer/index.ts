@@ -20,6 +20,9 @@ interface TourRequestEmailContent {
   adults: number;
   youth: number;
   children: number;
+  preferredDate: Date;
+  preferredTime: string;
+  tourDuration: string;
   consent: boolean;
 }
 
@@ -128,6 +131,27 @@ export async function sendTourRequestEmail(data: TourRequestEmailContent) {
             <p><strong>📞 Phone:</strong> ${
               data.phoneNumber || "Not provided"
             }</p>
+          </div>
+          
+          <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3;">
+            <h3 style="color: #333; margin-top: 0;">📅 Tour Schedule</h3>
+            <p><strong>📅 Date:</strong> ${data.preferredDate.toLocaleDateString(
+              "en-US",
+              {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }
+            )}</p>
+            <p><strong>🕐 Time:</strong> ${data.preferredTime} (${new Date(
+        "2000-01-01T" + data.preferredTime
+      ).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })})</p>
+            <p><strong>⏱️ Duration:</strong> ${data.tourDuration}</p>
           </div>
           
           <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">

@@ -17,6 +17,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import ParticipantCounter from "@/components/ui/participant-counter";
+import DatePicker from "@/components/ui/date-picker";
+import TimeSelector from "@/components/ui/time-selector";
+import DurationSelector from "@/components/ui/duration-selector";
 import { TourRequestSchema } from "@/lib/validation";
 import { sendTourRequestEmail } from "@/lib/nodemailer";
 import { toast } from "sonner";
@@ -40,6 +43,9 @@ const TourRequestForm = ({ cityName, onClose }: TourRequestFormProps) => {
       adults: 1,
       youth: 0,
       children: 0,
+      preferredDate: undefined,
+      preferredTime: undefined,
+      tourDuration: undefined,
       consent: false,
     },
   });
@@ -57,6 +63,9 @@ const TourRequestForm = ({ cityName, onClose }: TourRequestFormProps) => {
         adults: values.adults,
         youth: values.youth,
         children: values.children,
+        preferredDate: values.preferredDate,
+        preferredTime: values.preferredTime,
+        tourDuration: values.tourDuration,
         consent: values.consent,
       });
 
@@ -77,7 +86,10 @@ const TourRequestForm = ({ cityName, onClose }: TourRequestFormProps) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-4 max-h-[70vh] overflow-y-auto pr-2"
+      >
         <FormField
           control={form.control}
           name="fullName"
@@ -201,11 +213,77 @@ const TourRequestForm = ({ cityName, onClose }: TourRequestFormProps) => {
           />
         </div>
 
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-nightsky">Tour Schedule</h3>
+
+          <FormField
+            control={form.control}
+            name="preferredDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-nightsky">
+                  Preferred Date
+                </FormLabel>
+                <FormControl>
+                  <DatePicker
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select a date"
+                    minDate={new Date()}
+                    maxDate={new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)} // 1 year from now
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="preferredTime"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-nightsky">
+                  Preferred Time
+                </FormLabel>
+                <FormControl>
+                  <TimeSelector
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select time"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="tourDuration"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-nightsky">
+                  Tour Duration
+                </FormLabel>
+                <FormControl>
+                  <DurationSelector
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select duration"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
         <FormField
           control={form.control}
           name="city"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="hidden">
               <FormLabel className="text-sm font-medium text-nightsky">
                 City
               </FormLabel>
@@ -232,8 +310,8 @@ const TourRequestForm = ({ cityName, onClose }: TourRequestFormProps) => {
               <FormControl>
                 <Textarea
                   rows={3}
-                  placeholder="Tell us about your tour preferences, preferred dates, group size, etc."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine resize-none"
+                  placeholder="Tell us about your tour preferences."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
                   {...field}
                 />
               </FormControl>
