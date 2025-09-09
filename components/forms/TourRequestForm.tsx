@@ -346,7 +346,7 @@ const TourRequestForm = ({ cityName, onClose }: TourRequestFormProps) => {
         <div className="flex gap-3 mt-6">
           <Button
             type="submit"
-            className="flex-1"
+            className="flex-1 bg-nightsky hover:bg-nightsky/80"
             disabled={isSubmitting || !form.watch("consent")}
           >
             {isSubmitting ? "Sending..." : "Send request"}
@@ -354,7 +354,7 @@ const TourRequestForm = ({ cityName, onClose }: TourRequestFormProps) => {
           <Button
             type="button"
             variant="outline"
-            className="flex-1"
+            className="flex-1 "
             onClick={onClose}
           >
             Cancel

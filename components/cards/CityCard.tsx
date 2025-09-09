@@ -125,29 +125,24 @@ const CityCard = () => {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 justify-items-center">
         {CITIES.map((city, index) => (
           <div
             key={index}
-            className="bg-white rounded-xl shadow-sm overflow-hidden w-full max-w-[250px]"
+            className="bg-white rounded-xl shadow-sm overflow-hidden w-full max-w-[250px] transition-all duration-200 hover:shadow-lg hover:scale-105 cursor-pointer"
           >
             <div className="relative h-48 w-full">
-              <Image
-                src={city.image}
-                alt={city.title}
-                fill
-                className="object-cover"
-              />
+              <Image src={city.image} alt={city.title} fill className="" />
             </div>
             <div className="p-6">
               <h3 className="text-xl font-semibold text-nightsky mb-4">
                 {city.title}
               </h3>
               <Button
-                className="w-full"
+                className="w-full bg-nightsky hover:bg-nightsky/80"
                 onClick={() => handleOpenModal(city.title)}
               >
-                Request this tour
+                Request private tour
               </Button>
             </div>
           </div>
