@@ -43,10 +43,7 @@ const Footer = () => {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
           <div className="text-white">
             Made with ❤️ in Spain from travelers, for travelers
-            <span className="text-sm text-white">
-              {" "}
-              | © 2025 LocalCityWalks - an AMAIA Ventures SL Company
-            </span>
+            <span className="text-sm text-white"> | © 2025 LocalCityWalks</span>
           </div>
 
           <div className=""></div>
