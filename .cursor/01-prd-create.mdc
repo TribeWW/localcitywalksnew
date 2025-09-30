@@ -1,0 +1,79 @@
+---
+alwaysApply: false
+---
+
+#PRD Creation Rules
+
+## Goal: Create comprehensive implementation plans for features
+
+## Reference Architecture
+
+- **Application & Product**:@.cursor/.cursorrules.md - General product description, backend and frontend architecture, conduct how to write code
+- **Database**: @DATABASE_IMPLEMENTATION.md - Database setup
+- **API**: @WEBHOOK.md - Bókun Webhook
+
+## Required Components
+
+**Summary** - Clear goal statement that defines the feature in 1-2 sentences
+**Problem Statement** - What user pain point or business need this addresses
+**User Stories** - Who will use this and what they want to achieve
+**Acceptance Criteria** - Specific, testable conditions for completion
+**Technical Requirements** - Performance, security, and integration needs
+**Dependencies** - What other features/systems this relies on
+**Risks & Assumptions** - Potential blockers and what we're assuming to be true
+
+## Step 1: Core Areas to Explore
+
+- **Investigation** - What unknowns need resolution? Research existing patterns, check similar features, identify technical constraints
+- **Expected Behaviour** - Gherkin stories (Given/When/Then) that describe user interactions step-by-step
+- **Core Functionality** - Key User Actions: What are the primary user flows and edge cases?
+- **Scope/Boundaries** - What this should NOT do: Define clear limits to prevent scope creep
+- **File Requirements** - What files need changes? Map out all components, pages, actions, and utilities
+- **Data Schema** - Backend schema changes needed? New tables, columns, relationships, or API endpoints
+- **Design/UI** - Missing designs or mockups? Identify what UI components need to be created or modified
+
+## Step 2: Implementation Plan Components
+
+- **Goals** - Specific, measurable objectives this feature will achieve
+- **Gherkin User Stories** - Complete Given/When/Then scenarios covering happy path and edge cases
+- **Functional Requirements** - Detailed feature specifications with input/output definitions
+- **Non Goals** - Explicitly state what this feature will NOT include (prevents scope creep)
+- **Success Metrics** - How will we measure if this feature is successful? (user engagement, performance, etc.)
+- **Affected Files** - Complete list of files that need to be created, modified, or deleted
+
+## Production Safety - NO MOCKS ALLOWED
+
+**No Mock data/endpoints/functions/placeholders.**
+**Production Pipeline:**
+
+1. **Database Changes** - All schema changes must be properly migrated
+2. **API Endpoints** - Real endpoints with proper error handling and validation
+3. **Authentication** - Proper auth checks and user permissions
+4. **Error Handling** - Comprehensive error states and user feedback
+5. **Testing** - All features must be testable in production environment
+6. **Performance** - No performance regressions, proper loading states
+
+## File Discovery Rules
+
+**Search First** - Use codebase_search to understand existing patterns and similar implementations
+**Verify Locations** - Confirm file paths and directory structure before making changes
+**Read Cursorrules** - Always check .cursorrules.md for coding standards and architectural decisions
+**Check Dependencies** - Verify all imports and dependencies are available
+**Review Similar Features** - Look at existing components/features for consistency
+
+## Output Requirements
+
+- **Format**: Markdown `.md` with clear headings and bullet points
+- **Location**: `documentation/implementation-plans/YYYY-MM-DD-[type]-desc.md`
+- **Audience**: Junior Developer with no context - include all necessary background information
+- **Current Date**: Check system time for timestamps and version tracking
+- **Structure**: Follow the template sections in order, include all required components
+- **Clarity**: Use simple language, avoid jargon, provide examples where helpful
+
+## Workflow Integration
+
+**Before Starting Development:**
+
+1. Create PRD document using this template
+2. Review with team/stakeholders for approval
+3. Do not implement ANY CODE. This will be done in another instruction file.

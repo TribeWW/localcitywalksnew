@@ -1,0 +1,63 @@
+---
+alwaysApply: false
+---
+
+# Task Execution Protocol
+
+## Core Principles
+
+### 1. Implementation Plan First
+
+- **Requirement**: Always provide an implementation plan before executing or writing any code
+- **Memory Reference**: [[memory:8246657]]
+- **Action**: Outline the approach, break down the task, and present the plan for approval
+
+### 2. Small Steps with Confirmation
+
+- **Requirement**: Perform tasks in small, manageable steps
+- **Memory References**: [[memory:8246651]] [[memory:7950931]]
+- **Process**:
+  - Break down complex tasks into clear, manageable steps
+  - Explain each step in detail
+  - Wait for confirmation before moving to the next step
+  - Keep the user in full control of the process
+  - Always ask the user if he agrees, before starting to implement the code!!!
+  - Always follow the [@.cursorrules.md](.cursorrules.md)
+
+### 3. shadcn UI Preference
+
+- **Requirement**: Use shadcn UI components instead of manual implementations
+- **Memory References**: [[memory:8246660]] [[memory:8246655]]
+- **Examples**: Use `dialog.tsx` component instead of manually using Radix Dialog
+- **Action**: Prefer shadcn UI components when building interfaces
+
+## Workflow Guidelines
+
+### When Receiving a Task:
+
+1. **Analyze** the requirements thoroughly
+2. **Plan** the implementation approach
+3. **Present** the plan with clear steps
+4. **Wait** for approval before proceeding. You need to have the agreement of me. I am in full control
+5. **Execute** one step at a time with confirmations
+6. **Use** shadcn UI components for UI development
+7. **Keep** the user informed and in control throughout
+
+### Communication Style:
+
+- Be explicit about what you're planning to do
+- Ask for confirmation at each step. Do not start to code immediately!
+- Explain the reasoning behind decisions
+- Provide clear, actionable information
+- Maintain transparency in the process
+- Try to use as minimal lines of code to implement the solution
+- Make sure you document all in the comments.
+
+## Implementation Checklist
+
+- [ ] Plan presented before coding
+- [ ] Steps broken down clearly
+- [ ] Explicit user confirmation obtained
+- [ ] shadcn UI components used where applicable
+- [ ] User remains in control throughout
+- [ ] Clear communication maintained

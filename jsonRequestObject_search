@@ -1,0 +1,112 @@
+{
+  "agendaLocationFilters": {
+    "geoBoundingBoxFilter": {
+      "bottomRight": {
+        "lat": 0,
+        "lng": 0
+      },
+      "topLeft": {
+        "lat": 0,
+        "lng": 0
+      }
+    },
+    "geoDistanceFilter": {
+      "center": {
+        "lat": 0,
+        "lng": 0
+      },
+      "distance": "string"
+    },
+    "geoDistanceRangeFilter": {
+      "center": {
+        "lat": 0,
+        "lng": 0
+      },
+      "fromDistance": "string",
+      "includeLower": true,
+      "includeUpper": true,
+      "toDistance": "string"
+    },
+    "geoPolygonFilter": {
+      "points": [
+        {
+          "lat": 0,
+          "lng": 0
+        }
+      ]
+    }
+  },
+  "comboActivity": true,
+  "dateFormats": [
+    "string"
+  ],
+  "endDate": "string",
+  "excludeBoxes": true,
+  "externalId": "string",
+  "facetFilters": [
+    {
+      "excluded": true,
+      "name": "string",
+      "values": [
+        "string"
+      ]
+    }
+  ],
+  "page": 0,
+  "pageSize": 0,
+  "participants": 0,
+  "participantsByAge": [
+    0
+  ],
+  "publishedSince": "string",
+  "sortField": "BEST_SELLING_GLOBAL",
+  "sortOrder": "string",
+  "startDate": "string",
+  "startPointLocationFilters": {
+    "geoBoundingBoxFilter": {
+      "bottomRight": {
+        "lat": 0,
+        "lng": 0
+      },
+      "topLeft": {
+        "lat": 0,
+        "lng": 0
+      }
+    },
+    "geoDistanceFilter": {
+      "center": {
+        "lat": 0,
+        "lng": 0
+      },
+      "distance": "string"
+    },
+    "geoDistanceRangeFilter": {
+      "center": {
+        "lat": 0,
+        "lng": 0
+      },
+      "fromDistance": "string",
+      "includeLower": true,
+      "includeUpper": true,
+      "toDistance": "string"
+    },
+    "geoPolygonFilter": {
+      "points": [
+        {
+          "lat": 0,
+          "lng": 0
+        }
+      ]
+    }
+  },
+  "textFilter": {
+    "operator": "string",
+    "searchExternalId": true,
+    "searchFullText": true,
+    "searchKeywords": true,
+    "searchTitle": true,
+    "text": "string",
+    "wildcard": true
+  },
+  "vendorId": 0
+}

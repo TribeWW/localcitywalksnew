@@ -1,0 +1,84 @@
+---
+alwaysApply: false
+---
+
+#PRD Review & Implementation Readiness Check
+
+## Goal: Validate implementation plans before execution and convert to executable format
+
+## Reference Architecture
+
+- **Application & Product**:@.cursor/.cursorrules.md - General product description, backend and frontend architecture, conduct how to write code
+- **Database**: @DATABASE_IMPLEMENTATION.md - Database setup
+- **API**: @WEBHOOK.md - Bókun Webhook
+
+## Pre-Implementation Checklist
+
+1. **Context Check** - What would another LLM need to implement this with no prior context? Ensure all background information, dependencies, and assumptions are clearly documented
+2. **Rate Plan /10** - Score completeness before execution. Must be 8/10 or higher to proceed. Identify specific gaps and missing information
+3. **Phase Breakdown** - Split into smaller, safer chunks with 3 tasks per phase. Each phase should be independently testable and deployable
+4. **API Consistency** - Does this follow existing endpoint patterns from API contracts? Verify naming conventions, response formats, and error handling
+5. **Database Impact** - Are all schema changes properly planned and migrated? Check for data integrity and performance implications
+6. **Security Review** - Authentication, authorization, input validation, and data protection measures in place
+7. **Performance Considerations** - Loading states, caching, and optimization strategies defined
+
+## Quality Gates
+
+- **Production Safety** - No mocks, placeholders, or TODOs allowed. All code must be production-ready
+- **File Verification** - All mentioned paths exist via codebase_search and file system verification
+- **Dependency Checks** - Required services/endpoints available and properly configured
+- **Error Scenarios** - Edge cases and failure modes covered with proper error handling and user feedback
+- **Testing Strategy** - How will each component be tested? Unit tests, integration tests, manual testing
+- **Rollback Plan** - What happens if deployment fails? How to revert changes safely
+- **Monitoring & Logging** - How will we track success/failure and debug issues in production
+
+## Review Protocol
+
+1. **Read PRD** - Understand scope and requirements completely. Identify all user stories and acceptance criteria
+2. **Check References** - Verify against API contracts, READMEs, and existing codebase patterns
+3. **Score Completeness** - Rate /10 with specific gaps identified. Document what's missing or unclear
+4. **Validate Technical Feasibility** - Can this be implemented with current architecture? Any blockers?
+5. **Convert to Executable Format** - ALWAYS restructure into phased checklist format with clear, actionable tasks
+6. **Risk Assessment** - Identify potential issues, dependencies, and mitigation strategies
+7. **User Approval** - Wait for explicit "approved" before proceeding to implementation
+
+## MANDATORY: Convert to Executable Format
+
+**ALWAYS restructure implementation plans into this format:**
+
+### Phase 1: Foundation & Setup
+
+- [ ] **Task 1**: [Specific, actionable task with clear acceptance criteria]
+- [ ] **Task 2**: [Specific, actionable task with clear acceptance criteria]
+- [ ] **Task 3**: [Specific, actionable task with clear acceptance criteria]
+
+### Phase 2: Core Implementation
+
+- [ ] **Task 1**: [Specific, actionable task with clear acceptance criteria]
+- [ ] **Task 2**: [Specific, actionable task with clear acceptance criteria]
+- [ ] **Task 3**: [Specific, actionable task with clear acceptance criteria]
+
+### Phase 3: Integration & Testing
+
+- [ ] **Task 1**: [Specific, actionable task with clear acceptance criteria]
+- [ ] **Task 2**: [Specific, actionable task with clear acceptance criteria]
+- [ ] **Task 3**: [Specific, actionable task with clear acceptance criteria]
+
+### Success Criteria
+
+- [ ] All acceptance criteria from PRD are met
+- [ ] Feature works in production environment
+- [ ] No performance regressions
+- [ ] Proper error handling and user feedback
+- [ ] Documentation updated
+
+## Review Checklist Template
+
+**Before Implementation:**
+
+- [ ] PRD completeness score: \_\_\_/10 (must be 8+)
+- [ ] All references verified and accessible
+- [ ] Technical feasibility confirmed
+- [ ] Risk assessment completed
+- [ ] Phased implementation plan created
+- [ ] User approval received
