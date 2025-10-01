@@ -49,11 +49,11 @@ function transformProductToCityCard(product: unknown): CityCardData {
     id: string;
     title: string;
     keyPhoto: unknown;
-    location: { city: string };
+    googlePlace: { city: string };
   };
   return {
     id: productData.id,
-    title: productData.location.city,
+    title: productData.googlePlace.city,
     image: extractThumbnailUrl(productData.keyPhoto),
   };
 }
