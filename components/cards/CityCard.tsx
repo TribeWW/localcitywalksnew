@@ -49,7 +49,7 @@ const CityCard = ({ cities }: CityCardProps) => {
                 {city.title}
               </h3>
               <Button
-                className="w-full bg-nightsky hover:bg-nightsky/80"
+                className="w-full bg-nightsky hover:bg-nightsky/80 cursor-pointer"
                 onClick={() => handleOpenModal(city.title)}
               >
                 Request private tour
