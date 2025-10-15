@@ -16,8 +16,8 @@ const AboutUs = () => {
       aria-labelledby="about-title"
       className="w-full py-16 md:py-24 bg-white"
     >
-      <div className="mx-auto max-w-6xl px-4 md:px-0">
-        <div className="grid gap-10 md:grid-cols-2 md:gap-12">
+      <div className="mx-auto max-w-6xl px-4 xl:px-0">
+        <div className="grid gap-10 xl:grid-cols-2 xl:gap-12">
           {/* Left: Story */}
           <div className="space-y-6">
             <h2
@@ -124,9 +124,9 @@ const AboutUs = () => {
           </div>
 
           {/* Right: Visuals */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 ">
             <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-2 row-span-2 overflow-hidden rounded-lg md:min-h-[350px]">
+              <div className="row-span-3 col-span-3 sm:col-span-2 sm:row-span-2 overflow-hidden rounded-lg xl:min-h-[470px]">
                 <Image
                   src="/guiding1.jpg"
                   alt="Local guide leading a small group through a neighborhood"
