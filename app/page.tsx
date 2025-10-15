@@ -1,7 +1,6 @@
 import ContactForm from "@/components/forms/ContactForm";
 import AboutUs from "@/components/home/AboutUs";
 import Cities from "@/components/home/Cities";
-import ValueProposition from "@/components/home/ValueProposition";
 import Image from "next/image";
 
 export default function Home() {
@@ -89,7 +88,6 @@ export default function Home() {
           </div>
         </div>
       </main>
-      <ValueProposition />
       <AboutUs />
       <Cities />
     </>
