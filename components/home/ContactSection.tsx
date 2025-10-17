@@ -31,7 +31,9 @@ const ContactSection: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-nightsky mb-1">Phone</h3>
-                  <p className="text-nightsky/70">+34 611 083 816</p>
+                  <a href="tel:+34 871 242 085" className="text-nightsky/70">
+                    +34 871 242 085
+                  </a>
                 </div>
               </div>
 
@@ -57,9 +59,10 @@ const ContactSection: React.FC = () => {
                   Business Hours
                 </h3>
                 <div className="space-y-1 text-sm text-nightsky/70">
-                  <p>Monday - Friday: 9:00 AM - 6:00 PM (CET)</p>
-                  <p>Saturday: 10:00 AM - 4:00 PM (CET)</p>
-                  <p>Sunday: Closed</p>
+                  <p>
+                    Monday - Sunday:
+                    <br /> 9:00 AM - 6:00 PM (CET)
+                  </p>
                 </div>
               </div>
             </div>
