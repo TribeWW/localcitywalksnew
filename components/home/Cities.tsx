@@ -127,7 +127,7 @@ const Cities = async () => {
   const cities = result.success && result.data ? result.data : FALLBACK_CITIES;
 
   return (
-    <section className="py-16 px-4">
+    <section id="cities" className="py-16 px-4">
       <div className="max-w-6xl mx-auto text-center">
         <h2 className="text-4xl font-semibold text-white mb-4">
           Explore cities

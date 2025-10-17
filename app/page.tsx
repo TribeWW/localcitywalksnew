@@ -1,6 +1,7 @@
-import ContactForm from "@/components/forms/ContactForm";
 import AboutUs from "@/components/home/AboutUs";
 import Cities from "@/components/home/Cities";
+import ContactSection from "@/components/home/ContactSection";
+import StepsSection from "@/components/home/StepsSection";
 import Image from "next/image";
 
 export default function Home() {
@@ -80,16 +81,34 @@ export default function Home() {
                   height={80}
                 />
               </div>
+
+              {/* CTA Links */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <a
+                  href="#cities"
+                  className="inline-flex items-center justify-center px-8 py-3 bg-white text-nightsky font-semibold rounded-md hover:bg-gray-50 transition-colors duration-200"
+                >
+                  Browse Tours →
+                </a>
+                <a
+                  href="#contact"
+                  className="inline-flex items-center justify-center px-8 py-3 bg-nightsky text-white font-semibold rounded-md hover:bg-nightsky/90 transition-colors duration-200"
+                >
+                  Get in Touch
+                </a>
+              </div>
             </div>
-            {/* ContactForm on the right */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center md:py-8 xl:py-0">
-              <ContactForm />
+
+            {/* Steps Section on the right */}
+            <div className="w-full lg:w-1/2 hidden lg:flex items-center justify-center md:py-8 xl:py-0">
+              <StepsSection />
             </div>
           </div>
         </div>
       </main>
       <AboutUs />
       <Cities />
+      <ContactSection />
     </>
   );
 }

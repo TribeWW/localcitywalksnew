@@ -60,7 +60,7 @@ const CityCard = ({ cities }: CityCardProps) => {
       </div>
 
       <Dialog open={!!selectedCity} onOpenChange={handleCloseModal}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-semibold text-nightsky">
               Request tour in {selectedCity}

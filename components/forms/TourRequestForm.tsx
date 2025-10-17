@@ -88,7 +88,7 @@ const TourRequestForm = ({ cityName, onClose }: TourRequestFormProps) => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-4 max-h-[70vh] overflow-y-auto pr-2"
+        className="space-y-4 max-h-[70vh]  overflow-y-auto pr-2"
       >
         <FormField
           control={form.control}
@@ -343,7 +343,7 @@ const TourRequestForm = ({ cityName, onClose }: TourRequestFormProps) => {
           )}
         />
 
-        <div className="flex gap-3 mt-6">
+        <div className="flex gap-3 my-6 ">
           <Button
             type="submit"
             className="flex-1 bg-nightsky hover:bg-nightsky/80"

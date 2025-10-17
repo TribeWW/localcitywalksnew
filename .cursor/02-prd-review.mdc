@@ -8,9 +8,9 @@ alwaysApply: false
 
 ## Reference Architecture
 
-- **Application & Product**:@.cursor/.cursorrules.md - General product description, backend and frontend architecture, conduct how to write code
-- **Database**: @DATABASE_IMPLEMENTATION.md - Database setup
-- **API**: @WEBHOOK.md - Bókun Webhook
+- **Application & Product**: [`.cursorrules.md`](.cursorrules.md) - General product description, backend and frontend architecture, conduct how to write code
+- **Design System**: [DESIGN_SYSTEM.md](/documentation/guides/DESIGN_SYSTEM.md) - Comprehensive design guidelines, color palette, typography, and component standards
+- **API**: [Bokun Configuration](/documentation/guides/BOKUN_CONFIGURATION.md) - Bókun API Integration Details
 
 ## Pre-Implementation Checklist
 
