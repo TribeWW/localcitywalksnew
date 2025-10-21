@@ -64,9 +64,11 @@ alwaysApply: false
 ## Output Requirements
 
 - **Format**: Markdown `.md` with clear headings and bullet points
-- **Location**: `documentation/implementation-plans/YYYY-MM-DD-[type]-desc.md`
+- **Location**: `documentation/implementation-plans/$(date +%Y-%m-%d)-[type]-desc.md`
 - **Audience**: Junior Developer with no context - include all necessary background information
-- **Current Date**: Check system time for timestamps and version tracking
+- **Current Date**: Automatically insert current date using Markdown preprocessor or script
+  - Example: Use `date` command or language-specific date formatting
+  - Format: YYYY-MM-DD (ISO 8601 standard)
 - **Structure**: Follow the template sections in order, include all required components
 - **Clarity**: Use simple language, avoid jargon, provide examples where helpful
 
