@@ -2,6 +2,7 @@
 
 "use server";
 import nodemailer from "nodemailer";
+import { config } from "@/lib/config";
 
 interface EmailContent {
   subject: string;
@@ -50,15 +51,15 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: true,
   auth: {
-    user: process.env.SUPPORT_EMAIL,
-    pass: process.env.SUPPORT_PASSWORD,
+    user: config.email.supportEmail,
+    pass: config.email.supportPassword,
   },
 });
 
 export async function sendEmail(data: EmailContent) {
   try {
-    console.log("SMTP user:", process.env.SUPPORT_EMAIL);
-    console.log("SMTP pass defined:", Boolean(process.env.SUPPORT_PASSWORD));
+    console.log("SMTP user:", config.email.supportEmail);
+    console.log("SMTP pass defined:", Boolean(config.email.supportPassword));
     // Verify transporter before sending
     const isVerified = await verifyTransporter(transporter);
     if (!isVerified) {
@@ -67,9 +68,9 @@ export async function sendEmail(data: EmailContent) {
 
     // Email to support team
     const supportMailOptions = {
-      from: process.env.SUPPORT_EMAIL,
+      from: config.email.supportEmail,
       replyTo: data.email,
-      to: process.env.SUPPORT_EMAIL,
+      to: config.email.supportEmail,
       subject: data.subject,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -102,8 +103,8 @@ export async function sendEmail(data: EmailContent) {
 
 export async function sendTourRequestEmail(data: TourRequestEmailContent) {
   try {
-    console.log("SMTP user:", process.env.SUPPORT_EMAIL);
-    console.log("SMTP pass defined:", Boolean(process.env.SUPPORT_PASSWORD));
+    console.log("SMTP user:", config.email.supportEmail);
+    console.log("SMTP pass defined:", Boolean(config.email.supportPassword));
 
     // Verify transporter before sending
     const isVerified = await verifyTransporter(transporter);
@@ -113,9 +114,9 @@ export async function sendTourRequestEmail(data: TourRequestEmailContent) {
 
     // Email to support team for tour request
     const tourRequestMailOptions = {
-      from: process.env.SUPPORT_EMAIL,
+      from: config.email.supportEmail,
       replyTo: data.email,
-      to: process.env.SUPPORT_EMAIL,
+      to: config.email.supportEmail,
       subject: `Tour Request: ${data.city}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

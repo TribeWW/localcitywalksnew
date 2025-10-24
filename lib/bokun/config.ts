@@ -3,6 +3,8 @@
  * Handles environment-based configuration and API endpoints
  */
 
+import { config } from "@/lib/config";
+
 // Configuration type for Bokun API
 export interface BokunConfig {
   accessKey: string;
@@ -10,11 +12,11 @@ export interface BokunConfig {
   domain: string;
 }
 
-// Environment-based configuration
+// Environment-based configuration using centralized config
 export const bokunConfig: BokunConfig = {
-  accessKey: process.env.BOKUN_ACCESS_KEY!,
-  secretKey: process.env.BOKUN_SECRET_KEY!,
-  domain: process.env.BOKUN_DOMAIN!,
+  accessKey: config.bokun.accessKey,
+  secretKey: config.bokun.secretKey,
+  domain: config.bokun.domain,
 };
 
 // API endpoints

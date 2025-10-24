@@ -32,12 +32,6 @@ const Footer = () => {
                 Palma De Mallorca, Spain
               </span>
             </div>
-            <div className="flex items-center gap-3">
-              <Mail className="h-5 w-5 text-white/80" />
-              <span className="text-white/80 text-sm">
-                hello@localcitywalks.com
-              </span>
-            </div>
           </div>
         </div>
       </div>

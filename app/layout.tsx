@@ -6,10 +6,11 @@ import Header from "@/components/shared/Header";
 import MobileHeader from "@/components/shared/MobileHeader";
 import Footer from "@/components/shared/Footer";
 import Script from "next/script";
+import { config } from "@/lib/config";
 
 // Environment variables for analytics
-const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID;
-const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
+const GA4_ID = config.analytics.ga4Id;
+const GTM_ID = config.analytics.gtmId;
 
 const outfit = Outfit({
   variable: "--font-outfit",
