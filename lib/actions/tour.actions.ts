@@ -88,8 +88,8 @@ export async function getAllProducts(): Promise<GetAllProductsResult> {
       method: "POST",
       headers,
       body: JSON.stringify({
-        page: 0,
-        pageSize: 0,
+        page: 1,
+        pageSize: 40,
         sortField: "BEST_SELLING_GLOBAL",
       }),
       signal: controller.signal,

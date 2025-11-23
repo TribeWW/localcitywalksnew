@@ -8,19 +8,19 @@ alwaysApply: false
 
 ## Reference Architecture
 
-- **Application & Product**: [`.cursorrules.md`](.cursorrules.md) - General product description, backend and frontend architecture, conduct how to write code
+- **Coding Standards**: [`.cursorrules.md`](.cursorrules.md) - General product description, backend and frontend architecture, conduct how to write code
 - **Design System**: [DESIGN_SYSTEM.md](/documentation/guides/DESIGN_SYSTEM.md) - Comprehensive design guidelines, color palette, typography, and component standards
 - **API**: [Bokun Configuration](/documentation/guides/BOKUN_CONFIGURATION.md) - Bókun API Integration Details
 
 ## Required Components
 
-**Summary** - Clear goal statement that defines the feature in 1-2 sentences
-**Problem Statement** - What user pain point or business need this addresses
-**User Stories** - Who will use this and what they want to achieve
-**Acceptance Criteria** - Specific, testable conditions for completion
-**Technical Requirements** - Performance, security, and integration needs
-**Dependencies** - What other features/systems this relies on
-**Risks & Assumptions** - Potential blockers and what we're assuming to be true
+- **Summary** - Clear goal statement that defines the feature in 1-2 sentences
+- **Problem Statement** - What user pain point or business need this addresses
+- **User Stories** - Who will use this and what they want to achieve
+- **Acceptance Criteria** - Specific, testable conditions for completion
+- **Technical Requirements** - Performance, security, and integration needs
+- **Dependencies** - What other features/systems this relies on
+- **Risks & Assumptions** - Potential blockers and what we're assuming to be true
 
 ## Step 1: Core Areas to Explore
 
@@ -44,22 +44,23 @@ alwaysApply: false
 ## Production Safety - NO MOCKS ALLOWED
 
 **No Mock data/endpoints/functions/placeholders.**
-**Production Pipeline:**
 
-1. **Database Changes** - All schema changes must be properly migrated
-2. **API Endpoints** - Real endpoints with proper error handling and validation
-3. **Authentication** - Proper auth checks and user permissions
-4. **Error Handling** - Comprehensive error states and user feedback
-5. **Testing** - All features must be testable in production environment
-6. **Performance** - No performance regressions, proper loading states
+## Production Pipeline
+
+- **Database Changes** - All schema changes must be properly migrated
+- **API Endpoints** - Real endpoints with proper error handling and validation
+- **Authentication** - Proper auth checks and user permissions
+- **Error Handling** - Comprehensive error states and user feedback
+- **Testing** - All features must be testable in production environment
+- **Performance** - No performance regressions, proper loading states
 
 ## File Discovery Rules
 
-**Search First** - Use codebase_search to understand existing patterns and similar implementations
-**Verify Locations** - Confirm file paths and directory structure before making changes
-**Read Cursorrules** - Always check .cursorrules.md for coding standards and architectural decisions
-**Check Dependencies** - Verify all imports and dependencies are available
-**Review Similar Features** - Look at existing components/features for consistency
+- **Search First** - Use codebase_search to understand existing patterns and similar implementations
+- **Verify Locations** - Confirm file paths and directory structure before making changes
+- **Read Cursorrules** - Always check [`.cursorrules.md`](.cursorrules.md) for coding standards and architectural decisions
+- **Check Dependencies** - Verify all imports and dependencies are available
+- **Review Similar Features** - Look at existing components/features for consistency
 
 ## Output Requirements
 
