@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import { MapPin, Mail } from "lucide-react";
+import { MapPin } from "lucide-react";
 
 const Footer = () => {
   return (
