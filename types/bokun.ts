@@ -17,8 +17,11 @@ export interface BokunSearchResponse {
  */
 export interface BokunProduct {
   id: string;
-  city: string;
+  title: string;
   keyPhoto: BokunPhoto;
+  googlePlace: {
+    city: string;
+  };
 }
 
 /**
@@ -49,4 +52,52 @@ export interface GetAllProductsResult {
   success: boolean;
   data?: CityCardData[];
   error?: string;
+}
+
+/**
+ * Result of syncing cities from Bokun products to Sanity
+ */
+export interface CitySyncResult {
+  /** Array of city names that were successfully created in Sanity */
+  created: string[];
+  /** Array of city names that already existed in Sanity */
+  existing: string[];
+  /** Array of cities that failed to create, with error details */
+  errors: Array<{
+    city: string;
+    error: string;
+  }>;
+}
+
+/**
+ * Sanity city document structure
+ */
+export interface CityDocument {
+  _id: string;
+  _type: 'city';
+  name: string;
+}
+
+/**
+ * Result of syncing cities from Bokun products to Sanity
+ */
+export interface CitySyncResult {
+  /** Array of city names that were successfully created in Sanity */
+  created: string[];
+  /** Array of city names that already existed in Sanity */
+  existing: string[];
+  /** Array of cities that failed to create, with error details */
+  errors: Array<{
+    city: string;
+    error: string;
+  }>;
+}
+
+/**
+ * Sanity city document structure
+ */
+export interface CityDocument {
+  _id: string;
+  _type: 'city';
+  name: string;
 }

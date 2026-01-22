@@ -16,7 +16,7 @@ alwaysApply: false
 
 1. **Context Check** - What would another LLM need to implement this with no prior context? Ensure all background information, dependencies, and assumptions are clearly documented
 2. **Rate Plan /10** - Score completeness before execution. Must be 8/10 or higher to proceed. Identify specific gaps and missing information
-3. **Phase Breakdown** - Split into smaller, safer chunks with 3 tasks per phase. Each phase should be independently testable and deployable
+3. **Phase Breakdown** - Split into smaller, safer chunks with a minimum of 3 tasks per phase. Each phase should be independently testable and deployable
 4. **API Consistency** - Does this follow existing endpoint patterns from API contracts? Verify naming conventions, response formats, and error handling
 5. **Database Impact** - Are all schema changes properly planned and migrated? Check for data integrity and performance implications
 6. **Security Review** - Authentication, authorization, input validation, and data protection measures in place
@@ -45,24 +45,28 @@ alwaysApply: false
 ## MANDATORY: Convert to Executable Format
 
 **ALWAYS restructure implementation plans into this format:**
+**You can have more then 3 tasks per phase**
 
 ### Phase 1: Foundation & Setup
 
 - [ ] **Task 1**: [Specific, actionable task with clear acceptance criteria]
 - [ ] **Task 2**: [Specific, actionable task with clear acceptance criteria]
 - [ ] **Task 3**: [Specific, actionable task with clear acceptance criteria]
+- [ ] _(Add more tasks as needed...)_
 
 ### Phase 2: Core Implementation
 
 - [ ] **Task 1**: [Specific, actionable task with clear acceptance criteria]
 - [ ] **Task 2**: [Specific, actionable task with clear acceptance criteria]
 - [ ] **Task 3**: [Specific, actionable task with clear acceptance criteria]
+- [ ] _(Add more tasks as needed...)_
 
 ### Phase 3: Integration & Testing
 
 - [ ] **Task 1**: [Specific, actionable task with clear acceptance criteria]
 - [ ] **Task 2**: [Specific, actionable task with clear acceptance criteria]
 - [ ] **Task 3**: [Specific, actionable task with clear acceptance criteria]
+- [ ] _(Add more tasks as needed...)_
 
 ### Success Criteria
 

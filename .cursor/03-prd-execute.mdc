@@ -1,7 +1,3 @@
----
-alwaysApply: false
----
-
 # Task Execution Protocol
 
 ## Core Principles
@@ -9,13 +5,11 @@ alwaysApply: false
 ### 1. Implementation Plan First
 
 - **Requirement**: Always provide an implementation plan before executing or writing any code
-- **Memory Reference**: [[memory:8246657]]
 - **Action**: Outline the approach, break down the task, and present the plan for approval
 
 ### 2. Small Steps with Confirmation
 
 - **Requirement**: Perform tasks in small, manageable steps
-- **Memory References**: [[memory:8246651]] [[memory:7950931]]
 - **Process**:
   - Break down complex tasks into clear, manageable steps
   - Explain each step in detail
@@ -27,9 +21,34 @@ alwaysApply: false
 ### 3. shadcn UI Preference
 
 - **Requirement**: Use shadcn UI components instead of manual implementations
-- **Memory References**: [[memory:8246660]] [[memory:8246655]]
 - **Examples**: Use `dialog.tsx` component instead of manually using Radix Dialog
 - **Action**: Prefer shadcn UI components when building interfaces
+
+### 4. One Task at a Time
+
+- **Requirement**: Always move one task at a time. Never execute a full phase of tasks
+- **Action**:
+  - Focus on completing a single task before moving to the next
+  - Do not batch multiple tasks or entire phases together
+  - Complete and verify each task individually
+
+### 5. Update Implementation Files
+
+- **Requirement**: Always update the tasks in the corresponding implementation file when a task has been implemented
+- **Critical**: Implementation files must be updated during execution, not after
+- **Action**:
+  - Mark tasks as completed in the implementation file immediately after implementation
+  - Keep implementation files synchronized with actual progress
+  - Update task status, notes, and any relevant information in real-time
+
+### 6. Investigation Documentation
+
+- **Requirement**: For complex tasks requiring investigation, create investigation documentation
+- **Action**:
+  - Create a new markdown file about the investigation topic
+  - Store investigation files in the `documentation/investigation` folder
+  - Reference the investigation file in the corresponding implementation documents
+  - Include links or references to investigation files when documenting complex decisions
 
 ## Workflow Guidelines
 
@@ -39,9 +58,11 @@ alwaysApply: false
 2. **Plan** the implementation approach
 3. **Present** the plan with clear steps
 4. **Wait** for approval before proceeding. You need to have the agreement of me. I am in full control
-5. **Execute** one step at a time with confirmations
-6. **Use** shadcn UI components for UI development
-7. **Keep** the user informed and in control throughout
+5. **Execute** one task at a time with confirmations (never a full phase)
+6. **Update** the implementation file immediately after completing each task
+7. **Document** complex investigations in `documentation/investigation` folder and reference them in implementation files
+8. **Use** shadcn UI components for UI development
+9. **Keep** the user informed and in control throughout
 
 ### Communication Style:
 
@@ -58,6 +79,9 @@ alwaysApply: false
 - [ ] Plan presented before coding
 - [ ] Steps broken down clearly
 - [ ] Explicit user confirmation obtained
+- [ ] One task executed at a time (not a full phase)
+- [ ] Implementation file updated immediately after task completion
+- [ ] Investigation files created for complex tasks and referenced in implementation documents
 - [ ] shadcn UI components used where applicable
 - [ ] User remains in control throughout
 - [ ] Clear communication maintained
