@@ -1,7 +1,8 @@
 "use server";
 
 import { client } from "@/sanity/lib/client";
-import { BokunProduct } from "@/types/bokun";
+import { writeClient } from "@/sanity/lib/write-client";
+import { BokunProduct, CitySyncResult } from "@/types/bokun";
 
 /**
  * City sync actions for Sanity
@@ -28,7 +29,9 @@ import { BokunProduct } from "@/types/bokun";
  * normalizeCityName("") // Returns ""
  * normalizeCityName("Paris") // Returns "Paris"
  */
-export function normalizeCityName(name: string | null | undefined): string {
+export async function normalizeCityName(
+  name: string | null | undefined
+): Promise<string> {
   // Handle null or undefined
   if (!name) {
     return '';
@@ -60,14 +63,18 @@ export function normalizeCityName(name: string | null | undefined): string {
  *   { googlePlace: { city: "Madrid" } } // Duplicate
  * ]) // Returns ["Madrid", "Paris"]
  */
-export function extractUniqueCities(products: BokunProduct[]): string[] {
+export async function extractUniqueCities(
+  products: BokunProduct[]
+): Promise<string[]> {
   // Extract and normalize all city names
-  const normalizedCities = products
-    .map((product) => normalizeCityName(product.googlePlace?.city))
-    .filter((city) => city !== ''); // Remove invalid cities
+  const normalizedCitiesPromises = products.map((product) =>
+    normalizeCityName(product.googlePlace?.city)
+  );
+  const normalizedCities = await Promise.all(normalizedCitiesPromises);
+  const validCities = normalizedCities.filter((city) => city !== ''); // Remove invalid cities
 
   // Use Set to get unique cities only
-  const uniqueCities = Array.from(new Set(normalizedCities));
+  const uniqueCities = Array.from(new Set(validCities));
 
   return uniqueCities;
 }
@@ -111,5 +118,162 @@ export async function getExistingCities(
     // This prevents a single query failure from breaking the entire sync
     console.error("Error querying existing cities from Sanity:", error);
     return [];
+  }
+}
+
+/**
+ * Generates a deterministic document ID for a city based on its name
+ * 
+ * Converts city name to a URL-friendly slug format:
+ * - Lowercases the name
+ * - Replaces spaces and special characters with hyphens
+ * - Prefixes with "city-" to ensure uniqueness
+ * 
+ * @param cityName - Normalized city name
+ * @returns Deterministic document ID (e.g., "city-madrid", "city-new-york")
+ * 
+ * @example
+ * generateCityId("Madrid") // Returns "city-madrid"
+ * generateCityId("New York") // Returns "city-new-york"
+ * generateCityId("São Paulo") // Returns "city-s-o-paulo"
+ */
+function generateCityId(cityName: string): string {
+  // Convert to lowercase and replace spaces/special chars with hyphens
+  const slug = cityName
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-") // Replace non-alphanumeric with hyphens
+    .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
+
+  // Prefix with "city-" to ensure uniqueness and clarity
+  return `city-${slug}`;
+}
+
+/**
+ * Creates cities in Sanity that don't already exist
+ * 
+ * Uses `createIfNotExists` to ensure idempotency - safe to call multiple times.
+ * Each city gets a deterministic ID based on its name (slug format).
+ * 
+ * @param cityNames - Array of normalized city names to create
+ * @returns Promise resolving to CitySyncResult with created, existing, and errors
+ * 
+ * @example
+ * await createCities(["Madrid", "Barcelona"])
+ * // Returns: { created: ["Madrid", "Barcelona"], existing: [], errors: [] }
+ */
+export async function createCities(
+  cityNames: string[]
+): Promise<CitySyncResult> {
+  const result: CitySyncResult = {
+    created: [],
+    existing: [],
+    errors: [],
+  };
+
+  // Early return if no cities to create
+  if (cityNames.length === 0) {
+    return result;
+  }
+
+  // Process each city individually to handle errors gracefully
+  // This ensures one failure doesn't stop the entire batch
+  for (const cityName of cityNames) {
+    try {
+      const cityId = generateCityId(cityName);
+
+      // createIfNotExists will create the document if it doesn't exist,
+      // or silently succeed if it already exists (idempotent operation)
+      await writeClient.createIfNotExists({
+        _id: cityId,
+        _type: "city",
+        name: cityName,
+      });
+
+      // Since we check existence before calling this function (in sync flow),
+      // successful calls are assumed to be new creations
+      // If a document already existed, createIfNotExists succeeds silently,
+      // but we've already filtered those out in the sync process
+      result.created.push(cityName);
+    } catch (error) {
+      // Collect error but continue processing other cities
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      result.errors.push({
+        city: cityName,
+        error: errorMessage,
+      });
+
+      console.error(`Failed to create city "${cityName}" in Sanity:`, error);
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Main sync function that orchestrates the complete city sync process
+ * 
+ * This function:
+ * 1. Extracts unique cities from Bokun products
+ * 2. Checks which cities already exist in Sanity
+ * 3. Creates missing cities in Sanity
+ * 4. Returns comprehensive sync results
+ * 
+ * @param products - Array of Bokun products from the API
+ * @returns Promise resolving to CitySyncResult with sync details
+ * 
+ * @example
+ * const result = await syncCitiesFromProducts(bokunProducts);
+ * // result: { created: ["Barcelona"], existing: ["Madrid", "Paris"], errors: [] }
+ */
+export async function syncCitiesFromProducts(
+  products: BokunProduct[]
+): Promise<CitySyncResult> {
+  try {
+    // Step 1: Extract unique, normalized city names from products
+    const allCities = await extractUniqueCities(products);
+
+    // Early return if no cities found
+    if (allCities.length === 0) {
+      return {
+        created: [],
+        existing: [],
+        errors: [],
+      };
+    }
+
+    // Step 2: Check which cities already exist in Sanity
+    const existingCities = await getExistingCities(allCities);
+
+    // Step 3: Filter out existing cities to get only new ones
+    const citiesToCreate = allCities.filter(
+      (city) => !existingCities.includes(city)
+    );
+
+    // Step 4: Create missing cities
+    const createResult = await createCities(citiesToCreate);
+
+    // Step 5: Combine results
+    return {
+      created: createResult.created,
+      existing: existingCities,
+      errors: createResult.errors,
+    };
+  } catch (error) {
+    // If sync fails completely, return error result
+    // This allows the calling function to log and continue
+    console.error("City sync failed:", error);
+    return {
+      created: [],
+      existing: [],
+      errors: [
+        {
+          city: "SYNC_ERROR",
+          error:
+            error instanceof Error ? error.message : "Unknown sync error",
+        },
+      ],
+    };
   }
 }

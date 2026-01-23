@@ -1,7 +1,9 @@
 "use server";
 
 import { createBokunUrl, generateBokunHeaders } from "@/lib/bokun";
+import { syncCitiesFromProducts } from "./city.actions";
 import {
+  BokunProduct,
   BokunSearchResponse,
   CityCardData,
   GetAllProductsResult,
@@ -107,6 +109,34 @@ export async function getAllProducts(): Promise<GetAllProductsResult> {
 
     if (!data.items || !Array.isArray(data.items)) {
       throw new Error("Invalid response format from Bokun API");
+    }
+
+    // Sync cities to Sanity (non-blocking - doesn't affect product fetch)
+    // This happens automatically when products are fetched from Bokun
+    try {
+      const syncResult = await syncCitiesFromProducts(
+        data.items as BokunProduct[]
+      );
+
+      // Log sync results for monitoring
+      if (syncResult.created.length > 0) {
+        console.log(
+          `[City Sync] Created ${syncResult.created.length} new cities:`,
+          syncResult.created.join(", ")
+        );
+      }
+      if (syncResult.errors.length > 0) {
+        console.error(
+          `[City Sync] ${syncResult.errors.length} cities failed to sync:`,
+          syncResult.errors
+        );
+      }
+    } catch (error) {
+      // Log error but don't throw - product fetch should succeed even if sync fails
+      console.error(
+        "[City Sync] Failed to sync cities to Sanity:",
+        error instanceof Error ? error.message : error
+      );
     }
 
     // Transform products to CityCardData format
