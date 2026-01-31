@@ -51,11 +51,11 @@ function transformProductToCityCard(product: unknown): CityCardData {
     id: string;
     title: string;
     keyPhoto: unknown;
-    googlePlace: { city: string };
+    googlePlace?: { city: string };
   };
   return {
     id: productData.id,
-    title: productData.googlePlace.city,
+    title: productData.googlePlace?.city ?? productData.title,
     image: extractThumbnailUrl(productData.keyPhoto),
   };
 }
@@ -101,7 +101,7 @@ export async function getAllProducts(): Promise<GetAllProductsResult> {
 
     if (!response.ok) {
       throw new Error(
-        `Bokun API request failed with status: ${response.status}`
+        `Bokun API request failed with status: ${response.status}`,
       );
     }
 
@@ -115,33 +115,33 @@ export async function getAllProducts(): Promise<GetAllProductsResult> {
     // This happens automatically when products are fetched from Bokun
     try {
       const syncResult = await syncCitiesFromProducts(
-        data.items as BokunProduct[]
+        data.items as BokunProduct[],
       );
 
       // Log sync results for monitoring
-      if (syncResult.created.length > 0) {
+      if (syncResult.cities.created.length > 0) {
         console.log(
-          `[City Sync] Created ${syncResult.created.length} new cities:`,
-          syncResult.created.join(", ")
+          `[City Sync] Created ${syncResult.cities.created.length} new cities:`,
+          syncResult.cities.created.join(", "),
         );
       }
       if (syncResult.errors.length > 0) {
         console.error(
           `[City Sync] ${syncResult.errors.length} cities failed to sync:`,
-          syncResult.errors
+          syncResult.errors,
         );
       }
     } catch (error) {
       // Log error but don't throw - product fetch should succeed even if sync fails
       console.error(
         "[City Sync] Failed to sync cities to Sanity:",
-        error instanceof Error ? error.message : error
+        error instanceof Error ? error.message : error,
       );
     }
 
     // Transform products to CityCardData format
     const cityCards: CityCardData[] = data.items.map(
-      transformProductToCityCard
+      transformProductToCityCard,
     );
 
     // Update cache

@@ -12,6 +12,16 @@ export interface BokunSearchResponse {
 }
 
 /**
+ * Full googlePlace structure from Bokun (used for city/country sync)
+ */
+export interface BokunGooglePlace {
+  country: string;
+  countryCode: string; // ISO2
+  city: string;
+  cityCode: string; // Unique identifier
+}
+
+/**
  * Minimal product structure for city cards
  * Only includes fields we actually use
  */
@@ -19,9 +29,7 @@ export interface BokunProduct {
   id: string;
   title: string;
   keyPhoto: BokunPhoto;
-  googlePlace: {
-    city: string;
-  };
+  googlePlace?: BokunGooglePlace;
 }
 
 /**
@@ -55,49 +63,47 @@ export interface GetAllProductsResult {
 }
 
 /**
- * Result of syncing cities from Bokun products to Sanity
+ * Sanity country document structure
  */
-export interface CitySyncResult {
-  /** Array of city names that were successfully created in Sanity */
-  created: string[];
-  /** Array of city names that already existed in Sanity */
-  existing: string[];
-  /** Array of cities that failed to create, with error details */
-  errors: Array<{
-    city: string;
-    error: string;
-  }>;
+export interface CountryDocument {
+  _id: string;
+  _type: "country";
+  name: string;
+  iso2: string;
+  slug?: string;
 }
 
 /**
- * Sanity city document structure
+ * Sanity city document structure (with country support)
  */
 export interface CityDocument {
   _id: string;
-  _type: 'city';
+  _type: "city";
   name: string;
+  cityCode: string;
+  country: {
+    _type: "reference";
+    _ref: string;
+  };
+  countryCode: string;
 }
 
 /**
- * Result of syncing cities from Bokun products to Sanity
+ * Result of syncing cities and countries from Bokun products to Sanity
  */
 export interface CitySyncResult {
-  /** Array of city names that were successfully created in Sanity */
-  created: string[];
-  /** Array of city names that already existed in Sanity */
-  existing: string[];
-  /** Array of cities that failed to create, with error details */
+  countries: {
+    created: string[]; // Array of country codes created
+    updated: string[]; // Array of country codes updated
+  };
+  cities: {
+    created: string[]; // Array of city codes created
+    updated: string[]; // Array of city codes updated
+    existing: string[]; // Array of city codes that already existed
+  };
   errors: Array<{
-    city: string;
+    type: "country" | "city";
+    identifier: string; // countryCode or cityCode
     error: string;
   }>;
-}
-
-/**
- * Sanity city document structure
- */
-export interface CityDocument {
-  _id: string;
-  _type: 'city';
-  name: string;
 }
