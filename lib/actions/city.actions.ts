@@ -2,6 +2,7 @@
 
 import { client } from "@/sanity/lib/client";
 import { writeClient } from "@/sanity/lib/write-client";
+import { stripAccents } from "@/lib/utils";
 import { BokunProduct, CitySyncResult } from "@/types/bokun";
 
 /**
@@ -30,7 +31,7 @@ import { BokunProduct, CitySyncResult } from "@/types/bokun";
  * normalizeCityName("Paris") // Returns "Paris"
  */
 export async function normalizeCityName(
-  name: string | null | undefined,
+  name: string | null | undefined
 ): Promise<string> {
   // Handle null or undefined
   if (!name) {
@@ -45,44 +46,85 @@ export async function normalizeCityName(
 }
 
 /**
- * Extracts unique city names from Bokun products
+ * Extracts unique cities with country context from Bokun products
  *
  * Processes products to:
- * - Extract city names from googlePlace.city
- * - Normalize each city name (trim whitespace, handle nulls)
- * - Filter out invalid cities (empty strings)
- * - Deduplicate to get unique cities only
+ * - Extract city name, cityCode, and countryCode from googlePlace
+ * - Normalize (trim, validate countryCode as ISO2)
+ * - Filter out invalid or missing data
+ * - Deduplicate by cityCode (one entry per city)
  *
  * @param products - Array of Bokun products
- * @returns Array of unique, normalized city names
+ * @returns Array of unique city objects with cityCode, name, and countryCode
  *
  * @example
  * extractUniqueCities([
- *   { googlePlace: { city: "  Madrid  " } },
- *   { googlePlace: { city: "Paris" } },
- *   { googlePlace: { city: "Madrid" } } // Duplicate
- * ]) // Returns ["Madrid", "Paris"]
+ *   { googlePlace: { city: "Madrid", cityCode: "Madrid", countryCode: "ES", country: "Spain" } },
+ *   { googlePlace: { city: "Biarritz", cityCode: "Biarritz", countryCode: "FR", country: "France" } },
+ *   { googlePlace: { city: "Madrid", cityCode: "Madrid", countryCode: "es", country: "Spain" } }, // Deduplicated by cityCode
+ * ]) // Returns [{ cityCode: "Madrid", name: "Madrid", countryCode: "ES" }, { cityCode: "Biarritz", name: "Biarritz", countryCode: "FR" }]
  */
 export async function extractUniqueCities(
-  products: BokunProduct[],
-): Promise<string[]> {
-  // Extract and normalize all city names
-  const normalizedCitiesPromises = products.map((product) =>
-    normalizeCityName(product.googlePlace?.city),
-  );
-  const normalizedCities = await Promise.all(normalizedCitiesPromises);
-  const validCities = normalizedCities.filter((city) => city !== ""); // Remove invalid cities
+  products: BokunProduct[]
+): Promise<CityFromProduct[]> {
+  const byCityCode = new Map<string, CityFromProduct>();
 
-  // Use Set to get unique cities only
-  const uniqueCities = Array.from(new Set(validCities));
+  for (const product of products) {
+    const gp = product.googlePlace;
+    if (!gp?.city || !gp?.countryCode) continue;
 
-  return uniqueCities;
+    const name = gp.city.trim();
+    if (!name) continue;
+
+    const rawCountryCode = gp.countryCode.trim().toUpperCase();
+    if (rawCountryCode.length !== 2 || !ISO2_REGEX.test(rawCountryCode))
+      continue;
+
+    // Use cityCode from Bokun when present and valid (no spaces); otherwise derive from city name
+    let cityCode: string;
+    const rawFromBokun = gp.cityCode?.trim();
+    if (rawFromBokun && rawFromBokun !== "" && !/\s/.test(rawFromBokun)) {
+      cityCode = normalizeCityCodeForSlug(rawFromBokun);
+    } else {
+      cityCode = normalizeCityCodeForSlug(name);
+    }
+    if (!cityCode) continue;
+
+    const dedupeKey = cityCode.toLowerCase();
+    if (!byCityCode.has(dedupeKey)) {
+      byCityCode.set(dedupeKey, {
+        cityCode,
+        name,
+        countryCode: rawCountryCode,
+      });
+    }
+  }
+
+  return Array.from(byCityCode.values());
 }
 
 /** Country data extracted from Bokun products for sync */
 export type CountryFromProduct = { countryCode: string; name: string };
 
+/** City data with country context extracted from Bokun products for sync */
+export type CityFromProduct = {
+  cityCode: string;
+  name: string;
+  countryCode: string;
+};
+
 const ISO2_REGEX = /^[A-Z]{2}$/;
+
+/**
+ * Normalizes city code for storage and slugs: trim, accents removed, words joined with a single dash.
+ * e.g. "A Coruña" → "a-coruna", "Biarritz" → "biarritz". Not used for display names.
+ */
+function normalizeCityCodeForSlug(raw: string): string {
+  const trimmed = raw.trim();
+  const noAccents = stripAccents(trimmed);
+  const dashed = noAccents.replace(/\s+/g, "-").replace(/-+/g, "-"); // spaces → dash, collapse multiple dashes
+  return dashed.toLowerCase();
+}
 
 /**
  * Extracts unique countries from Bokun products
@@ -104,7 +146,7 @@ const ISO2_REGEX = /^[A-Z]{2}$/;
  * ]) // Returns [{ countryCode: "FR", name: "France" }, { countryCode: "ES", name: "Spain" }]
  */
 export async function extractUniqueCountries(
-  products: BokunProduct[],
+  products: BokunProduct[]
 ): Promise<CountryFromProduct[]> {
   const byCode = new Map<string, CountryFromProduct>();
 
@@ -126,71 +168,169 @@ export async function extractUniqueCountries(
   return Array.from(byCode.values());
 }
 
+/** Sanity city document fields needed for migration (cities without country) */
+type CityWithoutCountry = {
+  _id: string;
+  name?: string | null;
+  cityCode?: string | null;
+};
+
 /**
- * Queries Sanity to find which cities already exist
- *
- * Uses a single GROQ query to efficiently check existence of multiple cities.
- * Uses the read client (cached) for faster performance.
- *
- * @param cityNames - Array of normalized city names to check
- * @returns Promise resolving to array of city names that exist in Sanity
- *
- * @example
- * await getExistingCities(["Madrid", "Paris", "Barcelona"])
- * // Returns ["Madrid", "Paris"] if Barcelona doesn't exist
+ * Queries Sanity for city documents that have no country reference (legacy/migration).
+ * Used to patch them with country, cityCode, and countryCode from Bokun data.
  */
-export async function getExistingCities(
-  cityNames: string[],
-): Promise<string[]> {
-  // Early return if no cities to check
-  if (cityNames.length === 0) {
-    return [];
-  }
-
+async function getCitiesWithoutCountry(): Promise<CityWithoutCountry[]> {
   try {
-    // Single GROQ query to find all existing cities at once
-    // This is more efficient than querying each city individually
-    const existingCities = await client.fetch<Array<{ name: string }>>(
-      `*[_type == "city" && name in $cityNames]{name}`,
-      { cityNames },
-      { next: { revalidate: 0 } }, // Always fetch fresh data for existence check
+    const list = await client.fetch<CityWithoutCountry[]>(
+      `*[_type == "city" && !defined(country)]{ _id, name, cityCode }`,
+      {},
+      { next: { revalidate: 0 } }
     );
-
-    // Extract just the city names from the results
-    return existingCities.map((city) => city.name);
+    return list ?? [];
   } catch (error) {
-    // Log error but return empty array to allow sync to continue
-    // This prevents a single query failure from breaking the entire sync
-    console.error("Error querying existing cities from Sanity:", error);
+    console.error("[City Sync] Error fetching cities without country:", error);
     return [];
   }
 }
 
 /**
- * Generates a deterministic document ID for a city based on its name
+ * Migrates cities that lack a country reference by matching them to current Bokun data
+ * and patching with country, cityCode, and countryCode. Match by cityCode first, then
+ * by normalized name only when the name is unique in the product set.
+ * Names and published content are left unchanged; only codes/slugs are normalized (no accents).
+ */
+async function migrateCitiesWithoutCountry(
+  allCities: CityFromProduct[]
+): Promise<{
+  migrated: string[];
+  errors: CitySyncResult["errors"];
+}> {
+  const migrated: string[] = [];
+  const errors: CitySyncResult["errors"] = [];
+
+  const toMigrate = await getCitiesWithoutCountry();
+  if (toMigrate.length === 0) return { migrated, errors };
+
+  const byCityCode = new Map<string, CityFromProduct>();
+  for (const c of allCities) {
+    const key = normalizeCityCodeForSlug(c.cityCode).toLowerCase();
+    if (!byCityCode.has(key)) byCityCode.set(key, c);
+  }
+
+  const nameCount = new Map<string, number>();
+  for (const c of allCities) {
+    const key = stripAccents((c.name ?? "").trim().toLowerCase());
+    if (key) nameCount.set(key, (nameCount.get(key) ?? 0) + 1);
+  }
+  const byNameUnique = new Map<string, CityFromProduct>();
+  for (const c of allCities) {
+    const key = stripAccents((c.name ?? "").trim().toLowerCase());
+    if (key && nameCount.get(key) === 1) byNameUnique.set(key, c);
+  }
+
+  for (const doc of toMigrate) {
+    let match: CityFromProduct | undefined;
+
+    const existingCode =
+      doc.cityCode != null && doc.cityCode !== ""
+        ? normalizeCityCodeForSlug(doc.cityCode).toLowerCase()
+        : null;
+    if (existingCode) match = byCityCode.get(existingCode);
+
+    if (!match && doc.name != null && doc.name.trim() !== "") {
+      const nameKey = stripAccents(doc.name.trim().toLowerCase());
+      match = byNameUnique.get(nameKey);
+    }
+
+    if (!match) continue;
+
+    try {
+      const countryRef = generateCountryId(match.countryCode);
+      await writeClient
+        .patch(doc._id)
+        .set({
+          country: { _type: "reference", _ref: countryRef },
+          countryCode: match.countryCode,
+          cityCode: match.cityCode,
+          name: match.name,
+        })
+        .commit();
+
+      migrated.push(match.cityCode);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      errors.push({
+        type: "city",
+        identifier: match.cityCode,
+        error: errorMessage,
+      });
+      console.error(`[City Sync] Failed to migrate city "${doc._id}":`, error);
+    }
+  }
+
+  if (migrated.length > 0) {
+    console.log(
+      `[City Sync] Migrated ${migrated.length} cities without country:`,
+      migrated.join(", ")
+    );
+  }
+
+  return { migrated, errors };
+}
+
+/**
+ * Queries Sanity to find which cities already exist by cityCode
  *
- * Converts city name to a URL-friendly slug format:
- * - Lowercases the name
- * - Replaces spaces and special characters with hyphens
- * - Prefixes with "city-" to ensure uniqueness
+ * Uses a single GROQ query to efficiently check existence of multiple cities.
+ * Uses the read client (cached) for faster performance.
  *
- * @param cityName - Normalized city name
- * @returns Deterministic document ID (e.g., "city-madrid", "city-new-york")
+ * @param cityCodes - Array of city codes to check
+ * @returns Promise resolving to array of city codes that exist in Sanity
  *
  * @example
- * generateCityId("Madrid") // Returns "city-madrid"
- * generateCityId("New York") // Returns "city-new-york"
- * generateCityId("São Paulo") // Returns "city-s-o-paulo"
+ * await getExistingCities(["Madrid", "Biarritz", "Barcelona"])
+ * // Returns ["Madrid", "Biarritz"] if Barcelona doesn't exist
  */
-function generateCityId(cityName: string): string {
-  // Convert to lowercase and replace spaces/special chars with hyphens
-  const slug = cityName
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-") // Replace non-alphanumeric with hyphens
-    .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
+export async function getExistingCities(
+  cityCodes: string[]
+): Promise<string[]> {
+  if (cityCodes.length === 0) {
+    return [];
+  }
 
-  // Prefix with "city-" to ensure uniqueness and clarity
+  try {
+    const existingCities = await client.fetch<Array<{ cityCode: string }>>(
+      `*[_type == "city" && cityCode in $cityCodes]{cityCode}`,
+      { cityCodes },
+      { next: { revalidate: 0 } }
+    );
+
+    return existingCities.map((city) => city.cityCode);
+  } catch (error) {
+    // Log error but return empty array to allow sync to continue
+    // This prevents a single query failure from breaking the entire sync
+    console.error("[City Sync] Error querying existing cities:", error);
+    return [];
+  }
+}
+
+/**
+ * Generates a deterministic document ID for a city based on its cityCode
+ *
+ * Uses Bokun's cityCode (unique identifier). Format: city-{cityCode.toLowerCase()}.
+ * Trims and strips spaces; empty input returns "city-unknown".
+ *
+ * @param cityCode - City code from Bokun (e.g. Biarritz, Madrid)
+ * @returns Deterministic document ID (e.g. "city-biarritz", "city-madrid")
+ *
+ * @example
+ * generateCityId("Biarritz") // Returns "city-biarritz"
+ * generateCityId("Madrid") // Returns "city-madrid"
+ * generateCityId("NewYork") // Returns "city-newyork"
+ */
+function generateCityId(cityCode: string): string {
+  const slug = normalizeCityCodeForSlug(cityCode).toLowerCase() || "unknown";
   return `city-${slug}`;
 }
 
@@ -222,7 +362,7 @@ export type CountrySyncResult = {
  * @returns Promise with created country codes, updated (empty), and errors
  */
 export async function syncCountries(
-  countries: CountryFromProduct[],
+  countries: CountryFromProduct[]
 ): Promise<CountrySyncResult> {
   const result: CountrySyncResult = {
     created: [],
@@ -251,10 +391,23 @@ export async function syncCountries(
         error: errorMessage,
       });
       console.error(
-        `Failed to create country "${countryCode}" in Sanity:`,
-        error,
+        `[Country Sync] Failed to create country "${countryCode}":`,
+        error
       );
     }
+  }
+
+  if (result.created.length > 0) {
+    console.log(
+      `[Country Sync] Created ${result.created.length} countries:`,
+      result.created.join(", ")
+    );
+  }
+  if (result.errors.length > 0) {
+    console.error(
+      `[Country Sync] ${result.errors.length} country error(s):`,
+      result.errors.map((e) => `${e.identifier}: ${e.error}`).join("; ")
+    );
   }
 
   return result;
@@ -264,14 +417,14 @@ export async function syncCountries(
  * Creates cities in Sanity that don't already exist
  *
  * Uses `createIfNotExists` to ensure idempotency - safe to call multiple times.
- * Each city gets a deterministic ID based on its name (slug format).
+ * Each city gets a deterministic ID from cityCode and includes country reference.
  *
- * @param cityNames - Array of normalized city names to create
+ * @param cities - Array of city objects with cityCode, name, and countryCode
  * @returns Promise resolving to CitySyncResult with created, existing, and errors
  *
  * @example
- * await createCities(["Madrid", "Barcelona"])
- * // Returns: { created: ["Madrid", "Barcelona"], existing: [], errors: [] }
+ * await createCities([{ cityCode: "Biarritz", name: "Biarritz", countryCode: "FR" }])
+ * // Creates city document with country reference; result.cities.created includes "Biarritz"
  */
 function emptyCitySyncResult(): CitySyncResult {
   return {
@@ -282,104 +435,146 @@ function emptyCitySyncResult(): CitySyncResult {
 }
 
 export async function createCities(
-  cityNames: string[],
+  cities: CityFromProduct[]
 ): Promise<CitySyncResult> {
   const result = emptyCitySyncResult();
 
-  // Early return if no cities to create
-  if (cityNames.length === 0) {
-    return result;
-  }
+  if (cities.length === 0) return result;
 
-  // Process each city individually to handle errors gracefully
-  // This ensures one failure doesn't stop the entire batch
-  for (const cityName of cityNames) {
+  for (const city of cities) {
     try {
-      const cityId = generateCityId(cityName);
+      const _id = generateCityId(city.cityCode);
+      const countryRef = generateCountryId(city.countryCode);
 
-      // createIfNotExists will create the document if it doesn't exist,
-      // or silently succeed if it already exists (idempotent operation)
       await writeClient.createIfNotExists({
-        _id: cityId,
+        _id,
         _type: "city",
-        name: cityName,
+        name: city.name,
+        cityCode: city.cityCode,
+        countryCode: city.countryCode,
+        country: { _type: "reference", _ref: countryRef },
       });
 
-      // Since we check existence before calling this function (in sync flow),
-      // successful calls are assumed to be new creations
-      // If a document already existed, createIfNotExists succeeds silently,
-      // but we've already filtered those out in the sync process
-      result.cities.created.push(cityName);
+      result.cities.created.push(city.cityCode);
     } catch (error) {
-      // Collect error but continue processing other cities
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       result.errors.push({
         type: "city",
-        identifier: cityName,
+        identifier: city.cityCode,
         error: errorMessage,
       });
-
-      console.error(`Failed to create city "${cityName}" in Sanity:`, error);
+      console.error(
+        `[City Sync] Failed to create city "${city.cityCode}" (${city.countryCode}):`,
+        error
+      );
     }
+  }
+
+  if (result.cities.created.length > 0) {
+    console.log(
+      `[City Sync] Created ${result.cities.created.length} cities:`,
+      result.cities.created.join(", ")
+    );
+  }
+  if (result.errors.length > 0) {
+    console.error(
+      `[City Sync] ${result.errors.length} city create error(s):`,
+      result.errors.map((e) => `${e.identifier}: ${e.error}`).join("; ")
+    );
   }
 
   return result;
 }
 
 /**
- * Main sync function that orchestrates the complete city sync process
+ * Main sync function that orchestrates the complete city and country sync process
  *
- * This function:
- * 1. Extracts unique cities from Bokun products
- * 2. Checks which cities already exist in Sanity
- * 3. Creates missing cities in Sanity
- * 4. Returns comprehensive sync results
+ * Syncs countries first, then cities (cities reference country documents).
+ * 1. Extract and sync countries to Sanity
+ * 2. Extract unique cities with country context
+ * 3. Check which cities already exist (by cityCode)
+ * 4. Create missing cities with country reference
+ * 5. Return combined country and city sync results
  *
  * @param products - Array of Bokun products from the API
- * @returns Promise resolving to CitySyncResult with sync details
- *
- * @example
- * const result = await syncCitiesFromProducts(bokunProducts);
- * // result: { created: ["Barcelona"], existing: ["Madrid", "Paris"], errors: [] }
+ * @returns Promise resolving to CitySyncResult with country and city sync details
  */
 export async function syncCitiesFromProducts(
-  products: BokunProduct[],
+  products: BokunProduct[]
 ): Promise<CitySyncResult> {
-  try {
-    // Step 1: Extract unique, normalized city names from products
-    const allCities = await extractUniqueCities(products);
+  let countryResult: CountrySyncResult = {
+    created: [],
+    updated: [],
+    errors: [],
+  };
 
-    // Early return if no cities found
-    if (allCities.length === 0) {
-      return emptyCitySyncResult();
+  try {
+    // Step 1: Sync countries first (cities reference country documents)
+    const countries = await extractUniqueCountries(products);
+    if (countries.length > 0) {
+      try {
+        countryResult = await syncCountries(countries);
+      } catch (err) {
+        console.error("[Country Sync] Failed to sync countries:", err);
+        countryResult.errors.push({
+          type: "country",
+          identifier: "SYNC_ERROR",
+          error:
+            err instanceof Error ? err.message : "Unknown country sync error",
+        });
+      }
     }
 
-    // Step 2: Check which cities already exist in Sanity
-    const existingCities = await getExistingCities(allCities);
+    // Step 2: Extract unique cities with country context (cityCode normalized: no accents)
+    const allCities = await extractUniqueCities(products);
 
-    // Step 3: Filter out existing cities to get only new ones
-    const citiesToCreate = allCities.filter(
-      (city) => !existingCities.includes(city),
+    if (allCities.length === 0) {
+      return {
+        countries: {
+          created: countryResult.created,
+          updated: countryResult.updated,
+        },
+        cities: { created: [], updated: [], existing: [] },
+        errors: countryResult.errors,
+      };
+    }
+
+    // Step 3: Migrate existing cities without country (patch with country/cityCode/countryCode)
+    const migrationResult = await migrateCitiesWithoutCountry(allCities);
+
+    // Step 4: Check which cities already exist in Sanity (by cityCode)
+    const existingCityCodes = await getExistingCities(
+      allCities.map((c) => c.cityCode)
     );
 
-    // Step 4: Create missing cities
+    // Step 5: Filter out existing cities to get only new ones
+    const citiesToCreate = allCities.filter(
+      (city) => !existingCityCodes.includes(city.cityCode)
+    );
+
+    // Step 6: Create missing cities (with country reference)
     const createResult = await createCities(citiesToCreate);
 
-    // Step 5: Combine results (new CitySyncResult shape)
+    // Step 7: Combine country, migration, and city results
     return {
-      countries: createResult.countries,
+      countries: {
+        created: countryResult.created,
+        updated: countryResult.updated,
+      },
       cities: {
         created: createResult.cities.created,
-        updated: createResult.cities.updated,
-        existing: existingCities,
+        updated: migrationResult.migrated,
+        existing: existingCityCodes,
       },
-      errors: createResult.errors,
+      errors: [
+        ...countryResult.errors,
+        ...migrationResult.errors,
+        ...createResult.errors,
+      ],
     };
   } catch (error) {
-    // If sync fails completely, return error result
-    // This allows the calling function to log and continue
-    console.error("City sync failed:", error);
+    console.error("[City Sync] Sync failed:", error);
     return {
       ...emptyCitySyncResult(),
       errors: [

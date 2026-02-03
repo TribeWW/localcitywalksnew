@@ -101,7 +101,7 @@ export async function getAllProducts(): Promise<GetAllProductsResult> {
 
     if (!response.ok) {
       throw new Error(
-        `Bokun API request failed with status: ${response.status}`,
+        `Bokun API request failed with status: ${response.status}`
       );
     }
 
@@ -111,37 +111,55 @@ export async function getAllProducts(): Promise<GetAllProductsResult> {
       throw new Error("Invalid response format from Bokun API");
     }
 
-    // Sync cities to Sanity (non-blocking - doesn't affect product fetch)
-    // This happens automatically when products are fetched from Bokun
-    try {
-      const syncResult = await syncCitiesFromProducts(
-        data.items as BokunProduct[],
-      );
-
-      // Log sync results for monitoring
-      if (syncResult.cities.created.length > 0) {
-        console.log(
-          `[City Sync] Created ${syncResult.cities.created.length} new cities:`,
-          syncResult.cities.created.join(", "),
-        );
-      }
-      if (syncResult.errors.length > 0) {
+    // Sync cities and countries to Sanity in background (fire-and-forget)
+    // Does not block response; logging happens when sync completes or fails
+    syncCitiesFromProducts(data.items as BokunProduct[])
+      .then((syncResult) => {
+        if (syncResult.countries.created.length > 0) {
+          console.log(
+            "[Country Sync] Background: created",
+            syncResult.countries.created.length,
+            "countries:",
+            syncResult.countries.created.join(", ")
+          );
+        }
+        if (syncResult.cities.created.length > 0) {
+          console.log(
+            "[City Sync] Background: created",
+            syncResult.cities.created.length,
+            "cities:",
+            syncResult.cities.created.join(", ")
+          );
+        }
+        if (syncResult.cities.updated.length > 0) {
+          console.log(
+            "[City Sync] Background: migrated",
+            syncResult.cities.updated.length,
+            "cities:",
+            syncResult.cities.updated.join(", ")
+          );
+        }
+        if (syncResult.errors.length > 0) {
+          console.error(
+            "[City Sync] Background sync had",
+            syncResult.errors.length,
+            "error(s):",
+            syncResult.errors
+              .map((e) => `${e.type}:${e.identifier} - ${e.error}`)
+              .join("; ")
+          );
+        }
+      })
+      .catch((error) => {
         console.error(
-          `[City Sync] ${syncResult.errors.length} cities failed to sync:`,
-          syncResult.errors,
+          "[City Sync] Background sync failed:",
+          error instanceof Error ? error.message : error
         );
-      }
-    } catch (error) {
-      // Log error but don't throw - product fetch should succeed even if sync fails
-      console.error(
-        "[City Sync] Failed to sync cities to Sanity:",
-        error instanceof Error ? error.message : error,
-      );
-    }
+      });
 
     // Transform products to CityCardData format
     const cityCards: CityCardData[] = data.items.map(
-      transformProductToCityCard,
+      transformProductToCityCard
     );
 
     // Update cache
