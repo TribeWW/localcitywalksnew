@@ -80,15 +80,18 @@ export async function extractUniqueCities(
     if (rawCountryCode.length !== 2 || !ISO2_REGEX.test(rawCountryCode))
       continue;
 
-    // Use cityCode from Bokun when present and valid (no spaces); otherwise derive from city name
+    // Use cityCode from Bokun when present and valid (length > 2 to avoid country codes);
+    // normalize it (handles spaces, accents, slashes → slug). Otherwise derive from city name.
     let cityCode: string;
     const rawFromBokun = gp.cityCode?.trim();
-    if (rawFromBokun && rawFromBokun !== "" && !/\s/.test(rawFromBokun)) {
+    const fromBokunValid =
+      rawFromBokun && rawFromBokun !== "" && rawFromBokun.length > 2;
+    if (fromBokunValid) {
       cityCode = normalizeCityCodeForSlug(rawFromBokun);
     } else {
       cityCode = normalizeCityCodeForSlug(name);
     }
-    if (!cityCode) continue;
+    if (!cityCode || cityCode === "unknown") continue;
 
     const dedupeKey = cityCode.toLowerCase();
     if (!byCityCode.has(dedupeKey)) {
@@ -116,14 +119,26 @@ export type CityFromProduct = {
 const ISO2_REGEX = /^[A-Z]{2}$/;
 
 /**
- * Normalizes city code for storage and slugs: trim, accents removed, words joined with a single dash.
- * e.g. "A Coruña" → "a-coruna", "Biarritz" → "biarritz". Not used for display names.
+ * Slug-safe character set for city codes (lowercase, numbers, dash only).
+ * Use to strip any remaining invalid characters.
+ */
+const SLUG_SAFE_REGEX = /[^a-z0-9-]+/g;
+
+/**
+ * Normalizes city code for storage and use as URL slugs: lowercase, no accents,
+ * words joined with a single dash, "/" escaped to "-", only [a-z0-9-] kept.
+ * e.g. "A Coruña" → "a-coruna", "Donostia/San Sebastián" → "donostia-san-sebastian".
  */
 function normalizeCityCodeForSlug(raw: string): string {
   const trimmed = raw.trim();
   const noAccents = stripAccents(trimmed);
-  const dashed = noAccents.replace(/\s+/g, "-").replace(/-+/g, "-"); // spaces → dash, collapse multiple dashes
-  return dashed.toLowerCase();
+  const withDashes = noAccents
+    .replace(/\//g, "-") // escape slash (e.g. Donostia/San Sebastián)
+    .replace(/\s+/g, "-") // spaces → dash
+    .replace(/-+/g, "-"); // collapse multiple dashes
+  const lower = withDashes.toLowerCase();
+  const slugSafe = lower.replace(SLUG_SAFE_REGEX, "-").replace(/-+/g, "-");
+  return slugSafe.replace(/^-|-$/g, "") || "unknown"; // trim leading/trailing dash
 }
 
 /**
@@ -217,14 +232,18 @@ async function migrateCitiesWithoutCountry(
     if (!byCityCode.has(key)) byCityCode.set(key, c);
   }
 
+  // Normalize name for matching: accents removed, lowercase, spaces collapsed to one (so "A  Coruña" matches "A Coruña").
+  function normalizedNameKey(n: string): string {
+    return stripAccents(n.trim().toLowerCase()).replace(/\s+/g, " ").trim();
+  }
   const nameCount = new Map<string, number>();
   for (const c of allCities) {
-    const key = stripAccents((c.name ?? "").trim().toLowerCase());
+    const key = normalizedNameKey(c.name ?? "");
     if (key) nameCount.set(key, (nameCount.get(key) ?? 0) + 1);
   }
   const byNameUnique = new Map<string, CityFromProduct>();
   for (const c of allCities) {
-    const key = stripAccents((c.name ?? "").trim().toLowerCase());
+    const key = normalizedNameKey(c.name ?? "");
     if (key && nameCount.get(key) === 1) byNameUnique.set(key, c);
   }
 
@@ -238,13 +257,14 @@ async function migrateCitiesWithoutCountry(
     if (existingCode) match = byCityCode.get(existingCode);
 
     if (!match && doc.name != null && doc.name.trim() !== "") {
-      const nameKey = stripAccents(doc.name.trim().toLowerCase());
+      const nameKey = normalizedNameKey(doc.name);
       match = byNameUnique.get(nameKey);
     }
 
     if (!match) continue;
 
     try {
+      // Reference published country ID (countries are published, not drafts)
       const countryRef = generateCountryId(match.countryCode);
       await writeClient
         .patch(doc._id)
@@ -315,22 +335,14 @@ export async function getExistingCities(
   }
 }
 
+const DRAFT_PREFIX = "drafts.";
+
 /**
- * Generates a deterministic document ID for a city based on its cityCode
- *
- * Uses Bokun's cityCode (unique identifier). Format: city-{cityCode.toLowerCase()}.
- * Trims and strips spaces; empty input returns "city-unknown".
- *
- * @param cityCode - City code from Bokun (e.g. Biarritz, Madrid)
- * @returns Deterministic document ID (e.g. "city-biarritz", "city-madrid")
- *
- * @example
- * generateCityId("Biarritz") // Returns "city-biarritz"
- * generateCityId("Madrid") // Returns "city-madrid"
- * generateCityId("NewYork") // Returns "city-newyork"
+ * Generates a deterministic document ID for a city from its cityCode.
+ * cityCode is already slug-safe and lowercase; format: city-{slug}.
  */
 function generateCityId(cityCode: string): string {
-  const slug = normalizeCityCodeForSlug(cityCode).toLowerCase() || "unknown";
+  const slug = normalizeCityCodeForSlug(cityCode) || "unknown";
   return `city-${slug}`;
 }
 
@@ -342,6 +354,11 @@ function generateCityId(cityCode: string): string {
  */
 function generateCountryId(countryCode: string): string {
   return `country-${countryCode.toLowerCase()}`;
+}
+
+/** Returns the draft document ID (cities are created as drafts; countries are published). */
+function draftId(baseId: string): string {
+  return DRAFT_PREFIX + baseId;
 }
 
 /** Result of syncing countries to Sanity (used by syncCountries) */
@@ -374,6 +391,7 @@ export async function syncCountries(
 
   for (const { countryCode, name } of countries) {
     try {
+      // Countries are created as published (not drafts) so cities can reference them
       const _id = generateCountryId(countryCode);
       await writeClient.createIfNotExists({
         _id,
@@ -443,8 +461,9 @@ export async function createCities(
 
   for (const city of cities) {
     try {
-      const _id = generateCityId(city.cityCode);
-      const countryRef = generateCountryId(city.countryCode);
+      // Cities are created as drafts; countries are published so references work
+      const _id = draftId(generateCityId(city.cityCode));
+      const countryRef = generateCountryId(city.countryCode); // Published country ID
 
       await writeClient.createIfNotExists({
         _id,
