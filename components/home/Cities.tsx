@@ -1,6 +1,6 @@
 import React from "react";
-import CityCard from "@/components/cards/CityCard";
-import { getAllProducts } from "@/lib/actions/tour.actions";
+import { getProductsPage } from "@/lib/actions/tour.actions";
+import ToursSectionClient from "@/components/home/ToursSectionClient";
 import { CityCardData } from "@/types/bokun";
 
 // Fallback cities data in case API fails
@@ -122,22 +122,13 @@ const FALLBACK_CITIES: CityCardData[] = [
 ];
 
 const Cities = async () => {
-  // Fetch cities data from Bokun API
-  const result = await getAllProducts();
-  const cities = result.success && result.data ? result.data : FALLBACK_CITIES;
+  const result = await getProductsPage(1);
+  const initialData =
+    result.success && result.data ? result.data : FALLBACK_CITIES;
+  const totalHits = result.success && result.totalHits != null ? result.totalHits : FALLBACK_CITIES.length;
 
   return (
-    <section id="cities" className="py-16 px-4">
-      <div className="max-w-6xl mx-auto text-center">
-        <h2 className="text-4xl font-semibold text-white mb-4">
-          Explore cities
-        </h2>
-        <p className="text-lg text-white/80 max-w-2xl mx-auto">
-          Discover hidden gems with trusted local guides
-        </p>
-        <CityCard cities={cities} />
-      </div>
-    </section>
+    <ToursSectionClient initialData={initialData} totalHits={totalHits} />
   );
 };
 
