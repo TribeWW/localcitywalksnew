@@ -9,6 +9,7 @@
  */
 export interface BokunSearchResponse {
   items: BokunProduct[];
+  totalHits?: number;
 }
 
 /**
@@ -51,6 +52,8 @@ export interface CityCardData {
   id: string;
   title: string;
   image: string;
+  countryCode?: string;
+  country?: string;
 }
 
 /**
@@ -59,6 +62,17 @@ export interface CityCardData {
 export interface GetAllProductsResult {
   success: boolean;
   data?: CityCardData[];
+  error?: string;
+  totalHits?: number;
+}
+
+/**
+ * Server action response type for paginated product fetch (one page)
+ */
+export interface GetProductsPageResult {
+  success: boolean;
+  data?: CityCardData[];
+  totalHits?: number;
   error?: string;
 }
 
