@@ -72,15 +72,18 @@ function transformProductToCityCard(product: unknown): CityCardData {
 /**
  * Server action to fetch one page of products from Bokun API (pageSize 20).
  * Used for initial load and "Show more"; returns data + totalHits for pagination UI.
+ * When countryCode is provided, uses facetFilters so the API returns only that country (one request = up to 20 results).
  * @param page - 1-based page number
+ * @param countryCode - optional ISO2 country code (e.g. "FR", "ES"); when set, request uses facetFilters for server-side filter
  * @returns Promise<GetProductsPageResult>
  */
 export async function getProductsPage(
   page: number,
+  countryCode?: string | null,
 ): Promise<GetProductsPageResult> {
   const pageNum = Math.max(1, Math.floor(page));
+  const cacheKey = `bokun-products-page-${pageNum}-${countryCode ?? "all"}`;
   try {
-    const cacheKey = `bokun-products-page-${pageNum}`;
     const cached = pageCache.get(cacheKey);
 
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -94,17 +97,29 @@ export async function getProductsPage(
     const url = createBokunUrl("/activity.json/search");
     const headers = generateBokunHeaders("POST", "/activity.json/search");
 
+    const body: {
+      page: number;
+      pageSize: number;
+      sortField: string;
+      facetFilters?: Array<{ name: string; values: string[]; excluded?: boolean }>;
+    } = {
+      page: pageNum,
+      pageSize: PAGE_SIZE,
+      sortField: "BEST_SELLING_GLOBAL",
+    };
+    if (countryCode) {
+      body.facetFilters = [
+        { name: "country", values: [countryCode], excluded: false },
+      ];
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
     const response = await fetch(url, {
       method: "POST",
       headers,
-      body: JSON.stringify({
-        page: pageNum,
-        pageSize: PAGE_SIZE,
-        sortField: "BEST_SELLING_GLOBAL",
-      }),
+      body: JSON.stringify(body),
       signal: controller.signal,
     });
 
