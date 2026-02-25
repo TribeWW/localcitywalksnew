@@ -15,9 +15,14 @@ import { CityCardData } from "@/types/bokun";
 
 interface CityCardProps {
   cities: CityCardData[];
+  /** When true, grid has no horizontal padding (py-6 only); use when parent provides px-6 for alignment with a sibling (e.g. filter button) */
+  noHorizontalPadding?: boolean;
 }
 
-const CityCard = ({ cities }: CityCardProps) => {
+const CityCard = ({
+  cities,
+  noHorizontalPadding,
+}: CityCardProps) => {
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
 
   const handleOpenModal = (cityName: string) => {
@@ -30,7 +35,11 @@ const CityCard = ({ cities }: CityCardProps) => {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 justify-items-center">
+      <div
+        className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center ${
+          noHorizontalPadding ? "py-6" : "p-6"
+        }`}
+      >
         {cities.map((city) => (
           <div
             key={city.id}
@@ -44,7 +53,7 @@ const CityCard = ({ cities }: CityCardProps) => {
                 className="object-cover"
               />
             </div>
-            <div className="p-6">
+            <div className="p-6 text-center">
               <h3 className="text-xl font-semibold text-nightsky mb-4">
                 {city.title}
               </h3>

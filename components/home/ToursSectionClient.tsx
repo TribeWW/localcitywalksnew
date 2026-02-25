@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { getProductsPage } from "@/lib/actions/tour.actions";
 import { CityCardData } from "@/types/bokun";
-import { Filter } from "lucide-react";
+import { Flag } from "lucide-react";
 
 const PAGE_SIZE = 20;
 
@@ -42,9 +42,9 @@ export default function ToursSectionClient({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalHitsView, setTotalHitsView] = useState(totalHits);
   /** Single select: null = show all; string = filter by that countryCode (server-side) */
-  const [selectedCountryCode, setSelectedCountryCode] = useState<
-    string | null
-  >(null);
+  const [selectedCountryCode, setSelectedCountryCode] = useState<string | null>(
+    null,
+  );
   const [filterOpen, setFilterOpen] = useState(false);
   const [loadingFilter, setLoadingFilter] = useState(false);
 
@@ -63,7 +63,7 @@ export default function ToursSectionClient({
 
   const visibleList = useMemo(
     () => accumulatedList.slice(0, visibleCount),
-    [accumulatedList, visibleCount]
+    [accumulatedList, visibleCount],
   );
 
   const hasMoreFilteredToShow = visibleCount < accumulatedList.length;
@@ -72,7 +72,7 @@ export default function ToursSectionClient({
   const handleShowMore = useCallback(async () => {
     if (hasMoreFilteredToShow) {
       setVisibleCount((prev) =>
-        Math.min(prev + PAGE_SIZE, accumulatedList.length)
+        Math.min(prev + PAGE_SIZE, accumulatedList.length),
       );
       return;
     }
@@ -80,7 +80,10 @@ export default function ToursSectionClient({
     setLoadingMore(true);
     try {
       const nextPage = currentPage + 1;
-      const result = await getProductsPage(nextPage, selectedCountryCode ?? undefined);
+      const result = await getProductsPage(
+        nextPage,
+        selectedCountryCode ?? undefined,
+      );
       if (result.success && result.data) {
         setAccumulatedList((prev) => [...prev, ...result.data!]);
         if (result.totalHits != null) setTotalHitsView(result.totalHits);
@@ -126,7 +129,9 @@ export default function ToursSectionClient({
   }, []);
 
   const showEmptyForCountry =
-    selectedCountryCode !== null && accumulatedList.length === 0 && !loadingFilter;
+    selectedCountryCode !== null &&
+    accumulatedList.length === 0 &&
+    !loadingFilter;
 
   return (
     <section id="cities" className="py-16 px-4">
@@ -140,18 +145,19 @@ export default function ToursSectionClient({
           </p>
         </div>
 
-        <div className="flex justify-end mb-4">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => setFilterOpen(true)}
-            className="gap-2 bg-nightsky hover:bg-nightsky/90 text-white border-0"
-            aria-label="Filter by country"
-          >
-            <Filter className="size-4" aria-hidden />
-            Filter
-          </Button>
-        </div>
+        <div className="px-6">
+          <div className="flex justify-end mb-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setFilterOpen(true)}
+              className="gap-2 w-full md:w-auto bg-nightsky hover:bg-nightsky/90 text-white border-0"
+              aria-label="Select country"
+            >
+              <Flag className="size-4" aria-hidden />
+              Select country
+            </Button>
+          </div>
 
         <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
           <DialogContent className="sm:max-w-md">
@@ -203,9 +209,7 @@ export default function ToursSectionClient({
           </div>
         ) : (
           <>
-            <div className="text-center">
-              <CityCard cities={visibleList} />
-            </div>
+            <CityCard cities={visibleList} noHorizontalPadding />
             {showMoreVisible && (
               <div className="mt-8 text-center">
                 <Button
@@ -221,6 +225,7 @@ export default function ToursSectionClient({
             )}
           </>
         )}
+        </div>
       </div>
     </section>
   );
