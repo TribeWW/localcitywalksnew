@@ -19,10 +19,16 @@ Bokun API → Server Action → React Component → UI Display
 ### Key Components
 
 - **Server Actions**: `lib/actions/tour.actions.ts` - Bokun API integration
-- **Type Definitions**: `types/bokun.ts` - TypeScript interfaces
-- **UI Components**: `components/cards/CityCard.tsx` & `components/home/Cities.tsx`
+- **Type Definitions**: `types/bokun.ts` - TypeScript interfaces (including `CityCardData` with `countryCode` / `country`)
+- **UI Components**: `components/cards/CityCard.tsx`, `components/home/Cities.tsx`, `components/home/ToursSectionClient.tsx` (filter + pagination)
 
 ## Server Actions
+
+### `getProductsPage(page, countryCode?)`
+
+**Purpose**: Fetches one page of tour products (e.g. 20 items) with optional server-side country filter. Used by the landing tours section for initial load, "Show more", and country filter.
+
+**Returns**: `Promise<GetProductsPageResult>` with `data` and `totalHits`. When `countryCode` is provided, the Bokun request includes `facetFilters` for country; cache key includes country so filtered and unfiltered results are cached separately.
 
 ### `getAllProducts()`
 
@@ -136,35 +142,15 @@ interface GetAllProductsResult {
 
 ### Cities Component (`components/home/Cities.tsx`)
 
-**Purpose**: Server component that fetches tour data and renders city cards.
+**Purpose**: Server component that fetches the first page of tours and passes it to the client section for display, filter, and "Show more".
 
 **Key Features**:
 
-- ✅ **Async Server Component**: Uses server actions for data fetching
+- ✅ **Async Server Component**: Calls `getProductsPage(1)` and passes `initialData` + `totalHits` to `ToursSectionClient`
 - ✅ **Fallback Mechanism**: Falls back to hardcoded cities if API fails
 - ✅ **Error Resilience**: Graceful handling of API failures
 
-```typescript
-const Cities = async () => {
-  // Fetch cities data from Bokun API
-  const result = await getAllProducts();
-  const cities = result.success && result.data ? result.data : FALLBACK_CITIES;
-
-  return (
-    <section className="py-16 px-4">
-      <div className="max-w-6xl mx-auto text-center">
-        <h2 className="text-4xl font-semibold text-white mb-4">
-          Explore cities
-        </h2>
-        <p className="text-lg text-white/80 max-w-2xl mx-auto">
-          Discover hidden gems with trusted local guides
-        </p>
-        <CityCard cities={cities} />
-      </div>
-    </section>
-  );
-};
-```
+The client wrapper `ToursSectionClient` owns the country filter (single-select modal), "Show more" pagination, and skeleton loading when the filter changes. Filtering by country is done server-side via `getProductsPage(1, countryCode)`.
 
 ### CityCard Component (`components/cards/CityCard.tsx`)
 
@@ -347,7 +333,7 @@ return <CityCard cities={cities} />;
 
 - 🔄 **Redis Caching**: Replace in-memory cache with Redis for production scaling
 - 🔄 **Real-time Updates**: WebSocket integration for live data updates
-- 🔄 **Advanced Filtering**: City filtering and search functionality
+- ✅ **Country filter**: Implemented on landing (server-side via Bokun facetFilters); other filters (e.g. search) can be added similarly
 - 🔄 **Analytics Integration**: Track city card interactions and performance
 - 🔄 **A/B Testing**: Test different city card layouts and content
 

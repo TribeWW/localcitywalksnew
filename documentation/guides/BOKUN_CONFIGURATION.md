@@ -70,6 +70,10 @@ The configuration file exports:
 - `PRODUCT_BY_SLUG`: `/activity.json/slug/{slug}` - Get tour by slug
 - `PICKUP_PLACES`: `/activity.json/{id}/pickup-places` - Get pickup locations
 
+### Search: pagination and filtering
+
+The search endpoint supports **pagination** (`page`, `pageSize`) and optional **facetFilters** to restrict results (e.g. by country). The landing-page tours section uses this to load 20 items per page and to filter by country on the server. Cache keys should include filter state when applicable.
+
 ### Example Usage
 
 ```typescript

@@ -132,7 +132,7 @@ Our spacing system is based on a 4px grid for consistency:
 
 - **Hover effects**: 200ms ease-in-out
 - **Page transitions**: 300ms ease-in-out
-- **Loading states**: Smooth, non-jarring animations
+- **Loading states**: Smooth, non-jarring animations; use skeleton placeholders (e.g. card-shaped pulses) for list/grid loading to avoid layout shift.
 
 ## Accessibility Standards
 
