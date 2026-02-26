@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getProductsPage } from "@/lib/actions/tour.actions";
+import { Skeleton } from "@/components/ui/skeleton";
 import { CityCardData } from "@/types/bokun";
 import { Flag } from "lucide-react";
 
@@ -200,7 +201,22 @@ export default function ToursSectionClient({
         </Dialog>
 
         {loadingFilter ? (
-          <div className="text-center py-12 text-white/80">Loading…</div>
+          <div
+            className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center py-6`}
+          >
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-xl shadow-sm overflow-hidden w-full max-w-[250px]"
+              >
+                <Skeleton className="h-48 w-full rounded-none" />
+                <div className="p-6 space-y-4">
+                  <Skeleton className="h-6 w-3/4 mx-auto" />
+                  <Skeleton className="h-10 w-full rounded-md" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : showEmptyForCountry ? (
           <div className="text-center py-12 px-4 rounded-lg bg-white/5 text-white/90">
             <p className="text-lg font-medium">
