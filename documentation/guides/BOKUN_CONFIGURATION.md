@@ -74,6 +74,27 @@ The configuration file exports:
 
 The search endpoint supports **pagination** (`page`, `pageSize`) and optional **facetFilters** to restrict results (e.g. by country). The landing-page tours section uses this to load 20 items per page and to filter by country on the server. Cache keys should include filter state when applicable.
 
+### Tour page URL scheme (`/tours/{city}/{slug}`)
+
+Used for the city-first tour page. The **slug** is generated from search data (Bokun does not return a slug in search):
+
+- **{city}**: Slugified `googlePlace.city` (e.g. `Toledo` → `toledo`, `Aix-en-Provence` → `aix-en-provence`). Lowercase, spaces to hyphens.
+- **{slug}**: **Slugified product title + "-" + product id** for readability and uniqueness (e.g. `hello-toledo-private-walk-1077682`). When handling a request, parse the id from the end of the slug and fetch detail via `GET /activity.json/{id}`.
+
+Example: `/tours/toledo/hello-toledo-private-walk-1077682`. See `documentation/investigation/bokun-search-payload-and-url-scheme.md` for full search payload and decisions.
+
+### Routing contract (city validation)
+
+The **`{city}`** segment is **validated** against the product’s city from the detail response. After fetching by id, the app compares `params.city` with the slugified **`googlePlace.city`** from Bokun (the canonical city). If they **match** → render the tour page. If they **do not match** → **redirect** to the canonical URL `/tours/{canonicalCity}/{slug}` (e.g. `/tours/madrid/hello-toledo-1077682` → redirect to `/tours/toledo/hello-toledo-1077682`). If the product is **not found** (e.g. Bokun returns 404) → show **404**, no redirect. This keeps one canonical URL per tour and ensures the city in the URL always reflects the tour’s actual city.
+
+### Single-product fetch (tour detail)
+
+The tour page fetches full detail via **`GET /activity.json/{id}`** (`BOKUN_ENDPOINTS.PRODUCT_BY_ID`). The app resolves the product **id** from the URL slug (trailing segment after the last `-`); we do not use Bokun’s slug endpoint for this flow. Implementation: `lib/actions/tour-detail.actions.ts` (`getTourDetailById`).
+
+### Image domains (Next.js)
+
+Tour and listing images use Bokun’s **derived** URLs (`keyPhoto.derived`, `photos[].derived`), which are served from **imgcdn.bokun.tools**. The **original** image URLs may use **bokun.s3.amazonaws.com**. Both hosts are allowlisted in `next.config.ts` `images.remotePatterns` so `next/image` works for search and tour detail.
+
 ### Example Usage
 
 ```typescript

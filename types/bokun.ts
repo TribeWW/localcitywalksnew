@@ -23,14 +23,18 @@ export interface BokunGooglePlace {
 }
 
 /**
- * Minimal product structure for city cards
- * Only includes fields we actually use
+ * Minimal product structure for city cards and search items
+ * Matches Bokun search response (ExamplePayloadSearch.json). No slug in search; use id for URL.
  */
 export interface BokunProduct {
   id: string;
   title: string;
   keyPhoto: BokunPhoto;
   googlePlace?: BokunGooglePlace;
+  /** HTML description (search returns this) */
+  summary?: string;
+  /** Short plain-text blurb (search returns this) */
+  excerpt?: string;
 }
 
 /**
@@ -45,8 +49,8 @@ export interface BokunPhoto {
 }
 
 /**
- * Simplified data structure for CityCard component
- * Transformed from BokunProduct for easier component usage
+ * Simplified data structure for CityCard component and tour page links
+ * URL = /tours/{citySlug}/{slug}. Slug is generated: slugify(title) + "-" + id (e.g. "hello-toledo-private-walk-1077682").
  */
 export interface CityCardData {
   id: string;
@@ -54,6 +58,10 @@ export interface CityCardData {
   image: string;
   countryCode?: string;
   country?: string;
+  /** Slugified googlePlace.city for /tours/{city}/{slug} (e.g. "toledo", "aix-en-provence") */
+  citySlug?: string;
+  /** Generated slug for URL segment: slugify(title) + "-" + id (e.g. "hello-toledo-private-walk-1077682") */
+  slug?: string;
 }
 
 /**
@@ -73,6 +81,29 @@ export interface GetProductsPageResult {
   success: boolean;
   data?: CityCardData[];
   totalHits?: number;
+  error?: string;
+}
+
+/**
+ * Product detail from GET /activity.json/{id} (single-product endpoint).
+ * Used for the tour page; shape aligned with search item + full description/photos.
+ */
+export interface BokunProductDetail {
+  id: string;
+  title: string;
+  summary?: string;
+  excerpt?: string;
+  keyPhoto: BokunPhoto;
+  photos?: BokunPhoto[];
+  googlePlace?: BokunGooglePlace;
+}
+
+/**
+ * Server action response type for single-product (tour detail) fetch
+ */
+export interface GetTourDetailResult {
+  success: boolean;
+  data?: BokunProductDetail;
   error?: string;
 }
 

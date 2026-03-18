@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "imgcdn.bokun.tools",
       },
+      {
+        protocol: "https",
+        hostname: "bokun.s3.amazonaws.com",
+      },
     ],
   },
 };
