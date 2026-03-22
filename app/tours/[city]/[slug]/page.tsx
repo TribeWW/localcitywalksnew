@@ -1,11 +1,18 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
 import { stripAccents } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import TourRequestFormSection from "./tour-request-form-section";
+import TourRequestFormSection from "@/components/tours/tour-request-form-section";
+import TourImageGallery from "@/components/tours/tour-image-gallery";
 
 function extractIdFromSlug(slug: string): string | null {
   const trimmed = slug.trim();
@@ -29,9 +36,16 @@ function slugifyForUrl(raw: string): string {
   return slugSafe.replace(/^-|-$/g, "") || "unknown";
 }
 
-function pickDerivedUrl(photo: unknown, preferred: string[]): string | null {
-  const derived = (photo as { derived?: Array<{ name?: string; url?: string }> })
-    ?.derived;
+function pickBestPhotoUrl(photo: unknown, preferred: string[]): string | null {
+  const photoData = photo as {
+    originalUrl?: string;
+    derived?: Array<{ name?: string; url?: string }>;
+  };
+
+  // Prefer original image for fullscreen quality when available.
+  if (photoData?.originalUrl) return photoData.originalUrl;
+
+  const derived = photoData?.derived;
   if (!derived?.length) return null;
 
   for (const name of preferred) {
@@ -53,7 +67,35 @@ export default async function TourPage({
   if (!id) notFound();
 
   const detail = await getTourDetailById(id);
-  if (!detail.success || !detail.data) notFound();
+  if (!detail.success) {
+    if (detail.error === "Tour not found") {
+      notFound();
+    }
+
+    return (
+      <main className="min-h-screen bg-pearlgray">
+        <div className="mx-auto w-full max-w-3xl px-4 md:px-8 xl:px-0 py-16">
+          <h1 className="text-3xl font-semibold text-nightsky">
+            We could not load this tour right now
+          </h1>
+          <p className="mt-3 text-muted-foreground">
+            Please try again in a moment. If the issue continues, contact us and
+            we will help you plan your private tour.
+          </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Button asChild className="bg-nightsky hover:bg-nightsky/90">
+              <Link href={`/tours/${city}/${slug}`}>Try again</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/#contact">Contact us</Link>
+            </Button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!detail.data) notFound();
 
   const gpCity = detail.data.googlePlace?.city ?? "";
   const canonicalCity = slugifyForUrl(gpCity);
@@ -61,80 +103,95 @@ export default async function TourPage({
     redirect(`/tours/${canonicalCity}/${slug}`);
   }
 
-  const heroImage =
-    pickDerivedUrl(detail.data.keyPhoto, ["large", "preview", "thumbnail"]) ??
-    null;
-
+  const heroImage = pickBestPhotoUrl(detail.data.keyPhoto, [
+    "large",
+    "preview",
+    "thumbnail",
+  ]);
   const gallery = (detail.data.photos ?? [])
-    .map((p) => pickDerivedUrl(p, ["large", "preview", "thumbnail"]))
+    .map((p) => pickBestPhotoUrl(p, ["large", "preview", "thumbnail"]))
     .filter((u): u is string => !!u)
     .slice(0, 8);
+  const allImages = Array.from(
+    new Set([heroImage, ...gallery].filter(Boolean)),
+  ) as string[];
+
+  const cityDisplayName = gpCity.trim() || "City";
+
+  const productTitle = detail.data.title;
+  const excerpt = detail.data.excerpt?.trim() ?? "";
+  const aboutHtml =
+    detail.data.description?.trim() || detail.data.summary?.trim() || "" || "";
 
   return (
-    <main className="min-h-screen bg-pearlgray">
+    <main className="min-h-screen bg-white">
       <div className="mx-auto w-full max-w-6xl px-4 md:px-8 xl:px-0 py-10">
-        <div className="mb-8 flex items-center justify-between gap-4">
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Private tour in</p>
-            <h1 className="text-3xl md:text-4xl font-semibold text-nightsky">
-              {detail.data.googlePlace?.city ?? detail.data.title}
-            </h1>
-            <p className="text-base text-muted-foreground">
-              {detail.data.googlePlace?.country ?? ""}
-            </p>
-          </div>
-          <Button asChild className="bg-nightsky hover:bg-nightsky/90">
-            <Link href="#request">Request private tour</Link>
-          </Button>
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <Breadcrumb>
+            <BreadcrumbList className="flex-wrap gap-2 text-xs text-[#6A6A6A] sm:gap-2">
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link
+                    href="/"
+                    className="font-medium text-[#0F172A] no-underline hover:text-[#0F172A]"
+                  >
+                    Home
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="text-[#D3CED2] [&>svg]:hidden">
+                /
+              </BreadcrumbSeparator>
+              <BreadcrumbItem>
+                <span className="font-medium text-[#0F172A]">
+                  Private tour in {cityDisplayName}
+                </span>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
         </div>
 
-        {heroImage && (
-          <div className="relative mb-10 h-[260px] w-full overflow-hidden rounded-xl bg-white shadow-sm md:h-[380px]">
-            <Image
-              src={heroImage}
-              alt={detail.data.title}
-              fill
-              className="object-cover"
-              priority
-            />
-          </div>
-        )}
-
-        {gallery.length > 0 && (
+        {allImages.length > 0 ? (
+          <TourImageGallery images={allImages} title={productTitle} />
+        ) : (
           <section className="mb-10">
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              {gallery.map((url) => (
-                <div
-                  key={url}
-                  className="relative h-28 overflow-hidden rounded-lg bg-white shadow-sm md:h-36"
-                >
-                  <Image src={url} alt="" fill className="object-cover" />
-                </div>
-              ))}
-            </div>
+            <p className="text-sm text-muted-foreground">
+              Images for this tour are currently unavailable.
+            </p>
           </section>
         )}
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-nightsky text-xl">
-                  About this private tour
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="prose prose-neutral max-w-none">
-                {detail.data.summary ? (
-                  <div
-                    dangerouslySetInnerHTML={{ __html: detail.data.summary }}
-                  />
-                ) : (
-                  <p className="text-muted-foreground">
-                    Tour description is currently unavailable.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+            <div>
+              <h1 className="mb-4 text-[32px] font-bold leading-[1.3] text-[#0F172A]">
+                {cityDisplayName}: Private City Walk with a Local Guide
+              </h1>
+              {excerpt ? (
+                <p className="mb-6 text-lg font-normal leading-[1.6] text-[#1A1A1A]">
+                  {excerpt}
+                </p>
+              ) : null}
+            </div>
+
+            {aboutHtml ? (
+              <section
+                id="about"
+                className="mb-12 scroll-mt-28"
+                aria-labelledby="about-heading"
+              >
+                <h2
+                  id="about-heading"
+                  className="mb-4 text-xl font-semibold text-[#0F172A]"
+                >
+                  About
+                </h2>
+                <div
+                  className="flex flex-col gap-6 text-base leading-[1.6] text-[#1A1A1A] [&_p]:m-0 [&_p]:!text-[#1A1A1A] [&_p]:text-base [&_p]:leading-[1.6]"
+                  dangerouslySetInnerHTML={{ __html: aboutHtml }}
+                />
+              </section>
+            ) : null}
           </div>
 
           <div className="space-y-6">

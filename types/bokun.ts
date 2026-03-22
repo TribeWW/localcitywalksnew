@@ -87,11 +87,17 @@ export interface GetProductsPageResult {
 /**
  * Product detail from GET /activity.json/{id} (single-product endpoint).
  * Used for the tour page; shape aligned with search item + full description/photos.
+ *
+ * Bokun typically returns long-form HTML as `summary`; some payloads may expose `description` instead.
  */
 export interface BokunProductDetail {
   id: string;
+  /** Product title from Bokun */
   title: string;
+  /** Long-form HTML body (Bokun REST often uses `summary` for this) */
+  description?: string | null;
   summary?: string;
+  /** Short plain-text intro / teaser */
   excerpt?: string;
   keyPhoto: BokunPhoto;
   photos?: BokunPhoto[];
