@@ -1,5 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { BadgeCheck, Clock, Globe, Users } from "lucide-react";
 import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
 import { stripAccents } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -172,6 +174,34 @@ export default async function TourPage({
                   {excerpt}
                 </p>
               ) : null}
+              <div className="flex flex-wrap gap-3">
+                {[
+                  {
+                    icon: <Users size={14} />,
+                    text: "Private Tour",
+                  },
+                  {
+                    icon: <Clock size={14} />,
+                    text: "2 hours",
+                  },
+                  {
+                    icon: <Globe size={14} />,
+                    text: "English, Spanish, French, German",
+                  },
+                  {
+                    icon: <BadgeCheck size={14} className="text-[#16A34A]" />,
+                    text: "Free cancellation",
+                  },
+                ].map((tag, i) => (
+                  <div
+                    key={i}
+                    className="inline-flex items-center gap-1.5 rounded-lg border-[1.5px] border-[#D3CED2] bg-[#F7F7F7] px-2.5 py-1 text-sm font-medium text-[#0F172A]"
+                  >
+                    {tag.icon}
+                    <span>{tag.text}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {aboutHtml ? (
@@ -192,6 +222,32 @@ export default async function TourPage({
                 />
               </section>
             ) : null}
+
+            <section
+              className="mb-12 flex items-center gap-6 rounded-lg border-[1.5px] border-[#D3CED2] bg-white p-6"
+              aria-labelledby="hello-banner-heading"
+            >
+              <Image
+                src="/hello-image.svg"
+                alt="LocalCityWalks badge"
+                width={104}
+                height={104}
+                className="h-[104px] w-[104px] shrink-0 object-contain"
+              />
+              <div>
+                <h3
+                  id="hello-banner-heading"
+                  className="mb-2 text-base font-semibold text-[#0F172A]"
+                >
+                  Hello by LocalCityWalks
+                </h3>
+                <p className="text-sm leading-[1.6] text-[#1A1A1A]">
+                  Local-led private walking tours that blend iconic landmarks,
+                  hidden local corners and personal stories, bringing the city
+                  to life.
+                </p>
+              </div>
+            </section>
           </div>
 
           <div className="space-y-6">
