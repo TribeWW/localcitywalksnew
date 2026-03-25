@@ -1,48 +1,29 @@
-import React from "react";
 import Image from "next/image";
-import { MapPin } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="w-full bg-nightsky text-white">
-      {/* Main footer content */}
-      <div className="max-w-6xl mx-auto py-8 px-4">
-        <div className="flex flex-col lg:flex-row items-center lg:items-start lg:justify-between gap-8">
-          {/* Branding Section */}
-          <div className="flex flex-col items-center lg:items-start gap-4">
-            <div className="flex items-center gap-3">
-              <Image
-                src="/logo-long-white.png"
-                alt="LocalCityWalks"
-                width={200}
-                height={50}
-                className="h-12 w-auto"
-              />
-            </div>
-            <p className="text-white/80 text-sm max-w-xs">
-              City walking tours led by trusted local guides
+    <footer className="w-full bg-white font-sans">
+      <div className="mx-auto max-w-6xl px-4 py-12 md:px-6">
+        <div className="rounded-2xl bg-pearl-gray px-6 py-10 md:px-10">
+          <div className="mx-auto flex max-w-xl flex-col items-center text-center">
+            <Image
+              src="/logo-long-dark.svg"
+              alt="LocalCityWalks"
+              width={173}
+              height={40}
+              className="h-8 w-auto"
+              priority={false}
+            />
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+              LocalCityWalks connects you with trusted local guides for
+              personal, insightful city walks.
             </p>
           </div>
-
-          {/* Contact Information */}
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3">
-              <MapPin className="h-5 w-5 text-white/80" />
-              <span className="text-white/80 text-sm">
-                Palma De Mallorca, Spain
-              </span>
-            </div>
-          </div>
         </div>
-      </div>
 
-      {/* Copyright Section */}
-      <div className="bg-watermelon py-4 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <p className="text-white text-sm">
-            © 2025 LocalCityWalks | Made with ❤️ in Spain
-          </p>
-        </div>
+        <p className="mt-8 text-center text-xs text-muted-foreground">
+          © {new Date().getFullYear()} LocalCityWalks. All rights reserved.
+        </p>
       </div>
     </footer>
   );
