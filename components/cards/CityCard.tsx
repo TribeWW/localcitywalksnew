@@ -51,12 +51,10 @@ const CityCard = ({ cities, noHorizontalPadding }: CityCardProps) => {
                 />
               </div>
               <div className="p-6 text-center">
-                <h3 className="text-base font-semibold text-nightsky mb-1">
+                <h3 className="text-base font-semibold text-nightsky mb-4">
                   {city.title}
                 </h3>
-                <p className="text-sm mb-2 text-muted-foreground">
-                  Private tour
-                </p>
+                <p className="text-sm mb-2">Private tour</p>
               </div>
             </Link>
           </div>

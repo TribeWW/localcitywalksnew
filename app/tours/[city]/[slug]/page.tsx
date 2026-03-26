@@ -15,6 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TourRequestFormSection from "@/components/tours/tour-request-form-section";
 import TourImageGallery from "@/components/tours/tour-image-gallery";
+import FaqAccordion from "@/components/tours/faq-accordion";
 
 function extractIdFromSlug(slug: string): string | null {
   const trimmed = slug.trim();
@@ -248,6 +249,42 @@ export default async function TourPage({
                 </p>
               </div>
             </section>
+
+            <section className="mb-12" aria-labelledby="good-to-know-heading">
+              <h2
+                id="good-to-know-heading"
+                className="mb-4 text-xl font-semibold text-[#0F172A]"
+              >
+                Good to know
+              </h2>
+              <ul className="list-disc space-y-2 pl-5 text-base leading-[1.6] text-[#1A1A1A]">
+                <li>Group size limited to 15 for an intimate experience.</li>
+                <li>
+                  Not suitable for participants with severe mobility
+                  restrictions on uneven terrain.
+                </li>
+                <li>
+                  Please inform us of any dietary requirements for the tasting.
+                </li>
+              </ul>
+            </section>
+
+            <section
+              className="mb-12"
+              aria-labelledby="cancellation-policy-heading"
+            >
+              <h2
+                id="cancellation-policy-heading"
+                className="mb-4 text-xl font-semibold text-[#0F172A]"
+              >
+                Cancellation policy
+              </h2>
+              <p className="text-base leading-[1.6] text-[#1A1A1A]">
+                Receive a full refund if you cancel at least 24 hours before the
+                experience starts. No refund if cancelled less than 24 hours
+                before the start time.
+              </p>
+            </section>
           </div>
 
           <div className="space-y-6">
@@ -264,6 +301,43 @@ export default async function TourPage({
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        <div id="faq" className="scroll-mt-28 pb-20">
+          <h2 className="mb-6 text-xl font-semibold text-[#0F172A]">
+            Frequently asked questions
+          </h2>
+          <FaqAccordion
+            items={[
+              {
+                question: "Can I choose a different starting time?",
+                answer:
+                  "Yes, we offer flexible scheduling. Simply contact us with your preferred time and we'll do our best to accommodate. Most guides can adjust within a 2-hour window of the listed start time.",
+              },
+              {
+                question: "Can I customize the experience?",
+                answer:
+                  "Absolutely. All our private tours can be tailored to your interests. Let us know what you'd like to focus on — food, history, architecture, hidden gems — and your guide will adapt the route.",
+              },
+              {
+                question:
+                  "Can I book for bigger groups than your maximum group size?",
+                answer:
+                  "Yes! For groups larger than our standard maximum, we can arrange a private tour with one or more dedicated guides. Just send us a message with your group size and we'll put together a custom quote.",
+              },
+              {
+                question:
+                  "Can I book in a different language than the ones listed?",
+                answer:
+                  "We're always expanding our language options. If you don't see your preferred language listed, reach out to us — we may have a guide available or can help find one.",
+              },
+              {
+                question: "Are there any entrance tickets included?",
+                answer:
+                  'This depends on the specific tour. Some tours include entrance fees (noted in the "What\'s included" section), while others focus on outdoor exploration. Any additional costs are always clearly listed before you book.',
+              },
+            ]}
+          />
         </div>
       </div>
     </main>
