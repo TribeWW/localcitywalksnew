@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TourRequestFormSection from "@/components/tours/tour-request-form-section";
 import TourImageGallery from "@/components/tours/tour-image-gallery";
 import FaqAccordion from "@/components/tours/faq-accordion";
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 
 function extractIdFromSlug(slug: string): string | null {
   const trimmed = slug.trim();
@@ -88,10 +88,12 @@ export default async function TourPage({
 
   if (!detail.data) notFound();
 
-  const gpCity = detail.data.googlePlace?.city ?? "";
-  const canonicalCity = slugifyForUrl(gpCity);
-  if (city !== canonicalCity) {
-    redirect(`/tours/${canonicalCity}/${slug}`);
+  const gpCity = detail.data.googlePlace?.city?.trim();
+  const canonicalCity = gpCity ? slugifyForUrl(gpCity) : city;
+  const canonicalSlug = `${slugifyForUrl(detail.data.title)}-${id}`;
+
+  if (city !== canonicalCity || slug !== canonicalSlug) {
+    redirect(`/tours/${canonicalCity}/${canonicalSlug}`);
   }
 
   const heroImage = pickBestPhotoUrl(detail.data.keyPhoto, [
@@ -114,7 +116,22 @@ export default async function TourPage({
   const aboutHtml =
     detail.data.description?.trim() || detail.data.summary?.trim() || "";
 
-  const sanitizedAboutHtml = aboutHtml ? DOMPurify.sanitize(aboutHtml) : "";
+  const sanitizedAboutHtml = aboutHtml
+    ? sanitizeHtml(aboutHtml, {
+        allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+          "h1",
+          "h2",
+          "h3",
+          "h4",
+          "img",
+        ]),
+        allowedAttributes: {
+          ...sanitizeHtml.defaults.allowedAttributes,
+          a: ["href", "name", "target", "rel"],
+          img: ["src", "alt", "title", "width", "height", "loading"],
+        },
+      })
+    : "";
 
   return (
     <main className="min-h-screen bg-white">
