@@ -4,7 +4,6 @@ import { notFound, redirect } from "next/navigation";
 import { BadgeCheck, Clock, Globe, Users } from "lucide-react";
 import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
 import { slugifyForUrl } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -62,28 +61,7 @@ export default async function TourPage({
     if (detail.error === "Tour not found") {
       notFound();
     }
-
-    return (
-      <main className="min-h-screen bg-pearlgray">
-        <div className="mx-auto w-full max-w-3xl px-4 md:px-8 xl:px-0 py-16">
-          <h1 className="text-3xl font-semibold text-nightsky">
-            We could not load this tour right now
-          </h1>
-          <p className="mt-3 text-muted-foreground">
-            Please try again in a moment. If the issue continues, contact us and
-            we will help you plan your private tour.
-          </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Button asChild className="bg-nightsky hover:bg-nightsky/90">
-              <Link href={`/tours/${city}/${slug}`}>Try again</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/#contact">Contact us</Link>
-            </Button>
-          </div>
-        </div>
-      </main>
-    );
+    throw new Error(detail.error || "Unable to load tour");
   }
 
   if (!detail.data) notFound();
@@ -123,12 +101,10 @@ export default async function TourPage({
           "h2",
           "h3",
           "h4",
-          "img",
         ]),
         allowedAttributes: {
           ...sanitizeHtml.defaults.allowedAttributes,
           a: ["href", "name", "target", "rel"],
-          img: ["src", "alt", "title", "width", "height", "loading"],
         },
       })
     : "";
