@@ -2,6 +2,7 @@
 
 import { createBokunUrl, generateBokunHeaders } from "@/lib/bokun";
 import { syncCitiesFromProducts } from "./city.actions";
+import { slugifyForUrl } from "@/lib/utils";
 import {
   BokunProduct,
   BokunSearchResponse,
@@ -60,12 +61,18 @@ function transformProductToCityCard(product: unknown): CityCardData {
     keyPhoto: unknown;
     googlePlace?: { city: string; country: string; countryCode: string };
   };
+  const cityName = productData.googlePlace?.city ?? productData.title;
+  const citySlug = slugifyForUrl(cityName);
+  const titleSlug = slugifyForUrl(productData.title);
+  const slug = titleSlug === "unknown" ? productData.id : `${titleSlug}-${productData.id}`;
   return {
     id: productData.id,
-    title: productData.googlePlace?.city ?? productData.title,
+    title: cityName,
     image: extractThumbnailUrl(productData.keyPhoto),
     countryCode: productData.googlePlace?.countryCode ?? "",
     country: productData.googlePlace?.country ?? "Unknown",
+    citySlug,
+    slug,
   };
 }
 
@@ -82,7 +89,7 @@ export async function getProductsPage(
   countryCode?: string | null,
 ): Promise<GetProductsPageResult> {
   const pageNum = Math.max(1, Math.floor(page));
-  const cacheKey = `bokun-products-page-${pageNum}-${countryCode ?? "all"}`;
+  const cacheKey = `bokun-products-page-v2-${pageNum}-${countryCode ?? "all"}`;
   try {
     const cached = pageCache.get(cacheKey);
 
@@ -215,7 +222,7 @@ export async function getProductsPage(
 export async function getAllProducts(): Promise<GetAllProductsResult> {
   try {
     // Check cache first
-    const cacheKey = "bokun-products";
+    const cacheKey = "bokun-products-v2";
     const cached = cache.get(cacheKey);
 
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {

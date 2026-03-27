@@ -1,112 +1,274 @@
 {
-  "agendaLocationFilters": {
-    "geoBoundingBoxFilter": {
-      "bottomRight": {
-        "lat": 0,
-        "lng": 0
-      },
-      "topLeft": {
-        "lat": 0,
-        "lng": 0
-      }
-    },
-    "geoDistanceFilter": {
-      "center": {
-        "lat": 0,
-        "lng": 0
-      },
-      "distance": "string"
-    },
-    "geoDistanceRangeFilter": {
-      "center": {
-        "lat": 0,
-        "lng": 0
-      },
-      "fromDistance": "string",
-      "includeLower": true,
-      "includeUpper": true,
-      "toDistance": "string"
-    },
-    "geoPolygonFilter": {
-      "points": [
-        {
-          "lat": 0,
-          "lng": 0
-        }
-      ]
-    }
-  },
-  "comboActivity": true,
-  "dateFormats": [
-    "string"
-  ],
-  "endDate": "string",
-  "excludeBoxes": true,
-  "externalId": "string",
-  "facetFilters": [
+  "id": 9751538,
+  "originalUrl": "https://bokun.s3.amazonaws.com/d1f7ddc3-0019-4f6b-8b44-51572c80f4df.jpg",
+  "description": null,
+  "alternateText": null,
+  "height": null,
+  "width": null,
+  "fileName": "/d1f7ddc3-0019-4f6b-8b44-51572c80f4df.jpg",
+  "flags": [],
+  "derived": [
     {
-      "excluded": true,
-      "name": "string",
-      "values": [
-        "string"
-      ]
+      "name": "thumbnail",
+      "url": "https://imgcdn.bokun.tools/d1f7ddc3-0019-4f6b-8b44-51572c80f4df.jpg?w=80&h=80&mode=crop",
+      "cleanUrl": "https://imgcdn.bokun.tools/d1f7ddc3-0019-4f6b-8b44-51572c80f4df.jpg?w=80&h=80&mode=crop"
+    },
+    {
+      "name": "preview",
+      "url": "https://imgcdn.bokun.tools/d1f7ddc3-0019-4f6b-8b44-51572c80f4df.jpg?w=300&h=300",
+      "cleanUrl": "https://imgcdn.bokun.tools/d1f7ddc3-0019-4f6b-8b44-51572c80f4df.jpg?w=300&h=300"
+    },
+    {
+      "name": "large",
+      "url": "https://imgcdn.bokun.tools/d1f7ddc3-0019-4f6b-8b44-51572c80f4df.jpg?w=660&h=660",
+      "cleanUrl": "https://imgcdn.bokun.tools/d1f7ddc3-0019-4f6b-8b44-51572c80f4df.jpg?w=660&h=660"
     }
-  ],
-  "page": 0,
-  "pageSize": 0,
-  "participants": 0,
-  "participantsByAge": [
-    0
-  ],
-  "publishedSince": "string",
-  "sortField": "BEST_SELLING_GLOBAL",
-  "sortOrder": "string",
-  "startDate": "string",
-  "startPointLocationFilters": {
-    "geoBoundingBoxFilter": {
-      "bottomRight": {
-        "lat": 0,
-        "lng": 0
-      },
-      "topLeft": {
-        "lat": 0,
-        "lng": 0
-      }
-    },
-    "geoDistanceFilter": {
-      "center": {
-        "lat": 0,
-        "lng": 0
-      },
-      "distance": "string"
-    },
-    "geoDistanceRangeFilter": {
-      "center": {
-        "lat": 0,
-        "lng": 0
-      },
-      "fromDistance": "string",
-      "includeLower": true,
-      "includeUpper": true,
-      "toDistance": "string"
-    },
-    "geoPolygonFilter": {
-      "points": [
-        {
-          "lat": 0,
-          "lng": 0
-        }
-      ]
-    }
-  },
-  "textFilter": {
-    "operator": "string",
-    "searchExternalId": true,
-    "searchFullText": true,
-    "searchKeywords": true,
-    "searchTitle": true,
-    "text": "string",
-    "wildcard": true
-  },
-  "vendorId": 0
+  ]
 }
+],
+"videos": [],
+"fields": {
+"durationHours": 2,
+"durationWeeks": 0,
+"durationText": "2 hours",
+"comboComponentsInventory": null,
+"cutoffReferenceMinute": 0,
+"bookingCutoffDays": 0,
+"dayOptions": [],
+"meetingType": "MEET_ON_LOCATION",
+"durationDays": 0,
+"durationMinutes": 0,
+"dayBasedAvailability": false,
+"bookingCutoffMinutes": 0,
+"cutoffType": "RELATIVE_TO_START_TIME",
+"cutoffReferenceHour": 0,
+"selectFromDayOptions": false,
+"comboComponents": [],
+"bookingCutoffHours": 10,
+"comboActivity": false,
+"bookingCutoffWeeks": 0
+}
+},
+{
+"id": "1107331",
+"externalId": "5591921P36",
+"productGroupId": 0,
+"title": "Hello Dijon: Private 2-Hour Intro City Walk with Local Guide",
+"summary": "Get introduced to Dijon in the most authentic way: through its highlights, history, local flavors, and with a trusted local guide by your side.<br/><br/>Along the way, you’ll explore iconic landmarks such as the Owl of Dijon at Église Notre-Dame and the majestic Palais des Ducs, as well as local favorites and hidden corners loved by locals. Engaging anecdotes and personal insights from your local guide will connect Dijon’s history, culture, and tradition, bringing the city to life in an authentic and memorable way.<br/><br/>To complete the experience, enjoy a tasting of a local specialty such as the famous Dijon mustard. Whether sweet, savory, or regional, you’ll taste a real part of Dijon’s everyday culture and traditions.<br/><br/>By the end of the tour, you’ll have a great introduction to Dijon, its local culture, and how to explore it on your own. You’ll walk away with personal recommendations and local tips on where to eat and what to see next, helping you make the most of your time in the city",
+"price": 34633,
+"locationCode": {
+"country": "FR",
+"location": "Dijon",
+"name": "Dijon"
+},
+"googlePlace": {
+"country": "France",
+"countryCode": "FR",
+"city": "Dijon",
+"cityCode": "Dijon",
+"geoLocationCenter": {
+  "lat": 47.32346,
+  "lng": 5.043647
+},
+"addressTypes": []
+},
+"vendor": {
+"id": 125427,
+"title": "LocalCityWalks"
+},
+"box": false,
+"inventoryLocal": true,
+"usedInAffiliateHub": false,
+"showInMarketplaceSearch": false,
+"boxedProductId": 0,
+"boxedSupplierId": 0,
+"difficultyLevel": "EASY",
+"activityCategories": [
+"WALKING_TOUR",
+"CULTURAL_AND_THEME_TOURS",
+"CITY_TOURS"
+],
+"keywords": [
+"Walk",
+"2-Hour",
+"with",
+"Guide",
+"Hello",
+"Intro",
+"Dijon:",
+"Local",
+"Private",
+"City"
+],
+"flags": [],
+"reviewRating": 0,
+"reviewCount": 0,
+"durationText": "2 hours",
+"baseLanguage": "en_GB",
+"languages": [
+"EN_GB"
+],
+"paymentCurrencies": [],
+"customFields": [
+{
+  "type": "string",
+  "flags": [],
+  "code": "google_exp_itinerary",
+  "title": null,
+  "inputFieldId": null,
+  "value": "https://maps.app.goo.gl/bJK6HGm6cW243jQb7"
+},
+{
+  "type": "string",
+  "flags": [],
+  "code": "meeting_point_description",
+  "title": null,
+  "inputFieldId": null,
+  "value": "Meet your guide at the arch next to BNP Paribas."
+},
+{
+  "type": "string",
+  "flags": [],
+  "code": "meeting_point_link",
+  "title": null,
+  "inputFieldId": null,
+  "value": "https://maps.app.goo.gl/26VvuZYatdHgZdUX9"
+}
+],
+"places": [
+{
+  "id": 3311073,
+  "title": "",
+  "location": {
+    "address": "Place Notre Dame, ",
+    "city": "Dijon",
+    "countryCode": "FR",
+    "postCode": "21000",
+    "latitude": 47.32236,
+    "longitude": 5.04112,
+    "zoomLevel": 6,
+    "origin": null,
+    "originId": null,
+    "wholeAddress": "Place Notre Dame, , 21000 Dijon"
+  }
+},
+{
+  "id": 3311074,
+  "title": "",
+  "location": {
+    "address": null,
+    "city": "Côte-d'Or",
+    "countryCode": "FR",
+    "postCode": "21000",
+    "latitude": 47.321011999999996,
+    "longitude": 5.041408,
+    "zoomLevel": 6,
+    "origin": null,
+    "originId": null,
+    "wholeAddress": "21000 Côte-d'Or"
+  }
+},
+{
+  "id": 3311075,
+  "title": "",
+  "location": {
+    "address": "Place des ducs de bourgogne",
+    "city": "Dijon",
+    "countryCode": "FR",
+    "postCode": "21000",
+    "latitude": 47.322006,
+    "longitude": 5.041613,
+    "zoomLevel": 6,
+    "origin": null,
+    "originId": null,
+    "wholeAddress": "Place des ducs de bourgogne, 21000 Dijon"
+  }
+},
+{
+  "id": 3311076,
+  "title": "",
+  "location": {
+    "address": null,
+    "city": "Dijon",
+    "countryCode": "FR",
+    "postCode": "21000",
+    "latitude": 47.32213,
+    "longitude": 5.04056,
+    "zoomLevel": 6,
+    "origin": null,
+    "originId": null,
+    "wholeAddress": "21000 Dijon"
+  }
+},
+{
+  "id": 3311077,
+  "title": "",
+  "location": {
+    "address": "Les Halles, Rue Odebert",
+    "city": "Dijon",
+    "countryCode": "FR",
+    "postCode": "21000",
+    "latitude": 47.32394,
+    "longitude": 5.039942,
+    "zoomLevel": 6,
+    "origin": null,
+    "originId": null,
+    "wholeAddress": "Les Halles, Rue Odebert, 21000 Dijon"
+  }
+}
+],
+"keyPhoto": {
+"id": 9939315,
+"originalUrl": "https://bokun.s3.amazonaws.com/8e10a382-1dfd-4db1-a801-c646a125331b.jpg",
+"description": null,
+"alternateText": null,
+"height": null,
+"width": null,
+"fileName": "/8e10a382-1dfd-4db1-a801-c646a125331b.jpg",
+"flags": [],
+"derived": [
+  {
+    "name": "thumbnail",
+    "url": "https://imgcdn.bokun.tools/8e10a382-1dfd-4db1-a801-c646a125331b.jpg?w=80&h=80&mode=crop",
+    "cleanUrl": "https://imgcdn.bokun.tools/8e10a382-1dfd-4db1-a801-c646a125331b.jpg?w=80&h=80&mode=crop"
+  },
+  {
+    "name": "preview",
+    "url": "https://imgcdn.bokun.tools/8e10a382-1dfd-4db1-a801-c646a125331b.jpg?w=300&h=300",
+    "cleanUrl": "https://imgcdn.bokun.tools/8e10a382-1dfd-4db1-a801-c646a125331b.jpg?w=300&h=300"
+  },
+  {
+    "name": "large",
+    "url": "https://imgcdn.bokun.tools/8e10a382-1dfd-4db1-a801-c646a125331b.jpg?w=660&h=660",
+    "cleanUrl": "https://imgcdn.bokun.tools/8e10a382-1dfd-4db1-a801-c646a125331b.jpg?w=660&h=660"
+  }
+]
+},
+"photos": [
+{
+  "id": 9939315,
+  "originalUrl": "https://bokun.s3.amazonaws.com/8e10a382-1dfd-4db1-a801-c646a125331b.jpg",
+  "description": null,
+  "alternateText": null,
+  "height": null,
+  "width": null,
+  "fileName": "/8e10a382-1dfd-4db1-a801-c646a125331b.jpg",
+  "flags": [],
+  "derived": [
+    {
+      "name": "thumbnail",
+      "url": "https://imgcdn.bokun.tools/8e10a382-1dfd-4db1-a801-c646a125331b.jpg?w=80&h=80&mode=crop",
+      "cleanUrl": "https://imgcdn.bokun.tools/8e10a382-1dfd-4db1-a801-c646a125331b.jpg?w=80&h=80&mode=crop"
+    },
+    {
+      "name": "preview",
+      "url": "https://imgcdn.bokun.tools/8e10a382-1dfd-4db1-a801-c646a125331b.jpg?w=300&h=300",
+      "cleanUrl": "https://imgcdn.bokun.tools/8e10a382-1dfd-4db1-a801-c646a125331b.jpg?w=300&h=300"
+    },
+    {
+      "name": "large",
+      "url": "https://imgcdn.bokun.tools/8e10a382-1dfd-4db1-a801-c646a125331b.jpg?w=660&h=660",
+      "cleanUrl": "https://imgcdn.bokun.tools/8e10a382-1dfd-4db1-a801-c646a125331b.jpg?w=660&h=660"
+    }
+  ]
+},

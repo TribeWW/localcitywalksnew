@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
-import Header from "@/components/shared/Header";
-import MobileHeader from "@/components/shared/MobileHeader";
+import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import Script from "next/script";
 import { config } from "@/lib/config";
@@ -145,8 +144,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           </noscript>
         )}
         {/* End Google Tag Manager (noscript) */}
-        <Header />
-        <MobileHeader />
+        <Navbar />
         {children}
         <Footer />
         <Toaster />
