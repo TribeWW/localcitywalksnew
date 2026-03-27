@@ -23,6 +23,12 @@ const pageCache = new Map<
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes in milliseconds
 const PAGE_SIZE = 20;
 
+/**
+ * Create a URL-safe slug from a raw string.
+ *
+ * @param raw - The input string to convert; leading/trailing whitespace is ignored.
+ * @returns A lowercase, ASCII-only slug with words separated by single hyphens; returns `"unknown"` if the input is empty or the resulting slug is empty.
+ */
 function slugifyForUrl(raw: string): string {
   const trimmed = raw.trim();
   if (!trimmed) return "unknown";
@@ -63,9 +69,10 @@ function extractThumbnailUrl(keyPhoto: unknown): string {
 }
 
 /**
- * Transform Bokun product to CityCardData format
- * @param product - Raw product from Bokun API
- * @returns Transformed CityCardData object
+ * Convert a Bokun product record into a CityCardData object.
+ *
+ * @param product - Raw Bokun product object; expected to include `id`, `title`, optional `keyPhoto`, and optional `googlePlace` with `city`, `country`, and `countryCode`.
+ * @returns CityCardData containing `id`, `title` (resolved from `googlePlace.city` or `title`), `image` (thumbnail URL or placeholder), `countryCode`, `country`, `citySlug` (slugified city name), and `slug` (slugified title with `id`, or `id` when title is unknown).
  */
 function transformProductToCityCard(product: unknown): CityCardData {
   const productData = product as {
@@ -90,12 +97,13 @@ function transformProductToCityCard(product: unknown): CityCardData {
 }
 
 /**
- * Server action to fetch one page of products from Bokun API (pageSize 20).
- * Used for initial load and "Show more"; returns data + totalHits for pagination UI.
- * When countryCode is provided, uses facetFilters so the API returns only that country (one request = up to 20 results).
- * @param page - 1-based page number
- * @param countryCode - optional ISO2 country code (e.g. "FR", "ES"); when set, request uses facetFilters for server-side filter
- * @returns Promise<GetProductsPageResult>
+ * Fetches one page of products from the Bokun API, returns transformed city-card data and total hits for pagination.
+ *
+ * Triggers a background synchronization of cities from the fetched products and caches paginated results (short TTL).
+ *
+ * @param page - 1-based page number to fetch
+ * @param countryCode - Optional ISO2 country code (e.g. "FR", "ES"); when provided the request is filtered server-side to that country
+ * @returns On success, an object containing `data` (array of `CityCardData`) and `totalHits`; on failure, an object containing `error` describing the failure
  */
 export async function getProductsPage(
   page: number,
@@ -228,9 +236,9 @@ export async function getProductsPage(
 }
 
 /**
- * Server action to fetch all products from Bokun API
- * Includes caching, error handling, and timeout protection
- * @returns Promise<GetAllProductsResult>
+ * Fetches a page of products from the Bokun API, transforms them into CityCardData, triggers a background sync, and caches the results.
+ *
+ * @returns `GetAllProductsResult` — on success `{ success: true, data: CityCardData[] }`; on failure `{ success: false, error: string }`
  */
 export async function getAllProducts(): Promise<GetAllProductsResult> {
   try {

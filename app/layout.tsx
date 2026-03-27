@@ -68,6 +68,12 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Root layout component that renders the top-level HTML document, site metadata, analytics scripts, and global layout.
+ *
+ * @param children - The page content to render inside the layout.
+ * @returns The root `<html>` element containing the `<head>` (analytics scripts and JSON-LD) and `<body>` with the global navigation, `children`, footer, and toast container.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{

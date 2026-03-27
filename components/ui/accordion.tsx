@@ -6,12 +6,24 @@ import { Accordion as AccordionPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Renders a Radix UI Accordion root element and forwards received props.
+ *
+ * @returns The rendered Accordion root element (`JSX.Element`).
+ */
 function Accordion({
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Root>) {
   return <AccordionPrimitive.Root data-slot="accordion" {...props} />
 }
 
+/**
+ * Wraps Radix's Accordion Item with default border styling and a data-slot attribute.
+ *
+ * @param className - Additional CSS class names to merge with the default border styles (`"border-b last:border-b-0"`).
+ * @param props - Remaining props are forwarded to the underlying `AccordionPrimitive.Item`.
+ * @returns A React element rendering `AccordionPrimitive.Item` with merged `className`, `data-slot="accordion-item"`, and forwarded props.
+ */
 function AccordionItem({
   className,
   ...props
@@ -25,6 +37,13 @@ function AccordionItem({
   )
 }
 
+/**
+ * Renders an accordion trigger inside a header with a chevron icon that rotates when opened.
+ *
+ * @param className - Optional additional class names merged with the component's default styling
+ * @param children - Content to display inside the trigger
+ * @returns The accordion trigger element wrapped in a header, including default classes, state-driven chevron rotation, and all forwarded props
+ */
 function AccordionTrigger({
   className,
   children,
@@ -47,6 +66,15 @@ function AccordionTrigger({
   )
 }
 
+/**
+ * Renders the collapsible content area for an accordion item.
+ *
+ * The component applies overflow handling, small text sizing, and state-driven open/close animations, and wraps `children` in an inner container that accepts additional spacing or style classes.
+ *
+ * @param className - Additional CSS classes to apply to the inner content container
+ * @param children - Content to display inside the accordion content region
+ * @returns The accordion content element
+ */
 function AccordionContent({
   className,
   children,

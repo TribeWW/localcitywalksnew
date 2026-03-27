@@ -12,6 +12,12 @@ interface CityCardProps {
   noHorizontalPadding?: boolean;
 }
 
+/**
+ * Convert a raw string into a URL-safe lowercase slug suitable for path segments.
+ *
+ * @param raw - The input string to convert into a slug
+ * @returns The resulting slug containing only lowercase letters, digits, and dashes; returns `"unknown"` if the input is empty or produces an empty slug
+ */
 function slugifyForUrl(raw: string): string {
   const trimmed = raw.trim();
   if (!trimmed) return "unknown";

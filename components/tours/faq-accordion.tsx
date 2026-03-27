@@ -16,6 +16,12 @@ interface FaqAccordionProps {
   items: FaqItem[];
 }
 
+/**
+ * Render an accordion containing FAQ entries.
+ *
+ * @param items - Array of FAQ entries; each item supplies the question shown in the trigger and the answer shown in the content
+ * @returns A JSX element with an Accordion where each item becomes a single collapsible entry
+ */
 export default function FaqAccordion({ items }: FaqAccordionProps) {
   return (
     <Accordion type="single" collapsible className="w-full">

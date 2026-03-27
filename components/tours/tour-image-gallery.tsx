@@ -16,6 +16,16 @@ interface TourImageGalleryProps {
   title: string;
 }
 
+/**
+ * Render a responsive tour image gallery with a fullscreen dialog, keyboard arrows, and button navigation.
+ *
+ * The component shows a single-image mobile preview and a desktop mosaic preview. Activating a preview opens a fullscreen
+ * dialog with horizontal snap-scrolling slides, previous/next controls (when more than one image), and a slide counter.
+ *
+ * @param images - Array of image URLs; falsy entries are ignored before rendering.
+ * @param title - Title used for image `alt` text and accessibility labels.
+ * @returns A React element containing the gallery UI, or `null` when there are no valid images.
+ */
 export default function TourImageGallery({
   images,
   title,

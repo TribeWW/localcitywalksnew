@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
+/**
+ * Render a full-page "Tour not found" UI with actions to browse available tours or contact support.
+ *
+ * Displays a heading, a brief explanatory paragraph, and two call-to-action buttons linking to `/#cities` and `/#contact`.
+ *
+ * @returns A JSX element representing the not-found page UI
+ */
 export default function NotFound() {
   return (
     <main className="min-h-screen bg-pearlgray">

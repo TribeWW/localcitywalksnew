@@ -18,6 +18,13 @@ import { cn } from "@/lib/utils";
 
 const BROWSE_HREF = "/#cities";
 
+/**
+ * Top navigation bar that renders the site logo, a "Browse tours" action, and a responsive mobile slide-out menu.
+ *
+ * Tracks page scroll to conditionally apply a shadow to the sticky header and manages the mobile menu open/close state.
+ *
+ * @returns The navigation header JSX element.
+ */
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
