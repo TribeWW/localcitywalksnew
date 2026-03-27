@@ -109,7 +109,7 @@ export default async function TourPage({
     new Set([heroImage, ...gallery].filter(Boolean)),
   ) as string[];
 
-  const cityDisplayName = gpCity.trim() || "City";
+  const cityDisplayName = gpCity?.trim() || "City";
 
   const productTitle = detail.data.title;
   const excerpt = detail.data.excerpt?.trim() ?? "";
