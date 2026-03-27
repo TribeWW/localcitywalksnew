@@ -7,14 +7,15 @@ export default function TourRequestFormSection({
 }: {
   cityName: string;
 }) {
+  // For inline forms, onClose resets rather than dismissing a modal.
+  // Note: This requires TourRequestForm to expose a ref or callback to reset.
   return (
     <TourRequestForm
       cityName={cityName}
       onClose={() => {
-        // Inline form: on success we just keep the user on-page.
-        // (TourRequestForm resets itself after calling onClose.)
+        // No-op: form handles its own reset after calling onClose.
+        // Consider adding scroll-to-top or visual feedback here.
       }}
     />
   );
 }
-

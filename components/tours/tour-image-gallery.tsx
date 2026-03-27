@@ -26,7 +26,8 @@ export default function TourImageGallery({
 
   const safeImages = useMemo(() => images.filter(Boolean), [images]);
   const canNavigate = safeImages.length > 1;
-  const remainingCount = Math.max(0, safeImages.length - 4);
+  /** Photos beyond the four mosaic slots (only relevant when we show all four previews). */
+  const remainingAfterFour = Math.max(0, safeImages.length - 4);
 
   function openAt(index: number) {
     setActiveIndex(index);
@@ -86,21 +87,25 @@ export default function TourImageGallery({
 
   if (safeImages.length === 0) return null;
 
-  const idx0 = 0;
-  const idx1 = Math.min(1, safeImages.length - 1);
-  const idx2 = Math.min(2, safeImages.length - 1);
-  const idx3 = Math.min(3, safeImages.length - 1);
+  const n = safeImages.length;
 
   return (
     <>
       {/* Mobile: show one image only, open fullscreen on tap */}
       <button
         type="button"
-        onClick={() => openAt(idx0)}
+        onClick={() => openAt(0)}
         className="relative mb-10 h-[260px] w-full overflow-hidden rounded-xl bg-white shadow-sm md:hidden"
         aria-label="Open image gallery fullscreen"
       >
-        <Image src={safeImages[idx0]} alt={title} fill className="object-cover" priority />
+        <Image
+          src={safeImages[0]}
+          alt={title}
+          fill
+          className="object-cover"
+          sizes="(max-width: 767px) 100vw, 1px"
+          priority
+        />
         {safeImages.length > 1 && (
           <div className="absolute bottom-3 right-3 rounded-md bg-black/60 px-3 py-1 text-xs font-medium text-white">
             {safeImages.length} photos
@@ -108,72 +113,166 @@ export default function TourImageGallery({
         )}
       </button>
 
-      {/* Desktop: editorial mosaic preview similar to design */}
+      {/* Desktop: mosaic adapts when fewer than four images (no duplicate indices). */}
       <section className="mb-10 hidden md:block">
-        <div className="grid h-[420px] grid-cols-12 gap-3">
+        {n === 1 ? (
           <button
             type="button"
-            onClick={() => openAt(idx0)}
-            className="relative col-span-6 overflow-hidden rounded-xl bg-white shadow-sm"
-            aria-label="Open first image fullscreen"
+            onClick={() => openAt(0)}
+            className="relative h-[420px] w-full overflow-hidden rounded-xl bg-white shadow-sm"
+            aria-label="Open image gallery fullscreen"
           >
             <Image
-              src={safeImages[idx0]}
-              alt={`${title} image ${idx0 + 1}`}
+              src={safeImages[0]}
+              alt={`${title} image 1`}
               fill
               className="object-cover"
+              sizes="(max-width: 767px) 1px, min(100vw, 1152px)"
               priority
             />
           </button>
-
-          <button
-            type="button"
-            onClick={() => openAt(idx1)}
-            className="relative col-span-3 overflow-hidden rounded-xl bg-white shadow-sm"
-            aria-label="Open second image fullscreen"
-          >
-            <Image
-              src={safeImages[idx1]}
-              alt={`${title} image ${idx1 + 1}`}
-              fill
-              className="object-cover"
-            />
-          </button>
-
-          <div className="col-span-3 grid grid-rows-2 gap-3">
+        ) : n === 2 ? (
+          <div className="grid h-[420px] grid-cols-2 gap-3">
+            {[0, 1].map((i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => openAt(i)}
+                className="relative overflow-hidden rounded-xl bg-white shadow-sm"
+                aria-label={`Open image ${i + 1} fullscreen`}
+              >
+                <Image
+                  src={safeImages[i]}
+                  alt={`${title} image ${i + 1}`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 767px) 1px, 45vw"
+                />
+              </button>
+            ))}
+          </div>
+        ) : n === 3 ? (
+          <div className="grid h-[420px] grid-cols-12 grid-rows-2 gap-3">
             <button
               type="button"
-              onClick={() => openAt(idx2)}
-              className="relative overflow-hidden rounded-xl bg-white shadow-sm"
-              aria-label="Open third image fullscreen"
+              onClick={() => openAt(0)}
+              className="relative col-span-6 row-span-2 overflow-hidden rounded-xl bg-white shadow-sm"
+              aria-label="Open image 1 fullscreen"
             >
               <Image
-                src={safeImages[idx2]}
-                alt={`${title} image ${idx2 + 1}`}
+                src={safeImages[0]}
+                alt={`${title} image 1`}
                 fill
                 className="object-cover"
+                sizes="(max-width: 767px) 1px, 50vw"
+                priority
               />
             </button>
-
             <button
               type="button"
-              onClick={() => openAt(idx3)}
-              className="relative overflow-hidden rounded-xl bg-white shadow-sm"
-              aria-label="Open gallery fullscreen"
+              onClick={() => openAt(1)}
+              className="relative col-span-6 row-start-1 overflow-hidden rounded-xl bg-white shadow-sm"
+              aria-label="Open image 2 fullscreen"
             >
               <Image
-                src={safeImages[idx3]}
-                alt={`${title} image ${idx3 + 1}`}
+                src={safeImages[1]}
+                alt={`${title} image 2`}
                 fill
                 className="object-cover"
+                sizes="(max-width: 767px) 1px, 45vw"
               />
-              <div className="absolute bottom-3 right-3 inline-flex items-center gap-2 rounded-md bg-white/95 px-3 py-1.5 text-sm font-medium text-nightsky shadow">
-                <Eye className="size-4" />
-                <span>{remainingCount > 0 ? `+${remainingCount} photos` : "View photos"}</span>
-              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => openAt(2)}
+              className="relative col-span-6 row-start-2 overflow-hidden rounded-xl bg-white shadow-sm"
+              aria-label="Open image 3 fullscreen"
+            >
+              <Image
+                src={safeImages[2]}
+                alt={`${title} image 3`}
+                fill
+                className="object-cover"
+                sizes="(max-width: 767px) 1px, 45vw"
+              />
             </button>
           </div>
-        </div>
+        ) : (
+          <div className="grid h-[420px] grid-cols-12 gap-3">
+            <button
+              type="button"
+              onClick={() => openAt(0)}
+              className="relative col-span-6 overflow-hidden rounded-xl bg-white shadow-sm"
+              aria-label="Open image 1 fullscreen"
+            >
+              <Image
+                src={safeImages[0]}
+                alt={`${title} image 1`}
+                fill
+                className="object-cover"
+                sizes="(max-width: 767px) 1px, 50vw"
+                priority
+              />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => openAt(1)}
+              className="relative col-span-3 overflow-hidden rounded-xl bg-white shadow-sm"
+              aria-label="Open image 2 fullscreen"
+            >
+              <Image
+                src={safeImages[1]}
+                alt={`${title} image 2`}
+                fill
+                className="object-cover"
+                sizes="(max-width: 767px) 1px, 26vw"
+              />
+            </button>
+
+            <div className="col-span-3 grid grid-rows-2 gap-3">
+              <button
+                type="button"
+                onClick={() => openAt(2)}
+                className="relative overflow-hidden rounded-xl bg-white shadow-sm"
+                aria-label="Open image 3 fullscreen"
+              >
+                <Image
+                  src={safeImages[2]}
+                  alt={`${title} image 3`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 767px) 1px, 26vw"
+                />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => openAt(3)}
+                className="relative overflow-hidden rounded-xl bg-white shadow-sm"
+                aria-label={
+                  remainingAfterFour > 0
+                    ? `Open gallery fullscreen, ${remainingAfterFour} more photos not shown in preview`
+                    : "Open image 4 fullscreen"
+                }
+              >
+                <Image
+                  src={safeImages[3]}
+                  alt={`${title} image 4`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 767px) 1px, 26vw"
+                />
+                {remainingAfterFour > 0 ? (
+                  <div className="absolute bottom-3 right-3 inline-flex items-center gap-2 rounded-md bg-white/95 px-3 py-1.5 text-sm font-medium text-nightsky shadow">
+                    <Eye className="size-4" />
+                    <span>{`+${remainingAfterFour} photos`}</span>
+                  </div>
+                ) : null}
+              </button>
+            </div>
+          </div>
+        )}
       </section>
 
       <Dialog open={open} onOpenChange={setOpen}>

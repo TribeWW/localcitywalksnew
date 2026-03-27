@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { BadgeCheck, Clock, Globe, Users } from "lucide-react";
 import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
-import { stripAccents } from "@/lib/utils";
+import { slugifyForUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TourRequestFormSection from "@/components/tours/tour-request-form-section";
 import TourImageGallery from "@/components/tours/tour-image-gallery";
 import FaqAccordion from "@/components/tours/faq-accordion";
+import DOMPurify from "isomorphic-dompurify";
 
 function extractIdFromSlug(slug: string): string | null {
   const trimmed = slug.trim();
@@ -24,19 +25,6 @@ function extractIdFromSlug(slug: string): string | null {
   if (parts.length === 0) return null;
   const last = parts[parts.length - 1];
   return /^\d+$/.test(last) ? last : null;
-}
-
-function slugifyForUrl(raw: string): string {
-  const trimmed = raw.trim();
-  if (!trimmed) return "unknown";
-  const noAccents = stripAccents(trimmed);
-  const withDashes = noAccents
-    .replace(/\//g, "-")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-  const lower = withDashes.toLowerCase();
-  const slugSafe = lower.replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-");
-  return slugSafe.replace(/^-|-$/g, "") || "unknown";
 }
 
 function pickBestPhotoUrl(photo: unknown, preferred: string[]): string | null {
@@ -124,7 +112,9 @@ export default async function TourPage({
   const productTitle = detail.data.title;
   const excerpt = detail.data.excerpt?.trim() ?? "";
   const aboutHtml =
-    detail.data.description?.trim() || detail.data.summary?.trim() || "" || "";
+    detail.data.description?.trim() || detail.data.summary?.trim() || "";
+
+  const sanitizedAboutHtml = aboutHtml ? DOMPurify.sanitize(aboutHtml) : "";
 
   return (
     <main className="min-h-screen bg-white">
@@ -219,7 +209,7 @@ export default async function TourPage({
                 </h2>
                 <div
                   className="flex flex-col gap-6 text-base leading-[1.6] text-[#1A1A1A] [&_p]:m-0 [&_p]:!text-[#1A1A1A] [&_p]:text-base [&_p]:leading-[1.6]"
-                  dangerouslySetInnerHTML={{ __html: aboutHtml }}
+                  dangerouslySetInnerHTML={{ __html: sanitizedAboutHtml }}
                 />
               </section>
             ) : null}

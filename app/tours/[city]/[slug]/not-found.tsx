@@ -3,11 +3,9 @@ import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
   return (
-    <main className="min-h-screen bg-pearlgray">
+    <main className="min-h-screen bg-pearl-gray">
       <div className="mx-auto w-full max-w-3xl px-4 md:px-8 xl:px-0 py-16">
-        <h1 className="text-3xl font-semibold text-nightsky">
-          Tour not found
-        </h1>
+        <h1 className="text-3xl font-semibold text-nightsky">Tour not found</h1>
         <p className="mt-3 text-muted-foreground">
           This tour may no longer be available, or the link may be incorrect.
         </p>

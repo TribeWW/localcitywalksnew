@@ -3,10 +3,7 @@
 import { createBokunUrl, generateBokunHeaders } from "@/lib/bokun";
 import { BOKUN_ENDPOINTS } from "@/lib/bokun/config";
 // Single-product fetch uses PRODUCT_BY_ID only; URL slug is our format (slugify(title)-id), not Bokun's.
-import type {
-  BokunProductDetail,
-  GetTourDetailResult,
-} from "@/types/bokun";
+import type { BokunProductDetail, GetTourDetailResult } from "@/types/bokun";
 
 /** In-memory cache for single-product responses; 15min TTL aligned with getProductsPage */
 const detailCache = new Map<
@@ -67,8 +64,11 @@ export async function getTourDetailById(
 
     const raw = await response.json();
     const data = raw as BokunProductDetail;
-    if (!data?.id) {
-      console.error("Bokun tour detail: invalid response shape for id", trimmedId);
+    if (!data?.id || !data?.title) {
+      console.error(
+        "Bokun tour detail: invalid response shape for id",
+        trimmedId,
+      );
       return { success: false, error: "Unable to load tour" };
     }
 

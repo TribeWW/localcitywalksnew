@@ -3,26 +3,13 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { stripAccents } from "@/lib/utils";
+import { slugifyForUrl } from "@/lib/utils";
 import { CityCardData } from "@/types/bokun";
 
 interface CityCardProps {
   cities: CityCardData[];
   /** When true, grid has no horizontal padding (py-6 only); use when parent provides px-6 for alignment with a sibling (e.g. filter button) */
   noHorizontalPadding?: boolean;
-}
-
-function slugifyForUrl(raw: string): string {
-  const trimmed = raw.trim();
-  if (!trimmed) return "unknown";
-  const noAccents = stripAccents(trimmed);
-  const withDashes = noAccents
-    .replace(/\//g, "-")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-  const lower = withDashes.toLowerCase();
-  const slugSafe = lower.replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-");
-  return slugSafe.replace(/^-|-$/g, "") || "unknown";
 }
 
 const CityCard = ({ cities, noHorizontalPadding }: CityCardProps) => {

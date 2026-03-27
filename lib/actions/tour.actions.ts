@@ -2,7 +2,7 @@
 
 import { createBokunUrl, generateBokunHeaders } from "@/lib/bokun";
 import { syncCitiesFromProducts } from "./city.actions";
-import { stripAccents } from "@/lib/utils";
+import { slugifyForUrl } from "@/lib/utils";
 import {
   BokunProduct,
   BokunSearchResponse,
@@ -22,19 +22,6 @@ const pageCache = new Map<
 >();
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes in milliseconds
 const PAGE_SIZE = 20;
-
-function slugifyForUrl(raw: string): string {
-  const trimmed = raw.trim();
-  if (!trimmed) return "unknown";
-  const noAccents = stripAccents(trimmed);
-  const withDashes = noAccents
-    .replace(/\//g, "-")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-  const lower = withDashes.toLowerCase();
-  const slugSafe = lower.replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-");
-  return slugSafe.replace(/^-|-$/g, "") || "unknown";
-}
 
 /**
  * Extract thumbnail URL from keyPhoto derived array
