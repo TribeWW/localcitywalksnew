@@ -1,3 +1,10 @@
+/**
+ * Renders a page-level loading skeleton used while a tour detail page is loading.
+ *
+ * The skeleton includes a header-like set of shimmer bars and a large content placeholder.
+ *
+ * @returns A JSX element representing the loading skeleton UI
+ */
 export default function Loading() {
   return (
     <main className="min-h-screen bg-pearlgray">

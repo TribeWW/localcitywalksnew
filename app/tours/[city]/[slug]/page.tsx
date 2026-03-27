@@ -17,6 +17,12 @@ import TourRequestFormSection from "@/components/tours/tour-request-form-section
 import TourImageGallery from "@/components/tours/tour-image-gallery";
 import FaqAccordion from "@/components/tours/faq-accordion";
 
+/**
+ * Extracts a trailing numeric ID from a hyphen-separated slug.
+ *
+ * @param slug - Slug text where the last hyphen-separated segment may be a numeric identifier
+ * @returns The trailing numeric ID as a string if the last segment contains only digits, `null` otherwise
+ */
 function extractIdFromSlug(slug: string): string | null {
   const trimmed = slug.trim();
   if (!trimmed) return null;
@@ -26,6 +32,16 @@ function extractIdFromSlug(slug: string): string | null {
   return /^\d+$/.test(last) ? last : null;
 }
 
+/**
+ * Create a URL-safe slug from a raw city or place name.
+ *
+ * The returned slug is lowercase, contains only ASCII letters, digits, and dashes,
+ * and has no leading or trailing dashes. Accents are removed and common
+ * separators (slashes, whitespace, repeated dashes) are normalized to single dashes.
+ *
+ * @param raw - The input string to normalize into a slug
+ * @returns The resulting slug, or `"unknown"` if the input is empty or yields no valid characters
+ */
 function slugifyForUrl(raw: string): string {
   const trimmed = raw.trim();
   if (!trimmed) return "unknown";
@@ -39,6 +55,16 @@ function slugifyForUrl(raw: string): string {
   return slugSafe.replace(/^-|-$/g, "") || "unknown";
 }
 
+/**
+ * Selects the most appropriate photo URL from a photo object using a preference list.
+ *
+ * Tries `originalUrl` first; otherwise searches `derived` images for the first entry whose `name` matches an item
+ * in `preferred` (in order) and has a `url`, falling back to the first `derived` entry with any `url`.
+ *
+ * @param photo - An object that may contain `originalUrl?: string` and `derived?: Array<{ name?: string; url?: string }>`
+ * @param preferred - Ordered list of preferred `derived` image `name` values (highest priority first)
+ * @returns The chosen image URL, or `null` if no URL is available
+ */
 function pickBestPhotoUrl(photo: unknown, preferred: string[]): string | null {
   const photoData = photo as {
     originalUrl?: string;
@@ -59,6 +85,19 @@ function pickBestPhotoUrl(photo: unknown, preferred: string[]): string | null {
   return any?.url ?? null;
 }
 
+/**
+ * Server-side page component that renders the tour detail view for a given city/slug route.
+ *
+ * The component extracts a numeric tour id from `params.slug`, fetches tour details, and renders
+ * the tour page including image gallery, description, booking request form, and FAQ. If the slug
+ * does not contain a valid id or the backend reports "Tour not found", this component calls
+ * `notFound()`. If the fetched tour's canonical city slug differs from the route `city` param, it
+ * issues a redirect to the canonical `/tours/{city}/{slug}` URL. If the backend fetch fails for
+ * other reasons, a recoverable "could not load" fallback UI with retry/contact links is rendered.
+ *
+ * @param params - A promise resolving to an object with `city` and `slug` route parameters.
+ * @returns The tour detail page markup (JSX) or a fallback UI; may call `notFound()` or trigger a redirect.
+ */
 export default async function TourPage({
   params,
 }: {
