@@ -109,7 +109,7 @@ export default async function TourPage({
     new Set([heroImage, ...gallery].filter(Boolean)),
   ) as string[];
 
-  const cityDisplayName = gpCity?.trim() || "City";
+  const cityDisplayName = gpCity || "City";
 
   const productTitle = detail.data.title;
   const excerpt = detail.data.excerpt?.trim() ?? "";
@@ -303,7 +303,7 @@ export default async function TourPage({
               </CardHeader>
               <CardContent>
                 <TourRequestFormSection
-                  cityName={detail.data.googlePlace?.city ?? detail.data.title}
+                  cityName={gpCity ?? detail.data.title}
                 />
               </CardContent>
             </Card>
