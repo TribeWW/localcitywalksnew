@@ -41,7 +41,7 @@ export default function Navbar() {
           isScrolled && "shadow-[0px_4px_4px_rgba(0,0,0,0.05)]",
         )}
       >
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 md:px-6">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 md:px-0">
           <div className="flex flex-shrink-0 items-center gap-4">
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
@@ -129,7 +129,10 @@ export default function Navbar() {
           </div>
 
           <div className="flex flex-shrink-0 items-center">
-            <Link href={BROWSE_HREF} className={cn(browseClassName, "hidden lg:flex")}>
+            <Link
+              href={BROWSE_HREF}
+              className={cn(browseClassName, "hidden lg:flex")}
+            >
               Browse tours
             </Link>
           </div>
