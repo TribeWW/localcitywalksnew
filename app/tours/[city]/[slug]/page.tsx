@@ -111,7 +111,7 @@ export default async function TourPage({
 
   return (
     <main className="min-h-screen bg-white">
-      <div className="mx-auto w-full max-w-6xl px-4 md:px-8 xl:px-0 py-10">
+      <div className="mx-auto w-full max-w-6xl px-4 md:px-8 xl:px-0 py-6">
         <div className="mb-6 flex items-center justify-between gap-4">
           <Breadcrumb>
             <BreadcrumbList className="flex-wrap gap-2 text-xs text-[#6A6A6A] sm:gap-2">

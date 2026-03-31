@@ -35,6 +35,14 @@ Our color palette is inspired by vibrant, warm tones that evoke the excitement o
 - **Watermelon** `#040606` - Deep dark color for backgrounds and contrast
 - **Pearl Gray** `#f7f7f7` - Light background color, subtle borders
 
+In Tailwind v4 theme (`app/globals.css` `@theme inline`), brand colors map to utilities such as **`bg-tangerine`**, **`text-watermelon`**, **`bg-pearl-gray`**, etc. Prefer these tokens over arbitrary hex values when matching brand UI.
+
+### shadcn UI tokens (globals)
+
+The app uses **shadcn-style CSS variables** in `:root` / `.dark` for primitives such as **`background`**, **`foreground`**, **`border`**, **`muted`**, **`muted-foreground`**, **`primary`**, **`ring`**, and **`radius`**. Tailwind maps them to classes like **`bg-background`**, **`text-foreground`**, **`border-border`**, **`text-muted-foreground`**.
+
+- Secondary / helper copy often uses **`text-muted-foreground`**. The project sets **`--muted-foreground`** to **`#6A6A6A`** (light mode) for consistent gray body/supporting text alongside brand colors.
+
 ### Usage Guidelines
 
 - **Tangerine**: Primary buttons, links, important CTAs, brand highlights
@@ -103,6 +111,13 @@ Our spacing system is based on a 4px grid for consistency:
 - Active states should be obvious
 - Mobile-first responsive design
 - Smooth transitions between states
+
+**Global chrome** (see `app/layout.tsx`):
+
+- **`components/shared/Navbar.tsx`**: Sticky white bar; logo links home; primary CTA **Browse tours** → `/#cities`; mobile menu uses shadcn **Sheet** (left drawer).
+- **`components/shared/Footer.tsx`**: Light footer — logo, short tagline, copyright (minimal; expandable later).
+
+Tour pages add in-content navigation (e.g. **Breadcrumb**) in `app/tours/[city]/[slug]/page.tsx`.
 
 ## Responsive Design
 
@@ -180,9 +195,11 @@ Our spacing system is based on a 4px grid for consistency:
 
 ### Component Library
 
-- Reusable UI components in `components/ui/`
-- Page-specific components in `components/[section]/`
-- Shared components in `components/shared/`
+- Reusable UI components in `components/ui/` (Radix-based primitives: **Button**, **Dialog**, **Sheet**, **Accordion**, **Breadcrumb**, **Card**, etc.)
+- Feature components in `components/home/`, `components/tours/`, `components/forms/`, etc.
+- Shared layout/marketing in `components/shared/` (**Navbar**, **Footer**)
+
+Radix imports should use **scoped packages** (e.g. `@radix-ui/react-accordion`, `@radix-ui/react-slot`), not the umbrella `radix-ui` meta-package.
 
 ## Future Considerations
 

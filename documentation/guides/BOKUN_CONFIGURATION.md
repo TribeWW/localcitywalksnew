@@ -11,13 +11,22 @@ The application integrates with Bokun's booking API to fetch tour data and handl
 ```
 lib/
   bokun/
-    config.ts          # Configuration and API endpoints
-    index.ts           # Core utility functions
+    config.ts                 # Configuration and API endpoints
+    index.ts                  # createBokunUrl, generateBokunHeaders, etc.
+  actions/
+    tour.actions.ts           # Search / listing (getProductsPage, getAllProducts)
+    tour-detail.actions.ts    # Single product by id (getTourDetailById)
 app/
+  tours/[city]/[slug]/
+    page.tsx                  # City-first tour detail (server)
+    loading.tsx
+    not-found.tsx
+    error.tsx                 # Error UI when detail fetch fails (non-404)
   api/
-    tours/
-      route.ts         # API endpoint for fetching tours
+    dev/                      # Dev-only utilities (e.g. delete-all-cities)
 ```
+
+There is **no** public `/api/tours` route in this repo; Bokun is called only from **server actions** and server components.
 
 ## Configuration
 
@@ -91,6 +100,18 @@ The **`{city}`** segment is **validated** against the product’s city from the 
 
 The tour page fetches full detail via **`GET /activity.json/{id}`** (`BOKUN_ENDPOINTS.PRODUCT_BY_ID`). The app resolves the product **id** from the URL slug (trailing segment after the last `-`); we do not use Bokun’s slug endpoint for this flow. Implementation: `lib/actions/tour-detail.actions.ts` (`getTourDetailById`).
 
+- **Caching**: Successful responses are cached in memory for **15 minutes** (same TTL order of magnitude as product search in `tour.actions.ts`).
+- **Timeouts / errors**: Non-404 failures are logged with `console.error` on the server; the tour route surfaces them via **`error.tsx`** (see below)—not as a “soft” 200 page.
+
+### Tour page: HTML description safety
+
+Rich text from Bokun (`description` / `summary`) is rendered with `dangerouslySetInnerHTML` only after sanitization. The app uses **`sanitize-html`** on the server (no **jsdom** / no **`isomorphic-dompurify`** in this path). The latter pulls in jsdom and can break **Next.js / Vercel** builds (`default-stylesheet.css` ENOENT) when bundled for the server.
+
+### Tour page: errors vs 404
+
+- **`Tour not found`** (Bokun 404 / missing product) → `notFound()` → **`not-found.tsx`** (404).
+- **Any other failed `getTourDetailById` result** (timeout, 5xx, invalid payload) → **`throw new Error(...)`** → segment **`error.tsx`** (error status + retry / contact UI).
+
 ### Image domains (Next.js)
 
 Tour and listing images use Bokun’s **derived** URLs (`keyPhoto.derived`, `photos[].derived`), which are served from **imgcdn.bokun.tools**. The **original** image URLs may use **bokun.s3.amazonaws.com**. Both hosts are allowlisted in `next.config.ts` `images.remotePatterns` so `next/image` works for search and tour detail.
@@ -114,25 +135,9 @@ const response = await fetch(url, {
 });
 ```
 
-## API Route Example
+## Calling Bokun from application code
 
-The application includes a simple API route at `/api/tours` that demonstrates the integration:
-
-```typescript
-// app/api/tours/route.ts
-export async function GET() {
-  const url = createBokunUrl("/activity.json/search");
-  const headers = generateBokunHeaders("POST", "/activity.json/search");
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({}),
-  });
-
-  return NextResponse.json(await response.json());
-}
-```
+Use **`createBokunUrl`** + **`generateBokunHeaders`** from `@/lib/bokun` inside **server actions** or **server components**. Do not expose access/secret keys to the client.
 
 ## Authentication
 
@@ -154,12 +159,10 @@ The integration includes basic error handling:
 
 ## Testing
 
-To test the integration:
-
-1. Ensure environment variables are set
-2. Start the development server: `npm run dev`
-3. Visit: `http://localhost:3000/api/tours`
-4. Check browser network tab for API calls
+1. Set Bokun env vars in `.env.local`.
+2. Run `npm run dev`.
+3. Open the homepage **cities** section (search action) or a tour URL `/tours/{city}/{slug}` (detail action).
+4. Inspect **server logs** for Bokun errors; use **Network** only for client-visible requests (Bokun calls themselves are server-side).
 
 ## Security Notes
 
@@ -170,8 +173,7 @@ To test the integration:
 
 ## Future Enhancements
 
-- Add request caching for better performance
-- Implement retry logic for failed requests
-- Add comprehensive error logging
-- Support for additional Bokun API endpoints
-- Rate limiting and request throttling
+- Optional **retry** with backoff for transient Bokun failures (today: timeout + single attempt).
+- Structured **observability** (e.g. APM) beyond `console.error` if traffic or SLOs require it.
+- Additional Bokun endpoints if product needs grow.
+- Rate limiting / throttling at the edge if abuse becomes a concern.

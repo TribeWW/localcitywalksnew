@@ -1,6 +1,6 @@
 # Tour Actions Documentation
 
-**Date**: January 26, 2025  
+**Date**: March 27, 2026  
 **Type**: Server Actions Implementation  
 **Status**: Production Ready
 
@@ -18,9 +18,10 @@ Bokun API → Server Action → React Component → UI Display
 
 ### Key Components
 
-- **Server Actions**: `lib/actions/tour.actions.ts` - Bokun API integration
-- **Type Definitions**: `types/bokun.ts` - TypeScript interfaces (including `CityCardData` with `countryCode` / `country`)
-- **UI Components**: `components/cards/CityCard.tsx`, `components/home/Cities.tsx`, `components/home/ToursSectionClient.tsx` (filter + pagination)
+- **Server Actions**: `lib/actions/tour.actions.ts` — Bokun search/listing; `lib/actions/tour-detail.actions.ts` — single product by id (tour page)
+- **URL helpers**: `slugifyForUrl` in `lib/utils.ts` (shared with the tour page for canonical city slugs)
+- **Type Definitions**: `types/bokun.ts` — `CityCardData`, `BokunProductDetail`, result types, etc.
+- **UI**: `components/cards/CityCard.tsx` (links to `/tours/{citySlug}/{slug}`), `components/home/Cities.tsx`, `components/home/ToursSectionClient.tsx` (filter + pagination)
 
 ## Server Actions
 
@@ -29,6 +30,15 @@ Bokun API → Server Action → React Component → UI Display
 **Purpose**: Fetches one page of tour products (e.g. 20 items) with optional server-side country filter. Used by the landing tours section for initial load, "Show more", and country filter.
 
 **Returns**: `Promise<GetProductsPageResult>` with `data` and `totalHits`. When `countryCode` is provided, the Bokun request includes `facetFilters` for country; cache key includes country so filtered and unfiltered results are cached separately.
+
+**Sanity sync**: On a **cache miss**, after a successful Bokun response, the action fires **`syncCitiesFromProducts(data.items)`** in the background (same pattern as `getAllProducts`). See `documentation/guides/SANITY-BOKUN-SYNC.md`.
+
+### `getTourDetailById(id)` (tour page)
+
+**Location**: `lib/actions/tour-detail.actions.ts`  
+**Purpose**: **`GET /activity.json/{id}`** for the **`/tours/[city]/[slug]`** page (id parsed from slug).  
+**Caching**: 15-minute in-memory TTL per product id.  
+**Docs**: URL scheme, city validation, and image hosts are described in **`documentation/guides/BOKUN_CONFIGURATION.md`**.
 
 ### `getAllProducts()`
 
@@ -46,11 +56,11 @@ export async function getAllProducts(): Promise<GetAllProductsResult>;
 
 **Features**:
 
-- ✅ **Caching**: 15-minute in-memory cache to reduce API calls
+- ✅ **Caching**: 15-minute in-memory cache (global key) to reduce API calls
 - ✅ **Timeout Protection**: 5-second timeout to prevent hanging requests
-- ✅ **Error Handling**: Comprehensive error handling with graceful degradation
-- ✅ **Data Transformation**: Converts Bokun product data to `CityCardData` format
-- ✅ **Thumbnail Extraction**: Extracts thumbnail URLs from `keyPhoto.derived[]`
+- ✅ **Error Handling**: Returns `{ success: false, error }` on failure; callers may fall back to static data
+- ✅ **Data Transformation**: `transformProductToCityCard` — sets `citySlug` (slugified `googlePlace.city` or title), `slug` (`{titleSlug}-{id}`), `countryCode`, `country`, image URL
+- ✅ **Image pick**: Prefers `keyPhoto.derived` entry named **`preview`**, else first derived URL, else placeholder
 
 #### Request Flow
 
@@ -85,8 +95,8 @@ function extractThumbnailUrl(keyPhoto: unknown): string {
     return "/placeholder-city.jpg";
   }
 
-  // Find thumbnail in derived array
-  const thumbnail = photoData.derived.find((item) => item.name === "thumbnail");
+  // Prefer preview in derived array (matches tour.actions.ts)
+  const thumbnail = photoData.derived.find((item) => item.name === "preview");
 
   if (thumbnail?.url) {
     return thumbnail.url;
@@ -100,43 +110,12 @@ function extractThumbnailUrl(keyPhoto: unknown): string {
 
 ## Type Definitions
 
-### Core Interfaces
+Authoritative types live in **`types/bokun.ts`**. Highlights:
 
-```typescript
-// Bokun API response structure
-interface BokunSearchResponse {
-  items: BokunProduct[];
-}
+- **`CityCardData`**: `id`, `title` (display city name), `image`, `countryCode`, `country`, **`citySlug`**, **`slug`** (URL segment for the tour page: `titleSlug-id`).
+- **`GetProductsPageResult`** / **`GetAllProductsResult`**: `success`, optional `data`, `error`, and for paging `totalHits` where applicable.
 
-// Minimal product structure for city cards
-interface BokunProduct {
-  id: string;
-  title: string;
-  keyPhoto: BokunPhoto;
-}
-
-// Photo structure for keyPhoto
-interface BokunPhoto {
-  derived: Array<{
-    name: string; // "thumbnail", "preview", "large"
-    url: string;
-  }>;
-}
-
-// Transformed data for UI components
-interface CityCardData {
-  id: string;
-  title: string;
-  image: string;
-}
-
-// Server action response type
-interface GetAllProductsResult {
-  success: boolean;
-  data?: CityCardData[];
-  error?: string;
-}
-```
+Do not duplicate large interface blocks in this guide; update `types/bokun.ts` and reference it here.
 
 ## Component Integration
 
@@ -154,50 +133,16 @@ The client wrapper `ToursSectionClient` owns the country filter (single-select m
 
 ### CityCard Component (`components/cards/CityCard.tsx`)
 
-**Purpose**: Client component that renders individual city cards.
+**Purpose**: Client component that renders city/tour cards and **navigates** to the city-first tour page.
 
 **Key Features**:
 
-- ✅ **Dynamic Data**: Accepts `CityCardData[]` prop instead of hardcoded data
-- ✅ **Non-Clickable**: Cards display "Coming Soon" instead of tour request buttons
-- ✅ **Responsive Design**: Maintains existing grid layout and styling
-- ✅ **Image Optimization**: Uses Next.js Image component with `object-cover`
+- ✅ **`CityCardData[]`** prop; optional **`noHorizontalPadding`** when the parent supplies horizontal padding (e.g. aligned with a filter control).
+- ✅ **Links**: Each card wraps content in **`next/link`** to **`/tours/${citySlug}/${slug}`**, with `citySlug` from data or **`slugifyForUrl(city.title)`** fallback.
+- ✅ **Images**: `next/image` with **`fill`** and **`aspect-[3/2]`** (`object-cover`).
+- ✅ **Layout**: Responsive grid (`md:2`, `lg:3`, `xl:4` columns).
 
-```typescript
-interface CityCardProps {
-  cities: CityCardData[];
-}
-
-const CityCard = ({ cities }: CityCardProps) => {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 justify-items-center">
-      {cities.map((city) => (
-        <div
-          key={city.id}
-          className="bg-white rounded-xl shadow-sm overflow-hidden w-full max-w-[250px] transition-all duration-200 hover:shadow-lg hover:scale-105"
-        >
-          <div className="relative h-48 w-full">
-            <Image
-              src={city.image}
-              alt={city.title}
-              fill
-              className="object-cover"
-            />
-          </div>
-          <div className="p-6">
-            <h3 className="text-xl font-semibold text-nightsky mb-4">
-              {city.title}
-            </h3>
-            <div className="w-full bg-nightsky/10 text-nightsky text-center py-2 px-4 rounded-md">
-              Coming Soon
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-```
+Tour **request** capture lives on the **tour page** (`TourRequestForm` in the sidebar), not on the card.
 
 ## Error Handling & Fallback Strategy
 
@@ -229,17 +174,17 @@ The system includes a comprehensive fallback array with all 19 cities:
 ### Caching Strategy
 
 ```typescript
-// Simple in-memory cache with 15-minute TTL
-const cache = new Map<string, { data: CityCardData[]; timestamp: number }>();
-const CACHE_TTL = 15 * 60 * 1000; // 15 minutes in milliseconds
+// Listing: global cache key + per-page/per-country keys (15-minute TTL)
+const CACHE_TTL = 15 * 60 * 1000;
+// See tour.actions.ts: cache, pageCache
+// Tour detail: separate Map in tour-detail.actions.ts (same TTL order)
 ```
 
 **Benefits**:
 
-- ✅ Reduces API calls from every page load to ~4 per hour
-- ✅ Improves page load performance
-- ✅ Reduces Bokun API rate limiting concerns
-- ✅ Provides better user experience
+- ✅ Fewer Bokun round-trips for homepage pagination and repeat tour views
+- ✅ Better TTFB for cached paths
+- ✅ Lower rate-limit risk
 
 ### Image Optimization
 
@@ -251,7 +196,7 @@ const CACHE_TTL = 15 * 60 * 1000; // 15 minutes in milliseconds
 
 ### Server-Side Only
 
-- ✅ **No Public API Routes**: All Bokun API calls happen server-side
+- ✅ **Bokun never in the browser**: All Bokun API calls happen server-side (server actions / RSC). Dev-only routes under `app/api/dev/` are unrelated to Bokun.
 - ✅ **Credential Protection**: API keys never exposed to client
 - ✅ **Server Actions**: Secure server-side execution only
 
@@ -358,4 +303,4 @@ Enable detailed logging by adding console.log statements in the server action fo
 
 ## Conclusion
 
-This implementation provides a robust, scalable solution for dynamic city card management with comprehensive error handling, performance optimization, and security best practices. The system is production-ready and includes fallback mechanisms to ensure the website remains functional even if the Bokun API is unavailable.
+This stack covers **listing** (homepage cities with pagination and country filter), **tour detail** (`/tours/[city]/[slug]` via `getTourDetailById`), and **Sanity city/country sync** on listing cache misses. Fallback cities on the homepage remain if listing fetch fails; tour pages use **404** / **error boundary** instead of silent success on failure.
