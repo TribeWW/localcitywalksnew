@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 
 /**
- * Design/dev preview routes under `/preview` are not served on Vercel production.
- * Preview deployments (VERCEL_ENV=preview) and local dev remain available.
- * Set ALLOW_PREVIEW_ROUTES=true only if you intentionally need these URLs in production.
+ * Controls access to design/dev preview routes under `/preview` based on environment variables.
+ *
+ * Allows requests when `ALLOW_PREVIEW_ROUTES` is `"true"` or when `VERCEL_ENV` is not `"production"`.
+ * When previews are not allowed, responds with HTTP 404 and no body.
+ *
+ * @returns `NextResponse.next()` if preview routes are permitted, otherwise a `NextResponse` with status 404.
  */
 export function middleware() {
   const allow =

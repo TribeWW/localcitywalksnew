@@ -36,8 +36,14 @@ const SAMPLE_REVIEWS = [
 ];
 
 /**
- * Mockup-only: tour page–style reviews block (summary + distribution + vertical cards).
- * Preview: `/preview/reviews-mockup#tour-reviews`.
+ * Render a mock "Traveller reviews" section for the tour page preview.
+ *
+ * This mockup produces a static reviews block (summary, star-by-star distribution,
+ * and vertical sample review cards) anchored at `id="tour-reviews"` for previewing
+ * layout and styling in `/preview/reviews-mockup#tour-reviews`. Content is hardcoded
+ * for demonstration purposes and not sourced from live data.
+ *
+ * @returns A React element containing the reviews section with rating summary, distribution bars, and sample review cards.
  */
 export function TourDetailReviewsSectionMock() {
   return (
