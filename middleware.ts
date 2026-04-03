@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 
 /**
- * Controls access to design/dev preview routes under `/preview` based on environment variables.
+ * Controls access to design/dev preview routes under `/preview` based on environment.
  *
- * Allows requests when `ALLOW_PREVIEW_ROUTES` is `"true"` or when `VERCEL_ENV` is not `"production"`.
- * When previews are not allowed, responds with HTTP 404 and no body.
+ * Allows the request to proceed when `ALLOW_PREVIEW_ROUTES` is set to `"true"` or when
+ * `VERCEL_ENV` is not `"production"`; otherwise responds with HTTP 404.
  *
- * @returns `NextResponse.next()` if preview routes are permitted, otherwise a `NextResponse` with status 404.
+ * @returns A NextResponse that continues the request when preview routes are allowed, or a 404 response when they are not.
  */
 export function middleware() {
   const allow =

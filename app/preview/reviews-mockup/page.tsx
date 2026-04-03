@@ -75,9 +75,9 @@ const MOCK_ROW2: ReviewMarqueeProps["row2"] = [
 ];
 
 /**
- * Render a mock reviews page showcasing a reviews marquee and a tour reviews section.
+ * Renders a mock reviews preview page displaying a review marquee and a tour-detail reviews mock section for design and visual testing.
  *
- * @returns A React element containing the reviews mockup page layout
+ * @returns The page's JSX element containing the mock reviews layout.
  */
 export default function ReviewsMockupPage() {
   return (

@@ -15,12 +15,14 @@ export interface ReviewCardProps {
 }
 
 /**
- * Render a review card showing a star rating, author/location, date, review text, and an optional "Read more" action.
+ * Render a styled review card showing a star rating, reviewer name and location, date, and review text.
  *
- * @param rating - Number of filled stars to display (0–5)
- * @param maxLines - If provided, clamps the review text to this many lines using CSS line-clamp
- * @param onReadMore - If provided, renders a "Read more" button that is invoked when clicked
- * @returns A JSX element representing the styled review card
+ * When `maxLines` is provided the review text is visually truncated to that number of lines using CSS line clamping.
+ * When `onReadMore` is provided a "Read more" button is rendered and invokes the callback when clicked.
+ *
+ * @param maxLines - Optional maximum number of lines to display for the review text before truncation
+ * @param onReadMore - Optional click handler invoked when the "Read more" button is pressed
+ * @returns A JSX element representing the review card
  */
 export function ReviewCard({
   name,
