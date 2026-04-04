@@ -13,6 +13,7 @@ import {
 const AboutUs = () => {
   return (
     <section
+      id="about"
       aria-labelledby="about-title"
       className="w-full py-16 md:py-24 bg-white"
     >

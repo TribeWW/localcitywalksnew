@@ -48,6 +48,7 @@
   --color-nightsky: #333333;
   --color-watermelon: #040606;
   --color-pearl-gray: #f7f7f7;
+  --color-grapes: #0f172a;
 }
 
 :root {
@@ -63,7 +64,7 @@
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: #6A6A6A;
+  --muted-foreground: #6a6a6a;
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
