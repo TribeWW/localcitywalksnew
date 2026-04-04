@@ -7,7 +7,17 @@ export interface ReviewMarqueeProps {
 }
 
 /**
- * Mockup-only: dual-row infinite marquee for design preview (`/preview/reviews-mockup`).
+ * Renders a mockup-only, dual-row infinite marquee for design preview.
+ *
+ * The component displays a centered title and two horizontally scrolling rows of review cards
+ * that move in opposite directions. Each row duplicates its sequence to enable seamless looping,
+ * pauses animation on hover, and constrains each card's width; every card is rendered with
+ * `maxLines={3}` for preview purposes.
+ *
+ * @param title - Heading text displayed above the marquees
+ * @param row1 - Array of review props rendered in the top (left-moving) marquee row
+ * @param row2 - Array of review props rendered in the bottom (right-moving) marquee row
+ * @returns A JSX element containing the titled section with two infinite-scrolling rows of preview ReviewCards
  */
 export function ReviewMarquee({ title, row1, row2 }: ReviewMarqueeProps) {
   return (
