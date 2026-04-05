@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { MenuIcon, XIcon } from "lucide-react";
+import { HelpCircleIcon, MailIcon, MenuIcon, XIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +17,13 @@ import {
 import { cn } from "@/lib/utils";
 
 const BROWSE_HREF = "/#cities";
+const ABOUT_HREF = "/#about";
+const CONTACT_HREF = "/#contact";
+
+const iconLinkClassName = cn(
+  "rounded-full p-2 text-grapes transition-all",
+  "hover:bg-pearl-gray hover:text-tangerine",
+);
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -102,6 +109,27 @@ export default function Navbar() {
                         Browse tours
                       </Link>
                     </SheetClose>
+
+                    <div className="my-4 h-px w-full bg-border" />
+
+                    <SheetClose asChild>
+                      <Link
+                        href={ABOUT_HREF}
+                        className="flex items-center gap-3 rounded-lg px-2 py-3 text-[15px] font-medium text-watermelon transition-colors hover:bg-pearl-gray hover:text-tangerine"
+                      >
+                        <HelpCircleIcon className="size-5 shrink-0" />
+                        About us
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link
+                        href={CONTACT_HREF}
+                        className="flex items-center gap-3 rounded-lg px-2 py-3 text-[15px] font-medium text-watermelon transition-colors hover:bg-pearl-gray hover:text-tangerine"
+                      >
+                        <MailIcon className="size-5 shrink-0" />
+                        Contact us
+                      </Link>
+                    </SheetClose>
                   </div>
 
                   <div className="border-t border-border bg-pearl-gray p-4">
@@ -128,12 +156,30 @@ export default function Navbar() {
             </Link>
           </div>
 
-          <div className="flex flex-shrink-0 items-center">
+          <div className="flex flex-shrink-0 items-center gap-2">
             <Link
               href={BROWSE_HREF}
               className={cn(browseClassName, "hidden lg:flex")}
             >
               Browse tours
+            </Link>
+            <div
+              className="mx-1 hidden h-5 w-px bg-border lg:block"
+              aria-hidden
+            />
+            <Link
+              href={ABOUT_HREF}
+              className={cn(iconLinkClassName, "hidden lg:flex")}
+              aria-label="About us"
+            >
+              <HelpCircleIcon className="size-5" />
+            </Link>
+            <Link
+              href={CONTACT_HREF}
+              className={cn(iconLinkClassName, "hidden lg:flex")}
+              aria-label="Contact us"
+            >
+              <MailIcon className="size-5" />
             </Link>
           </div>
         </div>

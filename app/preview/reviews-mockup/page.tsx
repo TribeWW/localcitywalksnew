@@ -1,83 +1,40 @@
 import type { Metadata } from "next";
-import {
-  ReviewMarquee,
-  type ReviewMarqueeProps,
-} from "@/components/reviews-mockup/ReviewMarquee";
+import { ReviewCard } from "@/components/reviews-mockup/ReviewCard";
 import { TourDetailReviewsSectionMock } from "@/components/reviews-mockup/TourDetailReviewsSectionMock";
 
 export const metadata: Metadata = {
   title: "Reviews section mockup",
   description:
-    "Temporary design preview for the reviews marquee — not linked from production nav.",
+    "Temporary design preview for reviews layouts — not linked from production nav.",
   robots: { index: false, follow: false },
 };
 
-const MOCK_ROW1: ReviewMarqueeProps["row1"] = [
+const HOME_GRID_REVIEWS = [
   {
     name: "Sarah M.",
     location: "United Kingdom",
-    date: "Tour date: Mar 12, 2025",
+    date: "February 2026",
     rating: 5,
-    text: "Our guide made Biarritz come alive—history, food tips, and a calm pace. Best introduction we could have asked for.",
+    text: "Absolutely wonderful experience! Our guide was incredibly knowledgeable and passionate about Palma. The tasting at the market was a highlight.",
   },
   {
-    name: "Thomas K.",
-    location: "Germany",
-    date: "Tour date: Feb 3, 2025",
-    rating: 4,
-    text: "Small group feel even as a private walk. Clear meeting point and reliable communication before the day.",
-  },
-  {
-    name: "Elena R.",
-    location: "Italy",
-    date: "Tour date: Jan 18, 2025",
-    rating: 5,
-    text: "We loved the local perspective—places we would never have found on our own. Highly recommend for first-timers.",
-  },
-  {
-    name: "James P.",
-    location: "Ireland",
-    date: "Tour date: Dec 8, 2024",
-    rating: 5,
-    text: "Friendly, knowledgeable, and flexible when we wanted a photo stop. Felt like walking with a local friend.",
-  },
-];
-
-const MOCK_ROW2: ReviewMarqueeProps["row2"] = [
-  {
-    name: "Marie D.",
-    location: "France",
-    date: "Tour date: Mar 1, 2025",
-    rating: 4,
-    text: "Great overview of the city center and practical advice for the rest of our trip.",
-  },
-  {
-    name: "Chris L.",
+    name: "James K.",
     location: "United States",
-    date: "Tour date: Feb 22, 2025",
+    date: "January 2026",
     rating: 5,
-    text: "Exactly the low-stress start we needed after a long flight. The pacing was perfect.",
+    text: "Perfect introduction to the city. We learned so much about the history and culture. The pace was relaxed and our guide tailored the walk to our interests.",
   },
   {
-    name: "Ana S.",
-    location: "Spain",
-    date: "Tour date: Feb 9, 2025",
+    name: "David L.",
+    location: "Australia",
+    date: "February 2026",
     rating: 5,
-    text: "Warm welcome and genuine recommendations—no tourist-trap filler.",
-  },
-  {
-    name: "David W.",
-    location: "Netherlands",
-    date: "Tour date: Jan 4, 2025",
-    rating: 4,
-    text: "Clear storytelling and room for questions. Would book another city with the same format.",
+    text: "Best walking tour I have ever been on. The stories really brought the city to life and the guide was incredibly engaging.",
   },
 ];
 
 /**
- * Render a mock reviews page showcasing a reviews marquee and a tour reviews section.
- *
- * @returns A React element containing the reviews mockup page layout
+ * Mock reviews page: home-style 3-col grid + tour-detail reviews block.
  */
 export default function ReviewsMockupPage() {
   return (
@@ -86,11 +43,57 @@ export default function ReviewsMockupPage() {
         Mockup only — preview at{" "}
         <span className="font-mono text-foreground">/preview/reviews-mockup</span>
       </div>
-      <ReviewMarquee
-        title="What travelers say"
-        row1={MOCK_ROW1}
-        row2={MOCK_ROW2}
-      />
+
+      {/* Reviews */}
+      <section
+        style={{
+          padding: "64px 24px",
+          background: "#FFFFFF",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1140,
+            margin: "0 auto",
+          }}
+        >
+          <div
+            style={{
+              textAlign: "center",
+              marginBottom: 48,
+            }}
+          >
+            <h2
+              style={{
+                fontSize: "32px",
+                fontWeight: 700,
+                color: "#0F172A",
+                marginBottom: 12,
+                lineHeight: 1.3,
+                fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
+              }}
+            >
+              Loved by travellers
+            </h2>
+            <p
+              style={{
+                fontSize: "18px",
+                color: "#6A6A6A",
+                lineHeight: 1.6,
+                fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
+              }}
+            >
+              ⭐ 4.8 average rating from travellers across Europe
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-6">
+            {HOME_GRID_REVIEWS.map((review, i) => (
+              <ReviewCard key={i} {...review} />
+            ))}
+          </div>
+        </div>
+      </section>
+
       <div className="mx-auto max-w-5xl px-4 pb-16">
         <TourDetailReviewsSectionMock />
       </div>
