@@ -24,17 +24,22 @@ import { TourRequestSchema } from "@/lib/validation";
 import { sendTourRequestEmail } from "@/lib/nodemailer";
 import { toast } from "sonner";
 
-interface TourRequestFormProps {
-  /**
-   * Initial city value for the request.
-   * - When `lockCity` is true, this is used and the city input is not editable.
-   * - When `lockCity` is false, this can be empty and the user types their city.
-   */
-  initialCity?: string;
-  /** When true, the city is fixed (hidden) like tour pages. */
-  lockCity?: boolean;
-  onClose: () => void;
-}
+type TourRequestFormProps =
+  | {
+      lockCity: true;
+      /**
+       * Required when `lockCity` is true because the city input is hidden and
+       * the schema requires a non-empty city.
+       */
+      initialCity: string;
+      onClose: () => void;
+    }
+  | {
+      lockCity?: false;
+      /** Optional; user can type a city when unlocked. */
+      initialCity?: string;
+      onClose: () => void;
+    };
 
 const TourRequestForm = ({
   initialCity,
@@ -43,12 +48,22 @@ const TourRequestForm = ({
 }: TourRequestFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  if (lockCity && !initialCity) {
+    // Avoid a hidden empty city value that will fail z.string().min(1).
+    console.error(
+      "[TourRequestForm] lockCity=true requires a non-empty initialCity.",
+    );
+    throw new Error(
+      "TourRequestForm misconfigured: lockCity=true requires initialCity.",
+    );
+  }
+
   const form = useForm<z.infer<typeof TourRequestSchema>>({
     resolver: zodResolver(TourRequestSchema),
     defaultValues: {
       fullName: "",
       email: "",
-      city: initialCity ?? "",
+      city: lockCity ? initialCity : (initialCity ?? ""),
       message: "",
       phoneNumber: "",
       adults: 1,
