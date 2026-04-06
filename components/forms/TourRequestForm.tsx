@@ -24,20 +24,46 @@ import { TourRequestSchema } from "@/lib/validation";
 import { sendTourRequestEmail } from "@/lib/nodemailer";
 import { toast } from "sonner";
 
-interface TourRequestFormProps {
-  cityName: string;
-  onClose: () => void;
-}
+type TourRequestFormProps =
+  | {
+      lockCity: true;
+      /**
+       * Required when `lockCity` is true because the city input is hidden and
+       * the schema requires a non-empty city.
+       */
+      initialCity: string;
+      onClose: () => void;
+    }
+  | {
+      lockCity?: false;
+      /** Optional; user can type a city when unlocked. */
+      initialCity?: string;
+      onClose: () => void;
+    };
 
-const TourRequestForm = ({ cityName, onClose }: TourRequestFormProps) => {
+const TourRequestForm = ({
+  initialCity,
+  lockCity = true,
+  onClose,
+}: TourRequestFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (lockCity && !initialCity) {
+    // Avoid a hidden empty city value that will fail z.string().min(1).
+    console.error(
+      "[TourRequestForm] lockCity=true requires a non-empty initialCity.",
+    );
+    throw new Error(
+      "TourRequestForm misconfigured: lockCity=true requires initialCity.",
+    );
+  }
 
   const form = useForm<z.infer<typeof TourRequestSchema>>({
     resolver: zodResolver(TourRequestSchema),
     defaultValues: {
       fullName: "",
       email: "",
-      city: cityName,
+      city: lockCity ? initialCity : (initialCity ?? ""),
       message: "",
       phoneNumber: "",
       adults: 1,
@@ -279,25 +305,47 @@ const TourRequestForm = ({ cityName, onClose }: TourRequestFormProps) => {
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="city"
-          render={({ field }) => (
-            <FormItem className="hidden">
-              <FormLabel className="text-sm font-medium text-nightsky">
-                City
-              </FormLabel>
-              <FormControl>
-                <Input
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600"
-                  disabled
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {lockCity ? (
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem className="hidden">
+                <FormLabel className="text-sm font-medium text-nightsky">
+                  City
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600"
+                    disabled
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : (
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-nightsky">
+                  City
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="e.g. Barcelona"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <FormField
           control={form.control}

@@ -11,7 +11,8 @@ export default function TourRequestFormSection({
   // Note: This requires TourRequestForm to expose a ref or callback to reset.
   return (
     <TourRequestForm
-      cityName={cityName}
+      initialCity={cityName}
+      lockCity
       onClose={() => {
         // No-op: form handles its own reset after calling onClose.
         // Consider adding scroll-to-top or visual feedback here.
