@@ -25,11 +25,22 @@ import { sendTourRequestEmail } from "@/lib/nodemailer";
 import { toast } from "sonner";
 
 interface TourRequestFormProps {
-  cityName: string;
+  /**
+   * Initial city value for the request.
+   * - When `lockCity` is true, this is used and the city input is not editable.
+   * - When `lockCity` is false, this can be empty and the user types their city.
+   */
+  initialCity?: string;
+  /** When true, the city is fixed (hidden) like tour pages. */
+  lockCity?: boolean;
   onClose: () => void;
 }
 
-const TourRequestForm = ({ cityName, onClose }: TourRequestFormProps) => {
+const TourRequestForm = ({
+  initialCity,
+  lockCity = true,
+  onClose,
+}: TourRequestFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof TourRequestSchema>>({
@@ -37,7 +48,7 @@ const TourRequestForm = ({ cityName, onClose }: TourRequestFormProps) => {
     defaultValues: {
       fullName: "",
       email: "",
-      city: cityName,
+      city: initialCity ?? "",
       message: "",
       phoneNumber: "",
       adults: 1,
@@ -279,25 +290,47 @@ const TourRequestForm = ({ cityName, onClose }: TourRequestFormProps) => {
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="city"
-          render={({ field }) => (
-            <FormItem className="hidden">
-              <FormLabel className="text-sm font-medium text-nightsky">
-                City
-              </FormLabel>
-              <FormControl>
-                <Input
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600"
-                  disabled
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {lockCity ? (
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem className="hidden">
+                <FormLabel className="text-sm font-medium text-nightsky">
+                  City
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600"
+                    disabled
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : (
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-nightsky">
+                  City
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="e.g. Barcelona"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <FormField
           control={form.control}

@@ -1,6 +1,7 @@
 import AboutUs from "@/components/home/AboutUs";
 import Cities from "@/components/home/Cities";
 import ContactSection from "@/components/home/ContactSection";
+import CustomTourBanner from "@/components/home/CustomTourBanner";
 import StepsSection from "@/components/home/StepsSection";
 import Image from "next/image";
 
@@ -108,6 +109,7 @@ export default function Home() {
       </main>
       <AboutUs />
       <Cities />
+      <CustomTourBanner />
       <ContactSection />
     </>
   );
