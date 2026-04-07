@@ -15,14 +15,34 @@ type SpotlightItemValue = {
   bokunProductTitle?: string;
 };
 
+/**
+ * Builds the display label shown in the Autocomplete for a Bokun product.
+ *
+ * @param o - Bokun product option containing `id` and `title`
+ * @returns The combined label in the format `{title} — {id}`
+ */
 function formatOptionLabel(o: BokunProductOption) {
   return `${o.title} — ${o.id}`;
 }
 
+/**
+ * Get display label for a selected Bokun product.
+ *
+ * @param o - Product option object (must include `id`; `title` may be absent)
+ * @returns The `title` if present, otherwise the `id`
+ */
 function formatSelectedLabel(o: Partial<BokunProductOption> & { id: string }) {
   return o.title ?? o.id;
 }
 
+/**
+ * Renders a Sanity object input that provides a Bokun product search autocomplete and stores the selected product as `bokunProductId` (and optionally `bokunProductTitle`).
+ *
+ * The component performs debounced server-side searches when the query is at least two characters, resolves a missing title for an existing product ID by fetching the product, and writes selection changes back via `onChange`. It also supports read-only mode and exposes a clear-selection action when editable.
+ *
+ * @param props - Standard Sanity `ObjectInputProps`. Uses `value` (current field object), `onChange` (to write `bokunProductId` and `bokunProductTitle`), `readOnly` (disables interaction), and `elementProps` (`id`, `ref`, and `aria-describedby`) to configure the underlying Autocomplete.
+ * @returns The JSX element for the custom object input (Autocomplete plus helper text and optional clear button).
+ */
 export default function BokunSpotlightItemInput(props: ObjectInputProps) {
   const { value, onChange, readOnly, elementProps } = props;
   const { id, ref, "aria-describedby": ariaDescribedBy } = elementProps;
