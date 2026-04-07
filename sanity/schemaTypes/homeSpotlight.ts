@@ -1,7 +1,7 @@
 import { defineField, defineType } from "sanity";
 import BokunSpotlightItemInput from "../components/BokunSpotlightItemInput";
 
-const SAFE_BOKUN_ID_REGEX = /^[a-zA-Z0-9_-]+$/;
+const SAFE_BOKUN_ID_REGEX = /^\d+$/;
 
 export const homeSpotlight = defineType({
   name: "homeSpotlight",
@@ -34,7 +34,12 @@ export const homeSpotlight = defineType({
               description:
                 "Bokun activity/product id (e.g. 1077682). Must match the id used in tour URLs.",
               validation: (rule) =>
-                rule.required().regex(SAFE_BOKUN_ID_REGEX, "Invalid id format"),
+                rule
+                  .required()
+                  .regex(
+                    SAFE_BOKUN_ID_REGEX,
+                    "Use digits only — the Bokun product id from the tour URL",
+                  ),
             }),
             defineField({
               name: "bokunProductTitle",
@@ -58,4 +63,3 @@ export const homeSpotlight = defineType({
     }),
   ],
 });
-
