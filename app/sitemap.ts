@@ -1,15 +1,29 @@
 import { MetadataRoute } from "next";
+import { archivePage } from "@/lib/flags";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://localcitywalks.com"; // Replace with your actual domain
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = "https://www.localcitywalks.com";
 
   // Define your main routes
-  const routes = [""].map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: new Date(),
-    changeFrequency: "daily" as const,
-    priority: route === "" ? 1 : 0.8,
-  }));
+  const routes: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 1,
+    },
+  ];
+
+  // Only expose /explore to crawlers when the archive feature is enabled.
+  const exploreEnabled = await archivePage();
+  if (exploreEnabled) {
+    routes.push({
+      url: `${baseUrl}/explore`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.9,
+    });
+  }
 
   return routes;
 }
