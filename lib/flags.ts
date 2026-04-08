@@ -20,3 +20,18 @@ export const reviews = flag<boolean>({
   ],
   defaultValue: false,
 });
+
+/**
+ * Vercel Flags — `archive-page` (boolean: Off / On).
+ * Used to gate the /explore page and sitemap entry.
+ */
+export const archivePage = flag<boolean>({
+  key: "archive-page",
+  adapter: vercelAdapter(),
+  description: "Enables the /explore archive page",
+  options: [
+    { value: false, label: "Off" },
+    { value: true, label: "On" },
+  ],
+  defaultValue: false,
+});
