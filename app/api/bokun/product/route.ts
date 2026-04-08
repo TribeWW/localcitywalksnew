@@ -14,6 +14,13 @@ type ResponseItem = {
 const CACHE_TTL_MS = 60_000;
 const cache = new Map<string, { item: ResponseItem; ts: number }>();
 
+/**
+ * Fetches a Bokun activity by the `id` query parameter, normalizes it to `{ id: string, title: string }`, and caches successful results for 60 seconds.
+ *
+ * Uses an in-memory cache keyed by `id`. If `id` is missing, the upstream response is non-OK, the response body is invalid, or the upstream request fails or times out, the handler returns `item: null`.
+ *
+ * @returns A NextResponse whose JSON body is `{ item: ResponseItem | null }` and HTTP status 200; `item` contains the normalized product on success or `null` otherwise.
+ */
 export async function GET(request: Request) {
   const urlObj = new URL(request.url);
   const id = (urlObj.searchParams.get("id") ?? "").trim();

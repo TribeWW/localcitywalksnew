@@ -16,6 +16,13 @@ const PAGE_SIZE = 50;
 const MAX_PAGES = 10; // max 500 items scanned; Studio UX
 const MAX_MATCHES = 15;
 
+/**
+ * Search Bokun catalog for items whose titles contain the `q` query and return a JSON response with matching items.
+ *
+ * Performs a case-insensitive substring match on item titles, returns at most 15 matches, and caches results per query for 60 seconds. If `q` is shorter than 2 characters or an error occurs, responds with an empty `items` array and HTTP 200.
+ *
+ * @returns JSON object with an `items` array of matching items (`{ id: string; title?: string }[]`)
+ */
 export async function GET(request: Request) {
   const urlObj = new URL(request.url);
   const q = (urlObj.searchParams.get("q") ?? "").trim();

@@ -83,6 +83,16 @@ The configuration file exports:
 
 The search endpoint supports **pagination** (`page`, `pageSize`) and optional **facetFilters** to restrict results (e.g. by country). The landing-page tours section uses this to load 20 items per page and to filter by country on the server. Cache keys should include filter state when applicable.
 
+### Explore archive (`/explore`) and paged search today
+
+**Current behavior in code:** `app/explore/page.tsx` is a **feature-flagged placeholder** and does **not** load products from Bokun yet. The **live** paginated catalog is the home tours section, which uses [`lib/actions/tour.actions.ts`](../../lib/actions/tour.actions.ts) **`getProductsPage`**: one `POST /activity.json/search` per **page** (`pageSize` 20), **`sortField: "BEST_SELLING_GLOBAL"`**, optional country **`facetFilters`**, and a **~15-minute** in-memory **`pageCache`** keyed by page + country. Ordering follows **that Bokun sort** per page; there is **no** server-side `localeCompare` on card titles and **no** “fetch all then slice” pipeline in production today.
+
+**Product target for `/explore`:** Title **A–Z / Z–A** that stays correct across **“Show more”**, using the same display title as `CityCard`.
+
+**Investigation ([LOC-756](https://linear.app/localcitywalks/issue/LOC-756/explore-sorting-spike-bokun-title-sort-across-pages-a-z-z-a)):** Bokun **`sortField` / `sortOrder`** on `POST /activity.json/search` does **not** produce a strict title ordering across pagination for this catalog. We merged **page 1 + page 2** (50 items per page) for each candidate and checked monotonic order with `localeCompare(..., undefined, { sensitivity: "base" })`. **All** of these failed: `TITLE` (ASC/DESC), `NAME` (ASC/DESC), `ALPHABETICAL` (ASC/DESC), `PRODUCT_TITLE` (ASC/DESC).
+
+**Planned / in progress (not shipped on `/explore` yet):** Do **not** rely on Bokun for cross-page alphabetical order. When the explore catalog is implemented, the intended approach is: for each country filter + sort direction, **fetch all pages**, map to `CityCardData`, **sort in Node** with `localeCompare` on the card title, **cache** the full sorted list using the same **~15-minute TTL** pattern already used in [`tour.actions.ts`](../../lib/actions/tour.actions.ts) (`pageCache` / `CACHE_TTL`), and serve **slices** for pagination. Details and task breakdown: [implementation plan — Activity archive + curated home](../implementation-plans/2026-04-04-feature-activity-archive-curated-home.md), section *Archive catalog sorting*.
+
 ### Tour page URL scheme (`/tours/{city}/{slug}`)
 
 Used for the city-first tour page. The **slug** is generated from search data (Bokun does not return a slug in search):

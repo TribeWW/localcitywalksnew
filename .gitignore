@@ -45,3 +45,9 @@ next-env.d.ts
 /documentation
 /.cursor
 .env*.local
+
+# scripts
+/scripts/tmp/
+
+# data
+/data/
