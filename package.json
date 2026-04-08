@@ -7,9 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "delete:reviews": "tsx scripts/delete-all-reviews.ts",
-    "import:reviews:dry": "cross-env DRY_RUN=1 tsx scripts/import-reviews-from-csv.ts",
-    "import:reviews": "tsx scripts/import-reviews-from-csv.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -27,9 +24,7 @@
     "@sanity/vision": "^4.22.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "csv-parse": "^6.1.0",
     "date-fns": "^4.1.0",
-    "dotenv": "^17.4.1",
     "flags": "^4.0.6",
     "lucide-react": "^0.513.0",
     "next": "^15.5.14",
