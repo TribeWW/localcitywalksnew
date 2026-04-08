@@ -7,9 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "delete:reviews": "tsx scripts/delete-all-reviews.ts",
-    "import:reviews:dry": "cross-env DRY_RUN=1 tsx scripts/import-reviews-from-csv.ts",
-    "import:reviews": "tsx scripts/import-reviews-from-csv.ts",
+    "guard:nonprod-dataset": "node -e \"const ds=process.env.NEXT_PUBLIC_SANITY_DATASET; if(!ds){console.error('Missing NEXT_PUBLIC_SANITY_DATASET'); process.exit(1)} if(ds==='production'){console.error('Refusing to run against production dataset'); process.exit(1)}\"",
+    "delete:reviews": "npm run guard:nonprod-dataset && tsx scripts/delete-all-reviews.ts",
+    "import:reviews:dry": "npm run guard:nonprod-dataset && cross-env DRY_RUN=1 tsx scripts/import-reviews-from-csv.ts",
+    "import:reviews": "npm run guard:nonprod-dataset && tsx scripts/import-reviews-from-csv.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
