@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useRef } from "react";
 import CityCard from "@/components/cards/CityCard";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,7 +58,8 @@ export default function ExploreCatalogClient({
   const uniqueCountries = useMemo((): CountryOption[] => {
     const byCode = new Map<string, string>();
     for (const c of allProductsForCountryList) {
-      const code = c.countryCode ?? "";
+      const code = c.countryCode?.trim();
+      if (!code) continue; // keep "All countries" as the only unfiltered choice
       if (!byCode.has(code)) {
         byCode.set(code, c.country ?? "Unknown");
       }
@@ -117,8 +118,11 @@ export default function ExploreCatalogClient({
   const showMoreVisible =
     hasMoreFilteredToShow || (hasMorePages && accumulatedList.length > 0);
 
+  const refreshRequestId = useRef(0);
+
   const selectCountry = useCallback(
     async (countryCode: string | null) => {
+      const reqId = ++refreshRequestId.current;
       setFilterOpen(false);
       setLoadingFilter(true);
       try {
@@ -127,6 +131,7 @@ export default function ExploreCatalogClient({
           countryCode ?? undefined,
           sortAscending,
         );
+        if (reqId !== refreshRequestId.current) return;
         if (result.success && result.data) {
           setSelectedCountryCode(countryCode);
           setAccumulatedList(result.data);
@@ -138,7 +143,7 @@ export default function ExploreCatalogClient({
           }
         }
       } finally {
-        setLoadingFilter(false);
+        if (reqId === refreshRequestId.current) setLoadingFilter(false);
       }
     },
     [sortAscending],
@@ -146,7 +151,7 @@ export default function ExploreCatalogClient({
 
   const applySortOrder = useCallback(
     async (asc: boolean) => {
-      setSortAscending(asc);
+      const reqId = ++refreshRequestId.current;
       setLoadingFilter(true);
       try {
         const result = await getExploreCatalogPage(
@@ -154,7 +159,9 @@ export default function ExploreCatalogClient({
           selectedCountryCode ?? undefined,
           asc,
         );
+        if (reqId !== refreshRequestId.current) return;
         if (result.success && result.data) {
+          setSortAscending(asc);
           setAccumulatedList(result.data);
           setVisibleCount(PAGE_SIZE);
           setCurrentPage(1);
@@ -164,7 +171,7 @@ export default function ExploreCatalogClient({
           }
         }
       } finally {
-        setLoadingFilter(false);
+        if (reqId === refreshRequestId.current) setLoadingFilter(false);
       }
     },
     [selectedCountryCode],
@@ -181,7 +188,9 @@ export default function ExploreCatalogClient({
         <div className="px-0 md:px-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end mb-4">
             <label className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2 w-full sm:w-auto">
-              <span className="text-sm text-muted-foreground shrink-0">Sort</span>
+              <span className="text-sm text-muted-foreground shrink-0">
+                Sort
+              </span>
               <Select
                 value={sortAscending ? "asc" : "desc"}
                 onValueChange={(v) => void applySortOrder(v === "asc")}

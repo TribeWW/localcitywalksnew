@@ -12,6 +12,14 @@ const exploreSortedCache = new Map<
   string,
   { sorted: CityCardData[]; timestamp: number }
 >();
+
+type ExploreSortedBuildResult =
+  | { ok: true; sorted: CityCardData[] }
+  | { ok: false; error: string };
+
+/** One shared Promise per cacheKey while a cold build runs (dedupes concurrent misses). */
+const inFlightBuilds = new Map<string, Promise<ExploreSortedBuildResult>>();
+
 const CACHE_TTL = 15 * 60 * 1000;
 const PAGE_SIZE = 20;
 const EXPLORE_FETCH_TIMEOUT_MS = 12_000;
@@ -21,7 +29,7 @@ async function fetchBokunSearchPageRaw(
   pageSize: number,
   countryCode?: string | null,
 ): Promise<
-  | { ok: true; items: BokunProduct[]; totalHits: number }
+  | { ok: true; items: BokunProduct[]; totalHits?: number }
   | { ok: false; error: string }
 > {
   try {
@@ -31,7 +39,11 @@ async function fetchBokunSearchPageRaw(
       page: number;
       pageSize: number;
       sortField: string;
-      facetFilters?: Array<{ name: string; values: string[]; excluded?: boolean }>;
+      facetFilters?: Array<{
+        name: string;
+        values: string[];
+        excluded?: boolean;
+      }>;
     } = {
       page: Math.max(1, Math.floor(page)),
       pageSize,
@@ -43,7 +55,10 @@ async function fetchBokunSearchPageRaw(
       ];
     }
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), EXPLORE_FETCH_TIMEOUT_MS);
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      EXPLORE_FETCH_TIMEOUT_MS,
+    );
     const response = await fetch(url, {
       method: "POST",
       headers,
@@ -63,7 +78,7 @@ async function fetchBokunSearchPageRaw(
     return {
       ok: true,
       items: data.items as BokunProduct[],
-      totalHits: data.totalHits ?? 0,
+      totalHits: data.totalHits,
     };
   } catch (error) {
     return {
@@ -76,55 +91,81 @@ async function fetchBokunSearchPageRaw(
 async function getOrBuildExploreSortedList(
   countryCode: string | null | undefined,
   sortAscending: boolean,
-): Promise<{ ok: true; sorted: CityCardData[] } | { ok: false; error: string }> {
+): Promise<ExploreSortedBuildResult> {
   const cacheKey = `bokun-explore-sorted-v1-${countryCode ?? "all"}-${sortAscending ? "alphaAsc" : "alphaDesc"}`;
   const cached = exploreSortedCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return { ok: true, sorted: cached.sorted };
   }
 
-  const byId = new Map<string, CityCardData>();
-  let totalHits = 0;
-  let page = 1;
-  let first = true;
-
-  while (true) {
-    const res = await fetchBokunSearchPageRaw(page, PAGE_SIZE, countryCode);
-    if (!res.ok) {
-      return { ok: false, error: res.error };
-    }
-    if (first) {
-      totalHits = res.totalHits;
-      first = false;
-    }
-    scheduleSyncFromSearchItems(res.items);
-    for (const p of res.items) {
-      const card = transformSearchProductToCityCard(p);
-      byId.set(card.id, card);
-    }
-    if (res.items.length === 0 || byId.size >= totalHits) {
-      break;
-    }
-    if (res.items.length < PAGE_SIZE) {
-      break;
-    }
-    page += 1;
-    if (page > 500) {
-      console.warn("[Explore catalog] Stopped fetch after 500 pages safety cap");
-      break;
-    }
+  const inflight = inFlightBuilds.get(cacheKey);
+  if (inflight) {
+    return inflight;
   }
 
-  const sorted = Array.from(byId.values()).sort((a, b) => {
-    const cmp = a.title.localeCompare(b.title, undefined, {
-      sensitivity: "base",
-    });
-    return sortAscending ? cmp : -cmp;
-  });
+  const buildPromise = (async (): Promise<ExploreSortedBuildResult> => {
+    try {
+      const byId = new Map<string, CityCardData>();
+      const allItems: BokunProduct[] = [];
+      let totalHits: number | undefined;
+      let page = 1;
+      let first = true;
 
-  exploreSortedCache.set(cacheKey, { sorted: [...sorted], timestamp: Date.now() });
+      while (true) {
+        const res = await fetchBokunSearchPageRaw(page, PAGE_SIZE, countryCode);
+        if (!res.ok) {
+          return { ok: false, error: res.error };
+        }
+        if (first) {
+          totalHits = res.totalHits;
+          first = false;
+        }
+        allItems.push(...res.items);
+        for (const p of res.items) {
+          const card = transformSearchProductToCityCard(p);
+          byId.set(card.id, card);
+        }
+        if (
+          res.items.length === 0 ||
+          (typeof totalHits === "number" && byId.size >= totalHits)
+        ) {
+          break;
+        }
+        if (res.items.length < PAGE_SIZE) {
+          break;
+        }
+        page += 1;
+        if (page > 500) {
+          console.warn(
+            "[Explore catalog] Stopped fetch after 500 pages safety cap",
+          );
+          break;
+        }
+      }
+      if (allItems.length > 0) {
+        scheduleSyncFromSearchItems(allItems);
+      }
 
-  return { ok: true, sorted };
+      const sorted = Array.from(byId.values()).sort((a, b) => {
+        const cmp = a.title.localeCompare(b.title, undefined, {
+          sensitivity: "base",
+        });
+        return sortAscending ? cmp : -cmp;
+      });
+
+      exploreSortedCache.set(cacheKey, {
+        sorted: [...sorted],
+        timestamp: Date.now(),
+      });
+
+      return { ok: true, sorted };
+    } finally {
+      inFlightBuilds.delete(cacheKey);
+    }
+  })();
+
+  inFlightBuilds.set(cacheKey, buildPromise);
+  return buildPromise;
 }
 
 /**
