@@ -1,7 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
 /**
- * Loading UI for `/explore` — mirrors catalog heading + control row + card grid skeletons.
+ * Renders the loading skeleton layout for the /explore page, including the heading, control row, and a grid of item placeholders.
+ *
+ * @returns The JSX element representing the explore page loading skeleton layout.
  */
 export default function Loading() {
   return (

@@ -1,7 +1,13 @@
 import { syncCitiesFromProducts } from "@/lib/actions/city.actions";
 import { BokunProduct } from "@/types/bokun";
 
-/** Fire-and-forget Sanity city/country sync from a Bokun search result page. */
+/**
+ * Schedule a background sync of city and country data derived from the provided Bokun products.
+ *
+ * Triggers a fire-and-forget sync that logs summaries of created countries/cities, migrated cities, and any sync errors.
+ *
+ * @param items - Bokun product entries (typically from a search result page) used to derive cities and countries to sync
+ */
 export function scheduleSyncFromSearchItems(items: BokunProduct[]): void {
   syncCitiesFromProducts(items)
     .then((syncResult) => {

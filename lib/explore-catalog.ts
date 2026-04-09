@@ -24,6 +24,16 @@ const CACHE_TTL = 15 * 60 * 1000;
 const PAGE_SIZE = 20;
 const EXPLORE_FETCH_TIMEOUT_MS = 12_000;
 
+/**
+ * Fetches a single page of Bokun search results and returns validated items.
+ *
+ * Sends a POST search request to Bokun, optionally restricting results to the provided `countryCode`, and validates the response structure before returning items.
+ *
+ * @param page - Page number (will be normalized to an integer >= 1)
+ * @param pageSize - Number of items requested for the page
+ * @param countryCode - Optional ISO country code to filter results by country
+ * @returns `ok: true` with `items` (array of `BokunProduct`) and optional `totalHits` when the response is valid; otherwise `ok: false` with an error message describing the failure
+ */
 async function fetchBokunSearchPageRaw(
   page: number,
   pageSize: number,
@@ -88,6 +98,13 @@ async function fetchBokunSearchPageRaw(
   }
 }
 
+/**
+ * Provide a deduplicated, alphabetically sorted array of CityCardData for the given country and sort direction, using an in-memory cache and deduplicating concurrent builds.
+ *
+ * @param countryCode - Optional ISO country code to filter results; pass `null` or `undefined` to include all countries.
+ * @param sortAscending - When `true`, sort titles in ascending (A→Z) order; when `false`, sort in descending (Z→A) order.
+ * @returns `{ ok: true, sorted }` with the resulting `CityCardData[]` on success, or `{ ok: false, error }` with an error message on failure.
+ */
 async function getOrBuildExploreSortedList(
   countryCode: string | null | undefined,
   sortAscending: boolean,
@@ -169,8 +186,15 @@ async function getOrBuildExploreSortedList(
 }
 
 /**
- * Plain server module (not `"use server"`): safe to import from Server Components.
- * Client components should call the wrapper in `tour.actions.ts` instead.
+ * Produce a paginated slice of the explore catalog filtered by country and sort direction.
+ *
+ * Retrieves the fully built, de-duplicated, alphabetically sorted catalog (cached when available),
+ * then returns the requested page of results.
+ *
+ * @param page - 1-based page number (values less than 1 are normalized to 1)
+ * @param countryCode - ISO country code to filter results; pass `null`/`undefined` or falsy to include all countries
+ * @param sortAscending - `true` to sort titles ascending, `false` for descending
+ * @returns An object with `success: true`, `data` as the page of `CityCardData[]`, and `totalHits` as the full catalog length; or `success: false` with an `error` message on failure.
  */
 export async function getExploreCatalogPage(
   page: number,

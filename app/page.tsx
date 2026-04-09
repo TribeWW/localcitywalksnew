@@ -7,6 +7,13 @@ import StepsSection from "@/components/home/StepsSection";
 import { reviews } from "@/lib/flags";
 import Image from "next/image";
 
+/**
+ * Renders the landing page layout and conditionally includes the reviews section.
+ *
+ * The layout contains the hero section, AboutUs, Cities, CustomTourBanner, and ContactSection.
+ *
+ * @returns The page's JSX layout; includes the `Reviews` section when the feature flag is enabled.
+ */
 export default async function Home() {
   const showReviews = await reviews();
 

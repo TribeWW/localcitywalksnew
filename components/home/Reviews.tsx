@@ -4,9 +4,11 @@ import { ReviewsSection } from "@/components/reviews/ReviewsSection";
 const HOME_RECENT_REVIEW_LIMIT = 6;
 
 /**
- * Home page reviews block: fetches global recent reviews from Sanity.
- * Renders nothing when the list is empty or fetch fails (handled in actions).
- * Page wiring and feature flag live in Phase 3.
+ * Render the home page reviews block using recent global reviews.
+ *
+ * Fetches up to HOME_RECENT_REVIEW_LIMIT recent reviews and renders a ReviewsSection component; returns `null` when no reviews are available.
+ *
+ * @returns A ReviewsSection React element populated with the fetched reviews, or `null` if no reviews are available.
  */
 export default async function Reviews() {
   const reviews = await getRecentReviews(HOME_RECENT_REVIEW_LIMIT);

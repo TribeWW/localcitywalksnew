@@ -24,7 +24,14 @@ const pageCache = new Map<
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes in milliseconds
 const PAGE_SIZE = 20;
 
-/** Server action wrapper — import `loadExploreCatalogPage` from `@/lib/explore-catalog` in RSC. */
+/**
+ * Retrieves a single page of the explore catalog, optionally filtered by country and ordered by ascending or descending sort.
+ *
+ * @param page - The page number to retrieve (1-based).
+ * @param countryCode - Optional ISO country code to filter results; pass `null` or `undefined` to omit the country filter.
+ * @param sortAscending - If `true`, sort results in ascending order; if `false`, sort in descending order.
+ * @returns A GetProductsPageResult containing the page's city card data and `totalHits` on success, or an error message on failure.
+ */
 export async function getExploreCatalogPage(
   page: number,
   countryCode: string | null | undefined,
@@ -34,12 +41,13 @@ export async function getExploreCatalogPage(
 }
 
 /**
- * Server action to fetch one page of products from Bokun API (pageSize 20).
- * Used for initial load and "Show more"; returns data + totalHits for pagination UI.
- * When countryCode is provided, uses facetFilters so the API returns only that country (one request = up to 20 results).
- * @param page - 1-based page number
- * @param countryCode - optional ISO2 country code (e.g. "FR", "ES"); when set, request uses facetFilters for server-side filter
- * @returns Promise<GetProductsPageResult>
+ * Fetches one page of products from the Bokun API and returns city card data plus total hit count for pagination.
+ *
+ * Requests use a page size of 20 and sort by best-selling items. When `countryCode` is provided the request includes facet filters so the API returns results only for that country.
+ *
+ * @param page - 1-based page number (values are floored and coerced to at least 1)
+ * @param countryCode - Optional ISO2 country code (e.g., "FR", "ES"); when provided the server-side request restricts results to this country
+ * @returns `GetProductsPageResult` containing `data` (array of `CityCardData`) and `totalHits` when `success` is `true`; otherwise an `error` message
  */
 export async function getProductsPage(
   page: number,
@@ -130,9 +138,11 @@ export async function getProductsPage(
 }
 
 /**
- * Server action to fetch all products from Bokun API
- * Includes caching, error handling, and timeout protection
- * @returns Promise<GetAllProductsResult>
+ * Fetches products from the Bokun API, transforms them into `CityCardData` items, schedules background synchronization, and caches the result.
+ *
+ * Uses an in-memory cache with a 15-minute TTL and enforces a 5-second request timeout. On success stores transformed products in the cache and returns them; on failure returns an error message.
+ *
+ * @returns An object with `success: true` and `data: CityCardData[]` when the request and transformation succeed; otherwise `success: false` and `error` containing a human-readable message.
  */
 export async function getAllProducts(): Promise<GetAllProductsResult> {
   try {

@@ -35,6 +35,16 @@ interface ExploreCatalogClientProps {
   initialSortAscending: boolean;
 }
 
+/**
+ * Render an explore-catalog UI that displays city cards with title sorting, country filtering, and incremental "Show more" pagination.
+ *
+ * Renders controls for sorting (A–Z / Z–A), a dialog to filter by country (including "All countries"), a grid of city cards or loading/empty states, and a "Show more" button to load or reveal additional results.
+ *
+ * @param initialData - Initial page of city card data shown when the component mounts
+ * @param totalHits - Total number of available results used to determine whether more pages exist
+ * @param initialSortAscending - Whether the initial title sort order is ascending (A–Z)
+ * @returns The ExploreCatalogClient React element
+ */
 export default function ExploreCatalogClient({
   initialData,
   totalHits,
