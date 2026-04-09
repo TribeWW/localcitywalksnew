@@ -1,6 +1,13 @@
 import { getExploreCatalogPage } from "@/lib/explore-catalog";
 import ExploreCatalogClient from "@/components/explore/ExploreCatalogClient";
 
+/**
+ * Render the Explore Catalog server component using data fetched from the first catalog page.
+ *
+ * @returns A JSX element that shows a styled error message when the initial fetch fails, or the
+ * `ExploreCatalogClient` populated with `initialData`, `totalHits`, and an ascending initial sort
+ * when the fetch succeeds.
+ */
 export default async function ExploreCatalog() {
   const result = await getExploreCatalogPage(1, undefined, true);
 

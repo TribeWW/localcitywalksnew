@@ -13,9 +13,9 @@ export const metadata: Metadata = {
 };
 
 /**
- * Renders the Explore page UI gated by the `archive-page` feature flag.
+ * Render the Explore page when the `archive-page` feature is enabled.
  *
- * @returns The React element for the Explore page. Triggers a 404 response when the `archive-page` feature is disabled.
+ * @returns The React element for the Explore page. If the `archive-page` feature is disabled, triggers a 404 response.
  */
 export default async function ExplorePage() {
   const enabled = await archivePage();

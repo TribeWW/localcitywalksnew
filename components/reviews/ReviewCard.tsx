@@ -3,7 +3,13 @@ import type { SanityReviewListItem } from "@/types/review";
 import { cn } from "@/lib/utils";
 import { formatExperienceDate } from "@/lib/utils/review-date";
 
-/** Whole stars 0–5; invalid or out-of-range values become 0 (empty row). */
+/**
+ * Normalize a numeric rating to a whole number between 0 and 5.
+ *
+ * Rounds the input to the nearest integer and clamps the result to the 0–5 range.
+ *
+ * @returns An integer between 0 and 5 inclusive. Returns `0` for non-finite inputs.
+ */
 function clampRating(rating: number): number {
   const n = Math.round(Number(rating));
   if (!Number.isFinite(n)) return 0;
@@ -18,6 +24,16 @@ type ReviewCardProps = {
   presentation?: ReviewCardPresentation;
 };
 
+/**
+ * Render a review card showing a star rating, author name, tour date, and optional body text.
+ *
+ * The `presentation` prop controls visual styling and spacing; `"home"` applies alternate colors,
+ * spacing, and a simplified date line.
+ *
+ * @param review - Review data used to populate the card (expected fields: `authorName`, `rating`, `experienceDate`, and optional `body`)
+ * @param presentation - Visual variant of the card; `"default"` (default) or `"home"`
+ * @returns A JSX element representing the formatted review card
+ */
 export function ReviewCard({
   review,
   presentation = "default",

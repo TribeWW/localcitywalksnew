@@ -9,6 +9,15 @@ type ReviewsSectionProps = {
   variant?: ReviewsSectionVariant;
 };
 
+/**
+ * Compute the average star rating for a list of reviews.
+ *
+ * Each review's `rating` is converted to a number, rounded to the nearest integer,
+ * treated as `0` if not finite, and clamped to the range 0–5 before averaging.
+ *
+ * @param reviews - Array of review items (each should contain a `rating` field)
+ * @returns The mean of the processed ratings (a number between 0 and 5). Returns `0` when `reviews` is empty.
+ */
 function meanStarRating(reviews: SanityReviewListItem[]): number {
   if (reviews.length === 0) return 0;
   let sum = 0;
@@ -20,6 +29,16 @@ function meanStarRating(reviews: SanityReviewListItem[]): number {
   return sum / reviews.length;
 }
 
+/**
+ * Render a reviews section containing review cards and a variant-specific layout.
+ *
+ * Renders nothing when `reviews` is empty.
+ *
+ * @param title - Section heading text
+ * @param reviews - Array of review items to display
+ * @param variant - Layout variant: `"home"` shows a centered title and average rating; `"tour"` shows the default tour layout; `"fallback"` shows the fallback layout with an explanatory subtitle. Defaults to `"tour"`.
+ * @returns A React element representing the reviews section, or `null` when `reviews` is empty.
+ */
 export function ReviewsSection({
   title,
   reviews,
