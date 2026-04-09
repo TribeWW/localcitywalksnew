@@ -14,7 +14,7 @@ lib/
     config.ts                 # Configuration and API endpoints
     index.ts                  # createBokunUrl, generateBokunHeaders, etc.
   actions/
-    tour.actions.ts           # Search / listing (getProductsPage, getAllProducts)
+    tour.actions.ts           # Search / listing (getProductsPage, getExploreCatalogPage, getAllProducts)
     tour-detail.actions.ts    # Single product by id (getTourDetailById)
 app/
   tours/[city]/[slug]/
@@ -85,13 +85,9 @@ The search endpoint supports **pagination** (`page`, `pageSize`) and optional **
 
 ### Explore archive (`/explore`) and paged search today
 
-**Current behavior in code:** `app/explore/page.tsx` is a **feature-flagged placeholder** and does **not** load products from Bokun yet. The **live** paginated catalog is the home tours section, which uses [`lib/actions/tour.actions.ts`](../../lib/actions/tour.actions.ts) **`getProductsPage`**: one `POST /activity.json/search` per **page** (`pageSize` 20), **`sortField: "BEST_SELLING_GLOBAL"`**, optional country **`facetFilters`**, and a **~15-minute** in-memory **`pageCache`** keyed by page + country. Ordering follows **that Bokun sort** per page; there is **no** server-side `localeCompare` on card titles and **no** “fetch all then slice” pipeline in production today.
+**Home catalog** (tours section on the home page) uses [`lib/actions/tour.actions.ts`](../../lib/actions/tour.actions.ts) **`getProductsPage`**: one `POST /activity.json/search` per **page** (`pageSize` 20), **`sortField: "BEST_SELLING_GLOBAL"`**, optional country **`facetFilters`**, and a **~15-minute** **`pageCache`** keyed by page + country. Ordering is Bokun’s per-page bestseller sort (no full-catalog title sort).
 
-**Product target for `/explore`:** Title **A–Z / Z–A** that stays correct across **“Show more”**, using the same display title as `CityCard`.
-
-**Investigation ([LOC-756](https://linear.app/localcitywalks/issue/LOC-756/explore-sorting-spike-bokun-title-sort-across-pages-a-z-z-a)):** Bokun **`sortField` / `sortOrder`** on `POST /activity.json/search` does **not** produce a strict title ordering across pagination for this catalog. We merged **page 1 + page 2** (50 items per page) for each candidate and checked monotonic order with `localeCompare(..., undefined, { sensitivity: "base" })`. **All** of these failed: `TITLE` (ASC/DESC), `NAME` (ASC/DESC), `ALPHABETICAL` (ASC/DESC), `PRODUCT_TITLE` (ASC/DESC).
-
-**Planned / in progress (not shipped on `/explore` yet):** Do **not** rely on Bokun for cross-page alphabetical order. When the explore catalog is implemented, the intended approach is: for each country filter + sort direction, **fetch all pages**, map to `CityCardData`, **sort in Node** with `localeCompare` on the card title, **cache** the full sorted list using the same **~15-minute TTL** pattern already used in [`tour.actions.ts`](../../lib/actions/tour.actions.ts) (`pageCache` / `CACHE_TTL`), and serve **slices** for pagination. Details and task breakdown: [implementation plan — Activity archive + curated home](../implementation-plans/2026-04-04-feature-activity-archive-curated-home.md), section *Archive catalog sorting*.
+**Explore catalog** (when the [`archive-page`](../../lib/flags.ts) flag is on) uses **`getExploreCatalogPage`**: for each **country filter** and **sort direction** (title A–Z vs Z–A), the server **loads every page** from Bokun with the same search shape as `getProductsPage` (`BEST_SELLING_GLOBAL` + facets), merges to `CityCardData`, **`localeCompare`** on the **card title**, stores the **full sorted list** in **`exploreSortedCache`** (~**15-minute** TTL, keys include country + `alphaAsc` / `alphaDesc`), and returns **slices** of 20 for pagination. UI: [`ExploreCatalogClient`](../../components/explore/ExploreCatalogClient.tsx). Bokun **`sortField` / `sortOrder`** cannot be used alone for strict title order across pages ([LOC-756](https://linear.app/localcitywalks/issue/LOC-756/explore-sorting-spike-bokun-title-sort-across-pages-a-z-z-a)); this merge+sort path implements the product requirement for **“Show more”** in title order.
 
 ### Tour page URL scheme (`/tours/{city}/{slug}`)
 

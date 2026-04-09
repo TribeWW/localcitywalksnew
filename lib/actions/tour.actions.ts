@@ -1,8 +1,9 @@
 "use server";
 
 import { createBokunUrl, generateBokunHeaders } from "@/lib/bokun";
-import { syncCitiesFromProducts } from "./city.actions";
-import { slugifyForUrl } from "@/lib/utils";
+import { scheduleSyncFromSearchItems } from "@/lib/bokun/schedule-search-sync";
+import { transformSearchProductToCityCard } from "@/lib/bokun/transform-search-product-to-city-card";
+import { getExploreCatalogPage as loadExploreCatalogPage } from "@/lib/explore-catalog";
 import {
   BokunProduct,
   BokunSearchResponse,
@@ -23,57 +24,13 @@ const pageCache = new Map<
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes in milliseconds
 const PAGE_SIZE = 20;
 
-/**
- * Extract thumbnail URL from keyPhoto derived array
- * @param keyPhoto - The keyPhoto object from Bokun product
- * @returns The thumbnail URL or fallback image
- */
-function extractThumbnailUrl(keyPhoto: unknown): string {
-  const photoData = keyPhoto as {
-    derived?: Array<{ name: string; url: string }>;
-  };
-
-  if (!photoData?.derived) {
-    return "/placeholder-city.jpg"; // Fallback image
-  }
-
-  // Find thumbnail in derived array
-  const thumbnail = photoData.derived.find((item) => item.name === "preview");
-
-  if (thumbnail?.url) {
-    return thumbnail.url;
-  }
-
-  // Fallback to first available derived image
-  const firstDerived = photoData.derived.find((item) => item.url);
-  return firstDerived?.url || "/placeholder-city.jpg";
-}
-
-/**
- * Transform Bokun product to CityCardData format
- * @param product - Raw product from Bokun API
- * @returns Transformed CityCardData object
- */
-function transformProductToCityCard(product: unknown): CityCardData {
-  const productData = product as {
-    id: string;
-    title: string;
-    keyPhoto: unknown;
-    googlePlace?: { city: string; country: string; countryCode: string };
-  };
-  const cityName = productData.googlePlace?.city ?? productData.title;
-  const citySlug = slugifyForUrl(cityName);
-  const titleSlug = slugifyForUrl(productData.title);
-  const slug = titleSlug === "unknown" ? productData.id : `${titleSlug}-${productData.id}`;
-  return {
-    id: productData.id,
-    title: cityName,
-    image: extractThumbnailUrl(productData.keyPhoto),
-    countryCode: productData.googlePlace?.countryCode ?? "",
-    country: productData.googlePlace?.country ?? "Unknown",
-    citySlug,
-    slug,
-  };
+/** Server action wrapper — import `loadExploreCatalogPage` from `@/lib/explore-catalog` in RSC. */
+export async function getExploreCatalogPage(
+  page: number,
+  countryCode: string | null | undefined,
+  sortAscending: boolean,
+): Promise<GetProductsPageResult> {
+  return loadExploreCatalogPage(page, countryCode, sortAscending);
 }
 
 /**
@@ -146,52 +103,10 @@ export async function getProductsPage(
 
     const totalHits = data.totalHits ?? 0;
 
-    syncCitiesFromProducts(data.items as BokunProduct[])
-      .then((syncResult) => {
-        if (syncResult.countries.created.length > 0) {
-          console.log(
-            "[Country Sync] Background: created",
-            syncResult.countries.created.length,
-            "countries:",
-            syncResult.countries.created.join(", "),
-          );
-        }
-        if (syncResult.cities.created.length > 0) {
-          console.log(
-            "[City Sync] Background: created",
-            syncResult.cities.created.length,
-            "cities:",
-            syncResult.cities.created.join(", "),
-          );
-        }
-        if (syncResult.cities.updated.length > 0) {
-          console.log(
-            "[City Sync] Background: migrated",
-            syncResult.cities.updated.length,
-            "cities:",
-            syncResult.cities.updated.join(", "),
-          );
-        }
-        if (syncResult.errors.length > 0) {
-          console.error(
-            "[City Sync] Background sync had",
-            syncResult.errors.length,
-            "error(s):",
-            syncResult.errors
-              .map((e) => `${e.type}:${e.identifier} - ${e.error}`)
-              .join("; "),
-          );
-        }
-      })
-      .catch((error) => {
-        console.error(
-          "[City Sync] Background sync failed:",
-          error instanceof Error ? error.message : error,
-        );
-      });
+    scheduleSyncFromSearchItems(data.items as BokunProduct[]);
 
     const cityCards: CityCardData[] = data.items.map(
-      transformProductToCityCard,
+      transformSearchProductToCityCard,
     );
 
     pageCache.set(cacheKey, {
@@ -265,55 +180,11 @@ export async function getAllProducts(): Promise<GetAllProductsResult> {
       throw new Error("Invalid response format from Bokun API");
     }
 
-    // Sync cities and countries to Sanity in background (fire-and-forget)
-    // Does not block response; logging happens when sync completes or fails
-    syncCitiesFromProducts(data.items as BokunProduct[])
-      .then((syncResult) => {
-        if (syncResult.countries.created.length > 0) {
-          console.log(
-            "[Country Sync] Background: created",
-            syncResult.countries.created.length,
-            "countries:",
-            syncResult.countries.created.join(", "),
-          );
-        }
-        if (syncResult.cities.created.length > 0) {
-          console.log(
-            "[City Sync] Background: created",
-            syncResult.cities.created.length,
-            "cities:",
-            syncResult.cities.created.join(", "),
-          );
-        }
-        if (syncResult.cities.updated.length > 0) {
-          console.log(
-            "[City Sync] Background: migrated",
-            syncResult.cities.updated.length,
-            "cities:",
-            syncResult.cities.updated.join(", "),
-          );
-        }
-        if (syncResult.errors.length > 0) {
-          console.error(
-            "[City Sync] Background sync had",
-            syncResult.errors.length,
-            "error(s):",
-            syncResult.errors
-              .map((e) => `${e.type}:${e.identifier} - ${e.error}`)
-              .join("; "),
-          );
-        }
-      })
-      .catch((error) => {
-        console.error(
-          "[City Sync] Background sync failed:",
-          error instanceof Error ? error.message : error,
-        );
-      });
+    scheduleSyncFromSearchItems(data.items as BokunProduct[]);
 
     // Transform products to CityCardData format
     const cityCards: CityCardData[] = data.items.map(
-      transformProductToCityCard,
+      transformSearchProductToCityCard,
     );
 
     // Update cache
