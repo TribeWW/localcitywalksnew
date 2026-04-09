@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import ExploreCatalog from "@/components/explore/ExploreCatalog";
 import { archivePage } from "@/lib/flags";
 
 export const metadata: Metadata = {
@@ -21,18 +22,15 @@ export default async function ExplorePage() {
   if (!enabled) notFound();
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
-      <h1 className="text-3xl font-semibold text-nightsky">Explore</h1>
-      <p className="mt-2 text-muted-foreground">
-        Browse all tours. Filtering and sorting will be added here next.
-      </p>
-      <div className="mt-8 rounded-lg border border-border bg-white p-6">
-        <p className="text-sm text-muted-foreground">
-          Archive page skeleton (gated by the <span className="font-mono">archive-page</span>{" "}
-          feature flag).
+    <main className="bg-white">
+      <div className="mx-auto max-w-6xl px-4 py-10 md:px-8 w-full">
+        <h1 className="text-3xl font-semibold text-nightsky">Explore</h1>
+        <p className="mt-2 text-muted-foreground max-w-2xl">
+          Browse all walking tours. Filter by country, sort by title (A–Z or
+          Z–A), and load more with the same card grid as the home page.
         </p>
+        <ExploreCatalog />
       </div>
     </main>
   );
 }
-

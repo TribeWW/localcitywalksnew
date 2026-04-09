@@ -2,10 +2,14 @@ import AboutUs from "@/components/home/AboutUs";
 import Cities from "@/components/home/Cities";
 import ContactSection from "@/components/home/ContactSection";
 import CustomTourBanner from "@/components/home/CustomTourBanner";
+import Reviews from "@/components/home/Reviews";
 import StepsSection from "@/components/home/StepsSection";
+import { reviews } from "@/lib/flags";
 import Image from "next/image";
 
-export default function Home() {
+export default async function Home() {
+  const showReviews = await reviews();
+
   return (
     <>
       <main className="relative items-left justify-center bg-gradient-to-r from-tangerine to-grapefruit">
@@ -109,6 +113,7 @@ export default function Home() {
       </main>
       <AboutUs />
       <Cities />
+      {showReviews ? <Reviews /> : null}
       <CustomTourBanner />
       <ContactSection />
     </>

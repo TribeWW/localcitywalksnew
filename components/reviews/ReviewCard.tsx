@@ -1,5 +1,6 @@
 import { Star } from "lucide-react";
 import type { SanityReviewListItem } from "@/types/review";
+import { cn } from "@/lib/utils";
 import { formatExperienceDate } from "@/lib/utils/review-date";
 
 /** Whole stars 0–5; invalid or out-of-range values become 0 (empty row). */
@@ -9,15 +10,34 @@ function clampRating(rating: number): number {
   return Math.min(5, Math.max(0, n));
 }
 
-export function ReviewCard({ review }: { review: SanityReviewListItem }) {
+export type ReviewCardPresentation = "default" | "home";
+
+type ReviewCardProps = {
+  review: SanityReviewListItem;
+  /** `home` matches the /preview/reviews-mockup grid card styling. */
+  presentation?: ReviewCardPresentation;
+};
+
+export function ReviewCard({
+  review,
+  presentation = "default",
+}: ReviewCardProps) {
   const stars = clampRating(review.rating);
   const dateLabel = formatExperienceDate(review.experienceDate);
   const body = review.body?.trim();
+  const isHome = presentation === "home";
 
   return (
-    <article className="flex h-full flex-col rounded-lg border border-border bg-card p-6">
+    <article
+      className={cn(
+        "flex h-full flex-col rounded-lg p-6",
+        isHome
+          ? "border-[1.5px] border-[#D3CED2] bg-white"
+          : "border border-border bg-card",
+      )}
+    >
       <div
-        className="mb-4 flex gap-1 text-foreground"
+        className={cn("mb-4 flex gap-1", isHome ? "" : "text-foreground")}
         aria-label={
           stars > 0 ? `${stars} out of 5 stars` : "No star rating shown"
         }
@@ -25,22 +45,49 @@ export function ReviewCard({ review }: { review: SanityReviewListItem }) {
         {Array.from({ length: 5 }).map((_, i) => (
           <Star
             key={i}
-            className="size-3.5 shrink-0"
-            fill={i < stars ? "currentColor" : "none"}
-            color="currentColor"
+            className="size-[14px] shrink-0"
+            fill={
+              i < stars
+                ? isHome
+                  ? "#0F172A"
+                  : "currentColor"
+                : "none"
+            }
+            color={i < stars ? (isHome ? "#0F172A" : "currentColor") : isHome ? "#D3CED2" : "currentColor"}
             aria-hidden
           />
         ))}
       </div>
 
-      <p className="text-sm font-semibold text-foreground">{review.authorName}</p>
+      <p
+        className={cn(
+          "text-sm font-semibold",
+          isHome ? "mb-1 text-[#0F172A]" : "text-foreground",
+        )}
+      >
+        {review.authorName}
+      </p>
 
-      <p className="mt-1 text-xs text-muted-foreground">
-        Tour date: {dateLabel || "—"}
+      <p
+        className={cn(
+          "text-xs",
+          isHome ? "mb-4 text-[#6A6A6A]" : "mt-1 text-muted-foreground",
+        )}
+      >
+        {isHome ? dateLabel || "—" : `Tour date: ${dateLabel || "—"}`}
       </p>
 
       {body ? (
-        <p className="mt-4 text-sm leading-relaxed text-foreground">{body}</p>
+        <p
+          className={cn(
+            "text-sm leading-relaxed",
+            isHome
+              ? "mt-0 flex-1 text-[#1A1A1A] leading-[1.6]"
+              : "mt-4 text-foreground",
+          )}
+        >
+          {body}
+        </p>
       ) : null}
     </article>
   );
