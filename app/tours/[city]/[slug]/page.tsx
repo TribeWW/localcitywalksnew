@@ -5,7 +5,9 @@ import { notFound, redirect } from "next/navigation";
 import { BadgeCheck, Clock, Globe, Users } from "lucide-react";
 import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
 import {
+  getAllReviewRatings,
   getFallbackReviews,
+  getReviewRatingsForTour,
   getTourReviews,
 } from "@/lib/actions/reviews.actions";
 import { reviews as reviewsFlag } from "@/lib/flags";
@@ -121,20 +123,26 @@ export default async function TourPage({
   if (showReviews) {
     const tourReviews = await getTourReviews(id);
     if (tourReviews.length > 0) {
+      const tourSummaryRatings = await getReviewRatingsForTour(id);
       reviewsSection = (
         <ReviewsSection
           title="Traveller reviews"
           reviews={tourReviews}
+          summaryRatings={tourSummaryRatings}
           variant="tour"
         />
       );
     } else {
-      const fallbackReviews = await getFallbackReviews(id);
+      const [fallbackReviews, allSiteRatings] = await Promise.all([
+        getFallbackReviews(id),
+        getAllReviewRatings(),
+      ]);
       if (fallbackReviews.length > 0) {
         reviewsSection = (
           <ReviewsSection
             title="Traveller reviews"
             reviews={fallbackReviews}
+            summaryRatings={allSiteRatings}
             variant="fallback"
           />
         );

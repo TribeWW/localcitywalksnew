@@ -3,14 +3,18 @@ import type { SanityReviewListItem } from "@/types/review";
 import {
   meanStarRating,
   starDistribution,
+  type ReviewRatingRow,
 } from "@/lib/utils/review-summary";
 import { ReviewCard } from "./ReviewCard";
+import { TourReviewsExpandableList } from "./TourReviewsExpandableList";
 
 export type ReviewsSectionVariant = "home" | "tour" | "fallback";
 
 type ReviewsSectionProps = {
   title: string;
   reviews: SanityReviewListItem[];
+  /** Left-column summary; when omitted, uses `reviews` (e.g. home). */
+  summaryRatings?: ReadonlyArray<ReviewRatingRow>;
   variant?: ReviewsSectionVariant;
 };
 
@@ -21,6 +25,7 @@ type ReviewsSectionProps = {
 export function ReviewsSection({
   title,
   reviews,
+  summaryRatings,
   variant = "tour",
 }: ReviewsSectionProps) {
   if (reviews.length === 0) return null;
@@ -28,7 +33,11 @@ export function ReviewsSection({
   const isHome = variant === "home";
   const isTourLayout = variant === "tour" || variant === "fallback";
   const cardPresentation = isHome ? "home" : "tourDetail";
-  const avg = meanStarRating(reviews);
+  const summaryRows =
+    summaryRatings !== undefined && summaryRatings.length > 0
+      ? summaryRatings
+      : reviews;
+  const avg = meanStarRating(summaryRows);
 
   if (isHome) {
     return (
@@ -61,8 +70,8 @@ export function ReviewsSection({
   }
 
   if (isTourLayout) {
-    const total = reviews.length;
-    const distribution = starDistribution(reviews);
+    const summaryTotal = summaryRows.length;
+    const distribution = starDistribution(summaryRows);
 
     return (
       <section
@@ -87,7 +96,7 @@ export function ReviewsSection({
 
           <p className="mb-8 text-sm leading-relaxed text-[#6A6A6A]">
             All reviews come from verified travellers who joined an activity
-            with LocalCityWalks.
+            with LocalCityWalks. We only show the 10 most recent reviews below.
           </p>
 
           <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-[280px_1fr]">
@@ -101,7 +110,7 @@ export function ReviewsSection({
                   {avg.toFixed(1)}
                 </span>
                 <span className="text-sm text-[#6A6A6A]">
-                  based on {total} reviews
+                  based on {summaryTotal} reviews
                 </span>
               </div>
 
@@ -130,8 +139,8 @@ export function ReviewsSection({
                         className="absolute inset-y-0 left-0 rounded bg-[#0F172A]"
                         style={{
                           width:
-                            total > 0
-                              ? `${(row.count / total) * 100}%`
+                            summaryTotal > 0
+                              ? `${(row.count / summaryTotal) * 100}%`
                               : "0%",
                         }}
                       />
@@ -144,25 +153,10 @@ export function ReviewsSection({
               </ul>
             </div>
 
-            <ul className="flex list-none flex-col gap-4 p-0">
-              {reviews.map((review) => (
-                <li key={review._id}>
-                  <ReviewCard
-                    review={review}
-                    presentation={cardPresentation}
-                  />
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="mt-8 text-center">
-            <a
-              href="#tour-reviews"
-              className="text-sm font-semibold text-[#0F172A] underline decoration-1 underline-offset-[3px]"
-            >
-              Read more reviews
-            </a>
+            <TourReviewsExpandableList
+              reviews={reviews}
+              presentation="tourDetail"
+            />
           </div>
         </div>
       </section>

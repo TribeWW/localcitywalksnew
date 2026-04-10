@@ -83,3 +83,33 @@ export async function getRecentReviews(
     return [];
   }
 }
+
+/** All published ratings for one tour (summary / histogram only; no row limit). */
+export async function getReviewRatingsForTour(
+  tourId: string,
+): Promise<Array<{ rating: number }>> {
+  const id = tourId.trim();
+  if (!isValidTourId(id)) return [];
+
+  try {
+    return await client.fetch<Array<{ rating: number }>>(
+      `*[_type == "review" && ${DRAFT_EXCLUDED} && tourId == $tourId]{rating}`,
+      { tourId: id },
+    );
+  } catch (e) {
+    console.error("[Reviews] getReviewRatingsForTour failed", e);
+    return [];
+  }
+}
+
+/** All published ratings site-wide (summary when showing non–tour-specific cards). */
+export async function getAllReviewRatings(): Promise<Array<{ rating: number }>> {
+  try {
+    return await client.fetch<Array<{ rating: number }>>(
+      `*[_type == "review" && ${DRAFT_EXCLUDED}]{rating}`,
+    );
+  } catch (e) {
+    console.error("[Reviews] getAllReviewRatings failed", e);
+    return [];
+  }
+}
