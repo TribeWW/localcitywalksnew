@@ -1,9 +1,16 @@
+import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { BadgeCheck, Clock, Globe, Users } from "lucide-react";
 import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
+import {
+  getFallbackReviews,
+  getTourReviews,
+} from "@/lib/actions/reviews.actions";
+import { reviews as reviewsFlag } from "@/lib/flags";
 import { slugifyForUrl } from "@/lib/utils";
+import { ReviewsSection } from "@/components/reviews/ReviewsSection";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -108,6 +115,32 @@ export default async function TourPage({
         },
       })
     : "";
+
+  const showReviews = await reviewsFlag();
+  let reviewsSection: ReactNode = null;
+  if (showReviews) {
+    const tourReviews = await getTourReviews(id);
+    if (tourReviews.length > 0) {
+      reviewsSection = (
+        <ReviewsSection
+          title="Traveller reviews"
+          reviews={tourReviews}
+          variant="tour"
+        />
+      );
+    } else {
+      const fallbackReviews = await getFallbackReviews(id);
+      if (fallbackReviews.length > 0) {
+        reviewsSection = (
+          <ReviewsSection
+            title="Traveller reviews"
+            reviews={fallbackReviews}
+            variant="fallback"
+          />
+        );
+      }
+    }
+  }
 
   return (
     <main className="min-h-screen bg-white">
@@ -285,6 +318,10 @@ export default async function TourPage({
             </Card>
           </div>
         </div>
+
+        {reviewsSection ? (
+          <div className="w-full">{reviewsSection}</div>
+        ) : null}
 
         <div id="faq" className="mt-10 scroll-mt-28 pb-4 md:mt-4">
           <h2 className="mb-6 text-xl font-semibold text-[#0F172A]">

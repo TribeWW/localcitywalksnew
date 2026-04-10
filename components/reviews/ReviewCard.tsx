@@ -16,11 +16,11 @@ function clampRating(rating: number): number {
   return Math.min(5, Math.max(0, n));
 }
 
-export type ReviewCardPresentation = "default" | "home";
+export type ReviewCardPresentation = "default" | "home" | "tourDetail";
 
 type ReviewCardProps = {
   review: SanityReviewListItem;
-  /** `home` matches the /preview/reviews-mockup grid card styling. */
+  /** `home` matches the home grid mock; `tourDetail` matches tour vertical cards in the mock. */
   presentation?: ReviewCardPresentation;
 };
 
@@ -42,18 +42,22 @@ export function ReviewCard({
   const dateLabel = formatExperienceDate(review.experienceDate);
   const body = review.body?.trim();
   const isHome = presentation === "home";
+  const isTourDetail = presentation === "tourDetail";
 
   return (
     <article
       className={cn(
         "flex h-full flex-col rounded-lg p-6",
-        isHome
+        isHome || isTourDetail
           ? "border-[1.5px] border-[#D3CED2] bg-white"
           : "border border-border bg-card",
       )}
     >
       <div
-        className={cn("mb-4 flex gap-1", isHome ? "" : "text-foreground")}
+        className={cn(
+          "mb-4 flex gap-1",
+          isHome || isTourDetail ? "" : "text-foreground",
+        )}
         aria-label={
           stars > 0 ? `${stars} out of 5 stars` : "No star rating shown"
         }
@@ -64,12 +68,20 @@ export function ReviewCard({
             className="size-[14px] shrink-0"
             fill={
               i < stars
-                ? isHome
+                ? isHome || isTourDetail
                   ? "#0F172A"
                   : "currentColor"
                 : "none"
             }
-            color={i < stars ? (isHome ? "#0F172A" : "currentColor") : isHome ? "#D3CED2" : "currentColor"}
+            color={
+              i < stars
+                ? isHome || isTourDetail
+                  ? "#0F172A"
+                  : "currentColor"
+                : isHome || isTourDetail
+                  ? "#D3CED2"
+                  : "currentColor"
+            }
             aria-hidden
           />
         ))}
@@ -78,7 +90,7 @@ export function ReviewCard({
       <p
         className={cn(
           "text-sm font-semibold",
-          isHome ? "mb-1 text-[#0F172A]" : "text-foreground",
+          isHome || isTourDetail ? "mb-1 text-[#0F172A]" : "text-foreground",
         )}
       >
         {review.authorName}
@@ -87,17 +99,21 @@ export function ReviewCard({
       <p
         className={cn(
           "text-xs",
-          isHome ? "mb-4 text-[#6A6A6A]" : "mt-1 text-muted-foreground",
+          isHome || isTourDetail
+            ? "mb-4 text-[#6A6A6A]"
+            : "mt-1 text-muted-foreground",
         )}
       >
-        {isHome ? dateLabel || "—" : `Tour date: ${dateLabel || "—"}`}
+        {isHome || isTourDetail
+          ? dateLabel || "—"
+          : `Tour date: ${dateLabel || "—"}`}
       </p>
 
       {body ? (
         <p
           className={cn(
             "text-sm leading-relaxed",
-            isHome
+            isHome || isTourDetail
               ? "mt-0 flex-1 text-[#1A1A1A] leading-[1.6]"
               : "mt-4 text-foreground",
           )}
