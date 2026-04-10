@@ -6,6 +6,14 @@ export type StarDistributionRow = {
   count: number;
 };
 
+/** Pre-aggregated summary for the tour / site-wide left column (from GROQ counts). */
+export type ReviewRatingSummary = {
+  totalCount: number;
+  /** Mean of per-review displayed stars (0–5), same as `meanStarRating` over the full set. */
+  meanDisplayStars: number;
+  distribution: StarDistributionRow[];
+};
+
 /** Any row with a numeric `rating` (full review list or rating-only projection). */
 export type ReviewRatingRow = Pick<SanityReviewListItem, "rating">;
 
@@ -14,6 +22,53 @@ function normalizeRating(rating: number): 0 | 1 | 2 | 3 | 4 | 5 {
   const n = Math.round(Number(rating));
   if (!Number.isFinite(n)) return 0;
   return Math.min(5, Math.max(0, n)) as 0 | 1 | 2 | 3 | 4 | 5;
+}
+
+function distributionRowsFromBuckets(
+  buckets: Record<0 | 1 | 2 | 3 | 4 | 5, number>,
+): StarDistributionRow[] {
+  return ([5, 4, 3, 2, 1, 0] as const).map((stars) => ({
+    label: stars === 1 ? "1 star" : `${stars} stars`,
+    stars,
+    count: buckets[stars],
+  }));
+}
+
+/**
+ * Build {@link ReviewRatingSummary} from GROQ bucket counts (aligned with {@link normalizeRating}).
+ */
+export function reviewRatingSummaryFromAggregates(row: {
+  total: number;
+  c0: number;
+  c1: number;
+  c2: number;
+  c3: number;
+  c4: number;
+  c5: number;
+}): ReviewRatingSummary {
+  const buckets: Record<0 | 1 | 2 | 3 | 4 | 5, number> = {
+    0: row.c0,
+    1: row.c1,
+    2: row.c2,
+    3: row.c3,
+    4: row.c4,
+    5: row.c5,
+  };
+  const totalCount = row.total;
+  const meanDisplayStars =
+    totalCount === 0
+      ? 0
+      : (row.c1 +
+          2 * row.c2 +
+          3 * row.c3 +
+          4 * row.c4 +
+          5 * row.c5) /
+        totalCount;
+  return {
+    totalCount,
+    meanDisplayStars,
+    distribution: distributionRowsFromBuckets(buckets),
+  };
 }
 
 /**
@@ -46,9 +101,5 @@ export function starDistribution(
     const s = normalizeRating(r.rating);
     buckets[s] += 1;
   }
-  return ([5, 4, 3, 2, 1, 0] as const).map((stars) => ({
-    label: stars === 1 ? "1 star" : `${stars} stars`,
-    stars,
-    count: buckets[stars],
-  }));
+  return distributionRowsFromBuckets(buckets);
 }

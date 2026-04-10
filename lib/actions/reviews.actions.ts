@@ -5,6 +5,10 @@ import {
   DEFAULT_REVIEW_LIMIT,
   type SanityReviewListItem,
 } from "@/types/review";
+import {
+  reviewRatingSummaryFromAggregates,
+  type ReviewRatingSummary,
+} from "@/lib/utils/review-summary";
 
 const REVIEW_FIELDS = `_id, tourId, rating, experienceDate, authorName, body`;
 
@@ -22,25 +26,37 @@ function isValidTourId(id: string): boolean {
   return DIGITS_ONLY_TOUR_ID.test(id.trim());
 }
 
+export type GetTourReviewsResult =
+  | { ok: true; reviews: SanityReviewListItem[] }
+  | { ok: false; error: Error };
+
 /**
  * Published reviews for a single tour, newest experience first.
+ * Fetch failures return `{ ok: false }` so callers can tell them apart from an empty result.
  */
 export async function getTourReviews(
   tourId: string,
   limit: number = DEFAULT_REVIEW_LIMIT,
-): Promise<SanityReviewListItem[]> {
+): Promise<GetTourReviewsResult> {
   const id = tourId.trim();
-  if (!isValidTourId(id)) return [];
+  if (!isValidTourId(id)) {
+    return { ok: true, reviews: [] };
+  }
 
   const lim = clampLimit(limit);
   try {
-    return await client.fetch<SanityReviewListItem[]>(
+    const reviews = await client.fetch<SanityReviewListItem[]>(
       `*[_type == "review" && ${DRAFT_EXCLUDED} && tourId == $tourId] | order(experienceDate desc)[0...$lim] { ${REVIEW_FIELDS} }`,
       { tourId: id, lim },
     );
+    return { ok: true, reviews };
   } catch (e) {
     console.error("[Reviews] getTourReviews failed", e);
-    return [];
+    const error =
+      e instanceof Error
+        ? e
+        : new Error(typeof e === "string" ? e : "Failed to load tour reviews");
+    return { ok: false, error };
   }
 }
 
@@ -84,32 +100,67 @@ export async function getRecentReviews(
   }
 }
 
-/** All published ratings for one tour (summary / histogram only; no row limit). */
+/** GROQ: round + clamp to 0–5 (matches {@link review-summary} `normalizeRating`). */
+const GROQ_CLAMP_STAR =
+  "select(round(rating) > 5 => 5, round(rating) < 0 => 0, true => round(rating))";
+
+type ReviewRatingBucketRow = {
+  total: number;
+  c0: number;
+  c1: number;
+  c2: number;
+  c3: number;
+  c4: number;
+  c5: number;
+};
+
+function groqReviewRatingBuckets(filterExtra: string): string {
+  const base = `*[_type == "review" && ${DRAFT_EXCLUDED}${filterExtra}]`;
+  const withCond = (cond: string) =>
+    `*[_type == "review" && ${DRAFT_EXCLUDED}${filterExtra}${cond}]`;
+  return `{
+    "total": count(${base}),
+    "c5": count(${withCond(` && defined(rating) && ${GROQ_CLAMP_STAR} == 5`)}),
+    "c4": count(${withCond(` && defined(rating) && ${GROQ_CLAMP_STAR} == 4`)}),
+    "c3": count(${withCond(` && defined(rating) && ${GROQ_CLAMP_STAR} == 3`)}),
+    "c2": count(${withCond(` && defined(rating) && ${GROQ_CLAMP_STAR} == 2`)}),
+    "c1": count(${withCond(` && defined(rating) && ${GROQ_CLAMP_STAR} == 1`)}),
+    "c0": count(${withCond(` && !defined(rating)`)}) + count(${withCond(` && defined(rating) && ${GROQ_CLAMP_STAR} == 0`)})
+  }`;
+}
+
+/**
+ * Aggregated rating summary for one tour (no per-row fetch).
+ */
 export async function getReviewRatingsForTour(
   tourId: string,
-): Promise<Array<{ rating: number }>> {
+): Promise<ReviewRatingSummary | null> {
   const id = tourId.trim();
-  if (!isValidTourId(id)) return [];
+  if (!isValidTourId(id)) return null;
 
   try {
-    return await client.fetch<Array<{ rating: number }>>(
-      `*[_type == "review" && ${DRAFT_EXCLUDED} && tourId == $tourId]{rating}`,
+    const row = await client.fetch<ReviewRatingBucketRow>(
+      groqReviewRatingBuckets(" && tourId == $tourId"),
       { tourId: id },
     );
+    return reviewRatingSummaryFromAggregates(row);
   } catch (e) {
     console.error("[Reviews] getReviewRatingsForTour failed", e);
-    return [];
+    return null;
   }
 }
 
-/** All published ratings site-wide (summary when showing non–tour-specific cards). */
-export async function getAllReviewRatings(): Promise<Array<{ rating: number }>> {
+/**
+ * Aggregated rating summary site-wide (no per-row fetch).
+ */
+export async function getAllReviewRatings(): Promise<ReviewRatingSummary | null> {
   try {
-    return await client.fetch<Array<{ rating: number }>>(
-      `*[_type == "review" && ${DRAFT_EXCLUDED}]{rating}`,
+    const row = await client.fetch<ReviewRatingBucketRow>(
+      groqReviewRatingBuckets(""),
     );
+    return reviewRatingSummaryFromAggregates(row);
   } catch (e) {
     console.error("[Reviews] getAllReviewRatings failed", e);
-    return [];
+    return null;
   }
 }

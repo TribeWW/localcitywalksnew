@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { SanityReviewListItem } from "@/types/review";
 import { ReviewCard, type ReviewCardPresentation } from "./ReviewCard";
 
@@ -24,6 +30,11 @@ export function TourReviewsExpandableList({
     Math.min(INITIAL_VISIBLE, reviews.length),
   );
   const scrollToReviewIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setVisibleCount(Math.min(INITIAL_VISIBLE, reviews.length));
+    scrollToReviewIdRef.current = null;
+  }, [reviews]);
 
   const visible = reviews.slice(0, visibleCount);
   const showReadMore = visibleCount < reviews.length;

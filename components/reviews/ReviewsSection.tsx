@@ -3,7 +3,7 @@ import type { SanityReviewListItem } from "@/types/review";
 import {
   meanStarRating,
   starDistribution,
-  type ReviewRatingRow,
+  type ReviewRatingSummary,
 } from "@/lib/utils/review-summary";
 import { ReviewCard } from "./ReviewCard";
 import { TourReviewsExpandableList } from "./TourReviewsExpandableList";
@@ -13,8 +13,8 @@ export type ReviewsSectionVariant = "home" | "tour" | "fallback";
 type ReviewsSectionProps = {
   title: string;
   reviews: SanityReviewListItem[];
-  /** Left-column summary; when omitted, uses `reviews` (e.g. home). */
-  summaryRatings?: ReadonlyArray<ReviewRatingRow>;
+  /** Pre-aggregated left-column summary; when missing or empty, uses `reviews`. */
+  summary?: ReviewRatingSummary | null;
   variant?: ReviewsSectionVariant;
 };
 
@@ -25,7 +25,7 @@ type ReviewsSectionProps = {
 export function ReviewsSection({
   title,
   reviews,
-  summaryRatings,
+  summary,
   variant = "tour",
 }: ReviewsSectionProps) {
   if (reviews.length === 0) return null;
@@ -33,11 +33,11 @@ export function ReviewsSection({
   const isHome = variant === "home";
   const isTourLayout = variant === "tour" || variant === "fallback";
   const cardPresentation = isHome ? "home" : "tourDetail";
-  const summaryRows =
-    summaryRatings !== undefined && summaryRatings.length > 0
-      ? summaryRatings
-      : reviews;
-  const avg = meanStarRating(summaryRows);
+  const precomputed =
+    summary != null && summary.totalCount > 0 ? summary : null;
+  const avg = precomputed
+    ? precomputed.meanDisplayStars
+    : meanStarRating(reviews);
 
   if (isHome) {
     return (
@@ -70,8 +70,10 @@ export function ReviewsSection({
   }
 
   if (isTourLayout) {
-    const summaryTotal = summaryRows.length;
-    const distribution = starDistribution(summaryRows);
+    const summaryTotal = precomputed ? precomputed.totalCount : reviews.length;
+    const distribution = precomputed
+      ? precomputed.distribution
+      : starDistribution(reviews);
 
     return (
       <section

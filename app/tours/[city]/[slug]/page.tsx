@@ -121,19 +121,23 @@ export default async function TourPage({
   const showReviews = await reviewsFlag();
   let reviewsSection: ReactNode = null;
   if (showReviews) {
-    const tourReviews = await getTourReviews(id);
+    const tourReviewsResult = await getTourReviews(id);
+    if (!tourReviewsResult.ok) {
+      throw tourReviewsResult.error;
+    }
+    const tourReviews = tourReviewsResult.reviews;
     if (tourReviews.length > 0) {
-      const tourSummaryRatings = await getReviewRatingsForTour(id);
+      const tourSummary = await getReviewRatingsForTour(id);
       reviewsSection = (
         <ReviewsSection
           title="Traveller reviews"
           reviews={tourReviews}
-          summaryRatings={tourSummaryRatings}
+          summary={tourSummary}
           variant="tour"
         />
       );
     } else {
-      const [fallbackReviews, allSiteRatings] = await Promise.all([
+      const [fallbackReviews, siteSummary] = await Promise.all([
         getFallbackReviews(id),
         getAllReviewRatings(),
       ]);
@@ -142,7 +146,7 @@ export default async function TourPage({
           <ReviewsSection
             title="Traveller reviews"
             reviews={fallbackReviews}
-            summaryRatings={allSiteRatings}
+            summary={siteSummary}
             variant="fallback"
           />
         );
