@@ -41,7 +41,9 @@ export default function ReviewsMockupPage() {
     <main className="min-h-screen bg-white">
       <div className="border-b border-border bg-pearl-gray px-4 py-3 text-center text-sm text-muted-foreground">
         Mockup only — preview at{" "}
-        <span className="font-mono text-foreground">/preview/reviews-mockup</span>
+        <span className="font-mono text-foreground">
+          /preview/reviews-mockup
+        </span>
       </div>
 
       {/* Reviews */}
