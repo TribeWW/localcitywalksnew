@@ -5,7 +5,7 @@ import {
   starDistribution,
   type ReviewRatingSummary,
 } from "@/lib/utils/review-summary";
-import { ReviewCard } from "./ReviewCard";
+import { HomeReviewsCarousel } from "./HomeReviewsCarousel";
 import { TourReviewsExpandableList } from "./TourReviewsExpandableList";
 
 export type ReviewsSectionVariant = "home" | "tour" | "fallback";
@@ -19,8 +19,8 @@ type ReviewsSectionProps = {
 };
 
 /**
- * Renders a reviews section. `home` uses a 3-column grid; `tour` and `fallback`
- * match the tour-detail mock layout (summary + bars + vertical cards), Tailwind-only.
+ * Renders a reviews section. `home` uses a carousel with dot navigation; `tour` and
+ * `fallback` match the tour-detail layout (summary + bars + vertical cards).
  */
 export function ReviewsSection({
   title,
@@ -32,7 +32,6 @@ export function ReviewsSection({
 
   const isHome = variant === "home";
   const isTourLayout = variant === "tour" || variant === "fallback";
-  const cardPresentation = isHome ? "home" : "tourDetail";
   const precomputed =
     summary != null && summary.totalCount > 0 ? summary : null;
   const avg = precomputed
@@ -53,17 +52,17 @@ export function ReviewsSection({
             >
               {title}
             </h2>
-            <p className="text-lg leading-relaxed text-[#6A6A6A]">
-              ⭐ {avg.toFixed(1)} average rating from travellers across Europe
+            <p className="flex flex-wrap items-center justify-center gap-2 text-lg leading-relaxed text-[#6A6A6A]">
+              <Star
+                className="size-5 shrink-0 fill-[#0F172A] text-[#0F172A]"
+                aria-hidden
+              />
+              <span>
+                Aggregated score ({avg.toFixed(1)}) average rating across Europe
+              </span>
             </p>
           </div>
-          <ul className="grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-3">
-            {reviews.map((review) => (
-              <li key={review._id}>
-                <ReviewCard review={review} presentation={cardPresentation} />
-              </li>
-            ))}
-          </ul>
+          <HomeReviewsCarousel reviews={reviews} />
         </div>
       </section>
     );
