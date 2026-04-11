@@ -1,6 +1,6 @@
 import AboutUs from "@/components/home/AboutUs";
-import Cities from "@/components/home/Cities";
 import ContactSection from "@/components/home/ContactSection";
+import HomeSpotlight from "@/components/home/HomeSpotlight";
 import CustomTourBanner from "@/components/home/CustomTourBanner";
 import Reviews from "@/components/home/Reviews";
 import StepsSection from "@/components/home/StepsSection";
@@ -10,7 +10,7 @@ import Image from "next/image";
 /**
  * Renders the landing page layout and conditionally includes the reviews section.
  *
- * The layout contains the hero section, AboutUs, Cities, CustomTourBanner, and ContactSection.
+ * The layout contains the hero section, AboutUs, HomeSpotlight, CustomTourBanner, and ContactSection.
  *
  * @returns The page's JSX layout; includes the `Reviews` section when the feature flag is enabled.
  */
@@ -97,7 +97,7 @@ export default async function Home() {
               {/* CTA Links */}
               <div className="flex flex-col sm:flex-row gap-4">
                 <a
-                  href="#cities"
+                  href="/explore"
                   className="inline-flex items-center justify-center px-8 py-3 bg-white text-nightsky font-semibold rounded-md hover:bg-gray-50 transition-colors duration-200"
                 >
                   Browse Tours →
@@ -119,7 +119,7 @@ export default async function Home() {
         </div>
       </main>
       <AboutUs />
-      <Cities />
+      <HomeSpotlight />
       {showReviews ? <Reviews /> : null}
       <CustomTourBanner />
       <ContactSection />
