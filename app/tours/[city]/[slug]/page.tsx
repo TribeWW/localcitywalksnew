@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { BadgeCheck, Clock, Globe, Users } from "lucide-react";
+import { BadgeCheck, Clock, Globe, Users, Star } from "lucide-react";
 import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
 import {
   getAllReviewRatings,
@@ -12,6 +12,8 @@ import {
 } from "@/lib/actions/reviews.actions";
 import { reviews as reviewsFlag } from "@/lib/flags";
 import { slugifyForUrl } from "@/lib/utils";
+import { meanStarRating } from "@/lib/utils/review-summary";
+import { FallbackReviewInfoTooltip } from "@/components/reviews/FallbackReviewInfoTooltip";
 import { ReviewsSection } from "@/components/reviews/ReviewsSection";
 import {
   Breadcrumb,
@@ -120,14 +122,45 @@ export default async function TourPage({
 
   const showReviews = await reviewsFlag();
   let reviewsSection: ReactNode = null;
+  /** Shown under the title when reviews exist (same basis as ReviewsSection). */
+  let heroReviewStats: {
+    ratingLabel: string;
+    reviewCount: number;
+    /** Site-wide / other-tours reviews — show info tooltip next to hero link. */
+    usesFallbackReviews: boolean;
+  } | null = null;
+
+  /** Tour-specific block + hero stats only when this tour has enough reviews. */
+  const MIN_TOUR_REVIEWS_FOR_DEDICATED_BLOCK = 3;
+
   if (showReviews) {
-    const tourReviewsResult = await getTourReviews(id);
+    const [tourReviewsResult, tourSummary] = await Promise.all([
+      getTourReviews(id),
+      getReviewRatingsForTour(id),
+    ]);
     if (!tourReviewsResult.ok) {
       throw tourReviewsResult.error;
     }
     const tourReviews = tourReviewsResult.reviews;
-    if (tourReviews.length > 0) {
-      const tourSummary = await getReviewRatingsForTour(id);
+    const tourReviewTotal =
+      tourSummary != null && tourSummary.totalCount > 0
+        ? tourSummary.totalCount
+        : tourReviews.length;
+
+    if (tourReviewTotal >= MIN_TOUR_REVIEWS_FOR_DEDICATED_BLOCK) {
+      const precomputed =
+        tourSummary != null && tourSummary.totalCount > 0 ? tourSummary : null;
+      const avg = precomputed
+        ? precomputed.meanDisplayStars
+        : meanStarRating(tourReviews);
+      const reviewCount = precomputed
+        ? precomputed.totalCount
+        : tourReviews.length;
+      heroReviewStats = {
+        ratingLabel: avg.toFixed(1),
+        reviewCount,
+        usesFallbackReviews: false,
+      };
       reviewsSection = (
         <ReviewsSection
           title="Traveller reviews"
@@ -142,6 +175,19 @@ export default async function TourPage({
         getAllReviewRatings(),
       ]);
       if (fallbackReviews.length > 0) {
+        const precomputed =
+          siteSummary != null && siteSummary.totalCount > 0 ? siteSummary : null;
+        const avg = precomputed
+          ? precomputed.meanDisplayStars
+          : meanStarRating(fallbackReviews);
+        const reviewCount = precomputed
+          ? precomputed.totalCount
+          : fallbackReviews.length;
+        heroReviewStats = {
+          ratingLabel: avg.toFixed(1),
+          reviewCount,
+          usesFallbackReviews: true,
+        };
         reviewsSection = (
           <ReviewsSection
             title="Traveller reviews"
@@ -195,6 +241,27 @@ export default async function TourPage({
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
             <div>
+              {heroReviewStats ? (
+                <div className="mb-3 flex items-center gap-1.5">
+                  <Star size={14} fill="#0F172A" color="#0F172A" aria-hidden />
+                  <span className="text-[14px] font-semibold text-[#0F172A]">
+                    {heroReviewStats.ratingLabel}
+                  </span>
+                  <a
+                    href="#tour-reviews"
+                    className="cursor-pointer text-[14px] text-[#6A6A6A] underline decoration-[#D3CED2] underline-offset-2"
+                  >
+                    ·{" "}
+                    {heroReviewStats.usesFallbackReviews
+                      ? "All reviews"
+                      : `${heroReviewStats.reviewCount} ${heroReviewStats.reviewCount === 1 ? "review" : "reviews"}`}
+                  </a>
+                  {heroReviewStats.usesFallbackReviews ? (
+                    <FallbackReviewInfoTooltip className="top-px" />
+                  ) : null}
+                </div>
+              ) : null}
+
               <h1 className="mb-4 text-[32px] font-bold leading-[1.3] text-[#0F172A]">
                 {cityDisplayName}: Private City Walk with a Local Guide
               </h1>
@@ -331,9 +398,7 @@ export default async function TourPage({
           </div>
         </div>
 
-        {reviewsSection ? (
-          <div className="w-full">{reviewsSection}</div>
-        ) : null}
+        {reviewsSection ? <div className="w-full">{reviewsSection}</div> : null}
 
         <div id="faq" className="mt-10 scroll-mt-28 pb-4 md:mt-4">
           <h2 className="mb-6 text-xl font-semibold text-[#0F172A]">

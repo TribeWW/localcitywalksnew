@@ -5,6 +5,7 @@ import {
   starDistribution,
   type ReviewRatingSummary,
 } from "@/lib/utils/review-summary";
+import { FallbackReviewsNotice } from "./FallbackReviewsNotice";
 import { HomeReviewsCarousel } from "./HomeReviewsCarousel";
 import { TourReviewsExpandableList } from "./TourReviewsExpandableList";
 
@@ -88,17 +89,7 @@ export function ReviewsSection({
             {title}
           </h2>
 
-          {variant === "fallback" ? (
-            <p className="mb-3 max-w-2xl text-sm leading-relaxed text-[#6A6A6A]">
-              Recent reviews from travellers on other LocalCityWalks tours—these
-              experiences were not all on this specific walk.
-            </p>
-          ) : null}
-
-          <p className="mb-8 text-sm leading-relaxed text-[#6A6A6A]">
-            All reviews come from verified travellers who joined an activity
-            with LocalCityWalks. We only show the 10 most recent reviews below.
-          </p>
+          {variant === "fallback" ? <FallbackReviewsNotice /> : null}
 
           <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-[280px_1fr]">
             <div>
@@ -111,7 +102,9 @@ export function ReviewsSection({
                   {avg.toFixed(1)}
                 </span>
                 <span className="text-sm text-[#6A6A6A]">
-                  based on {summaryTotal} reviews
+                  {variant === "fallback"
+                    ? "based on all reviews"
+                    : `based on ${summaryTotal} ${summaryTotal === 1 ? "review" : "reviews"}`}
                 </span>
               </div>
 
