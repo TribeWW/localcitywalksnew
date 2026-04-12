@@ -110,7 +110,7 @@ export function HomeReviewsCarousel({ reviews }: HomeReviewsCarouselProps) {
           {reviews.map((review) => (
             <div
               key={review._id}
-              className="flex min-h-0 min-w-0 shrink-0 grow-0 basis-[calc(100%-48px)] md:basis-[calc((100%-24px)/2)] lg:basis-[calc((100%-48px)/3)]"
+              className="flex min-w-0 shrink-0 grow-0 basis-[calc(100%-48px)] md:basis-[calc((100%-24px)/2)] lg:basis-[calc((100%-48px)/3)]"
             >
               <ReviewCard review={review} presentation="home" />
             </div>

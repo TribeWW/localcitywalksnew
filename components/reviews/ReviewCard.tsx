@@ -1,6 +1,7 @@
 import { Star } from "lucide-react";
 import type { SanityReviewListItem } from "@/types/review";
 import { cn } from "@/lib/utils";
+import { formatPublicReviewAuthorName } from "@/lib/utils/review-author";
 import { formatExperienceDate } from "@/lib/utils/review-date";
 import { ReviewBodyClamp } from "./ReviewBodyClamp";
 
@@ -44,11 +45,13 @@ export function ReviewCard({
   const body = review.body?.trim();
   const isHome = presentation === "home";
   const isTourDetail = presentation === "tourDetail";
+  const authorDisplay = formatPublicReviewAuthorName(review.authorName);
 
   return (
     <article
       className={cn(
-        "flex h-full w-full min-h-0 flex-col rounded-lg p-6",
+        "flex w-full flex-col rounded-lg p-6",
+        !isHome && "h-full min-h-0",
         isHome || isTourDetail
           ? "border-[1.5px] border-[#D3CED2] bg-white"
           : "border border-border bg-card",
@@ -94,7 +97,7 @@ export function ReviewCard({
           isHome || isTourDetail ? "mb-1 text-[#0F172A]" : "text-foreground",
         )}
       >
-        {review.authorName}
+        {authorDisplay}
       </p>
 
       <p

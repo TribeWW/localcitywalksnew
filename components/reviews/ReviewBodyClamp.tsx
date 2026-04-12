@@ -54,9 +54,7 @@ export function ReviewBodyClamp({
   }, [text, expanded, clampClass]);
 
   return (
-    <div
-      className={cn("relative mt-0 flex min-h-0 flex-1 flex-col", className)}
-    >
+    <div className={cn("relative mt-0 flex flex-col", className)}>
       <p
         ref={textRef}
         className={cn(
