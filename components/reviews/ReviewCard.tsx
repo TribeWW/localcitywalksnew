@@ -1,7 +1,9 @@
 import { Star } from "lucide-react";
 import type { SanityReviewListItem } from "@/types/review";
 import { cn } from "@/lib/utils";
+import { formatPublicReviewAuthorName } from "@/lib/utils/review-author";
 import { formatExperienceDate } from "@/lib/utils/review-date";
+import { ReviewBodyClamp } from "./ReviewBodyClamp";
 
 /**
  * Normalize a numeric rating to a whole number between 0 and 5.
@@ -43,11 +45,14 @@ export function ReviewCard({
   const body = review.body?.trim();
   const isHome = presentation === "home";
   const isTourDetail = presentation === "tourDetail";
+  const authorDisplay = formatPublicReviewAuthorName(review.authorName);
 
   return (
     <article
       className={cn(
-        "flex h-full flex-col rounded-lg p-6",
+        "flex w-full flex-col rounded-lg p-6",
+        isHome && "shrink-0",
+        !isHome && "h-full min-h-0",
         isHome || isTourDetail
           ? "border-[1.5px] border-[#D3CED2] bg-white"
           : "border border-border bg-card",
@@ -93,7 +98,7 @@ export function ReviewCard({
           isHome || isTourDetail ? "mb-1 text-[#0F172A]" : "text-foreground",
         )}
       >
-        {review.authorName}
+        {authorDisplay}
       </p>
 
       <p
@@ -110,16 +115,20 @@ export function ReviewCard({
       </p>
 
       {body ? (
-        <p
-          className={cn(
-            "text-sm leading-relaxed",
-            isHome || isTourDetail
-              ? "mt-0 flex-1 text-[#1A1A1A] leading-[1.6]"
-              : "mt-4 text-foreground",
-          )}
-        >
-          {body}
-        </p>
+        isHome ? (
+          <ReviewBodyClamp text={body} maxLines={4} />
+        ) : (
+          <p
+            className={cn(
+              "text-sm leading-relaxed",
+              isTourDetail
+                ? "mt-0 flex-1 text-[#1A1A1A] leading-[1.6]"
+                : "mt-4 text-foreground",
+            )}
+          >
+            {body}
+          </p>
+        )
       ) : null}
     </article>
   );

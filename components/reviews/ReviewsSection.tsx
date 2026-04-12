@@ -5,7 +5,8 @@ import {
   starDistribution,
   type ReviewRatingSummary,
 } from "@/lib/utils/review-summary";
-import { ReviewCard } from "./ReviewCard";
+import { FallbackReviewsNotice } from "./FallbackReviewsNotice";
+import { HomeReviewsCarousel } from "./HomeReviewsCarousel";
 import { TourReviewsExpandableList } from "./TourReviewsExpandableList";
 
 export type ReviewsSectionVariant = "home" | "tour" | "fallback";
@@ -19,8 +20,8 @@ type ReviewsSectionProps = {
 };
 
 /**
- * Renders a reviews section. `home` uses a 3-column grid; `tour` and `fallback`
- * match the tour-detail mock layout (summary + bars + vertical cards), Tailwind-only.
+ * Renders a reviews section. `home` uses a carousel with dot navigation; `tour` and
+ * `fallback` match the tour-detail layout (summary + bars + vertical cards).
  */
 export function ReviewsSection({
   title,
@@ -32,7 +33,6 @@ export function ReviewsSection({
 
   const isHome = variant === "home";
   const isTourLayout = variant === "tour" || variant === "fallback";
-  const cardPresentation = isHome ? "home" : "tourDetail";
   const precomputed =
     summary != null && summary.totalCount > 0 ? summary : null;
   const avg = precomputed
@@ -53,17 +53,15 @@ export function ReviewsSection({
             >
               {title}
             </h2>
-            <p className="text-lg leading-relaxed text-[#6A6A6A]">
-              ⭐ {avg.toFixed(1)} average rating from travellers across Europe
+            <p className="flex flex-wrap items-center justify-center gap-2 text-lg leading-relaxed text-[#6A6A6A]">
+              <Star
+                className="size-5 shrink-0 fill-[#0F172A] text-[#0F172A]"
+                aria-hidden
+              />
+              <span>({avg.toFixed(1)}) average rating across Europe</span>
             </p>
           </div>
-          <ul className="grid list-none grid-cols-1 gap-6 p-0 md:grid-cols-3">
-            {reviews.map((review) => (
-              <li key={review._id}>
-                <ReviewCard review={review} presentation={cardPresentation} />
-              </li>
-            ))}
-          </ul>
+          <HomeReviewsCarousel reviews={reviews} />
         </div>
       </section>
     );
@@ -89,17 +87,7 @@ export function ReviewsSection({
             {title}
           </h2>
 
-          {variant === "fallback" ? (
-            <p className="mb-3 max-w-2xl text-sm leading-relaxed text-[#6A6A6A]">
-              Recent reviews from travellers on other LocalCityWalks tours—these
-              experiences were not all on this specific walk.
-            </p>
-          ) : null}
-
-          <p className="mb-8 text-sm leading-relaxed text-[#6A6A6A]">
-            All reviews come from verified travellers who joined an activity
-            with LocalCityWalks. We only show the 10 most recent reviews below.
-          </p>
+          {variant === "fallback" ? <FallbackReviewsNotice /> : null}
 
           <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-[280px_1fr]">
             <div>
@@ -112,7 +100,9 @@ export function ReviewsSection({
                   {avg.toFixed(1)}
                 </span>
                 <span className="text-sm text-[#6A6A6A]">
-                  based on {summaryTotal} reviews
+                  {variant === "fallback"
+                    ? "based on all reviews"
+                    : `based on ${summaryTotal} ${summaryTotal === 1 ? "review" : "reviews"}`}
                 </span>
               </div>
 

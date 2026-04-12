@@ -27,7 +27,8 @@ function normalizeRating(rating: number): 0 | 1 | 2 | 3 | 4 | 5 {
 function distributionRowsFromBuckets(
   buckets: Record<0 | 1 | 2 | 3 | 4 | 5, number>,
 ): StarDistributionRow[] {
-  return ([5, 4, 3, 2, 1, 0] as const).map((stars) => ({
+  // Omit 0 stars: not a user-facing rating on the site; c0 still rolls into totalCount elsewhere.
+  return ([5, 4, 3, 2, 1] as const).map((stars) => ({
     label: stars === 1 ? "1 star" : `${stars} stars`,
     stars,
     count: buckets[stars],
@@ -84,7 +85,7 @@ export function meanStarRating(reviews: ReadonlyArray<ReviewRatingRow>): number 
 }
 
 /**
- * Counts per star level for histogram rows (5 → 0), aligned with ReviewCard rendering.
+ * Counts per star level for histogram rows (5 → 1), aligned with ReviewCard rendering.
  */
 export function starDistribution(
   reviews: ReadonlyArray<ReviewRatingRow>,
