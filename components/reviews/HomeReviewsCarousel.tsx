@@ -1,7 +1,7 @@
 "use client";
 
 import useEmblaCarousel from "embla-carousel-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SanityReviewListItem } from "@/types/review";
 import { ReviewCard } from "./ReviewCard";
 
@@ -47,11 +47,20 @@ export function HomeReviewsCarousel({ reviews }: HomeReviewsCarouselProps) {
     [reviews.length, pageSize],
   );
 
-  const [emblaRef, emblaApi] = useEmblaCarousel({
+  const [emblaRefCallback, emblaApi] = useEmblaCarousel({
     align: "start",
     loop: false,
     containScroll: "trimSnaps",
   });
+
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const setViewportRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      viewportRef.current = node;
+      emblaRefCallback(node);
+    },
+    [emblaRefCallback],
+  );
 
   const [selectedSnap, setSelectedSnap] = useState(0);
 
@@ -81,6 +90,22 @@ export function HomeReviewsCarousel({ reviews }: HomeReviewsCarouselProps) {
     emblaApi.scrollTo(target, true);
   }, [emblaApi, pageSize, reviews.length]);
 
+  /** Embla measures viewport height once; cards can grow (e.g. Read more) — re-init when track height changes. */
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport || !emblaApi) return;
+    const inner = viewport.firstElementChild;
+    if (!inner || !(inner instanceof HTMLElement)) return;
+
+    const ro = new ResizeObserver(() => {
+      requestAnimationFrame(() => {
+        emblaApi.reInit();
+      });
+    });
+    ro.observe(inner);
+    return () => ro.disconnect();
+  }, [emblaApi, reviews.length]);
+
   const activePage = Math.min(
     pageCount - 1,
     Math.floor(selectedSnap / pageSize),
@@ -105,7 +130,10 @@ export function HomeReviewsCarousel({ reviews }: HomeReviewsCarouselProps) {
       aria-roledescription="carousel"
       aria-label="Recent traveller reviews"
     >
-      <div className="overflow-hidden" ref={emblaRef}>
+      <div
+        ref={setViewportRef}
+        className="overflow-hidden pb-1"
+      >
         <div className="flex items-start" style={{ gap: GAP_PX }}>
           {reviews.map((review) => (
             <div

@@ -51,6 +51,7 @@ export function ReviewCard({
     <article
       className={cn(
         "flex w-full flex-col rounded-lg p-6",
+        isHome && "shrink-0",
         !isHome && "h-full min-h-0",
         isHome || isTourDetail
           ? "border-[1.5px] border-[#D3CED2] bg-white"
