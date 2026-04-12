@@ -130,10 +130,7 @@ export function HomeReviewsCarousel({ reviews }: HomeReviewsCarouselProps) {
       aria-roledescription="carousel"
       aria-label="Recent traveller reviews"
     >
-      <div
-        ref={setViewportRef}
-        className="overflow-hidden pb-1"
-      >
+      <div ref={setViewportRef} className="overflow-hidden pb-1">
         <div className="flex items-start" style={{ gap: GAP_PX }}>
           {reviews.map((review) => (
             <div
@@ -162,7 +159,7 @@ export function HomeReviewsCarousel({ reviews }: HomeReviewsCarouselProps) {
                 aria-selected={isActive}
                 aria-label={`Go to page ${i + 1} of ${pageCount}`}
                 aria-current={isActive ? true : undefined}
-                tabIndex={0}
+                tabIndex={isActive ? 0 : -1}
                 className={
                   isActive
                     ? "size-2.5 rounded-full bg-[#0F172A] transition-colors"

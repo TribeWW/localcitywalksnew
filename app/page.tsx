@@ -6,6 +6,7 @@ import Reviews from "@/components/home/Reviews";
 import StepsSection from "@/components/home/StepsSection";
 import { reviews } from "@/lib/flags";
 import Image from "next/image";
+import Link from "next/link";
 
 /**
  * Renders the landing page layout and conditionally includes the reviews section.
@@ -96,18 +97,18 @@ export default async function Home() {
 
               {/* CTA Links */}
               <div className="flex flex-col sm:flex-row gap-4">
-                <a
+                <Link
                   href="/explore"
                   className="inline-flex items-center justify-center px-8 py-3 bg-white text-nightsky font-semibold rounded-md hover:bg-gray-50 transition-colors duration-200"
                 >
                   Browse Tours →
-                </a>
-                <a
+                </Link>
+                <Link
                   href="#contact"
                   className="inline-flex items-center justify-center px-8 py-3 bg-nightsky text-white font-semibold rounded-md hover:bg-nightsky/90 transition-colors duration-200"
                 >
                   Get in Touch
-                </a>
+                </Link>
               </div>
             </div>
 
