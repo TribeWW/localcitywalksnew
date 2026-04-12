@@ -58,9 +58,7 @@ export function ReviewsSection({
                 className="size-5 shrink-0 fill-[#0F172A] text-[#0F172A]"
                 aria-hidden
               />
-              <span>
-                Aggregated score ({avg.toFixed(1)}) average rating across Europe
-              </span>
+              <span>({avg.toFixed(1)}) average rating across Europe</span>
             </p>
           </div>
           <HomeReviewsCarousel reviews={reviews} />
