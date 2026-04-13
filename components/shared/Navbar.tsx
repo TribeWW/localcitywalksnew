@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
-const BROWSE_HREF = "/#cities";
+const BROWSE_HREF = "/explore";
 const ABOUT_HREF = "/#about";
 const CONTACT_HREF = "/#contact";
 

@@ -11,7 +11,7 @@ export default function NotFound() {
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Button asChild className="bg-nightsky hover:bg-nightsky/90">
-            <Link href="/#cities">Browse tours</Link>
+            <Link href="/explore">Browse tours</Link>
           </Button>
           <Button asChild variant="outline">
             <Link href="/#contact">Contact us</Link>
