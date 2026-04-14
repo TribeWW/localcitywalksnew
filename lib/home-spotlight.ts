@@ -4,6 +4,7 @@ import { client } from "@/sanity/lib/client";
 import type { CityCardData } from "@/types/bokun";
 
 const DRAFT_EXCLUDED = `!(_id in path("drafts.**"))`;
+const DIGITS_ONLY_BOKUN_ID = /^\d+$/;
 
 const SPOTLIGHT_QUERY = `*[_type == "homeSpotlight" && ${DRAFT_EXCLUDED}][0]{
   "items": coalesce(items, [])[]{ "id": bokunProductId }
@@ -34,7 +35,15 @@ export async function getHomeSpotlightCityCards(): Promise<CityCardData[]> {
       ?.map((row) => row.id?.trim())
       .filter((id): id is string => id != null && id.length > 0) ?? [];
 
-  const ids = rawIds.slice(0, MAX_ITEMS);
+  const ids = rawIds
+    .slice(0, MAX_ITEMS)
+    .filter((id) => {
+      const ok = DIGITS_ONLY_BOKUN_ID.test(id);
+      if (!ok) {
+        console.warn("[Home spotlight] Invalid Bokun product id in Sanity:", id);
+      }
+      return ok;
+    });
   if (ids.length === 0) {
     return [];
   }

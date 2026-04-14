@@ -91,6 +91,15 @@ async function fetchBokunSearchPageRaw(
       totalHits: data.totalHits,
     };
   } catch (error) {
+    console.error(
+      "[Explore catalog] Bokun page fetch failed",
+      {
+        page,
+        pageSize,
+        countryCode: countryCode ?? "all",
+      },
+      error,
+    );
     return {
       ok: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",
@@ -205,6 +214,7 @@ export async function getExploreCatalogPage(
   try {
     const built = await getOrBuildExploreSortedList(countryCode, sortAscending);
     if (!built.ok) {
+      console.error("[Explore catalog] Build failed:", built.error);
       return { success: false, error: built.error };
     }
     const { sorted } = built;
