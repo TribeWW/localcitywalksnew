@@ -122,19 +122,8 @@ export function ReviewsSection({
                     className="flex items-center gap-3 last:mb-0"
                   >
                     <span className="w-12 shrink-0 text-xs text-[#6A6A6A]">
-                      {row.label}
+                      {`${row.stars}stars`}
                     </span>
-                    <div className="flex gap-px">
-                      {Array.from({ length: 5 }).map((_, s) => (
-                        <Star
-                          key={s}
-                          className="size-3 shrink-0"
-                          fill={s < row.stars ? "#0F172A" : "none"}
-                          color={s < row.stars ? "#0F172A" : "#D3CED2"}
-                          aria-hidden
-                        />
-                      ))}
-                    </div>
                     <div className="relative h-2 min-w-0 flex-1 overflow-hidden rounded bg-[#F7F7F7]">
                       <div
                         className="absolute inset-y-0 left-0 rounded bg-[#0F172A]"
