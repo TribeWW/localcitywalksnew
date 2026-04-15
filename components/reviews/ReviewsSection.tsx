@@ -77,7 +77,7 @@ export function ReviewsSection({
       <section
         id="tour-reviews"
         aria-labelledby="reviews-section-title"
-        className="my-16 w-full scroll-mt-28"
+        className="mb-12 w-full scroll-mt-28"
       >
         <div className="w-full pb-16">
           <h2
@@ -87,7 +87,16 @@ export function ReviewsSection({
             {title}
           </h2>
 
-          {variant === "fallback" ? <FallbackReviewsNotice /> : null}
+          {variant === "fallback" ? (
+            <FallbackReviewsNotice />
+          ) : (
+            <p className="mb-8 max-w-2xl text-sm leading-relaxed text-[#6A6A6A]">
+              <span>
+                All reviews come from verified travellers who joined this
+                specific activity with LocalCityWalks.
+              </span>
+            </p>
+          )}
 
           <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-[280px_1fr]">
             <div>
@@ -101,7 +110,7 @@ export function ReviewsSection({
                 </span>
                 <span className="text-sm text-[#6A6A6A]">
                   {variant === "fallback"
-                    ? "based on all reviews"
+                    ? "based on recent reviews"
                     : `based on ${summaryTotal} ${summaryTotal === 1 ? "review" : "reviews"}`}
                 </span>
               </div>
