@@ -57,6 +57,18 @@ function pickBestPhotoUrl(photo: unknown, preferred: string[]): string | null {
   return any?.url ?? null;
 }
 
+/**
+ * Render the tour detail page for the provided route parameters.
+ *
+ * Extracts the numeric tour id from `slug`, validates and loads tour data, enforces canonical city/slug by redirecting when necessary, prepares images and sanitized content, and conditionally loads and displays reviews. The rendered page includes images, tour metadata, booking request form, reviews (when available), and an FAQ section.
+ *
+ * @param params - A promise that resolves to route parameters `{ city, slug }`
+ * @returns The React element for the tour detail page containing images, content, booking UI, reviews, and FAQ
+ *
+ * @throws Error when fetching tour details or reviews fails with a non-recoverable error
+ * @remarks
+ * This function will call `notFound()` when the slug does not contain a valid numeric id or when the requested tour is not found, and will call `redirect()` to the canonical city/slug when the incoming route does not match canonical values.
+ */
 export default async function TourPage({
   params,
 }: {
@@ -176,7 +188,9 @@ export default async function TourPage({
       ]);
       if (fallbackReviews.length > 0) {
         const precomputed =
-          siteSummary != null && siteSummary.totalCount > 0 ? siteSummary : null;
+          siteSummary != null && siteSummary.totalCount > 0
+            ? siteSummary
+            : null;
         const avg = precomputed
           ? precomputed.meanDisplayStars
           : meanStarRating(fallbackReviews);
@@ -364,10 +378,7 @@ export default async function TourPage({
               </ul>
             </section>
 
-            <section
-              className="mb-12"
-              aria-labelledby="cancellation-policy-heading"
-            >
+            <section aria-labelledby="cancellation-policy-heading">
               <h2
                 id="cancellation-policy-heading"
                 className="mb-4 text-xl font-semibold text-[#0F172A]"
@@ -398,7 +409,9 @@ export default async function TourPage({
           </div>
         </div>
 
-        {reviewsSection ? <div className="w-full">{reviewsSection}</div> : null}
+        {reviewsSection ? (
+          <div className="w-full mt-16">{reviewsSection}</div>
+        ) : null}
 
         <div id="faq" className="mt-10 scroll-mt-28 pb-4 md:mt-4">
           <h2 className="mb-6 text-xl font-semibold text-[#0F172A]">
