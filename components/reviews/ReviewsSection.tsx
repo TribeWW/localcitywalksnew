@@ -112,8 +112,8 @@ export function ReviewsSection({
                     key={row.label}
                     className="flex items-center gap-3 last:mb-0"
                   >
-                    <span className="w-12 shrink-0 text-xs text-[#6A6A6A]">
-                      {row.label}
+                    <span className="min-w-[4.75rem] shrink-0 text-xs text-[#6A6A6A]">
+                      {row.stars === 1 ? "1 star" : `${row.stars} stars`}
                     </span>
                     <div className="flex gap-px">
                       {Array.from({ length: 5 }).map((_, s) => (
