@@ -176,7 +176,9 @@ export default async function TourPage({
       ]);
       if (fallbackReviews.length > 0) {
         const precomputed =
-          siteSummary != null && siteSummary.totalCount > 0 ? siteSummary : null;
+          siteSummary != null && siteSummary.totalCount > 0
+            ? siteSummary
+            : null;
         const avg = precomputed
           ? precomputed.meanDisplayStars
           : meanStarRating(fallbackReviews);
@@ -364,10 +366,7 @@ export default async function TourPage({
               </ul>
             </section>
 
-            <section
-              className="mb-12"
-              aria-labelledby="cancellation-policy-heading"
-            >
+            <section aria-labelledby="cancellation-policy-heading">
               <h2
                 id="cancellation-policy-heading"
                 className="mb-4 text-xl font-semibold text-[#0F172A]"
@@ -398,7 +397,9 @@ export default async function TourPage({
           </div>
         </div>
 
-        {reviewsSection ? <div className="w-full">{reviewsSection}</div> : null}
+        {reviewsSection ? (
+          <div className="w-full mt-16">{reviewsSection}</div>
+        ) : null}
 
         <div id="faq" className="mt-10 scroll-mt-28 pb-4 md:mt-4">
           <h2 className="mb-6 text-xl font-semibold text-[#0F172A]">
