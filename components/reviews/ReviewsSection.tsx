@@ -20,8 +20,15 @@ type ReviewsSectionProps = {
 };
 
 /**
- * Renders a reviews section. `home` uses a carousel with dot navigation; `tour` and
- * `fallback` match the tour-detail layout (summary + bars + vertical cards).
+ * Render a reviews section using one of three layouts depending on `variant`.
+ *
+ * Renders nothing if `reviews` is empty. For `variant === "home"` it renders a carousel-style section; for `variant === "tour"` or `"fallback"` it renders the tour-detail layout with an average rating, a star-count distribution, and an expandable list of review cards. When a non-empty `summary` is provided it is used for the aggregated counts/average; otherwise these values are derived from `reviews`.
+ *
+ * @param title - Section heading text
+ * @param reviews - List of reviews to display and use for computed aggregates when `summary` is not provided
+ * @param summary - Optional pre-aggregated rating summary; used only when `summary.totalCount > 0`
+ * @param variant - Layout variant: `"home"` | `"tour"` | `"fallback"` (defaults to `"tour"`)
+ * @returns The section element for the selected layout, or `null` when there are no reviews or the variant does not match a supported layout
  */
 export function ReviewsSection({
   title,
@@ -121,8 +128,8 @@ export function ReviewsSection({
                     key={row.label}
                     className="flex items-center gap-3 last:mb-0"
                   >
-                    <span className="w-12 shrink-0 text-xs text-[#6A6A6A]">
-                      {`${row.stars}stars`}
+                    <span className="min-w-[4.75rem] shrink-0 text-xs text-[#6A6A6A]">
+                      {row.stars === 1 ? "1 star" : `${row.stars} stars`}
                     </span>
                     <div className="relative h-2 min-w-0 flex-1 overflow-hidden rounded bg-[#F7F7F7]">
                       <div
