@@ -57,6 +57,18 @@ function pickBestPhotoUrl(photo: unknown, preferred: string[]): string | null {
   return any?.url ?? null;
 }
 
+/**
+ * Render the tour detail page for the provided route parameters.
+ *
+ * Extracts the numeric tour id from `slug`, validates and loads tour data, enforces canonical city/slug by redirecting when necessary, prepares images and sanitized content, and conditionally loads and displays reviews. The rendered page includes images, tour metadata, booking request form, reviews (when available), and an FAQ section.
+ *
+ * @param params - A promise that resolves to route parameters `{ city, slug }`
+ * @returns The React element for the tour detail page containing images, content, booking UI, reviews, and FAQ
+ *
+ * @throws Error when fetching tour details or reviews fails with a non-recoverable error
+ * @remarks
+ * This function will call `notFound()` when the slug does not contain a valid numeric id or when the requested tour is not found, and will call `redirect()` to the canonical city/slug when the incoming route does not match canonical values.
+ */
 export default async function TourPage({
   params,
 }: {
