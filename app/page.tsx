@@ -12,8 +12,8 @@ import Link from "next/link";
 /**
  * Renders the landing page layout and conditionally includes the reviews section.
  *
- * The layout contains the hero section, AboutUs, then either **HomeSpotlight** (curated) or
- * **Cities** (legacy Bokun grid) depending on `archive-page`, plus CustomTourBanner and ContactSection.
+ * The layout contains the hero section, AboutUs, then **HomeSpotlight** when `archive-page` is on
+ * or **Cities** (legacy Bokun grid) when it is off, plus CustomTourBanner and ContactSection.
  *
  * @returns The page's JSX layout; includes the `Reviews` section when the reviews flag is enabled.
  */
@@ -123,7 +123,7 @@ export default async function Home() {
         </div>
       </main>
       <AboutUs />
-      {archiveEnabled ? <Cities /> : <HomeSpotlight />}
+      {archiveEnabled ? <HomeSpotlight /> : <Cities />}
       {showReviews ? <Reviews /> : null}
       <CustomTourBanner />
       <ContactSection />

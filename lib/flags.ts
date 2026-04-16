@@ -25,9 +25,9 @@ export const reviews = flag<boolean>({
  * Vercel Flags — `archive-page` (boolean: Off / On).
  * Kind and variants match `vercel flags inspect archive-page` for project `localcitywalks.v1`.
  *
- * When on: enables `/explore` and the home page uses the legacy **Cities** block (Bokun search)
- * instead of **HomeSpotlight** (Sanity-curated grid). When off: home shows HomeSpotlight; `/explore`
- * is not served (see `app/explore/page.tsx`).
+ * When on: enables `/explore` and the home page shows **HomeSpotlight** (Sanity-curated grid).
+ * When off: home uses the legacy **Cities** block (Bokun search); `/explore` is not served
+ * (see `app/explore/page.tsx`).
  *
  * Evaluate with `await archivePage()` in a Server Component, route handler, or middleware.
  *
@@ -37,7 +37,7 @@ export const archivePage = flag<boolean>({
   key: "archive-page",
   adapter: vercelAdapter(),
   description:
-    "Enables /explore and legacy home Cities section (hides curated HomeSpotlight)",
+    "Enables /explore and curated HomeSpotlight on home (legacy Cities when off)",
   options: [
     { value: false, label: "Off" },
     { value: true, label: "On" },
