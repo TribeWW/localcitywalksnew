@@ -54,6 +54,9 @@ describe("ExploreCatalogClient country filters", () => {
 
     expect(screen.queryByRole("button", { name: "Select country" })).not.toBeInTheDocument();
     expect(screen.queryByText("Filter by country")).not.toBeInTheDocument();
+
+    const gridArea = screen.getByTestId("city-card-list").parentElement;
+    expect(gridArea).toHaveTextContent(/2\s*tours\s*found/);
   });
 
   it("keeps active tab semantics and calls filter on click", async () => {

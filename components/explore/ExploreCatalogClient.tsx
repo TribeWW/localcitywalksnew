@@ -30,7 +30,7 @@ interface ExploreCatalogClientProps {
 /**
  * Render an explore-catalog UI that displays city cards with title sorting, country filtering, and incremental "Show more" pagination.
  *
- * Renders controls for sorting (A–Z / Z–A), a dialog to filter by country (including "All countries"), a grid of city cards or loading/empty states, and a "Show more" button to load or reveal additional results.
+ * Renders a sticky country tab bar (including "All"), title sorting controls (A–Z / Z–A), a grid of city cards or loading/empty states, and a "Show more" button to load or reveal additional results.
  *
  * @param initialData - Initial page of city card data shown when the component mounts
  * @param totalHits - Total number of available results used to determine whether more pages exist
@@ -246,51 +246,59 @@ export default function ExploreCatalogClient({
         </div>
       </div>
 
-      <section id="explore-catalog" className="py-8 md:py-12">
-      <div className="max-w-6xl mx-auto px-4 md:px-8 xl:px-0">
-        <div className="px-0 md:px-6">
-          {loadingFilter ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center py-6">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="bg-white rounded-xl shadow-sm overflow-hidden w-full max-w-[250px] border border-border"
-                >
-                  <Skeleton className="h-48 w-full rounded-none" />
-                  <div className="p-6 space-y-4">
-                    <Skeleton className="h-6 w-3/4 mx-auto" />
-                    <Skeleton className="h-10 w-full rounded-md" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : showEmptyForCountry ? (
-            <div className="text-center py-12 px-4 rounded-lg border border-border bg-muted/30 text-foreground">
-              <p className="text-lg font-medium">
-                No tours found for this country in the current catalog.
-              </p>
-            </div>
-          ) : (
-            <>
-              <CityCard cities={visibleList} noHorizontalPadding />
-              {showMoreVisible && (
-                <div className="mt-8 text-center">
-                  <Button
-                    type="button"
-                    variant="default"
-                    onClick={() => void handleShowMore()}
-                    disabled={loadingMore}
-                    className="min-h-[44px] px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+      <section id="explore-catalog" className="py-8">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 xl:px-0">
+          <div className="px-0 ">
+            {loadingFilter ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center ">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="bg-white rounded-xl shadow-sm overflow-hidden w-full max-w-[250px] border border-border"
                   >
-                    {loadingMore ? "Loading…" : "Show more"}
-                  </Button>
+                    <Skeleton className="h-48 w-full rounded-none" />
+                    <div className=" space-y-4">
+                      <Skeleton className="h-6 w-3/4 mx-auto" />
+                      <Skeleton className="h-10 w-full rounded-md" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : showEmptyForCountry ? (
+              <div className="text-center py-12 px-4 rounded-lg border border-border bg-muted/30 text-foreground">
+                <p className="text-lg font-medium">
+                  No tours found for this country in the current catalog.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="mb-2 text-sm text-[#6A6A6A]">
+                  <span>
+                    <span className="font-semibold text-[#0F172A]">
+                      {totalHitsView} {totalHitsView === 1 ? "tour" : "tours"}
+                    </span>{" "}
+                    found
+                  </span>
                 </div>
-              )}
-            </>
-          )}
+                <CityCard cities={visibleList} noHorizontalPadding />
+                {showMoreVisible && (
+                  <div className="mt-8 text-center">
+                    <Button
+                      type="button"
+                      variant="default"
+                      onClick={() => void handleShowMore()}
+                      disabled={loadingMore}
+                      className="min-h-[44px] px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loadingMore ? "Loading…" : "Show more"}
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
     </>
   );
 }
