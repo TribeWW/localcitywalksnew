@@ -4,7 +4,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
-import FooterCityLinks from "@/components/shared/FooterCityLinks";
+
 import Script from "next/script";
 import { config } from "@/lib/config";
 
@@ -148,7 +148,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <Navbar />
         {children}
         <Footer />
-        <FooterCityLinks />
+
         <Toaster />
       </body>
     </html>

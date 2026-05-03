@@ -1,4 +1,5 @@
 import Image from "next/image";
+import FooterCityLinks from "./FooterCityLinks";
 
 const Footer = () => {
   return (
@@ -20,7 +21,7 @@ const Footer = () => {
             </p>
           </div>
         </div>
-
+        <FooterCityLinks />
         <p className="mt-8 text-center text-xs text-muted-foreground">
           © {new Date().getFullYear()} LocalCityWalks. All rights reserved.
         </p>
