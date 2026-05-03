@@ -7,7 +7,8 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Removes diacritical marks (accents) from a string.
- * Use for city codes and slugs only — not for display names or published content.
+ * Use for city codes and slugs; also the sitewide footer city link strip (sort + label).
+ * Do not use for general CMS display or tour titles unless product asks for it.
  *
  * @example
  * stripAccents("Córdoba") // "Cordoba"

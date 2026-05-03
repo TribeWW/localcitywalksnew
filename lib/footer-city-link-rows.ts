@@ -5,7 +5,7 @@ export type FooterCityLinkItem = {
 
 /**
  * Maps raw GROQ rows into footer link items (trim, drop invalid hrefs).
- * Query layer handles ordering; this is pure validation/mapping for tests + reuse.
+ * Ordering and accent-free labels are applied in `getFooterCityLinkItems`.
  */
 export function normalizeFooterCityLinkRows(
   rows: Array<{ name?: string | null; href?: string | null }> | null | undefined,
