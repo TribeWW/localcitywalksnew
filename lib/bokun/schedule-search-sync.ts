@@ -35,6 +35,15 @@ export function scheduleSyncFromSearchItems(items: BokunProduct[]): void {
           syncResult.cities.updated.join(", "),
         );
       }
+      const patched = syncResult.cities.tourPagePathsPatched;
+      if (patched != null && patched.length > 0) {
+        console.log(
+          "[City Sync] Background: tourPagePath patched for",
+          patched.length,
+          "cities:",
+          patched.join(", "),
+        );
+      }
       if (syncResult.errors.length > 0) {
         console.error(
           "[City Sync] Background sync had",
