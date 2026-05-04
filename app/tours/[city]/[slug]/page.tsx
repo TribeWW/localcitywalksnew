@@ -147,16 +147,26 @@ export default async function TourPage({
     getTourReviews(id),
     getReviewRatingsForTour(id),
   ]);
+
   if (!tourReviewsResult.ok) {
-    throw tourReviewsResult.error;
+    console.error("Tour reviews unavailable, falling back to aggregate reviews", {
+      tourId: id,
+      error:
+        tourReviewsResult.error instanceof Error
+          ? tourReviewsResult.error.message
+          : String(tourReviewsResult.error),
+    });
   }
-  const tourReviews = tourReviewsResult.reviews;
+
+  const tourReviews = tourReviewsResult.ok ? tourReviewsResult.reviews : [];
+  const canUseTourReviews = tourReviewsResult.ok;
+
   const tourReviewTotal =
     tourSummary != null && tourSummary.totalCount > 0
       ? tourSummary.totalCount
       : tourReviews.length;
 
-  if (tourReviewTotal >= MIN_TOUR_REVIEWS_FOR_DEDICATED_BLOCK) {
+  if (canUseTourReviews && tourReviewTotal >= MIN_TOUR_REVIEWS_FOR_DEDICATED_BLOCK) {
     const precomputed =
       tourSummary != null && tourSummary.totalCount > 0 ? tourSummary : null;
     const avg = precomputed

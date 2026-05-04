@@ -25,6 +25,7 @@ interface ExploreCatalogClientProps {
   initialData: CityCardData[];
   totalHits: number;
   initialSortAscending: boolean;
+  completeCountryList: CountryOption[];
 }
 
 /**
@@ -41,10 +42,9 @@ export default function ExploreCatalogClient({
   initialData,
   totalHits,
   initialSortAscending,
+  completeCountryList,
 }: ExploreCatalogClientProps) {
   const [accumulatedList, setAccumulatedList] =
-    useState<CityCardData[]>(initialData);
-  const [allProductsForCountryList, setAllProductsForCountryList] =
     useState<CityCardData[]>(initialData);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -55,20 +55,6 @@ export default function ExploreCatalogClient({
   );
   const [loadingFilter, setLoadingFilter] = useState(false);
   const [sortAscending, setSortAscending] = useState(initialSortAscending);
-
-  const uniqueCountries = useMemo((): CountryOption[] => {
-    const byCode = new Map<string, string>();
-    for (const c of allProductsForCountryList) {
-      const code = c.countryCode?.trim();
-      if (!code) continue; // keep "All countries" as the only unfiltered choice
-      if (!byCode.has(code)) {
-        byCode.set(code, c.country ?? "Unknown");
-      }
-    }
-    return Array.from(byCode.entries())
-      .map(([countryCode, country]) => ({ countryCode, country }))
-      .sort((a, b) => a.country.localeCompare(b.country));
-  }, [allProductsForCountryList]);
 
   const visibleList = useMemo(
     () => accumulatedList.slice(0, visibleCount),
@@ -99,9 +85,6 @@ export default function ExploreCatalogClient({
         if (result.totalHits != null) setTotalHitsView(result.totalHits);
         setVisibleCount((prev) => prev + result.data!.length);
         setCurrentPage(nextPage);
-        if (selectedCountryCode === null) {
-          setAllProductsForCountryList((prev) => [...prev, ...result.data!]);
-        }
       }
     } finally {
       setLoadingMore(false);
@@ -138,9 +121,6 @@ export default function ExploreCatalogClient({
           setVisibleCount(PAGE_SIZE);
           setCurrentPage(1);
           if (result.totalHits != null) setTotalHitsView(result.totalHits);
-          if (countryCode === null) {
-            setAllProductsForCountryList(result.data);
-          }
         }
       } finally {
         if (reqId === refreshRequestId.current) setLoadingFilter(false);
@@ -166,9 +146,6 @@ export default function ExploreCatalogClient({
           setVisibleCount(PAGE_SIZE);
           setCurrentPage(1);
           if (result.totalHits != null) setTotalHitsView(result.totalHits);
-          if (selectedCountryCode === null) {
-            setAllProductsForCountryList(result.data);
-          }
         }
       } finally {
         if (reqId === refreshRequestId.current) setLoadingFilter(false);
@@ -206,7 +183,7 @@ export default function ExploreCatalogClient({
             >
               All
             </button>
-            {uniqueCountries.map(({ countryCode, country }) => (
+            {completeCountryList.map(({ countryCode, country }) => (
               <button
                 key={countryCode || "unknown"}
                 type="button"

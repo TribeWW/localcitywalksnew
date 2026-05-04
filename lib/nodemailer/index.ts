@@ -87,12 +87,13 @@ export async function sendEmail(data: EmailContent) {
     return { success: true };
   } catch (error) {
     const emailError = error as EmailError;
+    const errorMessage = emailError.message || "Unknown email delivery error";
     console.error("Failed to send contact email:", {
-      message: emailError.message,
+      message: errorMessage,
       code: emailError.code,
       command: emailError.command,
     });
-    throw new Error(`Failed to send email: ${emailError.message}`);
+    throw new Error(`Failed to send email: ${errorMessage}`);
   }
 }
 
@@ -186,11 +187,12 @@ export async function sendTourRequestEmail(data: TourRequestEmailContent) {
     return { success: true };
   } catch (error) {
     const emailError = error as EmailError;
+    const errorMessage = emailError.message || "Unknown email delivery error";
     console.error("Failed to send tour request email:", {
-      message: emailError.message,
+      message: errorMessage,
       code: emailError.code,
       command: emailError.command,
     });
-    throw new Error(`Failed to send tour request email: ${emailError.message}`);
+    throw new Error(`Failed to send tour request email: ${errorMessage}`);
   }
 }

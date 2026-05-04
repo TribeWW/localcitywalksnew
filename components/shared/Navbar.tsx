@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
-const BROWSE_HREF = "/explore";
+// Keep CTA on a guaranteed-safe route regardless of archive-page flag state.
+const BROWSE_HREF = "/";
 const ABOUT_HREF = "/#about";
 const CONTACT_HREF = "/#contact";
 

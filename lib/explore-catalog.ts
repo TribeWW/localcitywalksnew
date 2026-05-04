@@ -24,6 +24,20 @@ const CACHE_TTL = 15 * 60 * 1000;
 const PAGE_SIZE = 20;
 const EXPLORE_FETCH_TIMEOUT_MS = 12_000;
 
+function buildCompleteCountryList(items: CityCardData[]) {
+  const byCode = new Map<string, string>();
+  for (const item of items) {
+    const code = item.countryCode?.trim();
+    if (!code) continue;
+    if (!byCode.has(code)) {
+      byCode.set(code, item.country ?? "Unknown");
+    }
+  }
+  return Array.from(byCode.entries())
+    .map(([countryCode, country]) => ({ countryCode, country }))
+    .sort((a, b) => a.country.localeCompare(b.country));
+}
+
 /**
  * Fetches a single page of Bokun search results and returns validated items.
  *
@@ -215,6 +229,7 @@ export async function getExploreCatalogPage(
       success: true,
       data,
       totalHits,
+      completeCountryList: buildCompleteCountryList(sorted),
     };
   } catch (error) {
     console.error("Error building explore catalog page:", error);
