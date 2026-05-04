@@ -10,7 +10,6 @@ import {
   getReviewRatingsForTour,
   getTourReviews,
 } from "@/lib/actions/reviews.actions";
-import { reviews as reviewsFlag } from "@/lib/flags";
 import { slugifyForUrl } from "@/lib/utils";
 import { meanStarRating } from "@/lib/utils/review-summary";
 import { FallbackReviewInfoTooltip } from "@/components/reviews/FallbackReviewInfoTooltip";
@@ -60,7 +59,7 @@ function pickBestPhotoUrl(photo: unknown, preferred: string[]): string | null {
 /**
  * Render the tour detail page for the provided route parameters.
  *
- * Extracts the numeric tour id from `slug`, validates and loads tour data, enforces canonical city/slug by redirecting when necessary, prepares images and sanitized content, and conditionally loads and displays reviews. The rendered page includes images, tour metadata, booking request form, reviews (when available), and an FAQ section.
+ * Extracts the numeric tour id from `slug`, validates and loads tour data, enforces canonical city/slug by redirecting when necessary, prepares images and sanitized content, and loads and displays reviews. The rendered page includes images, tour metadata, booking request form, reviews (when available), and an FAQ section.
  *
  * @param params - A promise that resolves to route parameters `{ city, slug }`
  * @returns The React element for the tour detail page containing images, content, booking UI, reviews, and FAQ
@@ -132,7 +131,6 @@ export default async function TourPage({
       })
     : "";
 
-  const showReviews = await reviewsFlag();
   let reviewsSection: ReactNode = null;
   /** Shown under the title when reviews exist (same basis as ReviewsSection). */
   let heroReviewStats: {
@@ -145,72 +143,73 @@ export default async function TourPage({
   /** Tour-specific block + hero stats only when this tour has enough reviews. */
   const MIN_TOUR_REVIEWS_FOR_DEDICATED_BLOCK = 3;
 
-  if (showReviews) {
-    const [tourReviewsResult, tourSummary] = await Promise.all([
-      getTourReviews(id),
-      getReviewRatingsForTour(id),
-    ]);
-    if (!tourReviewsResult.ok) {
-      throw tourReviewsResult.error;
-    }
-    const tourReviews = tourReviewsResult.reviews;
-    const tourReviewTotal =
-      tourSummary != null && tourSummary.totalCount > 0
-        ? tourSummary.totalCount
-        : tourReviews.length;
+  const tourReviewsResult = await getTourReviews(id);
 
-    if (tourReviewTotal >= MIN_TOUR_REVIEWS_FOR_DEDICATED_BLOCK) {
+  if (!tourReviewsResult.ok) {
+    console.error("Tour reviews unavailable, falling back to aggregate reviews", {
+      tourId: id,
+      error:
+        tourReviewsResult.error instanceof Error
+          ? tourReviewsResult.error.message
+          : String(tourReviewsResult.error),
+    });
+  }
+
+  const tourReviews = tourReviewsResult.ok ? tourReviewsResult.reviews : [];
+  const canUseTourReviews = tourReviewsResult.ok;
+  const canRenderDedicatedTourReviews =
+    canUseTourReviews &&
+    tourReviews.length >= MIN_TOUR_REVIEWS_FOR_DEDICATED_BLOCK;
+
+  if (canRenderDedicatedTourReviews) {
+    const tourSummary = await getReviewRatingsForTour(id);
+    const precomputed =
+      tourSummary != null && tourSummary.totalCount > 0 ? tourSummary : null;
+    const avg = precomputed
+      ? precomputed.meanDisplayStars
+      : meanStarRating(tourReviews);
+    const reviewCount = precomputed
+      ? precomputed.totalCount
+      : tourReviews.length;
+    heroReviewStats = {
+      ratingLabel: avg.toFixed(1),
+      reviewCount,
+      usesFallbackReviews: false,
+    };
+    reviewsSection = (
+      <ReviewsSection
+        title="Traveller reviews"
+        reviews={tourReviews}
+        summary={tourSummary}
+        variant="tour"
+      />
+    );
+  } else {
+    const siteSummaryPromise = getAllReviewRatings();
+    const fallbackReviews = await getFallbackReviews(id);
+    if (fallbackReviews.length > 0) {
+      const siteSummary = await siteSummaryPromise;
       const precomputed =
-        tourSummary != null && tourSummary.totalCount > 0 ? tourSummary : null;
+        siteSummary != null && siteSummary.totalCount > 0 ? siteSummary : null;
       const avg = precomputed
         ? precomputed.meanDisplayStars
-        : meanStarRating(tourReviews);
+        : meanStarRating(fallbackReviews);
       const reviewCount = precomputed
         ? precomputed.totalCount
-        : tourReviews.length;
+        : fallbackReviews.length;
       heroReviewStats = {
         ratingLabel: avg.toFixed(1),
         reviewCount,
-        usesFallbackReviews: false,
+        usesFallbackReviews: true,
       };
       reviewsSection = (
         <ReviewsSection
           title="Traveller reviews"
-          reviews={tourReviews}
-          summary={tourSummary}
-          variant="tour"
+          reviews={fallbackReviews}
+          summary={siteSummary}
+          variant="fallback"
         />
       );
-    } else {
-      const [fallbackReviews, siteSummary] = await Promise.all([
-        getFallbackReviews(id),
-        getAllReviewRatings(),
-      ]);
-      if (fallbackReviews.length > 0) {
-        const precomputed =
-          siteSummary != null && siteSummary.totalCount > 0
-            ? siteSummary
-            : null;
-        const avg = precomputed
-          ? precomputed.meanDisplayStars
-          : meanStarRating(fallbackReviews);
-        const reviewCount = precomputed
-          ? precomputed.totalCount
-          : fallbackReviews.length;
-        heroReviewStats = {
-          ratingLabel: avg.toFixed(1),
-          reviewCount,
-          usesFallbackReviews: true,
-        };
-        reviewsSection = (
-          <ReviewsSection
-            title="Traveller reviews"
-            reviews={fallbackReviews}
-            summary={siteSummary}
-            variant="fallback"
-          />
-        );
-      }
     }
   }
 
