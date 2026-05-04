@@ -158,6 +158,7 @@ export default function ExploreCatalogClient({
     selectedCountryCode !== null &&
     accumulatedList.length === 0 &&
     !loadingFilter;
+  const controlsDisabled = loadingFilter || loadingMore;
 
   return (
     <>
@@ -174,7 +175,7 @@ export default function ExploreCatalogClient({
               aria-current={selectedCountryCode === null ? "true" : undefined}
               aria-selected={selectedCountryCode === null}
               onClick={() => void selectCountry(null)}
-              disabled={loadingFilter}
+              disabled={controlsDisabled}
               className={`-mb-px border-b px-5 py-4 text-sm transition-colors duration-150 ${
                 selectedCountryCode === null
                   ? "border-[#FF5500] font-semibold text-slate-900"
@@ -193,7 +194,7 @@ export default function ExploreCatalogClient({
                 }
                 aria-selected={selectedCountryCode === countryCode}
                 onClick={() => void selectCountry(countryCode)}
-                disabled={loadingFilter}
+                disabled={controlsDisabled}
                 className={`-mb-px border-b px-5 py-4 text-sm transition-colors duration-150 ${
                   selectedCountryCode === countryCode
                     ? "border-[#FF5500] font-semibold text-slate-900"
@@ -210,8 +211,9 @@ export default function ExploreCatalogClient({
             <Select
               value={sortAscending ? "asc" : "desc"}
               onValueChange={(v) => void applySortOrder(v === "asc")}
+              disabled={controlsDisabled}
             >
-              <SelectTrigger className="w-[170px]">
+              <SelectTrigger className="w-[170px]" disabled={controlsDisabled}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

@@ -29,8 +29,14 @@ function buildCompleteCountryList(items: CityCardData[]) {
   for (const item of items) {
     const code = item.countryCode?.trim();
     if (!code) continue;
-    if (!byCode.has(code)) {
-      byCode.set(code, item.country ?? "Unknown");
+    const currentLabel = byCode.get(code);
+    const incomingLabel = item.country?.trim() || "Unknown";
+    const currentIsMissingOrUnknown =
+      !currentLabel || currentLabel.trim() === "" || currentLabel === "Unknown";
+    const incomingIsRealLabel = incomingLabel !== "Unknown";
+
+    if (!byCode.has(code) || (currentIsMissingOrUnknown && incomingIsRealLabel)) {
+      byCode.set(code, incomingLabel);
     }
   }
   return Array.from(byCode.entries())

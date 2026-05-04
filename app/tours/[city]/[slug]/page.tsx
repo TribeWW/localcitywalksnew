@@ -143,10 +143,7 @@ export default async function TourPage({
   /** Tour-specific block + hero stats only when this tour has enough reviews. */
   const MIN_TOUR_REVIEWS_FOR_DEDICATED_BLOCK = 3;
 
-  const [tourReviewsResult, tourSummary] = await Promise.all([
-    getTourReviews(id),
-    getReviewRatingsForTour(id),
-  ]);
+  const tourReviewsResult = await getTourReviews(id);
 
   if (!tourReviewsResult.ok) {
     console.error("Tour reviews unavailable, falling back to aggregate reviews", {
@@ -160,13 +157,12 @@ export default async function TourPage({
 
   const tourReviews = tourReviewsResult.ok ? tourReviewsResult.reviews : [];
   const canUseTourReviews = tourReviewsResult.ok;
+  const canRenderDedicatedTourReviews =
+    canUseTourReviews &&
+    tourReviews.length >= MIN_TOUR_REVIEWS_FOR_DEDICATED_BLOCK;
 
-  const tourReviewTotal =
-    tourSummary != null && tourSummary.totalCount > 0
-      ? tourSummary.totalCount
-      : tourReviews.length;
-
-  if (canUseTourReviews && tourReviewTotal >= MIN_TOUR_REVIEWS_FOR_DEDICATED_BLOCK) {
+  if (canRenderDedicatedTourReviews) {
+    const tourSummary = await getReviewRatingsForTour(id);
     const precomputed =
       tourSummary != null && tourSummary.totalCount > 0 ? tourSummary : null;
     const avg = precomputed
@@ -189,11 +185,10 @@ export default async function TourPage({
       />
     );
   } else {
-    const [fallbackReviews, siteSummary] = await Promise.all([
-      getFallbackReviews(id),
-      getAllReviewRatings(),
-    ]);
+    const siteSummaryPromise = getAllReviewRatings();
+    const fallbackReviews = await getFallbackReviews(id);
     if (fallbackReviews.length > 0) {
+      const siteSummary = await siteSummaryPromise;
       const precomputed =
         siteSummary != null && siteSummary.totalCount > 0 ? siteSummary : null;
       const avg = precomputed
