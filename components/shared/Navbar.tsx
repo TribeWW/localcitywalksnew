@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 
 // Keep CTA on a guaranteed-safe route regardless of archive-page flag state.
-const BROWSE_HREF = "/";
+const BROWSE_HREF = "/explore";
 const ABOUT_HREF = "/#about";
 const CONTACT_HREF = "/#contact";
 

@@ -118,6 +118,130 @@ describe("ExploreCatalogClient country filters", () => {
 
     await userEvent.click(screen.getByRole("tab", { name: "Portugal" }));
 
-    expect(mockedGetExploreCatalogPage).toHaveBeenCalledWith(1, "PT", true);
+    expect(mockedGetExploreCatalogPage).toHaveBeenCalledWith(1, ["PT"], true);
+  });
+
+  it("resets to all countries after selecting a country", async () => {
+    mockedGetExploreCatalogPage
+      .mockResolvedValueOnce({
+        success: true,
+        data: [initialData[0]],
+        totalHits: 1,
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        data: initialData,
+        totalHits: 2,
+      });
+
+    render(
+      <ExploreCatalogClient
+        initialData={initialData}
+        totalHits={2}
+        initialSortAscending={true}
+        completeCountryList={completeCountryList}
+      />,
+    );
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("tab", { name: "Greece" }));
+    await user.click(screen.getByRole("tab", { name: "All" }));
+
+    expect(mockedGetExploreCatalogPage).toHaveBeenNthCalledWith(
+      1,
+      1,
+      ["GR"],
+      true,
+    );
+    expect(mockedGetExploreCatalogPage).toHaveBeenNthCalledWith(
+      2,
+      1,
+      [],
+      true,
+    );
+    expect(screen.getByRole("tab", { name: "All" })).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
+  });
+
+  it("supports mobile multi-select chips with remove and clear all", async () => {
+    mockedGetExploreCatalogPage
+      .mockResolvedValueOnce({
+        success: true,
+        data: [initialData[0]],
+        totalHits: 1,
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        data: initialData,
+        totalHits: 2,
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        data: [initialData[1]],
+        totalHits: 1,
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        data: initialData,
+        totalHits: 2,
+      });
+
+    render(
+      <ExploreCatalogClient
+        initialData={initialData}
+        totalHits={2}
+        initialSortAscending={true}
+        completeCountryList={completeCountryList}
+      />,
+    );
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Country" }));
+    await user.click(screen.getByRole("button", { name: "Country option Greece" }));
+    await user.click(screen.getByRole("button", { name: "Country" }));
+    await user.click(screen.getByRole("button", { name: "Country" }));
+    await user.click(
+      screen.getByRole("button", { name: "Country option Portugal" }),
+    );
+
+    expect(
+      mockedGetExploreCatalogPage,
+    ).toHaveBeenNthCalledWith(2, 1, ["GR", "PT"], true);
+    expect(screen.getByRole("button", { name: "Greece remove" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Portugal remove" }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Greece remove" }));
+    expect(
+      mockedGetExploreCatalogPage,
+    ).toHaveBeenNthCalledWith(3, 1, ["PT"], true);
+
+    await user.click(screen.getByRole("button", { name: "Clear all countries" }));
+    expect(mockedGetExploreCatalogPage).toHaveBeenNthCalledWith(4, 1, [], true);
+  });
+
+  it("closes mobile country dropdown when clicking outside", async () => {
+    render(
+      <ExploreCatalogClient
+        initialData={initialData}
+        totalHits={2}
+        initialSortAscending={true}
+        completeCountryList={completeCountryList}
+      />,
+    );
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Country" }));
+    expect(
+      screen.getByRole("button", { name: "Country option Greece" }),
+    ).toBeInTheDocument();
+
+    await user.click(document.body);
+    expect(
+      screen.queryByRole("button", { name: "Country option Greece" }),
+    ).not.toBeInTheDocument();
   });
 });

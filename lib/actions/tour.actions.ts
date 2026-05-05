@@ -34,10 +34,10 @@ const PAGE_SIZE = 20;
  */
 export async function getExploreCatalogPage(
   page: number,
-  countryCode: string | null | undefined,
+  countryCodes: string[] | null | undefined,
   sortAscending: boolean,
 ): Promise<GetProductsPageResult> {
-  return loadExploreCatalogPage(page, countryCode, sortAscending);
+  return loadExploreCatalogPage(page, countryCodes, sortAscending);
 }
 
 /**
