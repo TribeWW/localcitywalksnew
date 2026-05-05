@@ -15,8 +15,8 @@ interface CityCardProps {
 const CityCard = ({ cities, noHorizontalPadding }: CityCardProps) => {
   return (
     <div
-      className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center ${
-        noHorizontalPadding ? "py-6" : "p-6"
+      className={`grid grid-cols-1 gap-x-6 gap-y-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 justify-items-center ${
+        noHorizontalPadding ? "py-6" : "px-4 py-6 md:px-6 lg:px-0"
       }`}
     >
       {cities.map((city) => {
@@ -26,7 +26,7 @@ const CityCard = ({ cities, noHorizontalPadding }: CityCardProps) => {
         return (
           <div
             key={city.id}
-            className="bg-white rounded-xl shadow-sm overflow-hidden w-full max-w-[250px] transition-all duration-200 hover:shadow-lg hover:scale-105"
+            className="bg-white rounded-xl shadow-sm overflow-hidden w-full transition-all duration-200 hover:shadow-lg hover:scale-105"
           >
             <Link href={href} className="block">
               <div className="relative w-full aspect-[3/2]">
