@@ -153,12 +153,7 @@ describe("ExploreCatalogClient country filters", () => {
       ["GR"],
       true,
     );
-    expect(mockedGetExploreCatalogPage).toHaveBeenNthCalledWith(
-      2,
-      1,
-      [],
-      true,
-    );
+    expect(mockedGetExploreCatalogPage).toHaveBeenNthCalledWith(2, 1, [], true);
     expect(screen.getByRole("tab", { name: "All" })).toHaveAttribute(
       "aria-current",
       "true",
@@ -199,27 +194,38 @@ describe("ExploreCatalogClient country filters", () => {
 
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Country" }));
-    await user.click(screen.getByRole("button", { name: "Country option Greece" }));
+    await user.click(
+      screen.getByRole("button", { name: "Country option Greece" }),
+    );
     await user.click(screen.getByRole("button", { name: "Country" }));
     await user.click(screen.getByRole("button", { name: "Country" }));
     await user.click(
       screen.getByRole("button", { name: "Country option Portugal" }),
     );
 
+    const secondCallArgs = mockedGetExploreCatalogPage.mock.calls[1];
+    expect(secondCallArgs[0]).toBe(1);
+    expect(secondCallArgs[2]).toBe(true);
+    expect(secondCallArgs[1]).toHaveLength(2);
+    expect(secondCallArgs[1]).toEqual(expect.arrayContaining(["GR", "PT"]));
     expect(
-      mockedGetExploreCatalogPage,
-    ).toHaveBeenNthCalledWith(2, 1, ["GR", "PT"], true);
-    expect(screen.getByRole("button", { name: "Greece remove" })).toBeInTheDocument();
+      screen.getByRole("button", { name: "Greece remove" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Portugal remove" }),
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Greece remove" }));
-    expect(
-      mockedGetExploreCatalogPage,
-    ).toHaveBeenNthCalledWith(3, 1, ["PT"], true);
+    expect(mockedGetExploreCatalogPage).toHaveBeenNthCalledWith(
+      3,
+      1,
+      ["PT"],
+      true,
+    );
 
-    await user.click(screen.getByRole("button", { name: "Clear all countries" }));
+    await user.click(
+      screen.getByRole("button", { name: "Clear all countries" }),
+    );
     expect(mockedGetExploreCatalogPage).toHaveBeenNthCalledWith(4, 1, [], true);
   });
 

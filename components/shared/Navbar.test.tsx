@@ -31,7 +31,7 @@ describe("Navbar", () => {
     const browseLinks = screen.getAllByRole("link", { name: "Browse tours" });
     expect(browseLinks.length).toBeGreaterThan(0);
     for (const link of browseLinks) {
-      expect(link).toHaveAttribute("href", "/");
+      expect(link).toHaveAttribute("href", "/explore");
     }
   });
 });
