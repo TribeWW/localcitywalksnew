@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { notFound } from "next/navigation";
 import ExploreCatalog from "@/components/explore/ExploreCatalog";
-import { archivePage } from "@/lib/flags";
 
 export const metadata: Metadata = {
   title: "Explore tours - LocalCityWalks",
@@ -13,15 +11,8 @@ export const metadata: Metadata = {
   },
 };
 
-/**
- * Render the Explore page when the `archive-page` feature is enabled.
- *
- * @returns The React element for the Explore page. If the `archive-page` feature is disabled, triggers a 404 response.
- */
+/** Render the Explore page catalog. */
 export default async function ExplorePage() {
-  const enabled = await archivePage();
-  if (!enabled) notFound();
-
   return (
     <main className="bg-white">
       <div className="bg-[#F7F7F7]">
