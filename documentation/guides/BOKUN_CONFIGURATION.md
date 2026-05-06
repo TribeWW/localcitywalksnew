@@ -83,11 +83,22 @@ The configuration file exports:
 
 The search endpoint supports **pagination** (`page`, `pageSize`) and optional **facetFilters** to restrict results (e.g. by country). The landing-page tours section uses this to load 20 items per page and to filter by country on the server. Cache keys should include filter state when applicable.
 
-### Explore archive (`/explore`) and paged search today
+### Explore catalog (`/explore`) and paged search
 
 **Home catalog** (tours section on the home page) uses [`lib/actions/tour.actions.ts`](../../lib/actions/tour.actions.ts) **`getProductsPage`**: one `POST /activity.json/search` per **page** (`pageSize` 20), **`sortField: "BEST_SELLING_GLOBAL"`**, optional country **`facetFilters`**, and a **~15-minute** **`pageCache`** keyed by page + country. Ordering is Bokun’s per-page bestseller sort (no full-catalog title sort).
 
-**Explore catalog** (`/explore`) uses **`getExploreCatalogPage`** (implementation in [`lib/explore-catalog.ts`](../../lib/explore-catalog.ts), server-action wrapper in [`lib/actions/tour.actions.ts`](../../lib/actions/tour.actions.ts)). For each **country filter** and **sort direction** (title A–Z vs Z–A), the server **loads every page** from Bokun with the same search shape as `getProductsPage` (`BEST_SELLING_GLOBAL` + facets), merges to `CityCardData`, **`localeCompare`** on the **card title**, stores the **full sorted list** in an in-memory cache (~**15-minute** TTL, keys include the country filter + `alphaAsc` / `alphaDesc`), and returns **slices** of 20 for pagination. UI: [`ExploreCatalogClient`](../../components/explore/ExploreCatalogClient.tsx). Bokun **`sortField` / `sortOrder`** cannot be used alone for strict title order across pages ([LOC-756](https://linear.app/localcitywalks/issue/LOC-756/explore-sorting-spike-bokun-title-sort-across-pages-a-z-z-a)); this merge+sort path implements the product requirement for **“Show more”** in title order.
+**Explore catalog** (`/explore`) uses **`getExploreCatalogPage`** (implementation in [`lib/explore-catalog.ts`](../../lib/explore-catalog.ts), server-action wrapper in [`lib/actions/tour.actions.ts`](../../lib/actions/tour.actions.ts)) to provide alphabetically sorted tour listings:
+
+- **Per country filter and sort direction** (title A–Z vs Z–A):
+  - Server loads **every page** from Bokun using the same search shape as `getProductsPage` (`BEST_SELLING_GLOBAL` + facets)
+  - Merges results to `CityCardData` and sorts via `localeCompare` on the **card title**
+  - Stores the **full sorted list** in an in-memory cache with **~15-minute TTL**
+  - Cache keys include the country filter + `alphaAsc` / `alphaDesc`
+  - Returns **slices of 20** for pagination
+
+- **UI**: [`ExploreCatalogClient`](../../components/explore/ExploreCatalogClient.tsx)
+
+- **Rationale**: Bokun's **`sortField` / `sortOrder`** cannot guarantee strict title order across pages ([LOC-756](https://linear.app/localcitywalks/issue/LOC-756/explore-sorting-spike-bokun-title-sort-across-pages-a-z-z-a)). This merge+sort approach implements the **"Show more"** feature in title order.
 
 ### Tour page URL scheme (`/tours/{city}/{slug}`)
 

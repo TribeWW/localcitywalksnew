@@ -51,11 +51,12 @@ describe("getExploreCatalogPage country set cache key", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const first = await getExploreCatalogPage(1, ["PT", "GR"], true);
+    const callsAfterFirst = fetchMock.mock.calls.length;
     const second = await getExploreCatalogPage(1, ["GR", "PT"], true);
 
     expect(first.success).toBe(true);
     expect(second.success).toBe(true);
-    const callsAfterFirst = fetchMock.mock.calls.length;
+
     expect(callsAfterFirst).toBeGreaterThan(0);
     // second call with same set (different order) should hit cache
     expect(fetchMock.mock.calls.length).toBe(callsAfterFirst);

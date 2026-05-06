@@ -250,4 +250,26 @@ describe("ExploreCatalogClient country filters", () => {
       screen.queryByRole("button", { name: "Country option Greece" }),
     ).not.toBeInTheDocument();
   });
+
+  it("closes mobile country dropdown on Escape", async () => {
+    render(
+      <ExploreCatalogClient
+        initialData={initialData}
+        totalHits={2}
+        initialSortAscending={true}
+        completeCountryList={completeCountryList}
+      />,
+    );
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Country" }));
+    expect(
+      screen.getByRole("button", { name: "Country option Greece" }),
+    ).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+    expect(
+      screen.queryByRole("button", { name: "Country option Greece" }),
+    ).not.toBeInTheDocument();
+  });
 });
