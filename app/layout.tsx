@@ -76,6 +76,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={outfit.className}>
       <head>
+        <Script
+          src="https://embeds.iubenda.com/widgets/2eb2fdb3-d356-4f87-b69e-90958c564119.js"
+          strategy="beforeInteractive"
+        />
         {/* Google Tag Manager */}
         {GTM_ID && (
           <Script id="google-tag-manager" strategy="beforeInteractive">
