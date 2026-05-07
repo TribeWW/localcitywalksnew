@@ -1,7 +1,8 @@
 import Image from "next/image";
 import CookieSettingsLink from "@/components/shared/CookieSettingsLink";
 
-const IUBENDA_COOKIE_POLICY_ID = process.env.NEXT_PUBLIC_IUBENDA_COOKIE_POLICY_ID;
+const IUBENDA_COOKIE_POLICY_ID =
+  process.env.NEXT_PUBLIC_IUBENDA_COOKIE_POLICY_ID;
 
 function LegalRow() {
   const currentYear = new Date().getFullYear();

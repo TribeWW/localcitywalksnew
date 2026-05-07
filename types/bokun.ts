@@ -141,6 +141,8 @@ export interface CityDocument {
     _ref: string;
   };
   countryCode: string;
+  /** Relative tour URL for footer links, e.g. /tours/toledo/hello-toledo-123 */
+  tourPagePath?: string;
 }
 
 /**
@@ -155,6 +157,8 @@ export interface CitySyncResult {
     created: string[]; // Array of city codes created
     updated: string[]; // Array of city codes updated
     existing: string[]; // Array of city codes that already existed
+    /** City codes whose Sanity `tourPagePath` was set from Bokun in this sync run */
+    tourPagePathsPatched?: string[];
   };
   errors: Array<{
     type: "country" | "city";

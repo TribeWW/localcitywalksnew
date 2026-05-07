@@ -41,6 +41,22 @@ export const city = defineType({
           .regex(/^[A-Z]{2}$/, "Must be 2 uppercase letters (ISO2)"),
     }),
     defineField({
+      name: "tourPagePath",
+      title: "Tour page path",
+      type: "string",
+      description:
+        "Relative URL to the canonical tour for this city (same path as the city card link), e.g. /tours/toledo/hello-toledo-private-walk-1077682. Leave empty to hide this city from the sitewide footer city list.",
+      validation: (rule) =>
+        rule.custom<string>((value) => {
+          if (value == null || value.trim() === "") return true;
+          const v = value.trim();
+          if (!v.startsWith("/tours/")) {
+            return "Must be a relative path starting with /tours/";
+          }
+          return true;
+        }),
+    }),
+    defineField({
       name: "images",
       title: "Images",
       type: "array",

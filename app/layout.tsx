@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
+
 import Script from "next/script";
 import { config } from "@/lib/config";
 
@@ -12,7 +13,8 @@ const GA4_ID = config.analytics.ga4Id;
 const GTM_ID = config.analytics.gtmId;
 
 const IUBENDA_SITE_ID = process.env.NEXT_PUBLIC_IUBENDA_SITE_ID;
-const IUBENDA_COOKIE_POLICY_ID = process.env.NEXT_PUBLIC_IUBENDA_COOKIE_POLICY_ID;
+const IUBENDA_COOKIE_POLICY_ID =
+  process.env.NEXT_PUBLIC_IUBENDA_COOKIE_POLICY_ID;
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -174,6 +176,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <Navbar />
         {children}
         <Footer />
+
         <Toaster />
       </body>
     </html>

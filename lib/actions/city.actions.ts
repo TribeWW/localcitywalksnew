@@ -2,7 +2,8 @@
 
 import { client } from "@/sanity/lib/client";
 import { writeClient } from "@/sanity/lib/write-client";
-import { stripAccents } from "@/lib/utils";
+import { transformSearchProductToCityCard } from "@/lib/bokun/transform-search-product-to-city-card";
+import { slugifyForUrl, stripAccents } from "@/lib/utils";
 import { BokunProduct, CitySyncResult } from "@/types/bokun";
 
 /**
@@ -104,6 +105,114 @@ export async function extractUniqueCities(
   }
 
   return Array.from(byCityCode.values());
+}
+
+/**
+ * Normalized cityCode for a product (same rules as {@link extractUniqueCities}).
+ * Used to match Sanity `city` documents and to build `tourPagePath`.
+ */
+function cityCodeFromProduct(product: BokunProduct): string | null {
+  const gp = product.googlePlace;
+  if (!gp?.city || !gp?.countryCode) return null;
+
+  const name = gp.city.trim();
+  if (!name) return null;
+
+  const rawCountryCode = gp.countryCode.trim().toUpperCase();
+  if (rawCountryCode.length !== 2 || !ISO2_REGEX.test(rawCountryCode))
+    return null;
+
+  let cityCode: string;
+  const rawFromBokun = gp.cityCode?.trim();
+  const fromBokunValid =
+    rawFromBokun && rawFromBokun !== "" && rawFromBokun.length > 2;
+  if (fromBokunValid) {
+    cityCode = normalizeCityCodeForSlug(rawFromBokun);
+  } else {
+    cityCode = normalizeCityCodeForSlug(name);
+  }
+  if (!cityCode || cityCode === "unknown") return null;
+
+  return cityCode;
+}
+
+/** Relative tour URL for this product (same as {@link CityCard} href). */
+function tourPagePathFromProduct(product: BokunProduct): string | null {
+  try {
+    const card = transformSearchProductToCityCard(product);
+    const citySlug = card.citySlug ?? slugifyForUrl(card.title);
+    const segment = card.slug ?? card.id;
+    const path = `/tours/${citySlug}/${segment}`;
+    return path.startsWith("/tours/") ? path : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Patches Sanity `city` documents with `tourPagePath` from Bokun products (footer links).
+ * One path per cityCode (first product in batch wins). Skips cities with no matching document.
+ */
+async function syncTourPagePathsFromProducts(
+  products: BokunProduct[],
+): Promise<{
+  patched: string[];
+  errors: CitySyncResult["errors"];
+}> {
+  const patched: string[] = [];
+  const errors: CitySyncResult["errors"] = [];
+
+  const pathByCityCode = new Map<string, string>();
+  for (const product of products) {
+    const cityCode = cityCodeFromProduct(product);
+    const path = tourPagePathFromProduct(product);
+    if (!cityCode || !path) continue;
+    if (!pathByCityCode.has(cityCode)) pathByCityCode.set(cityCode, path);
+  }
+
+  for (const [cityCode, tourPagePath] of pathByCityCode) {
+    try {
+      // Draft cities (`drafts.city-*`) are excluded from the default API
+      // perspective; use `raw` so drafts are visible (same as
+      // `app/api/dev/delete-all-cities/route.ts`). Match cityCode case-insensitively
+      // in case Studio or legacy data used different casing.
+      const docId = await writeClient.fetch<string | null>(
+        `*[_type == "city" && lower(cityCode) == lower($cityCode)][0]._id`,
+        { cityCode },
+        { perspective: "raw" },
+      );
+      if (!docId) {
+        console.warn(
+          `[City Sync] No city document for cityCode="${cityCode}" (tourPagePath not patched).`,
+        );
+        continue;
+      }
+
+      await writeClient.patch(docId).set({ tourPagePath }).commit();
+      patched.push(cityCode);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      errors.push({
+        type: "city",
+        identifier: cityCode,
+        error: errorMessage,
+      });
+      console.error(
+        `[City Sync] Failed to patch tourPagePath for "${cityCode}":`,
+        error,
+      );
+    }
+  }
+
+  if (patched.length > 0) {
+    console.log(
+      `[City Sync] Patched tourPagePath for ${patched.length} cities:`,
+      patched.join(", "),
+    );
+  }
+
+  return { patched, errors };
 }
 
 /** Country data extracted from Bokun products for sync */
@@ -320,13 +429,14 @@ export async function getExistingCities(
   }
 
   try {
-    const existingCities = await client.fetch<Array<{ cityCode: string }>>(
-      `*[_type == "city" && cityCode in $cityCodes]{cityCode}`,
-      { cityCodes },
-      { next: { revalidate: 0 } }
+    const cityCodesLower = [...new Set(cityCodes.map((c) => c.toLowerCase()))];
+    const existingCities = await writeClient.fetch<Array<{ cityCode: string }>>(
+      `*[_type == "city" && lower(cityCode) in $cityCodesLower]{ "cityCode": lower(cityCode) }`,
+      { cityCodesLower },
+      { perspective: "raw", next: { revalidate: 0 } },
     );
 
-    return existingCities.map((city) => city.cityCode);
+    return [...new Set(existingCities.map((city) => city.cityCode))];
   } catch (error) {
     // Log error but return empty array to allow sync to continue
     // This prevents a single query failure from breaking the entire sync
@@ -575,7 +685,10 @@ export async function syncCitiesFromProducts(
     // Step 6: Create missing cities (with country reference)
     const createResult = await createCities(citiesToCreate);
 
-    // Step 7: Combine country, migration, and city results
+    // Step 7: Backfill / update `tourPagePath` on city docs (footer city links)
+    const tourPathResult = await syncTourPagePathsFromProducts(products);
+
+    // Step 8: Combine country, migration, city, and tour path results
     return {
       countries: {
         created: countryResult.created,
@@ -585,11 +698,13 @@ export async function syncCitiesFromProducts(
         created: createResult.cities.created,
         updated: migrationResult.migrated,
         existing: existingCityCodes,
+        tourPagePathsPatched: tourPathResult.patched,
       },
       errors: [
         ...countryResult.errors,
         ...migrationResult.errors,
         ...createResult.errors,
+        ...tourPathResult.errors,
       ],
     };
   } catch (error) {
