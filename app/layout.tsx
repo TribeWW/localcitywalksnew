@@ -11,6 +11,9 @@ import { config } from "@/lib/config";
 const GA4_ID = config.analytics.ga4Id;
 const GTM_ID = config.analytics.gtmId;
 
+const IUBENDA_SITE_ID = process.env.NEXT_PUBLIC_IUBENDA_SITE_ID;
+const IUBENDA_COOKIE_POLICY_ID = process.env.NEXT_PUBLIC_IUBENDA_COOKIE_POLICY_ID;
+
 const outfit = Outfit({
   variable: "--font-outfit",
   subsets: ["latin"],
@@ -80,6 +83,26 @@ export default function RootLayout({
           src="https://embeds.iubenda.com/widgets/2eb2fdb3-d356-4f87-b69e-90958c564119.js"
           strategy="beforeInteractive"
         />
+        {IUBENDA_SITE_ID && IUBENDA_COOKIE_POLICY_ID && (
+          <>
+            <Script id="iubenda-cs-config" strategy="beforeInteractive">
+              {`
+                var _iub = _iub || [];
+                _iub.csConfiguration = _iub.csConfiguration || {};
+                _iub.csConfiguration = Object.assign(_iub.csConfiguration, {
+                  siteId: Number(${JSON.stringify(IUBENDA_SITE_ID)}),
+                  cookiePolicyId: Number(${JSON.stringify(IUBENDA_COOKIE_POLICY_ID)}),
+                  lang: "en",
+                  floatingPreferencesButtonDisplay: false
+                });
+              `}
+            </Script>
+            <Script
+              src="https://cdn.iubenda.com/cs/iubenda_cs.js"
+              strategy="beforeInteractive"
+            />
+          </>
+        )}
         {/* Google Tag Manager */}
         {GTM_ID && (
           <Script id="google-tag-manager" strategy="beforeInteractive">

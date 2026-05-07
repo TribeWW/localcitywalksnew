@@ -1,4 +1,44 @@
 import Image from "next/image";
+import CookieSettingsLink from "@/components/shared/CookieSettingsLink";
+
+const IUBENDA_COOKIE_POLICY_ID = process.env.NEXT_PUBLIC_IUBENDA_COOKIE_POLICY_ID;
+
+function LegalRow() {
+  const currentYear = new Date().getFullYear();
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      <p className="m-0 text-xs text-muted-foreground">
+        © {currentYear} LocalCityWalks™. All rights reserved.
+      </p>
+      <div className="flex flex-wrap items-center gap-4 text-xs">
+        <CookieSettingsLink className="iubenda-cs-preferences-link cursor-pointer text-muted-foreground underline-offset-4 hover:underline">
+          Cookie settings
+        </CookieSettingsLink>
+        {IUBENDA_COOKIE_POLICY_ID && (
+          <>
+            <a
+              href={`https://www.iubenda.com/privacy-policy/${IUBENDA_COOKIE_POLICY_ID}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cursor-pointer text-muted-foreground underline-offset-4 hover:underline"
+            >
+              Privacy Policy
+            </a>
+            <a
+              href={`https://www.iubenda.com/privacy-policy/${IUBENDA_COOKIE_POLICY_ID}/cookie-policy`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cursor-pointer text-muted-foreground underline-offset-4 hover:underline"
+            >
+              Cookie Policy
+            </a>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
 const Footer = () => {
   return (
@@ -21,9 +61,9 @@ const Footer = () => {
           </div>
         </div>
 
-        <p className="mt-8 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} LocalCityWalks. All rights reserved.
-        </p>
+        <div className="pt-8">
+          <LegalRow />
+        </div>
       </div>
     </footer>
   );
