@@ -81,6 +81,10 @@ export interface GetProductsPageResult {
   success: boolean;
   data?: CityCardData[];
   totalHits?: number;
+  completeCountryList?: Array<{
+    countryCode: string;
+    country: string;
+  }>;
   error?: string;
 }
 

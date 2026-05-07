@@ -1,26 +1,20 @@
 import AboutUs from "@/components/home/AboutUs";
-import Cities from "@/components/home/Cities";
 import ContactSection from "@/components/home/ContactSection";
 import HomeSpotlight from "@/components/home/HomeSpotlight";
 import CustomTourBanner from "@/components/home/CustomTourBanner";
 import Reviews from "@/components/home/Reviews";
 import StepsSection from "@/components/home/StepsSection";
-import { archivePage, reviews } from "@/lib/flags";
 import Image from "next/image";
 import Link from "next/link";
 
 /**
- * Renders the landing page layout and conditionally includes the reviews section.
+ * Renders the landing page layout with the reviews section.
  *
- * The layout contains the hero section, AboutUs, then **HomeSpotlight** when `archive-page` is on
- * or **Cities** (legacy Bokun grid) when it is off, plus CustomTourBanner and ContactSection.
+ * The layout contains the hero section, AboutUs, HomeSpotlight, plus CustomTourBanner and ContactSection.
  *
- * @returns The page's JSX layout; includes the `Reviews` section when the reviews flag is enabled.
+ * @returns The page's JSX layout with the `Reviews` section.
  */
 export default async function Home() {
-  const showReviews = await reviews();
-  const archiveEnabled = await archivePage();
-
   return (
     <>
       <main className="relative items-left justify-center bg-gradient-to-r from-tangerine to-grapefruit">
@@ -123,8 +117,8 @@ export default async function Home() {
         </div>
       </main>
       <AboutUs />
-      {archiveEnabled ? <HomeSpotlight /> : <Cities />}
-      {showReviews ? <Reviews /> : null}
+      <HomeSpotlight />
+      <Reviews />
       <CustomTourBanner />
       <ContactSection />
     </>

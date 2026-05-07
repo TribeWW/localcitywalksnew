@@ -58,8 +58,6 @@ const transporter = nodemailer.createTransport({
 
 export async function sendEmail(data: EmailContent) {
   try {
-    console.log("SMTP user:", config.email.supportEmail);
-    console.log("SMTP pass defined:", Boolean(config.email.supportPassword));
     // Verify transporter before sending
     const isVerified = await verifyTransporter(transporter);
     if (!isVerified) {
@@ -84,28 +82,23 @@ export async function sendEmail(data: EmailContent) {
       `,
     };
 
-    const supportResult = await transporter.sendMail(supportMailOptions);
-    console.log("Support email sent:", supportResult);
+    await transporter.sendMail(supportMailOptions);
 
     return { success: true };
   } catch (error) {
     const emailError = error as EmailError;
-    console.error("Detailed email error:", {
-      name: emailError.name,
-      message: emailError.message,
-      stack: emailError.stack,
+    const errorMessage = emailError.message || "Unknown email delivery error";
+    console.error("Failed to send contact email:", {
+      message: errorMessage,
       code: emailError.code,
       command: emailError.command,
     });
-    throw new Error(`Failed to send email: ${emailError.message}`);
+    throw new Error(`Failed to send email: ${errorMessage}`);
   }
 }
 
 export async function sendTourRequestEmail(data: TourRequestEmailContent) {
   try {
-    console.log("SMTP user:", config.email.supportEmail);
-    console.log("SMTP pass defined:", Boolean(config.email.supportPassword));
-
     // Verify transporter before sending
     const isVerified = await verifyTransporter(transporter);
     if (!isVerified) {
@@ -189,21 +182,17 @@ export async function sendTourRequestEmail(data: TourRequestEmailContent) {
       `,
     };
 
-    const tourRequestResult = await transporter.sendMail(
-      tourRequestMailOptions
-    );
-    console.log("Tour request email sent:", tourRequestResult);
+    await transporter.sendMail(tourRequestMailOptions);
 
     return { success: true };
   } catch (error) {
     const emailError = error as EmailError;
-    console.error("Detailed tour request email error:", {
-      name: emailError.name,
-      message: emailError.message,
-      stack: emailError.stack,
+    const errorMessage = emailError.message || "Unknown email delivery error";
+    console.error("Failed to send tour request email:", {
+      message: errorMessage,
       code: emailError.code,
       command: emailError.command,
     });
-    throw new Error(`Failed to send tour request email: ${emailError.message}`);
+    throw new Error(`Failed to send tour request email: ${errorMessage}`);
   }
 }

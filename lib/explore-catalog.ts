@@ -24,6 +24,26 @@ const CACHE_TTL = 15 * 60 * 1000;
 const PAGE_SIZE = 20;
 const EXPLORE_FETCH_TIMEOUT_MS = 12_000;
 
+function buildCompleteCountryList(items: CityCardData[]) {
+  const byCode = new Map<string, string>();
+  for (const item of items) {
+    const code = item.countryCode?.trim();
+    if (!code) continue;
+    const currentLabel = byCode.get(code);
+    const incomingLabel = item.country?.trim() || "Unknown";
+    const currentIsMissingOrUnknown =
+      !currentLabel || currentLabel.trim() === "" || currentLabel === "Unknown";
+    const incomingIsRealLabel = incomingLabel !== "Unknown";
+
+    if (!byCode.has(code) || (currentIsMissingOrUnknown && incomingIsRealLabel)) {
+      byCode.set(code, incomingLabel);
+    }
+  }
+  return Array.from(byCode.entries())
+    .map(([countryCode, country]) => ({ countryCode, country }))
+    .sort((a, b) => a.country.localeCompare(b.country));
+}
+
 /**
  * Fetches a single page of Bokun search results and returns validated items.
  *
@@ -37,7 +57,7 @@ const EXPLORE_FETCH_TIMEOUT_MS = 12_000;
 async function fetchBokunSearchPageRaw(
   page: number,
   pageSize: number,
-  countryCode?: string | null,
+  countryCode?: string,
 ): Promise<
   | { ok: true; items: BokunProduct[]; totalHits?: number }
   | { ok: false; error: string }
@@ -106,10 +126,18 @@ async function fetchBokunSearchPageRaw(
  * @returns `{ ok: true, sorted }` with the resulting `CityCardData[]` on success, or `{ ok: false, error }` with an error message on failure.
  */
 async function getOrBuildExploreSortedList(
-  countryCode: string | null | undefined,
+  countryCodes: string[] | null | undefined,
   sortAscending: boolean,
 ): Promise<ExploreSortedBuildResult> {
-  const cacheKey = `bokun-explore-sorted-v1-${countryCode ?? "all"}-${sortAscending ? "alphaAsc" : "alphaDesc"}`;
+  const normalizedCountryCodes = (countryCodes ?? [])
+    .map((code) => code.trim())
+    .filter(Boolean)
+    .sort();
+  const countryCacheKey =
+    normalizedCountryCodes.length > 0
+      ? normalizedCountryCodes.join(",")
+      : "all";
+  const cacheKey = `bokun-explore-sorted-v1-${countryCacheKey}-${sortAscending ? "alphaAsc" : "alphaDesc"}`;
   const cached = exploreSortedCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return { ok: true, sorted: cached.sorted };
@@ -124,39 +152,44 @@ async function getOrBuildExploreSortedList(
     try {
       const byId = new Map<string, CityCardData>();
       const allItems: BokunProduct[] = [];
-      let totalHits: number | undefined;
-      let page = 1;
-      let first = true;
+      const countryScopes =
+        normalizedCountryCodes.length > 0 ? normalizedCountryCodes : [undefined];
 
-      while (true) {
-        const res = await fetchBokunSearchPageRaw(page, PAGE_SIZE, countryCode);
-        if (!res.ok) {
-          return { ok: false, error: res.error };
-        }
-        if (first) {
-          totalHits = res.totalHits;
-          first = false;
-        }
-        allItems.push(...res.items);
-        for (const p of res.items) {
-          const card = transformSearchProductToCityCard(p);
-          byId.set(card.id, card);
-        }
-        if (
-          res.items.length === 0 ||
-          (typeof totalHits === "number" && byId.size >= totalHits)
-        ) {
-          break;
-        }
-        if (res.items.length < PAGE_SIZE) {
-          break;
-        }
-        page += 1;
-        if (page > 500) {
-          console.warn(
-            "[Explore catalog] Stopped fetch after 500 pages safety cap",
-          );
-          break;
+      for (const countryCode of countryScopes) {
+        let totalHits: number | undefined;
+        let page = 1;
+        let first = true;
+
+        while (true) {
+          const res = await fetchBokunSearchPageRaw(page, PAGE_SIZE, countryCode);
+          if (!res.ok) {
+            return { ok: false, error: res.error };
+          }
+          if (first) {
+            totalHits = res.totalHits;
+            first = false;
+          }
+          allItems.push(...res.items);
+          for (const p of res.items) {
+            const card = transformSearchProductToCityCard(p);
+            byId.set(card.id, card);
+          }
+          if (
+            res.items.length === 0 ||
+            (typeof totalHits === "number" && page * PAGE_SIZE >= totalHits)
+          ) {
+            break;
+          }
+          if (res.items.length < PAGE_SIZE) {
+            break;
+          }
+          page += 1;
+          if (page > 500) {
+            console.warn(
+              "[Explore catalog] Stopped fetch after 500 pages safety cap",
+            );
+            break;
+          }
         }
       }
       if (allItems.length > 0) {
@@ -198,12 +231,12 @@ async function getOrBuildExploreSortedList(
  */
 export async function getExploreCatalogPage(
   page: number,
-  countryCode: string | null | undefined,
+  countryCodes: string[] | null | undefined,
   sortAscending: boolean,
 ): Promise<GetProductsPageResult> {
   const pageNum = Math.max(1, Math.floor(page));
   try {
-    const built = await getOrBuildExploreSortedList(countryCode, sortAscending);
+    const built = await getOrBuildExploreSortedList(countryCodes, sortAscending);
     if (!built.ok) {
       return { success: false, error: built.error };
     }
@@ -215,6 +248,7 @@ export async function getExploreCatalogPage(
       success: true,
       data,
       totalHits,
+      completeCountryList: buildCompleteCountryList(sorted),
     };
   } catch (error) {
     console.error("Error building explore catalog page:", error);

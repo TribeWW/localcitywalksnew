@@ -4,7 +4,7 @@ import FooterCityLinks from "./FooterCityLinks";
 const Footer = () => {
   return (
     <footer className="w-full bg-white font-sans">
-      <div className="mx-auto max-w-6xl px-4 py-12 md:px-0">
+      <div className="mx-auto max-w-6xl px-6 py-12 md:px-0">
         <div className="rounded-2xl bg-pearl-gray px-6 py-10 md:px-10">
           <div className="mx-auto flex max-w-xl flex-col items-center text-center">
             <Image

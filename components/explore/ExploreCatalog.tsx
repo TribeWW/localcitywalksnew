@@ -26,12 +26,14 @@ export default async function ExploreCatalog() {
 
   const initialData = result.data ?? [];
   const totalHits = result.totalHits ?? initialData.length;
+  const completeCountryList = result.completeCountryList ?? [];
 
   return (
     <ExploreCatalogClient
       initialData={initialData}
       totalHits={totalHits}
       initialSortAscending
+      completeCountryList={completeCountryList}
     />
   );
 }
