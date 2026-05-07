@@ -6,11 +6,15 @@ import type { FooterCityLinkItem } from "@/lib/footer-city-link-rows";
  * Sync presentational strip — no Sanity import (safe for Vitest without env).
  * Async `FooterCityLinks` loads data and renders this.
  */
-export function FooterCityLinksView({ items }: { items: FooterCityLinkItem[] }) {
+export function FooterCityLinksView({
+  items,
+}: {
+  items: FooterCityLinkItem[];
+}) {
   if (items.length === 0) return null;
 
   return (
-    <div className="w-full bg-white pt-8 pb-6">
+    <div className="w-full bg-white pb-6">
       <div className="mx-auto max-w-[1140px] px-6">
         <div className="flex flex-wrap justify-center gap-x-2 gap-y-1">
           {items.map((city, i) => (
