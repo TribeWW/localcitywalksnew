@@ -32,6 +32,8 @@ interface ExploreCatalogClientProps {
   totalHits: number;
   initialSortAscending: boolean;
   completeCountryList: CountryOption[];
+  /** Vercel Flag `cards-widget-update` — forwarded to `CityCard` for gated UI. */
+  cardsWidgetUpdate?: boolean;
 }
 
 /**
@@ -49,6 +51,7 @@ export default function ExploreCatalogClient({
   totalHits,
   initialSortAscending,
   completeCountryList,
+  cardsWidgetUpdate = false,
 }: ExploreCatalogClientProps) {
   const [accumulatedList, setAccumulatedList] =
     useState<CityCardData[]>(initialData);
@@ -412,7 +415,11 @@ export default function ExploreCatalogClient({
                     found
                   </span>
                 </div>
-                <CityCard cities={visibleList} noHorizontalPadding />
+                <CityCard
+                  cities={visibleList}
+                  noHorizontalPadding
+                  cardsWidgetUpdate={cardsWidgetUpdate}
+                />
                 {showMoreVisible && (
                   <div className="mt-16 text-center">
                     <button

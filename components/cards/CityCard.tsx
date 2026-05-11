@@ -10,11 +10,18 @@ interface CityCardProps {
   cities: CityCardData[];
   /** When true, grid has no horizontal padding (py-6 only); use when parent provides px-6 for alignment with a sibling (e.g. filter button) */
   noHorizontalPadding?: boolean;
+  /** Vercel Flag `cards-widget-update` — use to branch new card UI (price, ratings, Hello {city}). */
+  cardsWidgetUpdate?: boolean;
 }
 
-const CityCard = ({ cities, noHorizontalPadding }: CityCardProps) => {
+const CityCard = ({
+  cities,
+  noHorizontalPadding,
+  cardsWidgetUpdate = false,
+}: CityCardProps) => {
   return (
     <div
+      data-cards-widget-update={cardsWidgetUpdate ? "true" : "false"}
       className={`grid grid-cols-1 gap-x-6 gap-y-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 justify-items-center ${
         noHorizontalPadding ? "py-6" : "px-4 py-6 md:px-6 lg:px-0"
       }`}

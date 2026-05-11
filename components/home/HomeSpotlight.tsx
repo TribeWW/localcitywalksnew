@@ -1,12 +1,14 @@
 import Link from "next/link";
 import CityCard from "@/components/cards/CityCard";
 import { getHomeSpotlightCityCards } from "@/lib/home-spotlight";
+import { cardsWidgetUpdate } from "@/flags";
 
 /**
  * Curated home tour grid from Sanity `homeSpotlight` + Bokun detail.
  * Renders nothing when zero cards resolve (no published doc or all ids failed).
  */
 export default async function HomeSpotlight() {
+  const cardsWidgetUpdateEnabled = await cardsWidgetUpdate();
   const cities = await getHomeSpotlightCityCards();
   if (cities.length === 0) {
     return null;
@@ -28,7 +30,11 @@ export default async function HomeSpotlight() {
         </div>
 
         <div className="px-6">
-          <CityCard cities={cities} noHorizontalPadding />
+          <CityCard
+            cities={cities}
+            noHorizontalPadding
+            cardsWidgetUpdate={cardsWidgetUpdateEnabled}
+          />
           <div className="mt-8 text-center">
             <Link
               href="/explore"

@@ -1,5 +1,6 @@
 import { getExploreCatalogPage } from "@/lib/explore-catalog";
 import ExploreCatalogClient from "@/components/explore/ExploreCatalogClient";
+import { cardsWidgetUpdate } from "@/flags";
 
 /**
  * Render the Explore Catalog server component using data fetched from the first catalog page.
@@ -9,6 +10,7 @@ import ExploreCatalogClient from "@/components/explore/ExploreCatalogClient";
  * when the fetch succeeds.
  */
 export default async function ExploreCatalog() {
+  const cardsWidgetUpdateEnabled = await cardsWidgetUpdate();
   const result = await getExploreCatalogPage(1, undefined, true);
 
   if (!result.success) {
@@ -34,6 +36,7 @@ export default async function ExploreCatalog() {
       totalHits={totalHits}
       initialSortAscending
       completeCountryList={completeCountryList}
+      cardsWidgetUpdate={cardsWidgetUpdateEnabled}
     />
   );
 }
