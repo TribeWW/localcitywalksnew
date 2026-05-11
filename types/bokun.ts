@@ -35,6 +35,11 @@ export interface BokunProduct {
   summary?: string;
   /** Short plain-text blurb (search returns this) */
   excerpt?: string;
+  /** Search payload price (not the listing headline; use `price-list` enrichment). */
+  price?: number;
+  /** Search payload review fields (non-authoritative for card ratings). */
+  reviewRating?: number;
+  reviewCount?: number;
 }
 
 /**
@@ -62,6 +67,10 @@ export interface CityCardData {
   citySlug?: string;
   /** Generated slug for URL segment: slugify(title) + "-" + id (e.g. "hello-toledo-private-walk-1077682") */
   slug?: string;
+  /** Tier-aware per-person headline from `price-list` (amount as returned by Bókun). */
+  displayPricePerPerson?: number;
+  /** ISO currency for `displayPricePerPerson`. */
+  displayPriceCurrency?: string;
 }
 
 /**
@@ -106,6 +115,49 @@ export interface BokunProductDetail {
   keyPhoto: BokunPhoto;
   photos?: BokunPhoto[];
   googlePlace?: BokunGooglePlace;
+  /** Default rate for tiered pricing (activity detail payload) */
+  defaultRateId?: number;
+}
+
+/** Tier band from Bókun `price-list` (subset used for card headline extraction). */
+export interface BokunPriceListTieredPrice {
+  currency: string;
+  amount: number;
+  minPassengersRequired: number;
+  maxPassengersRequired: number;
+}
+
+/** Passenger row from Bókun `price-list`. */
+export interface BokunPriceListPassenger {
+  title?: string;
+  ticketCategory?: string;
+  tieredPrices: BokunPriceListTieredPrice[];
+}
+
+/** Rate row from Bókun `price-list`. */
+export interface BokunPriceListRate {
+  rateId: number;
+  title?: string;
+  passengers: BokunPriceListPassenger[];
+}
+
+/** Date-range slice from Bókun `price-list`. */
+export interface BokunPriceListDateRange {
+  from: string;
+  to: string;
+  rates: BokunPriceListRate[];
+}
+
+/** Response from `GET /activity.json/{id}/price-list` (fields used for listing headline). */
+export interface BokunPriceListResponse {
+  defaultCurrency?: string;
+  pricesByDateRange?: BokunPriceListDateRange[];
+}
+
+/** Per-person headline derived from `price-list` (amount as returned by Bókun; no division). */
+export interface ProductPriceHeadline {
+  amount: number;
+  currency: string;
 }
 
 /**
