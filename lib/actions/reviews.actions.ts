@@ -9,6 +9,11 @@ import {
   reviewRatingSummaryFromAggregates,
   type ReviewRatingSummary,
 } from "@/lib/utils/review-summary";
+import {
+  buildReviewRatingSummariesByTourId,
+  normalizeTourIdsForBulkRating,
+  type ReviewStarProjectionRow,
+} from "@/lib/utils/review-rating-summaries-by-tour";
 
 const REVIEW_FIELDS = `_id, tourId, rating, experienceDate, authorName, body`;
 
@@ -163,4 +168,56 @@ export async function getAllReviewRatings(): Promise<ReviewRatingSummary | null>
     console.error("[Reviews] getAllReviewRatings failed", e);
     return null;
   }
+}
+
+export type CardListingReviewRatingsResult = {
+  globalSummary: ReviewRatingSummary | null;
+  perTourMap: Map<string, ReviewRatingSummary>;
+};
+
+/**
+ * Bulk listing ratings: one Sanity projection for many tour ids, plus site-wide fallback.
+ * Avoids per-card N+1 fetches on home/explore grids.
+ */
+export async function getReviewRatingSummariesForTourIds(
+  tourIds: readonly string[],
+): Promise<CardListingReviewRatingsResult> {
+  const normalizedTourIds = normalizeTourIdsForBulkRating(tourIds);
+  const globalSummaryPromise = getAllReviewRatings();
+
+  if (normalizedTourIds.length === 0) {
+    return {
+      globalSummary: await globalSummaryPromise,
+      perTourMap: new Map(),
+    };
+  }
+
+  const projectionQuery = `*[_type == "review" && ${DRAFT_EXCLUDED} && tourId in $tourIds] { "tourId": tourId, "s": ${GROQ_CLAMP_STAR} }`;
+
+  const [projectionRows, globalSummary] = await Promise.all([
+    client
+      .fetch<ReviewStarProjectionRow[]>(projectionQuery, {
+        tourIds: normalizedTourIds,
+      })
+      .catch((error) => {
+        console.error(
+          "[Reviews] getReviewRatingSummariesForTourIds projection failed",
+          error,
+        );
+        return null;
+      }),
+    globalSummaryPromise,
+  ]);
+
+  if (!projectionRows) {
+    return { globalSummary, perTourMap: new Map() };
+  }
+
+  return {
+    globalSummary,
+    perTourMap: buildReviewRatingSummariesByTourId(
+      normalizedTourIds,
+      projectionRows,
+    ),
+  };
 }

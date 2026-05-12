@@ -1,5 +1,6 @@
 import { getExploreCatalogPage } from "@/lib/explore-catalog";
 import ExploreCatalogClient from "@/components/explore/ExploreCatalogClient";
+import { enrichCityCardsForListing } from "@/lib/city-cards/enrich-city-cards-for-listing";
 import { cardsWidgetUpdate } from "@/flags";
 
 /**
@@ -26,7 +27,9 @@ export default async function ExploreCatalog() {
     );
   }
 
-  const initialData = result.data ?? [];
+  const initialData = cardsWidgetUpdateEnabled
+    ? await enrichCityCardsForListing(result.data ?? [])
+    : (result.data ?? []);
   const totalHits = result.totalHits ?? initialData.length;
   const completeCountryList = result.completeCountryList ?? [];
 

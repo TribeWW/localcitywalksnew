@@ -1,16 +1,21 @@
 "use client";
 
-import React from "react";
+/**
+ * Client grid for listing cards. Stays a Client Component because
+ * `ExploreCatalogClient` and `ToursSectionClient` import it inside client trees.
+ * Server parents enrich `CityCardData` before passing `cities` here.
+ */
 import Image from "next/image";
 import Link from "next/link";
 import { slugifyForUrl } from "@/lib/utils";
+import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
 import { CityCardData } from "@/types/bokun";
 
 interface CityCardProps {
   cities: CityCardData[];
   /** When true, grid has no horizontal padding (py-6 only); use when parent provides px-6 for alignment with a sibling (e.g. filter button) */
   noHorizontalPadding?: boolean;
-  /** Vercel Flag `cards-widget-update` — use to branch new card UI (price, ratings, Hello {city}). */
+  /** Vercel Flag `cards-widget-update` — gates enriched card UI (price, ratings, Hello {city}). */
   cardsWidgetUpdate?: boolean;
 }
 
@@ -30,6 +35,16 @@ const CityCard = ({
         const citySlug = city.citySlug ?? slugifyForUrl(city.title);
         const slugSegment = city.slug ?? city.id;
         const href = `/tours/${citySlug}/${slugSegment}`;
+        const priceLabel =
+          cardsWidgetUpdate &&
+          city.displayPricePerPerson != null &&
+          city.displayPriceCurrency
+            ? formatCataloguePriceAmount(
+                city.displayPricePerPerson,
+                city.displayPriceCurrency,
+              )
+            : null;
+
         return (
           <div
             key={city.id}
@@ -48,7 +63,16 @@ const CityCard = ({
                 <h3 className="text-base font-semibold text-nightsky mb-4">
                   {city.title}
                 </h3>
-                <p className="text-sm mb-2">Private tour</p>
+                {cardsWidgetUpdate && priceLabel ? (
+                  <p className="text-sm mb-2">{priceLabel} / person</p>
+                ) : (
+                  <p className="text-sm mb-2">Private tour</p>
+                )}
+                {cardsWidgetUpdate && city.showRating && city.ratingLabel ? (
+                  <p className="text-sm text-muted-foreground">
+                    ★ {city.ratingLabel}
+                  </p>
+                ) : null}
               </div>
             </Link>
           </div>

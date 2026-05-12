@@ -2,6 +2,7 @@ import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
 import { createBokunUrl, generateBokunHeaders } from "@/lib/bokun";
 import { BOKUN_ENDPOINTS } from "@/lib/bokun/config";
 import { extractHeadlineFromPriceList } from "@/lib/bokun/extract-price-list-headline";
+import { normalizeBokunProductIds } from "@/lib/utils/bokun-product-id";
 import type { BokunPriceListResponse, ProductPriceHeadline } from "@/types/bokun";
 
 const CACHE_TTL_MS = 15 * 60 * 1000;
@@ -10,8 +11,6 @@ const MAX_PRODUCT_IDS = 50;
 const FETCH_CONCURRENCY = 6;
 const DEFAULT_CURRENCY = "EUR";
 const CATALOGUE_WINDOW_DAYS = 365;
-
-const SAFE_ID_REGEX = /^[0-9]+$/;
 
 const headlineCache = new Map<
   string,
@@ -52,26 +51,6 @@ function buildPriceListPath(
     end,
   });
   return `${basePath}?${query.toString()}`;
-}
-
-function normalizeProductIds(productIds: readonly string[]): string[] {
-  const seen = new Set<string>();
-  const normalized: string[] = [];
-
-  for (const rawId of productIds) {
-    const digits = rawId.replace(/\D/g, "");
-    if (!digits || !SAFE_ID_REGEX.test(digits) || seen.has(digits)) {
-      continue;
-    }
-
-    seen.add(digits);
-    normalized.push(digits);
-    if (normalized.length >= MAX_PRODUCT_IDS) {
-      break;
-    }
-  }
-
-  return normalized;
 }
 
 function getCacheKey(
@@ -177,10 +156,10 @@ async function resolveHeadlineForProduct(
  * Server-only: bounded concurrency, TTL cache, no search-price fallback.
  */
 export async function enrichProductPricesFromPriceList(
-  productIds: readonly string[],
+  productIds: readonly unknown[],
 ): Promise<Map<string, ProductPriceHeadline>> {
   const { start, end, catalogueDate } = getCataloguePriceListWindow();
-  const normalizedIds = normalizeProductIds(productIds);
+  const normalizedIds = normalizeBokunProductIds(productIds, MAX_PRODUCT_IDS);
   const headlines = new Map<string, ProductPriceHeadline>();
 
   for (let index = 0; index < normalizedIds.length; index += FETCH_CONCURRENCY) {

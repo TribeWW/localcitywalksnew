@@ -1,5 +1,6 @@
 import Link from "next/link";
 import CityCard from "@/components/cards/CityCard";
+import { enrichCityCardsForListing } from "@/lib/city-cards/enrich-city-cards-for-listing";
 import { getHomeSpotlightCityCards } from "@/lib/home-spotlight";
 import { cardsWidgetUpdate } from "@/flags";
 
@@ -9,9 +10,12 @@ import { cardsWidgetUpdate } from "@/flags";
  */
 export default async function HomeSpotlight() {
   const cardsWidgetUpdateEnabled = await cardsWidgetUpdate();
-  const cities = await getHomeSpotlightCityCards();
+  let cities = await getHomeSpotlightCityCards();
   if (cities.length === 0) {
     return null;
+  }
+  if (cardsWidgetUpdateEnabled) {
+    cities = await enrichCityCardsForListing(cities);
   }
 
   return (

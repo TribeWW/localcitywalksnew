@@ -71,6 +71,10 @@ export interface CityCardData {
   displayPricePerPerson?: number;
   /** ISO currency for `displayPricePerPerson`. */
   displayPriceCurrency?: string;
+  /** Listing rating label (e.g. `4.7`) when `showRating` is true. */
+  ratingLabel?: string;
+  /** Whether the listing card should render a rating row. */
+  showRating?: boolean;
 }
 
 /**
