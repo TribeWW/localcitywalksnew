@@ -9,11 +9,11 @@ function LegalRow() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 mx-auto">
+    <div className="mx-auto flex flex-col flex-wrap items-center justify-center gap-4 text-center md:flex-row md:justify-between md:text-left">
       <p className="m-0 text-xs text-muted-foreground">
         © {currentYear} LocalCityWalks™. All rights reserved.
       </p>
-      <div className="flex flex-wrap items-center gap-4 text-xs">
+      <div className="flex flex-wrap items-center justify-center gap-4 text-xs md:justify-end">
         <a
           href="/docs/LocalCityWalks_TermsAndConditions_EN.pdf"
           target="_blank"
@@ -21,7 +21,7 @@ function LegalRow() {
           className="cursor-pointer text-muted-foreground underline-offset-4 hover:underline"
         >
           Terms and Conditions
-        </a>{" "}
+        </a>
         <CookieSettingsLink className="iubenda-cs-preferences-link cursor-pointer text-muted-foreground underline-offset-4 hover:underline">
           Cookie settings
         </CookieSettingsLink>
