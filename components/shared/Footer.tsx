@@ -1,7 +1,6 @@
 import Image from "next/image";
 import CookieSettingsLink from "@/components/shared/CookieSettingsLink";
 import FooterCityLinks from "./FooterCityLinks";
-import Link from "next/link";
 
 const IUBENDA_COOKIE_POLICY_ID =
   process.env.NEXT_PUBLIC_IUBENDA_COOKIE_POLICY_ID;
@@ -15,14 +14,14 @@ function LegalRow() {
         © {currentYear} LocalCityWalks™. All rights reserved.
       </p>
       <div className="flex flex-wrap items-center gap-4 text-xs">
-        <Link
+        <a
           href="/docs/LocalCityWalks_TermsAndConditions_EN.pdf"
           target="_blank"
           rel="noopener noreferrer"
           className="cursor-pointer text-muted-foreground underline-offset-4 hover:underline"
         >
           Terms and Conditions
-        </Link>
+        </a>{" "}
         <CookieSettingsLink className="iubenda-cs-preferences-link cursor-pointer text-muted-foreground underline-offset-4 hover:underline">
           Cookie settings
         </CookieSettingsLink>
