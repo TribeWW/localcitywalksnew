@@ -1,6 +1,7 @@
 import Image from "next/image";
 import CookieSettingsLink from "@/components/shared/CookieSettingsLink";
 import FooterCityLinks from "./FooterCityLinks";
+import Link from "next/link";
 
 const IUBENDA_COOKIE_POLICY_ID =
   process.env.NEXT_PUBLIC_IUBENDA_COOKIE_POLICY_ID;
@@ -9,11 +10,19 @@ function LegalRow() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="flex flex-wrap items-center justify-between gap-4 mx-auto">
       <p className="m-0 text-xs text-muted-foreground">
         © {currentYear} LocalCityWalks™. All rights reserved.
       </p>
       <div className="flex flex-wrap items-center gap-4 text-xs">
+        <Link
+          href="/docs/LocalCityWalks_TermsAndConditions_EN.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="cursor-pointer text-muted-foreground underline-offset-4 hover:underline"
+        >
+          Terms and Conditions
+        </Link>
         <CookieSettingsLink className="iubenda-cs-preferences-link cursor-pointer text-muted-foreground underline-offset-4 hover:underline">
           Cookie settings
         </CookieSettingsLink>
@@ -45,7 +54,7 @@ function LegalRow() {
 const Footer = () => {
   return (
     <footer className="w-full bg-white font-sans">
-      <div className="mx-auto max-w-6xl px-6 py-12 md:px-0">
+      <div className="mx-auto max-w-6xl px-6 py-6 md:px-0">
         <div className="rounded-2xl bg-pearl-gray px-6 py-10 md:px-10">
           <div className="mx-auto flex max-w-xl flex-col items-center text-center">
             <Image
