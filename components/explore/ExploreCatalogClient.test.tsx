@@ -8,11 +8,22 @@ const mockedGetExploreCatalogPage = vi.fn();
 
 beforeEach(() => {
   mockedGetExploreCatalogPage.mockReset();
+  mockedEnrichListingCardsIfFlagged.mockReset();
+  mockedEnrichListingCardsIfFlagged.mockImplementation(
+    async (cards: typeof initialData) => cards,
+  );
 });
 
 vi.mock("@/lib/actions/tour.actions", () => ({
   getExploreCatalogPage: (...args: unknown[]) =>
     mockedGetExploreCatalogPage(...args),
+}));
+
+const mockedEnrichListingCardsIfFlagged = vi.fn();
+
+vi.mock("@/lib/city-cards/enrich-listing-cards-if-flagged", () => ({
+  enrichListingCardsIfFlagged: (...args: unknown[]) =>
+    mockedEnrichListingCardsIfFlagged(...args),
 }));
 
 vi.mock("@/components/cards/CityCard", () => ({
@@ -271,5 +282,45 @@ describe("ExploreCatalogClient country filters", () => {
     expect(
       screen.queryByRole("button", { name: "Country option Greece" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("enriches filtered catalog results when cards-widget-update is enabled", async () => {
+    const filteredCard = {
+      id: "3",
+      title: "Lisbon Walk",
+      image: "/lisbon.jpg",
+      countryCode: "PT",
+      country: "Portugal",
+    };
+
+    mockedGetExploreCatalogPage.mockResolvedValue({
+      success: true,
+      data: [filteredCard],
+      totalHits: 1,
+    });
+    mockedEnrichListingCardsIfFlagged.mockResolvedValue([
+      {
+        ...filteredCard,
+        ratingLabel: "4.6",
+        showRating: true,
+      },
+    ]);
+
+    render(
+      <ExploreCatalogClient
+        initialData={initialData}
+        totalHits={2}
+        initialSortAscending={true}
+        completeCountryList={completeCountryList}
+        cardsWidgetUpdate
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("tab", { name: "Portugal" }));
+
+    expect(mockedEnrichListingCardsIfFlagged).toHaveBeenCalledWith(
+      [filteredCard],
+      true,
+    );
   });
 });

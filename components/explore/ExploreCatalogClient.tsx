@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getExploreCatalogPage } from "@/lib/actions/tour.actions";
+import { enrichListingCardsIfFlagged } from "@/lib/city-cards/enrich-listing-cards-if-flagged";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CityCardData } from "@/types/bokun";
 import { Check, ChevronDown, X } from "lucide-react";
@@ -92,9 +93,13 @@ export default function ExploreCatalogClient({
         sortAscending,
       );
       if (result.success && result.data) {
-        setAccumulatedList((prev) => [...prev, ...result.data!]);
+        const enriched = await enrichListingCardsIfFlagged(
+          result.data,
+          cardsWidgetUpdate,
+        );
+        setAccumulatedList((prev) => [...prev, ...enriched]);
         if (result.totalHits != null) setTotalHitsView(result.totalHits);
-        setVisibleCount((prev) => prev + result.data!.length);
+        setVisibleCount((prev) => prev + enriched.length);
         setCurrentPage(nextPage);
       }
     } finally {
@@ -108,6 +113,7 @@ export default function ExploreCatalogClient({
     accumulatedList.length,
     selectedCountryCodes,
     sortAscending,
+    cardsWidgetUpdate,
   ]);
 
   const showMoreVisible =
@@ -127,8 +133,12 @@ export default function ExploreCatalogClient({
         );
         if (reqId !== refreshRequestId.current) return;
         if (result.success && result.data) {
+          const enriched = await enrichListingCardsIfFlagged(
+            result.data,
+            cardsWidgetUpdate,
+          );
           setSelectedCountryCodes(countryCodes);
-          setAccumulatedList(result.data);
+          setAccumulatedList(enriched);
           setVisibleCount(PAGE_SIZE);
           setCurrentPage(1);
           if (result.totalHits != null) setTotalHitsView(result.totalHits);
@@ -137,7 +147,7 @@ export default function ExploreCatalogClient({
         if (reqId === refreshRequestId.current) setLoadingFilter(false);
       }
     },
-    [sortAscending],
+    [sortAscending, cardsWidgetUpdate],
   );
 
   const applySortOrder = useCallback(
@@ -152,8 +162,12 @@ export default function ExploreCatalogClient({
         );
         if (reqId !== refreshRequestId.current) return;
         if (result.success && result.data) {
+          const enriched = await enrichListingCardsIfFlagged(
+            result.data,
+            cardsWidgetUpdate,
+          );
           setSortAscending(asc);
-          setAccumulatedList(result.data);
+          setAccumulatedList(enriched);
           setVisibleCount(PAGE_SIZE);
           setCurrentPage(1);
           if (result.totalHits != null) setTotalHitsView(result.totalHits);
@@ -162,7 +176,7 @@ export default function ExploreCatalogClient({
         if (reqId === refreshRequestId.current) setLoadingFilter(false);
       }
     },
-    [selectedCountryCodes],
+    [selectedCountryCodes, cardsWidgetUpdate],
   );
 
   const showEmptyForCountry =

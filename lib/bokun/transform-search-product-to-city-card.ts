@@ -1,31 +1,7 @@
 import { slugifyForUrl } from "@/lib/utils";
 import { toBokunProductIdDigits } from "@/lib/utils/bokun-product-id";
+import { pickBokunCardImageUrl } from "@/lib/bokun/pick-bokun-card-image-url";
 import { CityCardData } from "@/types/bokun";
-
-/**
- * Extracts a thumbnail URL from a Bokun `keyPhoto` structure.
- *
- * @param keyPhoto - An object that may include a `derived` array of `{ name: string; url: string }` entries.
- * @returns The `url` of the `derived` entry named `"preview"` if present; otherwise the first available `derived` `url`; if none found, `"/placeholder-city.jpg"`.
- */
-function extractThumbnailUrl(keyPhoto: unknown): string {
-  const photoData = keyPhoto as {
-    derived?: Array<{ name: string; url: string }>;
-  };
-
-  if (!photoData?.derived) {
-    return "/placeholder-city.jpg";
-  }
-
-  const thumbnail = photoData.derived.find((item) => item.name === "preview");
-
-  if (thumbnail?.url) {
-    return thumbnail.url;
-  }
-
-  const firstDerived = photoData.derived.find((item) => item.url);
-  return firstDerived?.url || "/placeholder-city.jpg";
-}
 
 /**
  * Convert a Bokun search product object into a CityCardData representation for city cards.
@@ -57,7 +33,7 @@ export function transformSearchProductToCityCard(product: unknown): CityCardData
   return {
     id: productId,
     title: cityName,
-    image: extractThumbnailUrl(productData.keyPhoto),
+    image: pickBokunCardImageUrl(productData.keyPhoto),
     countryCode: productData.googlePlace?.countryCode ?? "",
     country: productData.googlePlace?.country ?? "Unknown",
     citySlug,

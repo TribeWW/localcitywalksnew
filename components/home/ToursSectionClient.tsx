@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getProductsPage } from "@/lib/actions/tour.actions";
+import { enrichListingCardsIfFlagged } from "@/lib/city-cards/enrich-listing-cards-if-flagged";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CityCardData } from "@/types/bokun";
 import { Flag } from "lucide-react";
@@ -27,11 +28,14 @@ interface ToursSectionClientProps {
   initialData: CityCardData[];
   /** Total number of products from Bokun (for "Show more" and pagination) */
   totalHits: number;
+  /** Vercel Flag `cards-widget-update` — enriches paginated/filtered fetches server-side */
+  cardsWidgetUpdate?: boolean;
 }
 
 export default function ToursSectionClient({
   initialData,
   totalHits,
+  cardsWidgetUpdate = false,
 }: ToursSectionClientProps) {
   const [accumulatedList, setAccumulatedList] =
     useState<CityCardData[]>(initialData);
@@ -86,12 +90,16 @@ export default function ToursSectionClient({
         selectedCountryCode ?? undefined,
       );
       if (result.success && result.data) {
-        setAccumulatedList((prev) => [...prev, ...result.data!]);
+        const enriched = await enrichListingCardsIfFlagged(
+          result.data,
+          cardsWidgetUpdate,
+        );
+        setAccumulatedList((prev) => [...prev, ...enriched]);
         if (result.totalHits != null) setTotalHitsView(result.totalHits);
-        setVisibleCount((prev) => prev + result.data!.length);
+        setVisibleCount((prev) => prev + enriched.length);
         setCurrentPage(nextPage);
         if (selectedCountryCode === null) {
-          setAllProductsForCountryList((prev) => [...prev, ...result.data!]);
+          setAllProductsForCountryList((prev) => [...prev, ...enriched]);
         }
       }
     } finally {
@@ -104,6 +112,7 @@ export default function ToursSectionClient({
     loadingMore,
     accumulatedList.length,
     selectedCountryCode,
+    cardsWidgetUpdate,
   ]);
 
   const showMoreVisible =
@@ -115,19 +124,23 @@ export default function ToursSectionClient({
     try {
       const result = await getProductsPage(1, countryCode ?? undefined);
       if (result.success && result.data) {
+        const enriched = await enrichListingCardsIfFlagged(
+          result.data,
+          cardsWidgetUpdate,
+        );
         setSelectedCountryCode(countryCode);
-        setAccumulatedList(result.data);
+        setAccumulatedList(enriched);
         setVisibleCount(PAGE_SIZE);
         setCurrentPage(1);
         if (result.totalHits != null) setTotalHitsView(result.totalHits);
         if (countryCode === null) {
-          setAllProductsForCountryList(result.data);
+          setAllProductsForCountryList(enriched);
         }
       }
     } finally {
       setLoadingFilter(false);
     }
-  }, []);
+  }, [cardsWidgetUpdate]);
 
   const showEmptyForCountry =
     selectedCountryCode !== null &&
@@ -225,7 +238,11 @@ export default function ToursSectionClient({
           </div>
         ) : (
           <>
-            <CityCard cities={visibleList} noHorizontalPadding />
+            <CityCard
+              cities={visibleList}
+              noHorizontalPadding
+              cardsWidgetUpdate={cardsWidgetUpdate}
+            />
             {showMoreVisible && (
               <div className="mt-8 text-center">
                 <Button
