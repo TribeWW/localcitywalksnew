@@ -1,3 +1,4 @@
+import { toBokunProductIdDigits } from "@/lib/utils/bokun-product-id";
 import type { CityCardData, ProductPriceHeadline } from "@/types/bokun";
 
 /**
@@ -8,7 +9,9 @@ export function mergePriceHeadlinesIntoCityCards(
   headlines: ReadonlyMap<string, ProductPriceHeadline>,
 ): CityCardData[] {
   return cards.map((card) => {
-    const headline = headlines.get(card.id);
+    const normalizedId =
+      toBokunProductIdDigits(card.id) ?? String(card.id);
+    const headline = headlines.get(normalizedId);
     if (!headline) {
       return card;
     }

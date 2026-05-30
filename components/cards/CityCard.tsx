@@ -58,11 +58,16 @@ function LegacyCityCardItem({
 }
 
 function normalizeCardImageUrl(image: string): string {
-  if (image.startsWith("/")) {
-    return image;
+  const trimmed = image?.trim();
+  if (!trimmed) {
+    return "/placeholder-city.jpg";
   }
 
-  return upsizeBokunCardImageUrl(image);
+  if (trimmed.startsWith("/")) {
+    return trimmed;
+  }
+
+  return upsizeBokunCardImageUrl(trimmed);
 }
 
 function resolveCardPriceAmount(

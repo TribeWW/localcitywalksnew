@@ -67,6 +67,7 @@ export default function ExploreCatalogClient({
   const [sortAscending, setSortAscending] = useState(initialSortAscending);
   const [mobileCountryOpen, setMobileCountryOpen] = useState(false);
   const mobileCountryRef = useRef<HTMLDivElement | null>(null);
+  const refreshRequestId = useRef(0);
 
   const visibleList = useMemo(
     () => accumulatedList.slice(0, visibleCount),
@@ -84,6 +85,7 @@ export default function ExploreCatalogClient({
       return;
     }
     if (!hasMorePages || loadingMore) return;
+    const reqId = ++refreshRequestId.current;
     setLoadingMore(true);
     try {
       const nextPage = currentPage + 1;
@@ -92,18 +94,20 @@ export default function ExploreCatalogClient({
         selectedCountryCodes,
         sortAscending,
       );
+      if (reqId !== refreshRequestId.current) return;
       if (result.success && result.data) {
         const enriched = await enrichListingCardsIfFlagged(
           result.data,
           cardsWidgetUpdate,
         );
+        if (reqId !== refreshRequestId.current) return;
         setAccumulatedList((prev) => [...prev, ...enriched]);
         if (result.totalHits != null) setTotalHitsView(result.totalHits);
         setVisibleCount((prev) => prev + enriched.length);
         setCurrentPage(nextPage);
       }
     } finally {
-      setLoadingMore(false);
+      if (reqId === refreshRequestId.current) setLoadingMore(false);
     }
   }, [
     currentPage,
@@ -118,8 +122,6 @@ export default function ExploreCatalogClient({
 
   const showMoreVisible =
     hasMoreFilteredToShow || (hasMorePages && accumulatedList.length > 0);
-
-  const refreshRequestId = useRef(0);
 
   const selectCountry = useCallback(
     async (countryCodes: string[]) => {

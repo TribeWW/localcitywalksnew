@@ -323,4 +323,61 @@ describe("ExploreCatalogClient country filters", () => {
       true,
     );
   });
+
+  it("does not append a stale load-more page after filter replaces the list", async () => {
+    const stalePageCard = {
+      id: "99",
+      title: "Stale Page Walk",
+      image: "/stale.jpg",
+      countryCode: "ES",
+      country: "Spain",
+    };
+    let resolvePageTwo: (value: {
+      success: boolean;
+      data: typeof stalePageCard[];
+      totalHits: number;
+    }) => void = () => {};
+
+    mockedGetExploreCatalogPage.mockImplementation((page) => {
+      if (page === 2) {
+        return new Promise((resolve) => {
+          resolvePageTwo = resolve;
+        });
+      }
+
+      return Promise.resolve({
+        success: true,
+        data: [initialData[1]],
+        totalHits: 1,
+      });
+    });
+
+    render(
+      <ExploreCatalogClient
+        initialData={initialData}
+        totalHits={40}
+        initialSortAscending={true}
+        completeCountryList={completeCountryList}
+      />,
+    );
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Load more tours" }));
+    await user.click(screen.getByRole("tab", { name: "Portugal" }));
+
+    resolvePageTwo({
+      success: true,
+      data: [stalePageCard],
+      totalHits: 40,
+    });
+
+    await vi.waitFor(() => {
+      expect(screen.getByTestId("city-card-list")).toHaveTextContent(
+        "Porto Walk",
+      );
+    });
+    expect(screen.getByTestId("city-card-list")).not.toHaveTextContent(
+      "Stale Page Walk",
+    );
+  });
 });

@@ -122,7 +122,7 @@ The tour page fetches full detail via **`GET /activity.json/{id}`** (`BOKUN_ENDP
 
 ### Tiered pricing (listings)
 
-Search results expose a numeric `price` that does **not** reliably match a **2-guest** headline. For catalogue cards, product may need **`GET /activity.json/{id}/price-list`** (and/or fields on the same `GET /activity.json/{id}` payload) — see Bókun docs on [checking availability and pricing](https://bokun.dev/booking-api-rest/vU6sCfxwYdJWd1QAcLt12i/checking-availability-and-pricing/9x4PcziToX5g8WG4j5KMxt). **Implementation strategy** (concurrency, cache, spike): `documentation/implementation-plans/2026-05-08-ui-product-cards-request-form.md` → **§ Bókun card pricing — investigation**.
+Search results expose a numeric `price` that does **not** reliably match a **2-guest** headline. For catalogue cards, the app uses **`GET /activity.json/{id}/price-list`** (with `defaultRateId` from activity detail) — see Bókun docs on [checking availability and pricing](https://bokun.dev/booking-api-rest/vU6sCfxwYdJWd1QAcLt12i/checking-availability-and-pricing/9x4PcziToX5g8WG4j5KMxt). **Implementation** ([`lib/bokun/enrich-product-prices-from-price-list.ts`](../../lib/bokun/enrich-product-prices-from-price-list.ts)): prefetches `defaultRateId`, then fetches price-list per product with bounded concurrency (**6**), a **15-minute** in-memory headline cache (TTL eviction and size cap), max **50** ids per batch; headline rules in [`lib/bokun/extract-price-list-headline.ts`](../../lib/bokun/extract-price-list-headline.ts) (default rate, Adult tier, 2-guest band).
 
 ### Tour page: HTML description safety
 

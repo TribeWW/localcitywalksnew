@@ -36,6 +36,42 @@ describe("mergePriceHeadlinesIntoCityCards", () => {
     expect(merged.displayPriceCurrency).toBeUndefined();
   });
 
+  it("finds headlines when card.id is not normalized to map keys", () => {
+    const cardWithNumericId = {
+      ...baseCard,
+      id: 1077682 as unknown as string,
+    };
+
+    const [merged] = mergePriceHeadlinesIntoCityCards(
+      [cardWithNumericId],
+      new Map([["1077682", { amount: 124, currency: "EUR" }]]),
+    );
+
+    expect(merged).toMatchObject({
+      id: 1077682,
+      displayPricePerPerson: 124,
+      displayPriceCurrency: "EUR",
+    });
+  });
+
+  it("matches producer-normalized headline keys for composite card ids", () => {
+    const cardWithCompositeId = {
+      ...baseCard,
+      id: "tour-1077682",
+    };
+    const cards = [cardWithCompositeId];
+    const headlines = new Map([["1077682", { amount: 124, currency: "EUR" }]]);
+
+    const [merged] = mergePriceHeadlinesIntoCityCards(cards, headlines);
+
+    expect(merged).toMatchObject({
+      id: "tour-1077682",
+      displayPricePerPerson: 124,
+      displayPriceCurrency: "EUR",
+    });
+    expect(cards[0]).toEqual(cardWithCompositeId);
+  });
+
   it("does not mutate the input card array", () => {
     const cards = [baseCard];
     mergePriceHeadlinesIntoCityCards(cards, new Map());
