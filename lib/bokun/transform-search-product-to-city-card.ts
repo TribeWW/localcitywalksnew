@@ -8,19 +8,20 @@ import { CityCardData } from "@/types/bokun";
  *
  * @param product - Source product object expected to contain `id`, `title`, `keyPhoto`, and optional `googlePlace` with `city`, `country`, and `countryCode`. `title` is used as a fallback when `googlePlace.city` is not present.
  * @returns A CityCardData object containing:
- * - `id`: the product id
+ * - `id`: normalized digits-only product id from `toBokunProductIdDigits` (falls back to `String(product.id)` when normalization fails)
  * - `title`: the resolved city name
- * - `image`: thumbnail URL derived from `keyPhoto` (falls back to `"/placeholder-city.jpg"` when unavailable)
+ * - `image`: card image URL from `pickBokunCardImageUrl(keyPhoto)` (that helper applies its own fallback)
  * - `countryCode`: the `googlePlace.countryCode` or `""`
  * - `country`: the `googlePlace.country` or `"Unknown"`
  * - `citySlug`: slugified city name
- * - `slug`: slug that is `product.id` when the title slugifies to `"unknown"`, otherwise `"{titleSlug}-{id}"`
+ * - `slug`: normalized id when the title slugifies to `"unknown"`, otherwise `"{titleSlug}-{normalizedId}"`
  */
 export function transformSearchProductToCityCard(product: unknown): CityCardData {
   const productData = product as {
     id: string | number;
     title: string;
     keyPhoto: unknown;
+    defaultRateId?: number;
     googlePlace?: { city: string; country: string; countryCode: string };
   };
   const productId =
@@ -38,5 +39,8 @@ export function transformSearchProductToCityCard(product: unknown): CityCardData
     country: productData.googlePlace?.country ?? "Unknown",
     citySlug,
     slug,
+    ...(productData.defaultRateId != null
+      ? { defaultRateId: productData.defaultRateId }
+      : {}),
   };
 }

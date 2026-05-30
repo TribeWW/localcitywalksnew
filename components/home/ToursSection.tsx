@@ -15,9 +15,14 @@ export default async function ToursSection() {
     return null;
   }
 
-  const initialData = cardsWidgetUpdateEnabled
-    ? await enrichCityCardsForListing(result.data)
-    : result.data;
+  let initialData = result.data;
+  if (cardsWidgetUpdateEnabled) {
+    try {
+      initialData = await enrichCityCardsForListing(result.data);
+    } catch (e) {
+      console.error("[Tours section] enrichment failed", e);
+    }
+  }
 
   return (
     <ToursSectionClient

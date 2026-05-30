@@ -37,4 +37,10 @@ describe("enrichListingCardsIfFlagged", () => {
     expect(enrichActionMock).toHaveBeenCalledWith([baseCard]);
     expect(result[0]?.ratingLabel).toBe("4.7");
   });
+  it("skips server action for empty array even when flag is on", async () => {
+    const result = await enrichListingCardsIfFlagged([], true);
+
+    expect(result).toEqual([]);
+    expect(enrichActionMock).not.toHaveBeenCalled();
+  });
 });

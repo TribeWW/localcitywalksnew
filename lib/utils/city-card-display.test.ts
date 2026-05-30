@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  getCityCardPriceLine,
+  getCityCardImageAlt,
+  getCityCardPriceAmount,
   getCityCardRatingLine,
   getCityCardSubtitle,
   getCityCardTitle,
@@ -28,10 +29,16 @@ describe("getCityCardTitle", () => {
   });
 });
 
-describe("getCityCardPriceLine", () => {
+describe("getCityCardImageAlt", () => {
+  it("uses the raw city name for a descriptive photo alt", () => {
+    expect(getCityCardImageAlt("Barcelona")).toBe("Barcelona photo");
+  });
+});
+
+describe("getCityCardPriceAmount", () => {
   it("returns the formatted amount when enriched price exists without currency", () => {
     expect(
-      getCityCardPriceLine(
+      getCityCardPriceAmount(
         { ...enrichedCard, displayPriceCurrency: undefined },
         true,
       ),
@@ -39,9 +46,9 @@ describe("getCityCardPriceLine", () => {
   });
 
   it("returns null when price is missing or the flag is off", () => {
-    expect(getCityCardPriceLine(enrichedCard, false)).toBeNull();
+    expect(getCityCardPriceAmount(enrichedCard, false)).toBeNull();
     expect(
-      getCityCardPriceLine(
+      getCityCardPriceAmount(
         { ...enrichedCard, displayPricePerPerson: undefined },
         true,
       ),

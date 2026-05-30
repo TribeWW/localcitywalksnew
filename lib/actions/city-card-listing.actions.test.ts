@@ -35,4 +35,20 @@ describe("enrichCityCardsForListingAction", () => {
     expect(enrichMock).toHaveBeenCalledWith([baseCard]);
     expect(result[0]?.ratingLabel).toBe("4.7");
   });
+
+  it("returns an empty array when given no cards", async () => {
+    enrichMock.mockResolvedValue([]);
+
+    const result = await enrichCityCardsForListingAction([]);
+
+    expect(result).toEqual([]);
+  });
+
+  it("propagates enrichment errors", async () => {
+    enrichMock.mockRejectedValue(new Error("Enrichment failed"));
+
+    await expect(enrichCityCardsForListingAction([baseCard])).rejects.toThrow(
+      "Enrichment failed",
+    );
+  });
 });

@@ -60,6 +60,41 @@ describe("getHomeSpotlightCityCards", () => {
     ]);
   });
 
+  it("normalizes numeric ids and skips null spotlight entries", async () => {
+    fetchMock.mockResolvedValue({
+      items: [{ id: 1077682 }, { id: null }],
+    });
+    getTourDetailByIdMock.mockResolvedValue({
+      success: true,
+      data: {
+        id: 1077682,
+        title: "Hello Toledo Private Walk",
+        keyPhoto,
+        googlePlace: {
+          city: "Toledo",
+          country: "Spain",
+          countryCode: "ES",
+          cityCode: "toledo",
+        },
+      },
+    });
+
+    const cards = await getHomeSpotlightCityCards();
+
+    expect(getTourDetailByIdMock).toHaveBeenCalledTimes(1);
+    expect(getTourDetailByIdMock).toHaveBeenCalledWith("1077682");
+    expect(cards).toHaveLength(1);
+    expect(cards[0]).toEqual({
+      id: "1077682",
+      title: "Toledo",
+      image: "/preview.jpg",
+      countryCode: "ES",
+      country: "Spain",
+      citySlug: "toledo",
+      slug: "hello-toledo-private-walk-1077682",
+    });
+  });
+
   it("returns an empty list when Sanity has no spotlight items", async () => {
     fetchMock.mockResolvedValue({ items: [] });
 

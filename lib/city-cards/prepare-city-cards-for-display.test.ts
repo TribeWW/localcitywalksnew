@@ -37,4 +37,26 @@ describe("prepareCityCardsForListingDisplay", () => {
       showRating: true,
     });
   });
+
+  it("finds per-tour ratings when card.id is not normalized to map keys", () => {
+    const cardWithNumericId = {
+      ...baseCard,
+      id: 101 as unknown as string,
+    };
+
+    const prepared = prepareCityCardsForListingDisplay(
+      [cardWithNumericId],
+      new Map(),
+      {
+        globalSummary: summary(10, 4.6),
+        perTourMap: new Map([["101", summary(2, 4.5)]]),
+      },
+    );
+
+    expect(prepared[0]).toMatchObject({
+      id: 101,
+      ratingLabel: "4.5",
+      showRating: true,
+    });
+  });
 });

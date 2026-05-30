@@ -13,9 +13,13 @@ export function formatCataloguePriceAmount(
     return null;
   }
 
-  return new Intl.NumberFormat(CATALOGUE_PRICE_LOCALE, {
-    style: "currency",
-    currency: normalizedCurrency,
-    maximumFractionDigits: 0,
-  }).format(amount);
+  try {
+    return new Intl.NumberFormat(CATALOGUE_PRICE_LOCALE, {
+      style: "currency",
+      currency: normalizedCurrency,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return null;
+  }
 }

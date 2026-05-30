@@ -10,7 +10,7 @@ import Link from "next/link";
 import { Star } from "lucide-react";
 import { upsizeBokunCardImageUrl } from "@/lib/bokun/pick-bokun-card-image-url";
 import { slugifyForUrl } from "@/lib/utils";
-import { getCityCardDisplayContent } from "@/lib/utils/city-card-display";
+import { getCityCardDisplayContent, getCityCardImageAlt } from "@/lib/utils/city-card-display";
 import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
 import { CityCardData } from "@/types/bokun";
 
@@ -25,11 +25,13 @@ interface CityCardProps {
 function LegacyCityCardItem({
   href,
   image,
+  imageAlt,
   title,
   subtitle,
 }: {
   href: string;
   image: string;
+  imageAlt: string;
   title: string;
   subtitle: string | null;
 }) {
@@ -39,7 +41,7 @@ function LegacyCityCardItem({
         <div className="relative aspect-[3/2] w-full">
           <Image
             src={image}
-            alt={title}
+            alt={imageAlt}
             fill
             quality={90}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 320px"
@@ -80,12 +82,14 @@ function resolveCardPriceAmount(
 function MinimalCityCardItem({
   href,
   image,
+  imageAlt,
   title,
   priceAmount,
   ratingLine,
 }: {
   href: string;
   image: string;
+  imageAlt: string;
   title: string;
   priceAmount: string | null;
   ratingLine: string | null;
@@ -98,7 +102,7 @@ function MinimalCityCardItem({
       <div className="relative aspect-[3/2] overflow-hidden rounded-xl md:aspect-[4/5]">
         <Image
           src={image}
-          alt={title}
+          alt={imageAlt}
           fill
           quality={90}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 320px"
@@ -149,6 +153,7 @@ const CityCard = ({
         const citySlug = city.citySlug ?? slugifyForUrl(city.title);
         const slugSegment = city.slug ?? city.id;
         const href = `/tours/${citySlug}/${slugSegment}`;
+        const imageAlt = getCityCardImageAlt(city.title);
         const { title, ratingLine, subtitle } = getCityCardDisplayContent(
           city,
           cardsWidgetUpdate,
@@ -161,6 +166,7 @@ const CityCard = ({
               key={city.id}
               href={href}
               image={normalizeCardImageUrl(city.image)}
+              imageAlt={imageAlt}
               title={title}
               priceAmount={priceAmount}
               ratingLine={ratingLine}
@@ -173,6 +179,7 @@ const CityCard = ({
             key={city.id}
             href={href}
             image={normalizeCardImageUrl(city.image)}
+            imageAlt={imageAlt}
             title={title}
             subtitle={subtitle}
           />

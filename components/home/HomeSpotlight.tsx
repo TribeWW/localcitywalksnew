@@ -15,7 +15,11 @@ export default async function HomeSpotlight() {
     return null;
   }
   if (cardsWidgetUpdateEnabled) {
-    cities = await enrichCityCardsForListing(cities);
+    try {
+      cities = await enrichCityCardsForListing(cities);
+    } catch (e) {
+      console.error("[Home spotlight] enrichment failed", e);
+    }
   }
 
   return (
@@ -29,7 +33,8 @@ export default async function HomeSpotlight() {
             Explore cities
           </h2>
           <p className="text-lg text-white/80 max-w-2xl mx-auto">
-            Featured tours from our collection — browse more on the full catalog.
+            Featured tours from our collection — browse more on the full
+            catalog.
           </p>
         </div>
 

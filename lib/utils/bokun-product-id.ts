@@ -1,5 +1,3 @@
-const DIGITS_ONLY_PRODUCT_ID = /^\d+$/;
-
 /**
  * Coerces a Bókun product id to a digits-only string (API payloads may use numbers).
  */
@@ -10,7 +8,7 @@ export function toBokunProductIdDigits(rawId: unknown): string | null {
 
   const asString = typeof rawId === "string" ? rawId : String(rawId);
   const digits = asString.replace(/\D/g, "");
-  if (!digits || !DIGITS_ONLY_PRODUCT_ID.test(digits)) {
+  if (!digits) {
     return null;
   }
 
@@ -24,6 +22,10 @@ export function normalizeBokunProductIds(
   productIds: readonly unknown[],
   maxIds: number,
 ): string[] {
+  if (maxIds <= 0) {
+    return [];
+  }
+
   const seen = new Set<string>();
   const normalized: string[] = [];
 

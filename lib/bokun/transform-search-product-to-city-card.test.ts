@@ -40,4 +40,15 @@ describe("transformSearchProductToCityCard", () => {
     });
     expect(card.ratingLabel).toBeUndefined();
   });
+
+  it("preserves defaultRateId from activity detail payloads", () => {
+    const card = transformSearchProductToCityCard({
+      id: "1077682",
+      title: "Hello Toledo Private Walk",
+      keyPhoto,
+      defaultRateId: 2199582,
+    });
+
+    expect(card.defaultRateId).toBe(2199582);
+  });
 });

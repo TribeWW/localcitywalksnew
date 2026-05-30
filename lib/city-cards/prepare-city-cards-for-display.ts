@@ -1,5 +1,6 @@
 import type { CardListingReviewRatingsResult } from "@/lib/actions/reviews.actions";
 import { mergePriceHeadlinesIntoCityCards } from "@/lib/bokun/merge-price-headlines-into-city-cards";
+import { toBokunProductIdDigits } from "@/lib/utils/bokun-product-id";
 import { resolveCityCardRatingDisplay } from "@/lib/utils/city-card-rating-display";
 import type { CityCardData, ProductPriceHeadline } from "@/types/bokun";
 
@@ -14,8 +15,10 @@ export function prepareCityCardsForListingDisplay(
   const withPrices = mergePriceHeadlinesIntoCityCards(cards, headlines);
 
   return withPrices.map((card) => {
+    const normalizedId =
+      toBokunProductIdDigits(card.id) ?? String(card.id);
     const { ratingLabel, showRating } = resolveCityCardRatingDisplay(
-      ratings.perTourMap.get(card.id),
+      ratings.perTourMap.get(normalizedId),
       ratings.globalSummary,
     );
 

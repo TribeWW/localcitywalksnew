@@ -75,6 +75,8 @@ export interface CityCardData {
   ratingLabel?: string;
   /** Whether the listing card should render a rating row. */
   showRating?: boolean;
+  /** Default rate from activity detail; avoids duplicate detail fetches during price enrichment. */
+  defaultRateId?: number;
 }
 
 /**

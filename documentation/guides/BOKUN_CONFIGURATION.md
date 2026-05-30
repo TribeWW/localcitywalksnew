@@ -120,7 +120,7 @@ The tour page fetches full detail via **`GET /activity.json/{id}`** (`BOKUN_ENDP
 - **Caching**: Successful responses are cached in memory for **15 minutes** (same TTL order of magnitude as product search in `tour.actions.ts`).
 - **Timeouts / errors**: Non-404 failures are logged with `console.error` on the server; the tour route surfaces them via **`error.tsx`** (see below)—not as a “soft” 200 page.
 
-### Tiered pricing (listings; not in `config.ts` yet)
+### Tiered pricing (listings)
 
 Search results expose a numeric `price` that does **not** reliably match a **2-guest** headline. For catalogue cards, product may need **`GET /activity.json/{id}/price-list`** (and/or fields on the same `GET /activity.json/{id}` payload) — see Bókun docs on [checking availability and pricing](https://bokun.dev/booking-api-rest/vU6sCfxwYdJWd1QAcLt12i/checking-availability-and-pricing/9x4PcziToX5g8WG4j5KMxt). **Implementation strategy** (concurrency, cache, spike): `documentation/implementation-plans/2026-05-08-ui-product-cards-request-form.md` → **§ Bókun card pricing — investigation**.
 

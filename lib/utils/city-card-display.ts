@@ -17,11 +17,14 @@ export function getCityCardTitle(
   return cityTitle;
 }
 
-export function getCityCardPriceLine(
-  city: Pick<CityCardData, "displayPricePerPerson" | "displayPriceCurrency">,
-  cardsWidgetUpdate: boolean,
-): string | null {
-  return getCityCardPriceAmount(city, cardsWidgetUpdate);
+/** Descriptive alt text for listing card photos (not the greeting headline). */
+export function getCityCardImageAlt(cityTitle: string): string {
+  const city = cityTitle.trim();
+  if (!city) {
+    return "City tour photo";
+  }
+
+  return `${city} photo`;
 }
 
 /** Formatted currency amount for the minimal card price row (e.g. `€124`). */
@@ -71,7 +74,6 @@ export function getCityCardDisplayContent(
   return {
     title: getCityCardTitle(city.title, cardsWidgetUpdate),
     priceAmount: getCityCardPriceAmount(city, cardsWidgetUpdate),
-    priceLine: getCityCardPriceLine(city, cardsWidgetUpdate),
     ratingLine: getCityCardRatingLine(city, cardsWidgetUpdate),
     subtitle: getCityCardSubtitle(cardsWidgetUpdate),
   };
