@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getProductsPage } from "@/lib/actions/tour.actions";
+import { enrichListingCardsIfFlagged } from "@/lib/city-cards/enrich-listing-cards-if-flagged";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CityCardData } from "@/types/bokun";
 import { Flag } from "lucide-react";
@@ -27,11 +28,14 @@ interface ToursSectionClientProps {
   initialData: CityCardData[];
   /** Total number of products from Bokun (for "Show more" and pagination) */
   totalHits: number;
+  /** Vercel Flag `cards-widget-update` — enriches paginated/filtered fetches server-side */
+  cardsWidgetUpdate?: boolean;
 }
 
 export default function ToursSectionClient({
   initialData,
   totalHits,
+  cardsWidgetUpdate = false,
 }: ToursSectionClientProps) {
   const [accumulatedList, setAccumulatedList] =
     useState<CityCardData[]>(initialData);
@@ -86,12 +90,21 @@ export default function ToursSectionClient({
         selectedCountryCode ?? undefined,
       );
       if (result.success && result.data) {
-        setAccumulatedList((prev) => [...prev, ...result.data!]);
+        let enriched = result.data;
+        try {
+          enriched = await enrichListingCardsIfFlagged(
+            result.data,
+            cardsWidgetUpdate,
+          );
+        } catch (e) {
+          console.error("[Tours section] show-more enrichment failed", e);
+        }
+        setAccumulatedList((prev) => [...prev, ...enriched]);
         if (result.totalHits != null) setTotalHitsView(result.totalHits);
-        setVisibleCount((prev) => prev + result.data!.length);
+        setVisibleCount((prev) => prev + enriched.length);
         setCurrentPage(nextPage);
         if (selectedCountryCode === null) {
-          setAllProductsForCountryList((prev) => [...prev, ...result.data!]);
+          setAllProductsForCountryList((prev) => [...prev, ...enriched]);
         }
       }
     } finally {
@@ -104,31 +117,46 @@ export default function ToursSectionClient({
     loadingMore,
     accumulatedList.length,
     selectedCountryCode,
+    cardsWidgetUpdate,
   ]);
 
   const showMoreVisible =
     hasMoreFilteredToShow || (hasMorePages && accumulatedList.length > 0);
 
-  const selectCountry = useCallback(async (countryCode: string | null) => {
-    setFilterOpen(false);
-    setLoadingFilter(true);
-    try {
-      const result = await getProductsPage(1, countryCode ?? undefined);
-      if (result.success && result.data) {
-        setSelectedCountryCode(countryCode);
-        setAccumulatedList(result.data);
-        setVisibleCount(PAGE_SIZE);
-        setCurrentPage(1);
-        if (result.totalHits != null) setTotalHitsView(result.totalHits);
-        if (countryCode === null) {
-          setAllProductsForCountryList(result.data);
+  const selectCountry = useCallback(
+    async (countryCode: string | null) => {
+      setFilterOpen(false);
+      setLoadingFilter(true);
+      try {
+        const result = await getProductsPage(1, countryCode ?? undefined);
+        if (result.success && result.data) {
+          let enriched = result.data;
+          try {
+            enriched = await enrichListingCardsIfFlagged(
+              result.data,
+              cardsWidgetUpdate,
+            );
+          } catch (e) {
+            console.error(
+              "[Tours section] country-filter enrichment failed",
+              e,
+            );
+          }
+          setSelectedCountryCode(countryCode);
+          setAccumulatedList(enriched);
+          setVisibleCount(PAGE_SIZE);
+          setCurrentPage(1);
+          if (result.totalHits != null) setTotalHitsView(result.totalHits);
+          if (countryCode === null) {
+            setAllProductsForCountryList(enriched);
+          }
         }
+      } finally {
+        setLoadingFilter(false);
       }
-    } finally {
-      setLoadingFilter(false);
-    }
-  }, []);
-
+    },
+    [cardsWidgetUpdate],
+  );
   const showEmptyForCountry =
     selectedCountryCode !== null &&
     accumulatedList.length === 0 &&
@@ -160,87 +188,91 @@ export default function ToursSectionClient({
             </Button>
           </div>
 
-        <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Filter by country</DialogTitle>
-              <DialogDescription>
-                Choose one country to see tours from that country only.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto py-2">
-              <button
-                type="button"
-                onClick={() => selectCountry(null)}
-                disabled={loadingFilter}
-                className={`flex items-center gap-3 w-full text-left rounded-md px-3 py-3 min-h-[44px] transition-colors ${
-                  selectedCountryCode === null
-                    ? "bg-nightsky/20 text-white font-medium"
-                    : "hover:bg-muted/50 text-foreground"
-                } disabled:opacity-50`}
-              >
-                <span className="text-sm">All countries</span>
-              </button>
-              {uniqueCountries.map(({ countryCode, country }) => (
+          <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Filter by country</DialogTitle>
+                <DialogDescription>
+                  Choose one country to see tours from that country only.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto py-2">
                 <button
-                  key={countryCode || "unknown"}
                   type="button"
-                  onClick={() => selectCountry(countryCode)}
+                  onClick={() => selectCountry(null)}
                   disabled={loadingFilter}
                   className={`flex items-center gap-3 w-full text-left rounded-md px-3 py-3 min-h-[44px] transition-colors ${
-                    selectedCountryCode === countryCode
+                    selectedCountryCode === null
                       ? "bg-nightsky/20 text-white font-medium"
                       : "hover:bg-muted/50 text-foreground"
                   } disabled:opacity-50`}
                 >
-                  <span className="text-sm">{country}</span>
+                  <span className="text-sm">All countries</span>
                 </button>
+                {uniqueCountries.map(({ countryCode, country }) => (
+                  <button
+                    key={countryCode || "unknown"}
+                    type="button"
+                    onClick={() => selectCountry(countryCode)}
+                    disabled={loadingFilter}
+                    className={`flex items-center gap-3 w-full text-left rounded-md px-3 py-3 min-h-[44px] transition-colors ${
+                      selectedCountryCode === countryCode
+                        ? "bg-nightsky/20 text-white font-medium"
+                        : "hover:bg-muted/50 text-foreground"
+                    } disabled:opacity-50`}
+                  >
+                    <span className="text-sm">{country}</span>
+                  </button>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {loadingFilter ? (
+            <div
+              className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center py-6`}
+            >
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-xl shadow-sm overflow-hidden w-full max-w-[250px]"
+                >
+                  <Skeleton className="h-48 w-full rounded-none" />
+                  <div className="p-6 space-y-4">
+                    <Skeleton className="h-6 w-3/4 mx-auto" />
+                    <Skeleton className="h-10 w-full rounded-md" />
+                  </div>
+                </div>
               ))}
             </div>
-          </DialogContent>
-        </Dialog>
-
-        {loadingFilter ? (
-          <div
-            className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center py-6`}
-          >
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-xl shadow-sm overflow-hidden w-full max-w-[250px]"
-              >
-                <Skeleton className="h-48 w-full rounded-none" />
-                <div className="p-6 space-y-4">
-                  <Skeleton className="h-6 w-3/4 mx-auto" />
-                  <Skeleton className="h-10 w-full rounded-md" />
+          ) : showEmptyForCountry ? (
+            <div className="text-center py-12 px-4 rounded-lg bg-white/5 text-white/90">
+              <p className="text-lg font-medium">
+                No tours found for this country in the current catalog.
+              </p>
+            </div>
+          ) : (
+            <>
+              <CityCard
+                cities={visibleList}
+                noHorizontalPadding
+                cardsWidgetUpdate={cardsWidgetUpdate}
+              />
+              {showMoreVisible && (
+                <div className="mt-8 text-center">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleShowMore}
+                    disabled={loadingMore}
+                    className="min-h-[44px] px-6 py-3 bg-nightsky hover:bg-nightsky/90 text-white border-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loadingMore ? "Loading…" : "Show more"}
+                  </Button>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : showEmptyForCountry ? (
-          <div className="text-center py-12 px-4 rounded-lg bg-white/5 text-white/90">
-            <p className="text-lg font-medium">
-              No tours found for this country in the current catalog.
-            </p>
-          </div>
-        ) : (
-          <>
-            <CityCard cities={visibleList} noHorizontalPadding />
-            {showMoreVisible && (
-              <div className="mt-8 text-center">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleShowMore}
-                  disabled={loadingMore}
-                  className="min-h-[44px] px-6 py-3 bg-nightsky hover:bg-nightsky/90 text-white border-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loadingMore ? "Loading…" : "Show more"}
-                </Button>
-              </div>
-            )}
-          </>
-        )}
+              )}
+            </>
+          )}
         </div>
       </div>
     </section>

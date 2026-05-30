@@ -1,5 +1,9 @@
 import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
 import { transformSearchProductToCityCard } from "@/lib/bokun/transform-search-product-to-city-card";
+import {
+  normalizeBokunProductIds,
+  toBokunProductIdDigits,
+} from "@/lib/utils/bokun-product-id";
 import { client } from "@/sanity/lib/client";
 import type { CityCardData } from "@/types/bokun";
 
@@ -10,7 +14,7 @@ const SPOTLIGHT_QUERY = `*[_type == "homeSpotlight" && ${DRAFT_EXCLUDED}][0]{
 }`;
 
 type SpotlightDoc = {
-  items?: Array<{ id?: string | null }> | null;
+  items?: Array<{ id?: string | number | null }> | null;
 } | null;
 
 const MAX_ITEMS = 8;
@@ -29,12 +33,11 @@ export async function getHomeSpotlightCityCards(): Promise<CityCardData[]> {
     return [];
   }
 
-  const rawIds =
-    doc?.items
-      ?.map((row) => row.id?.trim())
-      .filter((id): id is string => id != null && id.length > 0) ?? [];
+  const ids = normalizeBokunProductIds(
+    doc?.items?.map((row) => row.id) ?? [],
+    MAX_ITEMS,
+  );
 
-  const ids = rawIds.slice(0, MAX_ITEMS);
   if (ids.length === 0) {
     return [];
   }
@@ -51,7 +54,7 @@ export async function getHomeSpotlightCityCards(): Promise<CityCardData[]> {
       console.warn(
         "[Home spotlight] Skipping product",
         id,
-        res.success ? "" : res.error ?? "",
+        res.success ? "" : (res.error ?? ""),
       );
     }
   }
