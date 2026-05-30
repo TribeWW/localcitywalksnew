@@ -232,6 +232,14 @@ async function resolveHeadlineForProduct(
   defaultRateId?: number,
 ): Promise<ProductPriceHeadline | null> {
   const cacheKey = getCacheKey(productId, start, end, currency);
+
+  if (defaultRateId == null) {
+    console.warn(
+      `[price-list] missing defaultRateId on activity detail for product ${productId}`,
+    );
+    return null;
+  }
+
   const cachedHeadline = readHeadlineCache(cacheKey);
   if (cachedHeadline !== undefined) {
     return cachedHeadline;
@@ -243,15 +251,6 @@ async function resolveHeadlineForProduct(
     writeHeadlineCache(cacheKey, null);
     return null;
   }
-
-  if (defaultRateId == null) {
-    console.warn(
-      `[price-list] missing defaultRateId on activity detail for product ${productId}`,
-    );
-    writeHeadlineCache(cacheKey, null);
-    return null;
-  }
-
   const headline = extractHeadlineFromPriceList(
     priceList,
     defaultRateId,
@@ -284,7 +283,11 @@ export async function enrichProductPricesFromPriceList(
     defaultRateIdsByProductId,
   );
 
-  for (let index = 0; index < normalizedIds.length; index += FETCH_CONCURRENCY) {
+  for (
+    let index = 0;
+    index < normalizedIds.length;
+    index += FETCH_CONCURRENCY
+  ) {
     const chunk = normalizedIds.slice(index, index + FETCH_CONCURRENCY);
     const results = await Promise.all(
       chunk.map(async (productId) => {

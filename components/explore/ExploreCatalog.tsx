@@ -27,9 +27,14 @@ export default async function ExploreCatalog() {
     );
   }
 
-  const initialData = cardsWidgetUpdateEnabled
-    ? await enrichCityCardsForListing(result.data ?? [])
-    : (result.data ?? []);
+  let initialData = result.data ?? [];
+  if (cardsWidgetUpdateEnabled) {
+    try {
+      initialData = await enrichCityCardsForListing(initialData);
+    } catch (e) {
+      console.error("[Explore catalog] enrichment failed", e);
+    }
+  }
   const totalHits = result.totalHits ?? initialData.length;
   const completeCountryList = result.completeCountryList ?? [];
 

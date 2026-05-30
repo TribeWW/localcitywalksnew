@@ -22,12 +22,12 @@ pnpm i flags @vercel/toolbar
 
 ```ts
 // src/lib/flags.ts
-import { flag } from 'flags/sveltekit';
+import { flag } from "flags/sveltekit";
 
 export const showDashboard = flag<boolean>({
-  key: 'showDashboard',
-  description: 'Show the dashboard',
-  origin: 'https://example.com/#showdashboard',
+  key: "showDashboard",
+  description: "Show the dashboard",
+  origin: "https://example.com/#showdashboard",
   options: [{ value: true }, { value: false }],
   decide(_event) {
     return false;
@@ -41,9 +41,9 @@ One-time setup that makes the toolbar aware of your flags:
 
 ```ts
 // src/hooks.server.ts
-import { createHandle } from 'flags/sveltekit';
-import { FLAGS_SECRET } from '$env/static/private';
-import * as flags from '$lib/flags';
+import { createHandle } from "flags/sveltekit";
+import { FLAGS_SECRET } from "$env/static/private";
+import * as flags from "$lib/flags";
 
 export const handle = createHandle({ secret: FLAGS_SECRET, flags });
 ```
@@ -54,12 +54,12 @@ When composing with other handlers via SvelteKit's `sequence`, `createHandle` mu
 
 ```ts
 // src/routes/+page.server.ts
-import { showDashboard } from '$lib/flags';
+import { showDashboard } from "$lib/flags";
 
 export const load = async () => {
   const dashboard = await showDashboard();
   return {
-    post: { title: dashboard ? 'New Dashboard' : 'Old Dashboard' },
+    post: { title: dashboard ? "New Dashboard" : "Old Dashboard" },
   };
 };
 ```
@@ -81,9 +81,9 @@ export const load = async () => {
 
 ```ts
 // vite.config.ts
-import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
-import { vercelToolbar } from '@vercel/toolbar/plugins/vite';
+import { sveltekit } from "@sveltejs/kit/vite";
+import { defineConfig } from "vite";
+import { vercelToolbar } from "@vercel/toolbar/plugins/vite";
 
 export default defineConfig({
   plugins: [sveltekit(), vercelToolbar()],
@@ -112,16 +112,18 @@ export default defineConfig({
 ## Flag Declaration
 
 ```ts
-import { flag } from 'flags/sveltekit';
+import { flag } from "flags/sveltekit";
 
 export const showSummerSale = flag<boolean>({
-  key: 'summer-sale',
-  async decide() { return false; },
-  origin: 'https://example.com/flags/summer-sale/',
-  description: 'Show Summer Holiday Sale Banner, 20% off',
+  key: "summer-sale",
+  async decide() {
+    return false;
+  },
+  origin: "https://example.com/flags/summer-sale/",
+  description: "Show Summer Holiday Sale Banner, 20% off",
   options: [
-    { value: false, label: 'Hide' },
-    { value: true, label: 'Show' },
+    { value: false, label: "Hide" },
+    { value: true, label: "Show" },
   ],
 });
 ```
@@ -131,20 +133,20 @@ export const showSummerSale = flag<boolean>({
 Use `identify` to segment users. Headers and cookies are normalized:
 
 ```ts
-import { flag } from 'flags/sveltekit';
+import { flag } from "flags/sveltekit";
 
 interface Entities {
   user?: { id: string };
 }
 
 export const exampleFlag = flag<boolean, Entities>({
-  key: 'identify-example-flag',
+  key: "identify-example-flag",
   identify({ headers, cookies }) {
-    const userId = cookies.get('user-id')?.value;
+    const userId = cookies.get("user-id")?.value;
     return { user: userId ? { id: userId } : undefined };
   },
   decide({ entities }) {
-    return entities?.user?.id === 'user1';
+    return entities?.user?.id === "user1";
   },
 });
 ```
@@ -154,8 +156,8 @@ export const exampleFlag = flag<boolean, Entities>({
 Extract `identify` as a named function and reuse across flags. Calls are deduped by function identity:
 
 ```ts
-import type { ReadonlyHeaders, ReadonlyRequestCookies } from 'flags';
-import { flag } from 'flags/sveltekit';
+import type { ReadonlyHeaders, ReadonlyRequestCookies } from "flags";
+import { flag } from "flags/sveltekit";
 
 interface Entities {
   visitorId?: string;
@@ -169,20 +171,24 @@ function identify({
   headers: ReadonlyHeaders;
 }): Entities {
   const visitorId =
-    cookies.get('visitorId')?.value ?? headers.get('x-visitorId');
+    cookies.get("visitorId")?.value ?? headers.get("x-visitorId");
   return { visitorId };
 }
 
 export const flag1 = flag<boolean, Entities>({
-  key: 'flag1',
+  key: "flag1",
   identify,
-  decide({ entities }) { /* ... */ },
+  decide({ entities }) {
+    /* ... */
+  },
 });
 
 export const flag2 = flag<boolean, Entities>({
-  key: 'flag2',
+  key: "flag2",
   identify,
-  decide({ entities }) { /* ... */ },
+  decide({ entities }) {
+    /* ... */
+  },
 });
 ```
 
@@ -198,20 +204,20 @@ export const flag2 = flag<boolean, Entities>({
 
 ```ts
 // src/lib/flags.ts
-import { flag } from 'flags/sveltekit';
+import { flag } from "flags/sveltekit";
 
 export const firstPricingABTest = flag({
-  key: 'firstPricingABTest',
+  key: "firstPricingABTest",
   decide: () => false,
 });
 
 export const secondPricingABTest = flag({
-  key: 'secondPricingABTest',
+  key: "secondPricingABTest",
   decide: () => false,
 });
 ```
 
-```ts
+````ts
 // src/lib/precomputed-flags.ts
 import { precompute } from 'flags/sveltekit';
 import { firstPricingABTest, secondPricingABTest } from './flags';
@@ -224,7 +230,11 @@ export async function computeInternalRoute(pathname: string, request: Request) {
   }
   return pathname;
 }
-```
+
+export function createVisitorId(): string {
+  // Generate a unique visitor ID (e.g., UUID v4)
+  return crypto.randomUUID();
+}```
 
 ### Step 2: Set up reroute hook
 
@@ -237,16 +247,16 @@ export async function reroute({ url, fetch }) {
     return fetch(destination).then((response) => response.text());
   }
 }
-```
+````
 
 ```ts
 // src/routes/api/reroute/+server.ts
-import { text } from '@sveltejs/kit';
-import { computeInternalRoute } from '$lib/precomputed-flags';
+import { text } from "@sveltejs/kit";
+import { computeInternalRoute } from "$lib/precomputed-flags";
 
 export async function GET({ url, request }) {
   const destination = await computeInternalRoute(
-    url.searchParams.get('pathname')!,
+    url.searchParams.get("pathname")!,
     request,
   );
   return text(destination);
@@ -257,15 +267,15 @@ export async function GET({ url, request }) {
 
 ```ts
 // middleware.ts
-import { rewrite } from '@vercel/edge';
-import { normalizeUrl } from '@sveltejs/kit';
-import { computeInternalRoute } from './src/lib/precomputed-flags';
+import { rewrite } from "@vercel/edge";
+import { normalizeUrl } from "@sveltejs/kit";
+import { computeInternalRoute } from "./src/lib/precomputed-flags";
 
-export const config = { matcher: ['/pricing'] };
+export const config = { matcher: ["/pricing"] };
 
 export default async function middleware(request: Request) {
   const { url, denormalize } = normalizeUrl(request.url);
-  if (url.pathname === '/pricing') {
+  if (url.pathname === "/pricing") {
     return rewrite(
       denormalize(await computeInternalRoute(url.pathname, request)),
     );
@@ -277,9 +287,9 @@ export default async function middleware(request: Request) {
 
 ```ts
 // src/routes/pricing/[code]/+page.server.ts
-import type { PageServerLoad } from './$types';
-import { firstPricingABTest, secondPricingABTest } from '$lib/flags';
-import { pricingFlags } from '$lib/precomputed-flags';
+import type { PageServerLoad } from "./$types";
+import { firstPricingABTest, secondPricingABTest } from "$lib/flags";
+import { pricingFlags } from "$lib/precomputed-flags";
 
 export const load: PageServerLoad = async ({ params }) => {
   const flag1 = await firstPricingABTest(params.code, pricingFlags);
@@ -313,8 +323,8 @@ export const config = {
 ### Enable prerendering
 
 ```ts
-import { generatePermutations } from 'flags/sveltekit';
-import { pricingFlags } from '$lib/precomputed-flags';
+import { generatePermutations } from "flags/sveltekit";
+import { pricingFlags } from "$lib/precomputed-flags";
 
 export const prerender = true;
 
@@ -327,24 +337,24 @@ export async function entries() {
 
 ```ts
 // src/lib/flags.ts
-import { flag } from 'flags/sveltekit';
+import { flag } from "flags/sveltekit";
 
 export const showNewDashboard = flag<boolean>({
-  key: 'showNewDashboard',
+  key: "showNewDashboard",
   decide({ cookies }) {
-    return cookies.get('showNewDashboard')?.value === 'true';
+    return cookies.get("showNewDashboard")?.value === "true";
   },
 });
 ```
 
 ```ts
 // src/routes/+page.server.ts
-import type { PageServerLoad } from './$types';
-import { showNewDashboard } from '$lib/flags';
+import type { PageServerLoad } from "./$types";
+import { showNewDashboard } from "$lib/flags";
 
 export const load: PageServerLoad = async () => {
   const dashboard = await showNewDashboard();
-  return { title: dashboard ? 'New Dashboard' : 'Old Dashboard' };
+  return { title: dashboard ? "New Dashboard" : "Old Dashboard" };
 };
 ```
 
@@ -354,35 +364,41 @@ Combine precompute with visitor ID generation for A/B tests on static pages:
 
 ### Middleware with visitor ID
 
-```ts
-// middleware.ts
-import { rewrite } from '@vercel/edge';
-import { parse } from 'cookie';
-import { normalizeUrl } from '@sveltejs/kit';
-import { computeInternalRoute, createVisitorId } from './src/lib/precomputed-flags';
-
-export const config = { matcher: ['/examples/marketing-pages'] };
-
 export default async function middleware(request: Request) {
-  const { url, denormalize } = normalizeUrl(request.url);
+const { url, denormalize } = normalizeUrl(request.url);
 
-  let visitorId = parse(request.headers.get('cookie') ?? '').visitorId || '';
-  if (!visitorId) {
-    visitorId = createVisitorId();
-    request.headers.set('x-visitorId', visitorId);
-  }
-
-  return rewrite(
-    denormalize(await computeInternalRoute(url.pathname, request)),
-  );
+let visitorId = parse(request.headers.get('cookie') ?? '').visitorId || '';
+if (!visitorId) {
+visitorId = createVisitorId();
+const headers = new Headers(request.headers);
+headers.set('x-visitorId', visitorId);
+request = new Request(request, { headers });
 }
-```
+
+return rewrite(
+denormalize(await computeInternalRoute(url.pathname, request)),
+);
+}export default async function middleware(request: Request) {
+const { url, denormalize } = normalizeUrl(request.url);
+
+let visitorId = parse(request.headers.get("cookie") ?? "").visitorId || "";
+if (!visitorId) {
+visitorId = createVisitorId();
+request.headers.set("x-visitorId", visitorId);
+}
+
+return rewrite(
+denormalize(await computeInternalRoute(url.pathname, request)),
+);
+}
+
+````
 
 ### Flags with identify
 
 ```ts
 // src/lib/flags.ts
-import { flag } from 'flags/sveltekit';
+import { flag } from "flags/sveltekit";
 
 interface Entities {
   visitorId?: string;
@@ -390,19 +406,19 @@ interface Entities {
 
 function identify({ cookies, headers }) {
   const visitorId =
-    cookies.get('visitorId')?.value ?? headers.get('x-visitorId');
-  if (!visitorId) throw new Error('Visitor ID not found');
+    cookies.get("visitorId")?.value ?? headers.get("x-visitorId");
+  if (!visitorId) throw new Error("Visitor ID not found");
   return { visitorId };
 }
 
 export const firstMarketingABTest = flag<boolean, Entities>({
-  key: 'firstMarketingABTest',
+  key: "firstMarketingABTest",
   identify,
   decide({ entities }) {
     if (!entities?.visitorId) return false;
     return /^[a-n0-5]/i.test(entities.visitorId);
   },
 });
-```
+````
 
 The `x-visitorId` header ensures the visitor ID is available even on the first request before the cookie is set.

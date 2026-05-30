@@ -7,6 +7,7 @@ vi.mock("@/lib/city-cards/enrich-city-cards-for-listing", () => ({
 }));
 
 import { enrichCityCardsForListingAction } from "@/lib/actions/city-card-listing.actions";
+import type { CityCardData } from "@/types/bokun";
 
 const baseCard = {
   id: "101",
@@ -37,11 +38,38 @@ describe("enrichCityCardsForListingAction", () => {
   });
 
   it("returns an empty array when given no cards", async () => {
-    enrichMock.mockResolvedValue([]);
+    await expect(enrichCityCardsForListingAction([])).rejects.toThrow(
+      "empty array",
+    );
+    expect(enrichMock).not.toHaveBeenCalled();
+  });
 
-    const result = await enrichCityCardsForListingAction([]);
+  it("rejects non-array input without calling the enricher", async () => {
+    await expect(
+      enrichCityCardsForListingAction(null as unknown as CityCardData[]),
+    ).rejects.toThrow("expected an array");
+    expect(enrichMock).not.toHaveBeenCalled();
+  });
 
-    expect(result).toEqual([]);
+  it("rejects oversized batches without calling the enricher", async () => {
+    const cards = Array.from({ length: 101 }, (_, index) => ({
+      ...baseCard,
+      id: String(index + 1),
+    }));
+
+    await expect(enrichCityCardsForListingAction(cards)).rejects.toThrow(
+      "at most 100 cards",
+    );
+    expect(enrichMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects malformed cards without calling the enricher", async () => {
+    await expect(
+      enrichCityCardsForListingAction([
+        { ...baseCard, title: "" },
+      ] as CityCardData[]),
+    ).rejects.toThrow("title at index 0");
+    expect(enrichMock).not.toHaveBeenCalled();
   });
 
   it("propagates enrichment errors", async () => {

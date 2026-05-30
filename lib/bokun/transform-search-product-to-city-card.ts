@@ -16,7 +16,9 @@ import { CityCardData } from "@/types/bokun";
  * - `citySlug`: slugified city name
  * - `slug`: normalized id when the title slugifies to `"unknown"`, otherwise `"{titleSlug}-{normalizedId}"`
  */
-export function transformSearchProductToCityCard(product: unknown): CityCardData {
+export function transformSearchProductToCityCard(
+  product: unknown,
+): CityCardData {
   const productData = product as {
     id: string | number;
     title: string;
@@ -26,6 +28,12 @@ export function transformSearchProductToCityCard(product: unknown): CityCardData
   };
   const productId =
     toBokunProductIdDigits(productData.id) ?? String(productData.id ?? "");
+
+  if (!productId) {
+    throw new Error(
+      `[transform] Product must have a valid ID: ${JSON.stringify(productData)}`,
+    );
+  }
   const cityName = productData.googlePlace?.city ?? productData.title;
   const citySlug = slugifyForUrl(cityName);
   const titleSlug = slugifyForUrl(productData.title);

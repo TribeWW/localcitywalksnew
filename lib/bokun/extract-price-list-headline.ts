@@ -38,10 +38,22 @@ export function pickDefaultRate(
     return null;
   }
 
-  if (defaultRateId == null) {
-    return null;
+  const matched = rates.find((rate) => rate.rateId === defaultRateId);
+  if (matched) {
+    return matched;
   }
 
+  if (defaultRateId == null) {
+    console.warn(
+      `[price-list] no defaultRateId provided for product ${productId ?? "unknown"}; using rates[0]`,
+    );
+    return rates[0] ?? null;
+  }
+
+  console.warn(
+    `[price-list] defaultRateId ${defaultRateId} missing in rates for product ${productId ?? "unknown"}; using rates[0]`,
+  );
+  return rates[0] ?? null;
   const matched = rates.find((rate) => rate.rateId === defaultRateId);
   if (matched) {
     return matched;

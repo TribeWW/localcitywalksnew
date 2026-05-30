@@ -130,10 +130,18 @@ export default function ToursSectionClient({
       try {
         const result = await getProductsPage(1, countryCode ?? undefined);
         if (result.success && result.data) {
-          const enriched = await enrichListingCardsIfFlagged(
-            result.data,
-            cardsWidgetUpdate,
-          );
+          let enriched = result.data;
+          try {
+            enriched = await enrichListingCardsIfFlagged(
+              result.data,
+              cardsWidgetUpdate,
+            );
+          } catch (e) {
+            console.error(
+              "[Tours section] country-filter enrichment failed",
+              e,
+            );
+          }
           setSelectedCountryCode(countryCode);
           setAccumulatedList(enriched);
           setVisibleCount(PAGE_SIZE);
@@ -149,7 +157,6 @@ export default function ToursSectionClient({
     },
     [cardsWidgetUpdate],
   );
-
   const showEmptyForCountry =
     selectedCountryCode !== null &&
     accumulatedList.length === 0 &&
