@@ -1,15 +1,25 @@
 import Link from "next/link";
 import CityCard from "@/components/cards/CityCard";
+import { enrichCityCardsForListing } from "@/lib/city-cards/enrich-city-cards-for-listing";
 import { getHomeSpotlightCityCards } from "@/lib/home-spotlight";
+import { cardsWidgetUpdate } from "@/flags";
 
 /**
  * Curated home tour grid from Sanity `homeSpotlight` + Bokun detail.
  * Renders nothing when zero cards resolve (no published doc or all ids failed).
  */
 export default async function HomeSpotlight() {
-  const cities = await getHomeSpotlightCityCards();
+  const cardsWidgetUpdateEnabled = await cardsWidgetUpdate();
+  let cities = await getHomeSpotlightCityCards();
   if (cities.length === 0) {
     return null;
+  }
+  if (cardsWidgetUpdateEnabled) {
+    try {
+      cities = await enrichCityCardsForListing(cities);
+    } catch (e) {
+      console.error("[Home spotlight] enrichment failed", e);
+    }
   }
 
   return (
@@ -23,12 +33,17 @@ export default async function HomeSpotlight() {
             Explore cities
           </h2>
           <p className="text-lg text-white/80 max-w-2xl mx-auto">
-            Featured tours from our collection — browse more on the full catalog.
+            Featured tours from our collection — browse more on the full
+            catalog.
           </p>
         </div>
 
         <div className="px-6">
-          <CityCard cities={cities} noHorizontalPadding />
+          <CityCard
+            cities={cities}
+            noHorizontalPadding
+            cardsWidgetUpdate={cardsWidgetUpdateEnabled}
+          />
           <div className="mt-8 text-center">
             <Link
               href="/explore"

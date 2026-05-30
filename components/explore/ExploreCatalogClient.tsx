@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getExploreCatalogPage } from "@/lib/actions/tour.actions";
+import { enrichListingCardsIfFlagged } from "@/lib/city-cards/enrich-listing-cards-if-flagged";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CityCardData } from "@/types/bokun";
 import { Check, ChevronDown, X } from "lucide-react";
@@ -32,6 +33,8 @@ interface ExploreCatalogClientProps {
   totalHits: number;
   initialSortAscending: boolean;
   completeCountryList: CountryOption[];
+  /** Vercel Flag `cards-widget-update` — forwarded to `CityCard` for gated UI. */
+  cardsWidgetUpdate?: boolean;
 }
 
 /**
@@ -49,6 +52,7 @@ export default function ExploreCatalogClient({
   totalHits,
   initialSortAscending,
   completeCountryList,
+  cardsWidgetUpdate = false,
 }: ExploreCatalogClientProps) {
   const [accumulatedList, setAccumulatedList] =
     useState<CityCardData[]>(initialData);
@@ -63,6 +67,7 @@ export default function ExploreCatalogClient({
   const [sortAscending, setSortAscending] = useState(initialSortAscending);
   const [mobileCountryOpen, setMobileCountryOpen] = useState(false);
   const mobileCountryRef = useRef<HTMLDivElement | null>(null);
+  const refreshRequestId = useRef(0);
 
   const visibleList = useMemo(
     () => accumulatedList.slice(0, visibleCount),
@@ -80,6 +85,7 @@ export default function ExploreCatalogClient({
       return;
     }
     if (!hasMorePages || loadingMore) return;
+    const reqId = ++refreshRequestId.current;
     setLoadingMore(true);
     try {
       const nextPage = currentPage + 1;
@@ -88,14 +94,20 @@ export default function ExploreCatalogClient({
         selectedCountryCodes,
         sortAscending,
       );
+      if (reqId !== refreshRequestId.current) return;
       if (result.success && result.data) {
-        setAccumulatedList((prev) => [...prev, ...result.data!]);
+        const enriched = await enrichListingCardsIfFlagged(
+          result.data,
+          cardsWidgetUpdate,
+        );
+        if (reqId !== refreshRequestId.current) return;
+        setAccumulatedList((prev) => [...prev, ...enriched]);
         if (result.totalHits != null) setTotalHitsView(result.totalHits);
-        setVisibleCount((prev) => prev + result.data!.length);
+        setVisibleCount((prev) => prev + enriched.length);
         setCurrentPage(nextPage);
       }
     } finally {
-      setLoadingMore(false);
+      if (reqId === refreshRequestId.current) setLoadingMore(false);
     }
   }, [
     currentPage,
@@ -105,12 +117,11 @@ export default function ExploreCatalogClient({
     accumulatedList.length,
     selectedCountryCodes,
     sortAscending,
+    cardsWidgetUpdate,
   ]);
 
   const showMoreVisible =
     hasMoreFilteredToShow || (hasMorePages && accumulatedList.length > 0);
-
-  const refreshRequestId = useRef(0);
 
   const selectCountry = useCallback(
     async (countryCodes: string[]) => {
@@ -124,8 +135,12 @@ export default function ExploreCatalogClient({
         );
         if (reqId !== refreshRequestId.current) return;
         if (result.success && result.data) {
+          const enriched = await enrichListingCardsIfFlagged(
+            result.data,
+            cardsWidgetUpdate,
+          );
           setSelectedCountryCodes(countryCodes);
-          setAccumulatedList(result.data);
+          setAccumulatedList(enriched);
           setVisibleCount(PAGE_SIZE);
           setCurrentPage(1);
           if (result.totalHits != null) setTotalHitsView(result.totalHits);
@@ -134,7 +149,7 @@ export default function ExploreCatalogClient({
         if (reqId === refreshRequestId.current) setLoadingFilter(false);
       }
     },
-    [sortAscending],
+    [sortAscending, cardsWidgetUpdate],
   );
 
   const applySortOrder = useCallback(
@@ -149,8 +164,12 @@ export default function ExploreCatalogClient({
         );
         if (reqId !== refreshRequestId.current) return;
         if (result.success && result.data) {
+          const enriched = await enrichListingCardsIfFlagged(
+            result.data,
+            cardsWidgetUpdate,
+          );
           setSortAscending(asc);
-          setAccumulatedList(result.data);
+          setAccumulatedList(enriched);
           setVisibleCount(PAGE_SIZE);
           setCurrentPage(1);
           if (result.totalHits != null) setTotalHitsView(result.totalHits);
@@ -159,7 +178,7 @@ export default function ExploreCatalogClient({
         if (reqId === refreshRequestId.current) setLoadingFilter(false);
       }
     },
-    [selectedCountryCodes],
+    [selectedCountryCodes, cardsWidgetUpdate],
   );
 
   const showEmptyForCountry =
@@ -412,7 +431,11 @@ export default function ExploreCatalogClient({
                     found
                   </span>
                 </div>
-                <CityCard cities={visibleList} noHorizontalPadding />
+                <CityCard
+                  cities={visibleList}
+                  noHorizontalPadding
+                  cardsWidgetUpdate={cardsWidgetUpdate}
+                />
                 {showMoreVisible && (
                   <div className="mt-16 text-center">
                     <button

@@ -120,6 +120,10 @@ The tour page fetches full detail via **`GET /activity.json/{id}`** (`BOKUN_ENDP
 - **Caching**: Successful responses are cached in memory for **15 minutes** (same TTL order of magnitude as product search in `tour.actions.ts`).
 - **Timeouts / errors**: Non-404 failures are logged with `console.error` on the server; the tour route surfaces them via **`error.tsx`** (see below)—not as a “soft” 200 page.
 
+### Tiered pricing (listings)
+
+Search results expose a numeric `price` that does **not** reliably match a **2-guest** headline. For catalogue cards, the app uses **`GET /activity.json/{id}/price-list`** (with `defaultRateId` from activity detail) — see Bókun docs on [checking availability and pricing](https://bokun.dev/booking-api-rest/vU6sCfxwYdJWd1QAcLt12i/checking-availability-and-pricing/9x4PcziToX5g8WG4j5KMxt). **Implementation** ([`lib/bokun/enrich-product-prices-from-price-list.ts`](../../lib/bokun/enrich-product-prices-from-price-list.ts)): prefetches `defaultRateId`, then fetches price-list per product with bounded concurrency (**6**), a **15-minute** in-memory headline cache (TTL eviction and size cap), max **50** ids per batch; headline rules in [`lib/bokun/extract-price-list-headline.ts`](../../lib/bokun/extract-price-list-headline.ts) (default rate, Adult tier, 2-guest band).
+
 ### Tour page: HTML description safety
 
 Rich text from Bokun (`description` / `summary`) is rendered with `dangerouslySetInnerHTML` only after sanitization. The app uses **`sanitize-html`** on the server (no **jsdom** / no **`isomorphic-dompurify`** in this path). The latter pulls in jsdom and can break **Next.js / Vercel** builds (`default-stylesheet.css` ENOENT) when bundled for the server.

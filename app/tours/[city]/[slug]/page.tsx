@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TourRequestFormSection from "@/components/tours/tour-request-form-section";
+import { cardsWidgetUpdate } from "@/flags";
 import TourImageGallery from "@/components/tours/tour-image-gallery";
 import FaqAccordion from "@/components/tours/faq-accordion";
 import sanitizeHtml from "sanitize-html";
@@ -74,6 +75,8 @@ export default async function TourPage({
   params: Promise<{ city: string; slug: string }>;
 }) {
   const { city, slug } = await params;
+
+  const cardsWidgetUpdateEnabled = await cardsWidgetUpdate();
 
   const id = extractIdFromSlug(slug);
   if (!id) notFound();
@@ -402,6 +405,7 @@ export default async function TourPage({
               <CardContent>
                 <TourRequestFormSection
                   cityName={gpCity ?? detail.data.title}
+                  cardsWidgetUpdate={cardsWidgetUpdateEnabled}
                 />
               </CardContent>
             </Card>
