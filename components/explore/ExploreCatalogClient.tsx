@@ -139,6 +139,7 @@ export default function ExploreCatalogClient({
             result.data,
             cardsWidgetUpdate,
           );
+          if (reqId !== refreshRequestId.current) return;
           setSelectedCountryCodes(countryCodes);
           setAccumulatedList(enriched);
           setVisibleCount(PAGE_SIZE);
@@ -168,6 +169,7 @@ export default function ExploreCatalogClient({
             result.data,
             cardsWidgetUpdate,
           );
+          if (reqId !== refreshRequestId.current) return;
           setSortAscending(asc);
           setAccumulatedList(enriched);
           setVisibleCount(PAGE_SIZE);

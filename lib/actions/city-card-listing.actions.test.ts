@@ -37,7 +37,7 @@ describe("enrichCityCardsForListingAction", () => {
     expect(result[0]?.ratingLabel).toBe("4.7");
   });
 
-  it("returns an empty array when given no cards", async () => {
+  it("rejects when given no cards", async () => {
     await expect(enrichCityCardsForListingAction([])).rejects.toThrow(
       "empty array",
     );
