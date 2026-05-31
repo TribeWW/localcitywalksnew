@@ -20,7 +20,7 @@ export default function CustomTourBanner() {
       <div className="w-full bg-white py-8 md:py-10">
         <section
           aria-labelledby="custom-tour-banner-heading"
-          className="px-4 sm:px-6 max-w-[1140px] mx-auto"
+          className="px-4 sm:px-0 max-w-[1140px] mx-auto"
         >
           <div className="flex flex-col items-center gap-6 text-center bg-[#F7F7F7] rounded-[16px] border-[1.5px] border-[#D3CED2] px-5 py-6 sm:px-6 sm:py-7 md:flex-row md:items-center md:gap-8 md:text-left md:px-8 md:py-8">
             <Image
