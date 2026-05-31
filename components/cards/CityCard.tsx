@@ -84,6 +84,9 @@ function resolveCardPriceAmount(
   );
 }
 
+// Temporarily hide card prices until the booking widget ships; enrichment still runs server-side.
+const SHOW_CARD_PRICES = false;
+
 function MinimalCityCardItem({
   href,
   image,
@@ -127,7 +130,7 @@ function MinimalCityCardItem({
           <h3 className="mb-2 text-lg font-semibold leading-tight text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.3)]">
             {title}
           </h3>
-          {priceAmount ? (
+          {SHOW_CARD_PRICES && priceAmount ? (
             <p className="text-sm text-white/90 [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
               From{" "}
               <span className="text-base font-bold text-white">
@@ -135,7 +138,11 @@ function MinimalCityCardItem({
               </span>{" "}
               / adult
             </p>
-          ) : null}
+          ) : (
+            <p className="text-sm text-white/90 [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
+              Private tour
+            </p>
+          )}
         </div>
       </div>
     </Link>
@@ -163,7 +170,10 @@ const CityCard = ({
           city,
           cardsWidgetUpdate,
         );
-        const priceAmount = resolveCardPriceAmount(city, cardsWidgetUpdate);
+        // Keep resolving enriched prices for easy restore when SHOW_CARD_PRICES is true.
+        const priceAmount = SHOW_CARD_PRICES
+          ? resolveCardPriceAmount(city, cardsWidgetUpdate)
+          : null;
 
         if (cardsWidgetUpdate) {
           return (
