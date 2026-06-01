@@ -93,10 +93,60 @@ Our spacing system is based on a 4px grid for consistency:
 
 ### Cards
 
-- Use Pearl Gray background in light mode
+#### General
+
+- Use Pearl Gray background in light mode (legacy layout)
 - Subtle shadows for depth
-- Consistent padding: 24px
-- Border radius: 10px
+- Consistent padding: 24px (legacy text block only)
+- Border radius: `rounded-xl` (10px–12px)
+
+#### Listing tour cards (`CityCard`)
+
+Home (`#cities`), explore catalog, and paginated home grids use **`components/cards/CityCard.tsx`**. Behaviour is gated by the Vercel flag **`cards-widget-update`** (see [Listing city cards — data & architecture](./LISTING_CITY_CARDS.md)).
+
+| Variant | When | Layout |
+| ------- | ---- | ------ |
+| **Minimal** (current product) | Flag **on** | Full-bleed photo, bottom gradient overlay, text on image |
+| **Legacy** | Flag **off** | Photo on top, title + subtitle below on white card |
+
+**Minimal card — content (flag on)**
+
+| Element | Copy / rule | Notes |
+| ------- | ----------- | ----- |
+| **Title** | `Hello {city}` | City from `googlePlace.city` (or product title in data) |
+| **Subtitle line** | `Private tour` | Shown instead of price while `SHOW_CARD_PRICES` is `false` in `CityCard.tsx` |
+| **Price** (hidden) | `From {amount} / adult` | Enrichment still runs server-side; set `SHOW_CARD_PRICES = true` to show formatted headline (e.g. `€124`) |
+| **Rating** | `★ {label}` pill, top-right | One decimal (e.g. `4.7`); hidden if no per-tour or global rating |
+| **Image alt** | `{city} photo` | Not the `Hello …` headline |
+
+**Minimal card — visual**
+
+- **Aspect ratio:** `3/2` on small screens, `4/5` from `md` up
+- **Image:** `object-cover`, slight zoom on hover (`group-hover:scale-105`)
+- **Overlay:** `bg-gradient-to-b` transparent → `black/80` at bottom
+- **Title:** `text-lg font-semibold text-white` with light text-shadow
+- **Subtitle / price line:** `text-sm text-white/90`
+- **Rating pill:** `bg-white/95`, `text-nightsky`, `rounded-full`, Lucide **Star** `size-3`
+- **Card chrome:** `rounded-xl`, `shadow-sm`, hover lift (`-translate-y-1`, stronger shadow)
+- **Link:** Entire card is one `<Link>` to `/tours/{citySlug}/{slug}`
+
+**Legacy card — content (flag off)**
+
+- **Title:** Plain city name
+- **Subtitle:** `Private tour` (centered below title)
+
+**Grid**
+
+- `grid-cols-1` → `md:2` → `lg:3` → `xl:4`
+- Gap: `gap-x-6 gap-y-6`
+- Optional `noHorizontalPadding` when parent supplies horizontal padding (e.g. home spotlight band)
+
+**Do not**
+
+- Fetch price or ratings from the client per card (all enrichment is server-side)
+- Use Bókun search `price` as the card headline (use `price-list` enrichment when prices are shown)
+
+For Bókun vs Sanity responsibilities, enrichment pipeline, and parent components, see **[Listing city cards — data & architecture](./LISTING_CITY_CARDS.md)**. For Bókun API details, see **[BOKUN_CONFIGURATION.md](./BOKUN_CONFIGURATION.md)**.
 
 ### Forms
 
@@ -197,6 +247,7 @@ Tour pages add in-content navigation (e.g. **Breadcrumb**) in `app/tours/[city]/
 
 - Reusable UI components in `components/ui/` (Radix-based primitives: **Button**, **Dialog**, **Sheet**, **Accordion**, **Breadcrumb**, **Card**, etc.)
 - Feature components in `components/home/`, `components/tours/`, `components/forms/`, etc.
+- Listing tour grids: **`components/cards/CityCard.tsx`** — see [Listing city cards](./LISTING_CITY_CARDS.md) and **Cards** above
 - Shared layout/marketing in `components/shared/` (**Navbar**, **Footer**)
 
 Radix imports should use **scoped packages** (e.g. `@radix-ui/react-accordion`, `@radix-ui/react-slot`), not the umbrella `radix-ui` meta-package.
