@@ -103,6 +103,37 @@ export interface GetProductsPageResult {
   error?: string;
 }
 
+/** Money amount from Bókun REST payloads (`amount` object on prices). */
+export interface BokunMoneyAmount {
+  amount: number;
+  currency: string;
+}
+
+/** Pricing category row from activity detail (`pricingCategories[]`). */
+export interface BokunPricingCategory {
+  id: number;
+  title?: string;
+  ticketCategory?: string;
+  minAge?: number | null;
+  maxAge?: number | null;
+}
+
+/** Scheduled start time from activity detail (`startTimes[]`). */
+export interface BokunStartTime {
+  id: number;
+  hour: number;
+  minute: number;
+  /** Duration in minutes */
+  duration?: number;
+}
+
+/** Rate row from activity detail (`rates[]`). */
+export interface BokunActivityRate {
+  id: number;
+  title?: string;
+  tieredPricingEnabled?: boolean;
+}
+
 /**
  * Product detail from GET /activity.json/{id} (single-product endpoint).
  * Used for the tour page; shape aligned with search item + full description/photos.
@@ -123,6 +154,115 @@ export interface BokunProductDetail {
   googlePlace?: BokunGooglePlace;
   /** Default rate for tiered pricing (activity detail payload) */
   defaultRateId?: number;
+  /** Human-readable duration (e.g. "2 hours") */
+  durationText?: string;
+  /** IANA timezone (e.g. "Europe/Paris") */
+  timeZone?: string;
+  /** Product-level language codes when slot `guidedLanguages` is empty */
+  languages?: string[];
+  pricingCategories?: BokunPricingCategory[];
+  startTimes?: BokunStartTime[];
+  rates?: BokunActivityRate[];
+}
+
+/** Tier band for a pricing category on an availability slot. */
+export interface BokunPricePerCategoryUnit {
+  /** Pricing category id (e.g. Adult 1045649) */
+  id: number;
+  amount: BokunMoneyAmount;
+  minParticipantsRequired: number;
+  maxParticipantsRequired: number;
+}
+
+/** Per-rate prices on an availability slot (`pricesByRate[]`). */
+export interface BokunAvailabilityPriceByRate {
+  /** Matches `defaultRateId` or a row in product `rates[]` */
+  activityRateId: number;
+  pricePerCategoryUnit: BokunPricePerCategoryUnit[];
+}
+
+/**
+ * Single availability slot from `GET /activity.json/{id}/availabilities`.
+ * Shape aligned with `payloads/ExamplePayloadAvailabilities.json`.
+ */
+export interface BokunAvailability {
+  /** Composite id, e.g. "4252139_20260612" */
+  id: string;
+  activityId: number;
+  /** Localized time label, e.g. "17:00" */
+  startTime?: string;
+  startTimeId: number;
+  /** Slot date as epoch milliseconds */
+  date: number;
+  localizedDate?: string;
+  availabilityCount?: number;
+  minParticipants?: number;
+  minParticipantsToBookNow?: number;
+  defaultRateId?: number;
+  pricesByRate: BokunAvailabilityPriceByRate[];
+  /** Slot-specific guided languages; empty → fall back to product `languages` */
+  guidedLanguages: string[];
+  soldOut: boolean;
+  unavailable?: boolean;
+  pickupSoldOut?: boolean;
+}
+
+/** Query params for availabilities fetch (`start`/`end` as YYYY-MM-DD). */
+export interface BokunAvailabilitiesParams {
+  /** Inclusive range start (YYYY-MM-DD) */
+  start: string;
+  /** Inclusive range end (YYYY-MM-DD) */
+  end: string;
+  /** Bókun language code; default `EN` in fetch layer */
+  lang?: string;
+  /** ISO currency; default `EUR` per LOC-1041 */
+  currency?: string;
+  /** When false, sold-out slots may be omitted from the response */
+  includeSoldOut?: boolean;
+}
+
+/**
+ * Widget participant counters (mapped to Bókun pricing category ids server-side).
+ *
+ * | Widget field | Typical ages | Bókun category (1079932) |
+ * |--------------|--------------|--------------------------|
+ * | `adults`     | 18+          | Adult (1045649)          |
+ * | `youth`      | 13–17        | Youth (1045650)          |
+ * | `children`   | 3–12         | Child (1045651)          |
+ * | `infants`    | 0–2          | Infant (1045652)         |
+ *
+ * Category ids are product-specific; resolve from `pricingCategories` when implementing quote logic.
+ */
+export interface BookingWidgetParticipants {
+  adults: number;
+  youth: number;
+  children: number;
+  infants: number;
+}
+
+/** One priced line in the booking widget quote breakdown. */
+export interface BookingWidgetQuoteLineItem {
+  /** Bókun `pricingCategories[].id` */
+  categoryId: number;
+  /** Display label (e.g. "Adult", "Youth") */
+  categoryLabel: string;
+  count: number;
+  /** Unit price for the band matching this category's count */
+  unitAmount: number;
+  /** `count × unitAmount` */
+  lineTotal: number;
+  currency: string;
+}
+
+/**
+ * Server-computed quote for the booking widget.
+ * Produced by `calculate-booking-quote` from availability + participant inputs.
+ */
+export interface BookingWidgetQuote {
+  totalAmount: number;
+  currency: string;
+  breakdown: BookingWidgetQuoteLineItem[];
+  source: "bokun-availability";
 }
 
 /** Tier band from Bókun `price-list` (subset used for card headline extraction). */

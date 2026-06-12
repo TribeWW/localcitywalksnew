@@ -96,7 +96,7 @@ const TourRequestForm = ({
       });
 
       toast.success(
-        "Tour request sent successfully! We'll get back to you soon."
+        "Tour request sent successfully! We'll get back to you soon.",
       );
 
       // Close modal after successful submission
