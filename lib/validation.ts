@@ -46,7 +46,7 @@ export const TourRequestSchema = z
         {
           message:
             "Please enter a valid phone number with country code (e.g., +1 234 567 8900)",
-        }
+        },
       ),
     adults: z
       .number()
@@ -72,7 +72,7 @@ export const TourRequestSchema = z
         },
         {
           message: "Please select a future date for your tour",
-        }
+        },
       )
       .refine(
         (date) => {
@@ -82,7 +82,7 @@ export const TourRequestSchema = z
         },
         {
           message: "Please select a date within the next year",
-        }
+        },
       ),
     preferredTime: z
       .string({
@@ -105,7 +105,7 @@ export const TourRequestSchema = z
         },
         {
           message: "Please select a valid time between 09:00 and 17:00",
-        }
+        },
       ),
     tourDuration: z
       .string({
@@ -125,7 +125,7 @@ export const TourRequestSchema = z
         },
         {
           message: "Please select a valid tour duration",
-        }
+        },
       ),
     consent: z.boolean().refine((val) => val === true, {
       message: "You must agree to the terms to submit the form",

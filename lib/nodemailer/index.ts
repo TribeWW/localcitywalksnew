@@ -136,15 +136,15 @@ export async function sendTourRequestEmail(data: TourRequestEmailContent) {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
-              }
+              },
             )}</p>
             <p><strong>🕐 Time:</strong> ${data.preferredTime} (${new Date(
-        "2000-01-01T" + data.preferredTime
-      ).toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      })})</p>
+              "2000-01-01T" + data.preferredTime,
+            ).toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            })})</p>
             <p><strong>⏱️ Duration:</strong> ${data.tourDuration}</p>
           </div>
           
