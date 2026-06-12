@@ -26,4 +26,6 @@ export const BOKUN_ENDPOINTS = {
   PRODUCT_BY_SLUG: (slug: string) => `/activity.json/slug/${slug}`,
   PICKUP_PLACES: (id: string) => `/activity.json/${id}/pickup-places`,
   PRICE_LIST: (id: string) => `/activity.json/${id}/price-list`,
+  /** `GET` with query params: `start`, `end`, `lang`, `currency`, `includeSoldOut` */
+  AVAILABILITIES: (id: string) => `/activity.json/${id}/availabilities`,
 } as const;
