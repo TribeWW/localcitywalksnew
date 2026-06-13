@@ -34,15 +34,16 @@ export type FetchAvailabilitiesResult =
 
 /**
  * Builds the in-memory cache key for an availabilities request.
- * Keyed by `productId + start + end + currency` (lang / includeSoldOut excluded).
+ * Keyed by `productId + start + end + currency + includeSoldOut` (lang excluded).
  */
 export function buildAvailabilitiesCacheKey(
   productId: string,
   start: string,
   end: string,
   currency: string,
+  includeSoldOut: boolean,
 ): string {
-  return `bokun-availabilities-${productId}-${start}-${end}-${currency}`;
+  return `bokun-availabilities-${productId}-${start}-${end}-${currency}-${includeSoldOut}`;
 }
 
 /** Clears the module-level availabilities cache (intended for unit tests). */
@@ -110,11 +111,13 @@ export async function fetchAvailabilities(
   }
 
   const currency = params.currency ?? DEFAULT_CURRENCY;
+  const includeSoldOut = params.includeSoldOut ?? false;
   const cacheKey = buildAvailabilitiesCacheKey(
     trimmedId,
     params.start,
     params.end,
     currency,
+    includeSoldOut,
   );
 
   const cached = availabilitiesCache.get(cacheKey);
@@ -127,7 +130,7 @@ export async function fetchAvailabilities(
     end: params.end,
     lang: params.lang ?? DEFAULT_LANG,
     currency,
-    includeSoldOut: params.includeSoldOut ?? false,
+    includeSoldOut,
   };
 
   const pathWithQuery = buildAvailabilitiesPath(trimmedId, requestParams);

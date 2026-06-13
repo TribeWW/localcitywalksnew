@@ -80,28 +80,28 @@ export interface CityCardData {
 }
 
 /**
- * Server action response type
+ * Server action response for `getAllProducts`.
+ * Success always includes `data`; failure always includes `error`.
  */
-export interface GetAllProductsResult {
-  success: boolean;
-  data?: CityCardData[];
-  error?: string;
-  totalHits?: number;
-}
+export type GetAllProductsResult =
+  | { success: true; data: CityCardData[] }
+  | { success: false; error: string };
 
 /**
- * Server action response type for paginated product fetch (one page)
+ * Server action response for paginated product fetch (`getProductsPage`, `getExploreCatalogPage`).
+ * `completeCountryList` is present on explore catalog success responses only.
  */
-export interface GetProductsPageResult {
-  success: boolean;
-  data?: CityCardData[];
-  totalHits?: number;
-  completeCountryList?: Array<{
-    countryCode: string;
-    country: string;
-  }>;
-  error?: string;
-}
+export type GetProductsPageResult =
+  | {
+      success: true;
+      data: CityCardData[];
+      totalHits: number;
+      completeCountryList?: Array<{
+        countryCode: string;
+        country: string;
+      }>;
+    }
+  | { success: false; error: string };
 
 /** Money amount from Bókun REST payloads (`amount` object on prices). */
 export interface BokunMoneyAmount {
@@ -307,27 +307,22 @@ export interface ProductPriceHeadline {
 }
 
 /**
- * Server action response type for single-product (tour detail) fetch
+ * Server action response for `getTourDetailById`.
+ * Success always includes `data`; failure always includes `error`.
  */
-export interface GetTourDetailResult {
-  success: boolean;
-  data?: BokunProductDetail;
-  error?: string;
-}
+export type GetTourDetailResult =
+  | { success: true; data: BokunProductDetail }
+  | { success: false; error: string };
 
 /** Server action response for `getTourAvailabilities`. */
-export interface GetTourAvailabilitiesResult {
-  success: boolean;
-  data?: BokunAvailability[];
-  error?: string;
-}
+export type GetTourAvailabilitiesResult =
+  | { success: true; data: BokunAvailability[] }
+  | { success: false; error: string };
 
 /** Server action response for `getTourBookingQuote`. */
-export interface GetTourBookingQuoteResult {
-  success: boolean;
-  data?: BookingWidgetQuote;
-  error?: string;
-}
+export type GetTourBookingQuoteResult =
+  | { success: true; data: BookingWidgetQuote }
+  | { success: false; error: string };
 
 /**
  * Sanity country document structure

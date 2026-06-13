@@ -138,10 +138,10 @@ export async function computeTourBookingQuote(
   const currency = input.currency ?? DEFAULT_CURRENCY;
 
   const detail = await getTourDetailById(productId);
-  if (!detail.success || !detail.data) {
+  if (!detail.success) {
     return {
       success: false,
-      error: detail.error ?? "Unable to load tour",
+      error: detail.error,
     };
   }
 

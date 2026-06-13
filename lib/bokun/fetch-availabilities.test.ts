@@ -49,10 +49,16 @@ const requestParams = {
 } as const;
 
 describe("buildAvailabilitiesCacheKey", () => {
-  it("keys cache by productId, start, end, and currency", () => {
+  it("keys cache by productId, start, end, currency, and includeSoldOut", () => {
     expect(
-      buildAvailabilitiesCacheKey("1079932", "2026-06-12", "2026-06-13", "EUR"),
-    ).toBe("bokun-availabilities-1079932-2026-06-12-2026-06-13-EUR");
+      buildAvailabilitiesCacheKey(
+        "1079932",
+        "2026-06-12",
+        "2026-06-13",
+        "EUR",
+        false,
+      ),
+    ).toBe("bokun-availabilities-1079932-2026-06-12-2026-06-13-EUR-false");
   });
 });
 
@@ -98,6 +104,17 @@ describe("fetchAvailabilities", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("refetches when includeSoldOut differs", async () => {
+    await fetchAvailabilities("1079932", requestParams);
+    await fetchAvailabilities("1079932", {
+      ...requestParams,
+      includeSoldOut: true,
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[1]?.[0]).toContain("includeSoldOut=true");
   });
 
   it("refetches after cache TTL expires", async () => {
