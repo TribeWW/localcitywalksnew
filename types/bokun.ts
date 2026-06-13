@@ -315,6 +315,20 @@ export interface GetTourDetailResult {
   error?: string;
 }
 
+/** Server action response for `getTourAvailabilities`. */
+export interface GetTourAvailabilitiesResult {
+  success: boolean;
+  data?: BokunAvailability[];
+  error?: string;
+}
+
+/** Server action response for `getTourBookingQuote`. */
+export interface GetTourBookingQuoteResult {
+  success: boolean;
+  data?: BookingWidgetQuote;
+  error?: string;
+}
+
 /**
  * Sanity country document structure
  */
