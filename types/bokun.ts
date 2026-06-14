@@ -265,6 +265,26 @@ export interface BookingWidgetQuote {
   source: "bokun-availability";
 }
 
+/** Server-passed bootstrap props for `BookingWidget` (tour page). */
+export interface BookingWidgetBootstrap {
+  /** Bókun activity id (numeric string). */
+  productId: string;
+  /** Product title for submit email / hidden fields. */
+  productTitle: string;
+  /** Locked city name for the request form. */
+  cityName: string;
+  /** Scheduled times from product detail; intersected with availabilities for the date picker. */
+  startTimes: BokunStartTime[];
+  /** Product-level language codes; used when slot `guidedLanguages` is empty. */
+  languages: string[];
+  /** Optional pricing category rows for quote label resolution. */
+  pricingCategories?: BokunPricingCategory[];
+  /** Read-only duration copy (e.g. “2 hours”); replaces `DurationSelector`. */
+  durationText?: string;
+  /** Default rate for tiered pricing; used server-side in quote pipeline. */
+  defaultRateId?: number;
+}
+
 /** Tier band from Bókun `price-list` (subset used for card headline extraction). */
 export interface BokunPriceListTieredPrice {
   currency: string;

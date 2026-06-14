@@ -14,6 +14,8 @@ interface DatePickerProps {
   disabled?: boolean;
   minDate?: Date;
   maxDate?: Date;
+  /** When true, the date cannot be selected (e.g. sold-out / no slots). */
+  isDateDisabled?: (date: Date) => boolean;
   className?: string;
 }
 
@@ -24,6 +26,7 @@ const DatePicker = ({
   disabled = false,
   minDate,
   maxDate,
+  isDateDisabled,
   className,
 }: DatePickerProps) => {
   const [open, setOpen] = useState(false);
@@ -83,6 +86,7 @@ const DatePicker = ({
               selected={value}
               onSelect={handleDateSelect}
               disabled={(date) => {
+                if (isDateDisabled?.(date)) return true;
                 if (minDate && date < minDate) return true;
                 if (maxDate && date > maxDate) return true;
                 return false;

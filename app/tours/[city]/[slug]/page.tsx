@@ -406,6 +406,16 @@ export default async function TourPage({
                 <TourRequestFormSection
                   cityName={gpCity ?? detail.data.title}
                   cardsWidgetUpdate={cardsWidgetUpdateEnabled}
+                  bookingBootstrap={{
+                    productId: id,
+                    productTitle: detail.data.title,
+                    cityName: gpCity ?? detail.data.title,
+                    startTimes: detail.data.startTimes ?? [],
+                    languages: detail.data.languages ?? [],
+                    pricingCategories: detail.data.pricingCategories,
+                    durationText: detail.data.durationText,
+                    defaultRateId: detail.data.defaultRateId,
+                  }}
                 />
               </CardContent>
             </Card>
