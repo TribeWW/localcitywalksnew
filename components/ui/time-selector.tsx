@@ -15,6 +15,8 @@ interface TimeSelectorProps {
   onChange: (time: string | undefined) => void;
   placeholder?: string;
   disabled?: boolean;
+  /** Dynamic options from product `startTimes` / availabilities; falls back to legacy static list when omitted. */
+  options?: { value: string; label: string }[];
   className?: string;
 }
 
@@ -35,19 +37,28 @@ const TimeSelector = ({
   onChange,
   placeholder = "Select time",
   disabled = false,
+  options,
   className,
 }: TimeSelectorProps) => {
+  const timeOptions = options ?? TIME_OPTIONS;
+
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger className={cn("w-full", className)}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {TIME_OPTIONS.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            {option.label}
+        {timeOptions.length === 0 ? (
+          <SelectItem value="__none__" disabled>
+            No times available
           </SelectItem>
-        ))}
+        ) : (
+          timeOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))
+        )}
       </SelectContent>
     </Select>
   );

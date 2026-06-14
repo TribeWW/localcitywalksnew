@@ -1,17 +1,43 @@
 "use client";
 
-import TourRequestForm from "@/components/forms/TourRequestForm";
+/**
+ * Tour-page request card — branches between legacy form and booking widget (LOC-1052).
+ *
+ * When `cardsWidgetUpdate` is true and `bookingBootstrap` is provided, renders
+ * `BookingWidget`; otherwise keeps `TourRequestForm` for flag-off rollout and
+ * `CustomTourBanner` parity.
+ */
 
+import TourRequestForm from "@/components/forms/TourRequestForm";
+import BookingWidget from "@/components/tours/BookingWidget";
+import type { BookingWidgetBootstrap } from "@/types/bokun";
+
+/**
+ * Renders the tour request UI inside the `#request` card on the product page.
+ *
+ * @param cityName - Locked city label passed to the form / widget
+ * @param cardsWidgetUpdate - Vercel flag `cards-widget-update`
+ * @param bookingBootstrap - Product context from `getTourDetailById`; required when flag is on
+ */
 export default function TourRequestFormSection({
   cityName,
   cardsWidgetUpdate = false,
+  bookingBootstrap,
 }: {
   cityName: string;
-  /** Vercel Flag `cards-widget-update` — use for booking-widget rollout / pre-fill. */
+  /** Vercel Flag `cards-widget-update` — toggles booking widget vs legacy form. */
   cardsWidgetUpdate?: boolean;
+  /** Product context from `getTourDetailById`; required when flag is on. */
+  bookingBootstrap?: BookingWidgetBootstrap;
 }) {
-  // For inline forms, onClose resets rather than dismissing a modal.
-  // Note: This requires TourRequestForm to expose a ref or callback to reset.
+  if (cardsWidgetUpdate && bookingBootstrap) {
+    return (
+      <div data-cards-widget-update="true">
+        <BookingWidget {...bookingBootstrap} />
+      </div>
+    );
+  }
+
   return (
     <div data-cards-widget-update={cardsWidgetUpdate ? "true" : "false"}>
       <TourRequestForm
@@ -19,7 +45,6 @@ export default function TourRequestFormSection({
         lockCity
         onClose={() => {
           // No-op: form handles its own reset after calling onClose.
-          // Consider adding scroll-to-top or visual feedback here.
         }}
       />
     </div>
