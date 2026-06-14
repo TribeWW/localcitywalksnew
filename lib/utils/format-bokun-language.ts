@@ -2,7 +2,7 @@
  * Display labels for Bókun guided-language codes (LOC-1051 / LOC-1042).
  *
  * Used by `LanguageSelector` and booking widget copy. Unknown codes fall back to
- * underscore-stripped uppercase (e.g. `EN_GB` → “English”).
+ * underscore-stripped uppercase (e.g. `ZH_CN` → "ZH CN").
  */
 
 /** Human-readable labels for common Bókun language codes. */

@@ -81,10 +81,7 @@ const bookingWidgetFormSchema = z.object({
     .string()
     .optional()
     .refine(
-      (value) =>
-        !value ||
-        value.trim() === "" ||
-        value.trim().length >= 10,
+      (value) => !value || value.trim() === "" || value.trim().length >= 10,
       {
         message:
           "Please provide more details about your tour preferences (at least 10 characters)",
@@ -175,18 +172,15 @@ export default function BookingWidget({
   const infants = form.watch("infants");
   const consent = form.watch("consent");
 
-  const mergeAvailabilities = useCallback(
-    (incoming: BokunAvailability[]) => {
-      setAvailabilities((prev) => {
-        const byId = new Map(prev.map((slot) => [slot.id, slot]));
-        for (const slot of incoming) {
-          byId.set(slot.id, slot);
-        }
-        return [...byId.values()];
-      });
-    },
-    [],
-  );
+  const mergeAvailabilities = useCallback((incoming: BokunAvailability[]) => {
+    setAvailabilities((prev) => {
+      const byId = new Map(prev.map((slot) => [slot.id, slot]));
+      for (const slot of incoming) {
+        byId.set(slot.id, slot);
+      }
+      return [...byId.values()];
+    });
+  }, []);
 
   const loadMonthAvailabilities = useCallback(
     async (referenceDate: Date) => {
@@ -283,9 +277,7 @@ export default function BookingWidget({
   const minParticipantsRequired = useMemo(() => {
     if (!selectedSlot) return 1;
     return (
-      selectedSlot.minParticipantsToBookNow ??
-      selectedSlot.minParticipants ??
-      1
+      selectedSlot.minParticipantsToBookNow ?? selectedSlot.minParticipants ?? 1
     );
   }, [selectedSlot]);
 
@@ -309,14 +301,17 @@ export default function BookingWidget({
     if (!preferredDate || !Number.isFinite(startTimeId) || startTimeId <= 0) {
       setQuote(null);
       setQuoteError(null);
+      setQuoteLoading(false);
       return;
     }
 
     const participants = { adults, youth, children, infants };
-    const participantCheck = tourBookingParticipantsSchema.safeParse(participants);
+    const participantCheck =
+      tourBookingParticipantsSchema.safeParse(participants);
     if (!participantCheck.success) {
       setQuote(null);
       setQuoteError(null);
+      setQuoteLoading(false);
       return;
     }
 
@@ -698,8 +693,8 @@ export default function BookingWidget({
               </FormControl>
               <div className="space-y-1 leading-none">
                 <FormLabel className="text-sm text-nightsky">
-                  I agree that LocalCityWalks may use my details to respond to my
-                  tour request.
+                  I agree that LocalCityWalks may use my details to respond to
+                  my tour request.
                 </FormLabel>
                 <FormMessage />
               </div>

@@ -12,6 +12,7 @@
 
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ReactNode } from "react";
 import type { BokunAvailability, BookingWidgetQuote } from "@/types/bokun";
 
 const getTourAvailabilitiesMock = vi.fn();
@@ -86,7 +87,7 @@ vi.mock("@/components/ui/select", () => ({
     onValueChange,
     disabled,
   }: {
-    children: React.ReactNode;
+    children: ReactNode;
     value?: string;
     onValueChange: (value: string) => void;
     disabled?: boolean;
@@ -100,13 +101,13 @@ vi.mock("@/components/ui/select", () => ({
       {children}
     </select>
   ),
-  SelectTrigger: ({ children }: { children: React.ReactNode }) => (
+  SelectTrigger: ({ children }: { children: ReactNode }) => (
     <>{children}</>
   ),
   SelectValue: ({ placeholder }: { placeholder?: string }) => (
     <option value="">{placeholder}</option>
   ),
-  SelectContent: ({ children }: { children: React.ReactNode }) => (
+  SelectContent: ({ children }: { children: ReactNode }) => (
     <>{children}</>
   ),
   SelectItem: ({
@@ -114,7 +115,7 @@ vi.mock("@/components/ui/select", () => ({
     children,
   }: {
     value: string;
-    children: React.ReactNode;
+    children: ReactNode;
   }) => <option value={value}>{children}</option>,
 }));
 
