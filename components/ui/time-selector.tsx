@@ -43,7 +43,11 @@ const TimeSelector = ({
   const timeOptions = options ?? TIME_OPTIONS;
 
   return (
-    <Select value={value} onValueChange={onChange} disabled={disabled}>
+    <Select
+      value={value}
+      onValueChange={onChange}
+      disabled={disabled || timeOptions.length === 0}
+    >
       <SelectTrigger className={cn("w-full", className)}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>

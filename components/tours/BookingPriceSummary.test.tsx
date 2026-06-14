@@ -123,6 +123,27 @@ describe("BookingPriceSummary — display invariants", () => {
     expect(screen.getByText("€200")).toBeInTheDocument();
   });
 
+  it("precedence invariant: error wins over loading and quote", () => {
+    const { container } = render(
+      <BookingPriceSummary
+        quote={sampleQuote}
+        loading
+        error="Unable to calculate price"
+      />,
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Unable to calculate price",
+    );
+    expect(container.querySelector("[aria-busy='true']")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Total:/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Select participants, date, and time to see your total price.",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
   it("empty invariant: prompts user when quote is null and not loading", () => {
     render(
       <BookingPriceSummary quote={null} loading={false} error={null} />,

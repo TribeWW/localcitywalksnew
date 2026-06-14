@@ -46,16 +46,12 @@ const BookingPriceSummary = ({
         <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
-      ) : null}
-
-      {loading ? (
+      ) : loading ? (
         <div className="space-y-2" aria-busy="true">
           <div className="h-6 w-32 animate-pulse rounded bg-muted" />
           <div className="h-4 w-48 animate-pulse rounded bg-muted" />
         </div>
-      ) : null}
-
-      {!loading && !error && quote && formattedTotal ? (
+      ) : quote && formattedTotal ? (
         <div className="space-y-1">
           <p className="text-base font-semibold text-nightsky">
             Total:{" "}
@@ -93,13 +89,11 @@ const BookingPriceSummary = ({
             </ul>
           ) : null}
         </div>
-      ) : null}
-
-      {!loading && !error && !quote ? (
+      ) : (
         <p className="text-sm text-muted-foreground">
           Select participants, date, and time to see your total price.
         </p>
-      ) : null}
+      )}
     </div>
   );
 };
