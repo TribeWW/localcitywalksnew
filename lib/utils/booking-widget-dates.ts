@@ -14,7 +14,7 @@ export function toIsoDateString(date: Date): string {
 
 /** Converts a Bókun availability slot epoch to `YYYY-MM-DD` (UTC). */
 export function availabilitySlotToIsoDate(slot: BokunAvailability): string {
-  return new Date(slot.date).toISOString().slice(0, 10);
+  return format(new Date(slot.date), "yyyy-MM-dd");
 }
 
 /** Inclusive month window for availabilities fetch. */
