@@ -191,19 +191,23 @@ export default function BookingWidget({
       setAvailError(null);
 
       const { start, end } = getMonthAvailabilityRange(referenceDate);
-      const result = await getTourAvailabilities(productId, start, end);
+      try {
+        const result = await getTourAvailabilities(productId, start, end);
 
-      if (!result.success) {
-        setAvailError(
-          result.error ?? "Unable to load availability. Please try again.",
-        );
+        if (!result.success) {
+          setAvailError(
+            result.error ?? "Unable to load availability. Please try again.",
+          );
+          return;
+        }
+
+        loadedMonthsRef.current.add(key);
+        mergeAvailabilities(result.data);
+      } catch {
+        setAvailError("Unable to load availability. Please try again.");
+      } finally {
         setAvailLoading(false);
-        return;
       }
-
-      loadedMonthsRef.current.add(key);
-      mergeAvailabilities(result.data);
-      setAvailLoading(false);
     },
     [mergeAvailabilities, productId],
   );
@@ -291,9 +295,21 @@ export default function BookingWidget({
   }, [form, startTimeIdValue, timeOptions]);
 
   useEffect(() => {
-    if (languageOptions.length === 1 && language !== languageOptions[0]) {
-      form.setValue("language", languageOptions[0]);
+    if (languageOptions.length === 0) {
+      if (language) {
+        form.setValue("language", undefined);
+      }
+      return;
     }
+
+    if (language && languageOptions.includes(language)) {
+      return;
+    }
+
+    form.setValue(
+      "language",
+      languageOptions.length === 1 ? languageOptions[0] : undefined,
+    );
   }, [form, language, languageOptions]);
 
   useEffect(() => {
@@ -321,29 +337,36 @@ export default function BookingWidget({
     const timer = setTimeout(async () => {
       setQuoteLoading(true);
       setQuoteError(null);
+      try {
+        const result = await getTourBookingQuote({
+          productId,
+          date,
+          startTimeId,
+          participants: participantCheck.data,
+          language: language?.trim() || undefined,
+          currency: "EUR",
+        });
 
-      const result = await getTourBookingQuote({
-        productId,
-        date,
-        startTimeId,
-        participants: participantCheck.data,
-        language: language?.trim() || undefined,
-        currency: "EUR",
-      });
+        if (cancelled) return;
 
-      if (cancelled) return;
+        if (!result.success) {
+          setQuote(null);
+          setQuoteError(
+            result.error ?? "Unable to calculate price. Please try again.",
+          );
+          return;
+        }
 
-      if (!result.success) {
+        setQuote(result.data);
+      } catch {
+        if (cancelled) return;
         setQuote(null);
-        setQuoteError(
-          result.error ?? "Unable to calculate price. Please try again.",
-        );
-        setQuoteLoading(false);
-        return;
+        setQuoteError("Unable to calculate price. Please try again.");
+      } finally {
+        if (!cancelled) {
+          setQuoteLoading(false);
+        }
       }
-
-      setQuote(result.data);
-      setQuoteLoading(false);
     }, QUOTE_DEBOUNCE_MS);
 
     return () => {
