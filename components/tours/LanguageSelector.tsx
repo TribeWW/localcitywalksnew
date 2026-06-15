@@ -32,6 +32,8 @@ interface LanguageSelectorProps {
 
 /**
  * Select control for tour guided language; dedupes and trims incoming codes.
+ *
+ * @param props.languages - Bókun codes from slot or product metadata
  */
 const LanguageSelector = ({
   value,

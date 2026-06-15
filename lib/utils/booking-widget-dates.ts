@@ -12,12 +12,17 @@ export function toIsoDateString(date: Date): string {
   return format(date, "yyyy-MM-dd");
 }
 
-/** Converts a Bókun availability slot epoch to `YYYY-MM-DD` (UTC). */
+/** Converts a Bókun availability slot epoch to `YYYY-MM-DD` (local calendar). */
 export function availabilitySlotToIsoDate(slot: BokunAvailability): string {
   return format(new Date(slot.date), "yyyy-MM-dd");
 }
 
-/** Inclusive month window for availabilities fetch. */
+/**
+ * Inclusive month window for `getTourAvailabilities`.
+ *
+ * @param referenceDate - Any date in the month to load
+ * @returns `start` and `end` as `YYYY-MM-DD` for the month's first and last day
+ */
 export function getMonthAvailabilityRange(referenceDate: Date): {
   start: string;
   end: string;

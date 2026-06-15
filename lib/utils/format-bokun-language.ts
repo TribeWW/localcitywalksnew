@@ -26,6 +26,8 @@ const BOKUN_LANGUAGE_LABELS: Record<string, string> = {
 
 /**
  * Maps a Bókun language code (e.g. `EN_GB`) to a display label for the widget.
+ *
+ * @param code - Raw Bókun language code from product or slot metadata
  */
 export function formatBokunLanguage(code: string): string {
   const trimmed = code.trim();

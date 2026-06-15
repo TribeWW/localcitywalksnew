@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * Calendar date picker used by tour request and booking widget forms.
+ *
+ * Supports `isDateDisabled` for Bókun sold-out / no-slot dates (LOC-1050).
+ */
+
 import React, { useState, useRef, useEffect } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
@@ -7,18 +13,27 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 
+/** Props for `DatePicker`. */
 interface DatePickerProps {
   value?: Date;
+  /** Called when the user selects or clears a date. */
   onChange: (date: Date | undefined) => void;
   placeholder?: string;
   disabled?: boolean;
+  /** Earliest selectable day (inclusive). */
   minDate?: Date;
+  /** Latest selectable day (inclusive). */
   maxDate?: Date;
   /** When true, the date cannot be selected (e.g. sold-out / no slots). */
   isDateDisabled?: (date: Date) => boolean;
   className?: string;
 }
 
+/**
+ * Button-triggered single-date calendar picker.
+ *
+ * @param props.isDateDisabled - Optional predicate; used by `BookingWidget` for unavailable days
+ */
 const DatePicker = ({
   value,
   onChange,
