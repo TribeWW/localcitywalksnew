@@ -8,6 +8,7 @@
  * - Submit stays disabled until consent + valid quote
  * - Slot `guidedLanguages` override product `languages` for the language control
  * - Below `minParticipantsToBookNow` blocks submit with inline message
+ * - Pre-submit `BookingSubmitSummary` shows date, time, participants, and total (LOC-1054)
  */
 
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -265,7 +266,7 @@ describe("BookingWidget — availability and quote invariants", () => {
     await selectAvailableDate();
 
     await waitFor(() => {
-      expect(screen.getByText("€248")).toBeInTheDocument();
+      expect(screen.getByText(/Total:/)).toBeInTheDocument();
     });
     expect(submitButton).toBeDisabled();
 
@@ -274,6 +275,26 @@ describe("BookingWidget — availability and quote invariants", () => {
     });
 
     expect(submitButton).toBeEnabled();
+  });
+
+  it("pre-submit summary invariant: shows booking review above submit when quote is ready", async () => {
+    render(<BookingWidget {...defaultBootstrap} />);
+    await flushAvailabilitiesLoad();
+
+    expect(screen.queryByLabelText("Booking summary")).not.toBeInTheDocument();
+
+    await selectAvailableDate();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Booking summary")).toBeInTheDocument();
+    });
+
+    const summary = screen.getByLabelText("Booking summary");
+    expect(summary).toHaveTextContent("Your booking");
+    expect(summary).toHaveTextContent("11:00");
+    expect(summary).toHaveTextContent("1 adult");
+    expect(summary).toHaveTextContent("English");
+    expect(summary).toHaveTextContent("€248");
   });
 });
 

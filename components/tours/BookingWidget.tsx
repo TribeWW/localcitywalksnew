@@ -11,7 +11,8 @@
  *
  * Replaces legacy `TourRequestForm` static time/duration options with dynamic
  * `startTimes` ∩ availabilities, read-only `durationText`, and four participant counters.
- * Submit wiring lands in LOC-1056 (`submitTourBookingRequest`).
+ * Includes `BookingPriceSummary` (live total + breakdown) and `BookingSubmitSummary`
+ * (pre-submit review, LOC-1054). Submit wiring lands in LOC-1056 (`submitTourBookingRequest`).
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -46,6 +47,7 @@ import DatePicker from "@/components/ui/date-picker";
 import TimeSelector from "@/components/ui/time-selector";
 import LanguageSelector from "@/components/tours/LanguageSelector";
 import BookingPriceSummary from "@/components/tours/BookingPriceSummary";
+import BookingSubmitSummary from "@/components/tours/BookingSubmitSummary";
 import type {
   BokunAvailability,
   BokunStartTime,
@@ -54,8 +56,10 @@ import type {
 } from "@/types/bokun";
 import { toast } from "sonner";
 
+/** Debounce delay before calling `getTourBookingQuote` after selection changes (ms). */
 const QUOTE_DEBOUNCE_MS = 400;
 
+/** Client-side Zod schema for the booking widget form (contact + slot fields). */
 const bookingWidgetFormSchema = z.object({
   fullName: z.string().trim().min(3, {
     message: "Please enter your full name (at least 3 characters)",
@@ -102,12 +106,14 @@ const bookingWidgetFormSchema = z.object({
 
 type BookingWidgetFormValues = z.infer<typeof bookingWidgetFormSchema>;
 
+/** Formats `BokunStartTime` as `HH:mm` for the time selector. */
 function formatStartTimeLabel(startTime: BokunStartTime): string {
   const hour = String(startTime.hour).padStart(2, "0");
   const minute = String(startTime.minute).padStart(2, "0");
   return `${hour}:${minute}`;
 }
 
+/** Cache key for loaded availability months (`yyyy-MM`). */
 function monthKey(date: Date): string {
   return format(date, "yyyy-MM");
 }
@@ -395,6 +401,12 @@ export default function BookingWidget({
     [availableDateSet],
   );
 
+  const selectedTimeLabel = useMemo(() => {
+    if (!startTimeIdValue) return undefined;
+    return timeOptions.find((option) => option.value === startTimeIdValue)
+      ?.label;
+  }, [startTimeIdValue, timeOptions]);
+
   const canSubmit =
     consent &&
     quote != null &&
@@ -405,6 +417,7 @@ export default function BookingWidget({
     Boolean(startTimeIdValue) &&
     Boolean(preferredDate);
 
+  /** Placeholder submit handler until LOC-1056 wires `submitTourBookingRequest`. */
   async function onSubmit(_values: BookingWidgetFormValues) {
     toast.error(
       "Booking request submission is not available yet. Pricing and availability are live — email submission ships in the next release.",
@@ -726,6 +739,14 @@ export default function BookingWidget({
         />
 
         <input type="hidden" name="productTitle" value={productTitle} />
+
+        <BookingSubmitSummary
+          date={preferredDate}
+          startTimeLabel={selectedTimeLabel}
+          participants={{ adults, youth, children, infants }}
+          languageCode={language}
+          quote={quoteLoading || quoteError ? null : quote}
+        />
 
         <div className="my-6">
           <Button

@@ -24,6 +24,10 @@ interface BookingPriceSummaryProps {
 
 /**
  * Renders total price, tax-inclusive helper text, and optional breakdown lines.
+ *
+ * State precedence: error → loading → success (quote) → empty prompt.
+ *
+ * @param props.showBreakdown - When true, lists each priced line from `quote.breakdown`
  */
 const BookingPriceSummary = ({
   quote,
