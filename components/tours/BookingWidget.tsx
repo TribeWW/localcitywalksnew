@@ -1,24 +1,17 @@
 "use client";
 
 /**
- * Tour-page booking widget with live Bókun pricing and availability (LOC-1048).
+ * Tour-page booking widget with live Bókun pricing and availability (LOC-1048 / LOC-1063).
  *
- * Client UI rendered when `cards-widget-update` is enabled. Receives server-passed
- * `BookingWidgetBootstrap` from `getTourDetailById`; calls server actions for:
- *
- * - `getTourAvailabilities` — month-scoped calendar / slot data
- * - `getTourBookingQuote` — debounced (400ms) total on participant / date / time changes
- *
- * Replaces legacy `TourRequestForm` static time/duration options with dynamic
- * `startTimes` ∩ availabilities, read-only `durationText`, and four participant counters.
- * Includes `BookingPriceSummary` (live total + breakdown) and `BookingSubmitSummary`
- * (pre-submit review, LOC-1054). Submit wiring lands in LOC-1056 (`submitTourBookingRequest`).
+ * Two-step UI: collapsed → configuring (mockup) → contact (email fields).
+ * Submit wiring lands in LOC-1056 (`submitTourBookingRequest`).
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { useForm } from "react-hook-form";
+import { Calendar, Clock, Globe } from "lucide-react";
+import { useForm, type Control, type FieldValues } from "react-hook-form";
 import { z } from "zod";
 import {
   getTourAvailabilities,
@@ -30,24 +23,26 @@ import {
   getMonthAvailabilityRange,
   toIsoDateString,
 } from "@/lib/utils/booking-widget-dates";
-import { Button } from "@/components/ui/button";
+import BookingWidgetShell from "@/components/tours/booking-widget/BookingWidgetShell";
+import BookingWidgetFromPrice from "@/components/tours/booking-widget/BookingWidgetFromPrice";
+import BookingWidgetField from "@/components/tours/booking-widget/BookingWidgetField";
+import BookingGuestsPicker from "@/components/tours/booking-widget/BookingGuestsPicker";
+import BookingWidgetBreakdown from "@/components/tours/booking-widget/BookingWidgetBreakdown";
+import BookingWidgetContactStep from "@/components/tours/booking-widget/BookingWidgetContactStep";
+import BookingWidgetCollapsed from "@/components/tours/booking-widget/BookingWidgetCollapsed";
+import BookingWidgetStepOneFooter from "@/components/tours/booking-widget/BookingWidgetStepOneFooter";
+import type { GuestCategoryKey } from "@/components/tours/booking-widget/guest-categories";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import ParticipantCounter from "@/components/ui/participant-counter";
 import DatePicker from "@/components/ui/date-picker";
 import TimeSelector from "@/components/ui/time-selector";
 import LanguageSelector from "@/components/tours/LanguageSelector";
-import BookingPriceSummary from "@/components/tours/BookingPriceSummary";
-import BookingSubmitSummary from "@/components/tours/BookingSubmitSummary";
 import type {
   BokunAvailability,
   BokunStartTime,
@@ -58,6 +53,9 @@ import { toast } from "sonner";
 
 /** Debounce delay before calling `getTourBookingQuote` after selection changes (ms). */
 const QUOTE_DEBOUNCE_MS = 400;
+
+/** Active UI step once the widget is expanded (LOC-1063 two-step flow). */
+type WidgetStep = "configuring" | "contact";
 
 /** Client-side Zod schema for the booking widget form (contact + slot fields). */
 const bookingWidgetFormSchema = z.object({
@@ -104,16 +102,27 @@ const bookingWidgetFormSchema = z.object({
   }),
 });
 
+/** Inferred form values for the full booking widget (step 1 + step 2 fields). */
 type BookingWidgetFormValues = z.infer<typeof bookingWidgetFormSchema>;
 
-/** Formats `BokunStartTime` as `HH:mm` for the time selector. */
+/**
+ * Formats `BokunStartTime` as `HH:mm` for the time selector.
+ *
+ * @param startTime - Hour/minute from product `startTimes` or availability slot
+ * @returns Zero-padded 24-hour label (e.g. `"10:30"`)
+ */
 function formatStartTimeLabel(startTime: BokunStartTime): string {
   const hour = String(startTime.hour).padStart(2, "0");
   const minute = String(startTime.minute).padStart(2, "0");
   return `${hour}:${minute}`;
 }
 
-/** Cache key for loaded availability months (`yyyy-MM`). */
+/**
+ * Cache key for loaded availability months.
+ *
+ * @param date - Any date within the month to load
+ * @returns `yyyy-MM` string used in `loadedMonthsRef`
+ */
 function monthKey(date: Date): string {
   return format(date, "yyyy-MM");
 }
@@ -121,7 +130,13 @@ function monthKey(date: Date): string {
 /**
  * Bókun-backed booking form for the tour page `#request` card.
  *
- * @param props - `BookingWidgetBootstrap` from `getTourDetailById` (product id, times, languages, duration)
+ * Orchestrates the LOC-1063 two-step UI via subcomponents in `booking-widget/`:
+ * collapsed → configuring (date/time/language/guests/breakdown) → contact.
+ *
+ * Fetches availabilities per month and debounces live quotes from
+ * `getTourBookingQuote`. Submit is a placeholder until LOC-1056.
+ *
+ * @param props - `BookingWidgetBootstrap` from `getTourDetailById`
  */
 export default function BookingWidget({
   productId,
@@ -129,8 +144,11 @@ export default function BookingWidget({
   cityName,
   startTimes,
   languages,
-  durationText,
+  fromPriceAmount,
+  fromPriceCurrency,
 }: BookingWidgetBootstrap) {
+  const [widgetOpen, setWidgetOpen] = useState(false);
+  const [step, setStep] = useState<WidgetStep>("configuring");
   const [availabilities, setAvailabilities] = useState<BokunAvailability[]>([]);
   const [availLoading, setAvailLoading] = useState(false);
   const [availError, setAvailError] = useState<string | null>(null);
@@ -177,6 +195,13 @@ export default function BookingWidget({
   const children = form.watch("children");
   const infants = form.watch("infants");
   const consent = form.watch("consent");
+  const fullName = form.watch("fullName");
+  const email = form.watch("email");
+
+  const participants = useMemo(
+    () => ({ adults, youth, children, infants }),
+    [adults, children, infants, youth],
+  );
 
   const mergeAvailabilities = useCallback((incoming: BokunAvailability[]) => {
     setAvailabilities((prev) => {
@@ -327,7 +352,6 @@ export default function BookingWidget({
       return;
     }
 
-    const participants = { adults, youth, children, infants };
     const participantCheck =
       tourBookingParticipantsSchema.safeParse(participants);
     if (!participantCheck.success) {
@@ -380,14 +404,11 @@ export default function BookingWidget({
       clearTimeout(timer);
     };
   }, [
-    adults,
-    children,
-    infants,
     language,
+    participants,
     preferredDate,
     productId,
     startTimeIdValue,
-    youth,
   ]);
 
   const isDateDisabled = useCallback(
@@ -401,14 +422,7 @@ export default function BookingWidget({
     [availableDateSet],
   );
 
-  const selectedTimeLabel = useMemo(() => {
-    if (!startTimeIdValue) return undefined;
-    return timeOptions.find((option) => option.value === startTimeIdValue)
-      ?.label;
-  }, [startTimeIdValue, timeOptions]);
-
-  const canSubmit =
-    consent &&
+  const canBookNow =
     quote != null &&
     !quoteLoading &&
     !quoteError &&
@@ -417,7 +431,21 @@ export default function BookingWidget({
     Boolean(startTimeIdValue) &&
     Boolean(preferredDate);
 
-  /** Placeholder submit handler until LOC-1056 wires `submitTourBookingRequest`. */
+  const contactFieldsValid =
+    fullName.trim().length >= 3 && z.string().email().safeParse(email).success;
+
+  const canSubmit =
+    canBookNow && consent && contactFieldsValid;
+
+  const handleParticipantChange = (key: GuestCategoryKey, value: number) => {
+    form.setValue(key, value, { shouldDirty: true, shouldValidate: true });
+  };
+
+  /**
+   * Placeholder submit handler until LOC-1056 wires `submitTourBookingRequest`.
+   *
+   * @param _values - Validated form payload (contact + slot + participants)
+   */
   async function onSubmit(_values: BookingWidgetFormValues) {
     toast.error(
       "Booking request submission is not available yet. Pricing and availability are live — email submission ships in the next release.",
@@ -425,339 +453,166 @@ export default function BookingWidget({
   }
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-4 max-h-[70vh] overflow-y-auto pr-2"
-      >
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-nightsky">Participants</h3>
-
-          <FormField
-            control={form.control}
-            name="adults"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <ParticipantCounter
-                    label="Adults (18+)"
-                    value={field.value}
-                    onChange={field.onChange}
-                    min={0}
-                    max={20}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+    <BookingWidgetShell>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0">
+          <BookingWidgetFromPrice
+            amount={fromPriceAmount}
+            currency={fromPriceCurrency}
           />
 
-          <FormField
-            control={form.control}
-            name="youth"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <ParticipantCounter
-                    label="Youth (13-17)"
-                    value={field.value}
-                    onChange={field.onChange}
-                    min={0}
-                    max={20}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="children"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <ParticipantCounter
-                    label="Children (3-12)"
-                    value={field.value}
-                    onChange={field.onChange}
-                    min={0}
-                    max={20}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="infants"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <ParticipantCounter
-                    label="Infants (0-2)"
-                    value={field.value}
-                    onChange={field.onChange}
-                    min={0}
-                    max={20}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-nightsky">Tour schedule</h3>
-
-          {durationText ? (
-            <p className="text-sm text-muted-foreground">
-              Duration: <span className="text-nightsky">{durationText}</span>
-            </p>
-          ) : null}
-
-          {availError ? (
-            <p className="text-sm text-destructive" role="alert">
-              {availError}
-            </p>
-          ) : null}
-
-          {availLoading ? (
-            <p className="text-sm text-muted-foreground" aria-live="polite">
-              Loading available dates…
-            </p>
-          ) : null}
-
-          <FormField
-            control={form.control}
-            name="preferredDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium text-nightsky">
-                  Preferred date
-                </FormLabel>
-                <FormControl>
-                  <DatePicker
-                    value={field.value}
-                    onChange={(date) => {
-                      field.onChange(date);
-                      form.setValue("startTimeId", undefined);
-                      form.setValue("language", undefined);
-                    }}
-                    placeholder="Select a date"
-                    minDate={minDate}
-                    maxDate={maxDate}
-                    isDateDisabled={isDateDisabled}
-                    disabled={availLoading}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="startTimeId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium text-nightsky">
-                  Start time
-                </FormLabel>
-                <FormControl>
-                  <TimeSelector
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Select time"
-                    options={timeOptions}
-                    disabled={!preferredDate || timeOptions.length === 0}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {languageOptions.length > 0 ? (
-            <FormField
-              control={form.control}
-              name="language"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium text-nightsky">
-                    Tour language
-                  </FormLabel>
-                  <FormControl>
-                    <LanguageSelector
-                      value={field.value}
-                      onChange={field.onChange}
-                      languages={languageOptions}
-                      placeholder="Select language"
-                      disabled={!startTimeIdValue}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+          {!widgetOpen ? (
+            <BookingWidgetCollapsed
+              className={fromPriceAmount != null ? "mt-4" : undefined}
+              onCheckAvailability={() => setWidgetOpen(true)}
             />
-          ) : null}
-        </div>
+          ) : step === "configuring" ? (
+            <div className="mt-6 space-y-3">
+              {availError ? (
+                <p className="text-sm text-destructive" role="alert">
+                  {availError}
+                </p>
+              ) : null}
 
-        <BookingPriceSummary
-          quote={quote}
-          loading={quoteLoading}
-          error={quoteError}
-          showBreakdown
-        />
+              {availLoading ? (
+                <p className="text-sm text-muted-foreground" aria-live="polite">
+                  Loading available dates…
+                </p>
+              ) : null}
 
-        {belowMinParticipants ? (
-          <p className="text-sm text-destructive" role="alert">
-            This tour requires at least {minParticipantsRequired} participant
-            {minParticipantsRequired === 1 ? "" : "s"} for the selected time.
-          </p>
-        ) : null}
+              <FormField
+                control={form.control}
+                name="preferredDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <BookingWidgetField icon={Calendar}>
+                        <DatePicker
+                          value={field.value}
+                          onChange={(date) => {
+                            field.onChange(date);
+                            form.setValue("startTimeId", undefined);
+                            form.setValue("language", undefined);
+                          }}
+                          placeholder="Select a date"
+                          minDate={minDate}
+                          maxDate={maxDate}
+                          isDateDisabled={isDateDisabled}
+                          disabled={availLoading}
+                          variant="widget"
+                          hideLeadingIcon
+                        />
+                      </BookingWidgetField>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        <FormField
-          control={form.control}
-          name="fullName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-sm font-medium text-nightsky">
-                Full name
-              </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Your full name"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
-                  {...field}
+              <FormField
+                control={form.control}
+                name="startTimeId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <BookingWidgetField icon={Clock}>
+                        <TimeSelector
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Select time"
+                          options={timeOptions}
+                          disabled={!preferredDate || timeOptions.length === 0}
+                          variant="widget"
+                        />
+                      </BookingWidgetField>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {languageOptions.length > 0 ? (
+                <FormField
+                  control={form.control}
+                  name="language"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <BookingWidgetField icon={Globe}>
+                          <LanguageSelector
+                            value={field.value}
+                            onChange={field.onChange}
+                            languages={languageOptions}
+                            placeholder="Select language"
+                            disabled={!startTimeIdValue}
+                            variant="widget"
+                          />
+                        </BookingWidgetField>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+              ) : null}
 
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-sm font-medium text-nightsky">
-                Email
-              </FormLabel>
-              <FormControl>
-                <Input
-                  type="email"
-                  placeholder="your.email@example.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
-                  {...field}
+              <BookingGuestsPicker
+                participants={participants}
+                onChange={handleParticipantChange}
+                quote={quote}
+              />
+
+              <div className="pt-3">
+                <BookingWidgetBreakdown
+                  quote={quote}
+                  loading={quoteLoading}
+                  error={quoteError}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="phoneNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-sm font-medium text-nightsky">
-                Phone number (optional)
-              </FormLabel>
-              <FormControl>
-                <Input
-                  type="tel"
-                  placeholder="+1 234 567 8900 (optional)"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="city"
-          render={({ field }) => (
-            <FormItem className="hidden">
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="message"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-sm font-medium text-nightsky">
-                Message (optional)
-              </FormLabel>
-              <FormControl>
-                <Textarea
-                  rows={3}
-                  placeholder="Tell us about your tour preferences."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="consent"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                  className="bg-white"
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel className="text-sm text-nightsky">
-                  I agree that LocalCityWalks may use my details to respond to
-                  my tour request.
-                </FormLabel>
-                <FormMessage />
               </div>
-            </FormItem>
+
+              {belowMinParticipants ? (
+                <p className="text-sm text-destructive" role="alert">
+                  This tour requires at least {minParticipantsRequired}{" "}
+                  participant
+                  {minParticipantsRequired === 1 ? "" : "s"} for the selected
+                  time.
+                </p>
+              ) : null}
+
+              <BookingWidgetStepOneFooter
+                canBookNow={canBookNow}
+                onBookNow={() => setStep("contact")}
+              />
+            </div>
+          ) : (
+            <div className="mt-6">
+              <BookingWidgetContactStep
+                control={
+                  form.control as unknown as Control<FieldValues>
+                }
+                quote={quote}
+                quoteLoading={quoteLoading}
+                quoteError={quoteError}
+                canSubmit={canSubmit}
+                onBack={() => setStep("configuring")}
+              />
+            </div>
           )}
-        />
 
-        <input type="hidden" name="productTitle" value={productTitle} />
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem className="hidden">
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
 
-        <BookingSubmitSummary
-          date={preferredDate}
-          startTimeLabel={selectedTimeLabel}
-          participants={{ adults, youth, children, infants }}
-          languageCode={language}
-          quote={quoteLoading || quoteError ? null : quote}
-        />
-
-        <div className="my-6">
-          <Button
-            type="submit"
-            className="w-full bg-nightsky hover:bg-nightsky/80"
-            disabled={!canSubmit}
-          >
-            Send request
-          </Button>
-        </div>
-      </form>
-    </Form>
+          <input type="hidden" name="productTitle" value={productTitle} />
+        </form>
+      </Form>
+    </BookingWidgetShell>
   );
 }

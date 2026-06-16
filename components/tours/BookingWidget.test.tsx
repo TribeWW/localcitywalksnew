@@ -1,14 +1,14 @@
 /**
- * BookingWidget — red/green TDD specs (LOC-1048).
+ * BookingWidget — red/green TDD specs (LOC-1048 / LOC-1063).
  *
  * Critical invariants:
- * - Four participant counters (includes infants); no static duration selector
+ * - Guests accordion with four participant categories
+ * - Collapsed → configuring → contact two-step flow
  * - Availabilities fetched on mount for the current month
  * - Quote refetch is debounced (400ms) after date + startTimeId are set
- * - Submit stays disabled until consent + valid quote
+ * - Submit stays disabled until step 2 consent + valid quote + contact fields
  * - Slot `guidedLanguages` override product `languages` for the language control
- * - Below `minParticipantsToBookNow` blocks submit with inline message
- * - Pre-submit `BookingSubmitSummary` shows date, time, participants, and total (LOC-1054)
+ * - Below `minParticipantsToBookNow` blocks Book now with inline message
  */
 
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -145,7 +145,16 @@ const sampleQuote: BookingWidgetQuote = {
   totalAmount: 248,
   currency: "EUR",
   source: "bokun-availability",
-  breakdown: [],
+  breakdown: [
+    {
+      categoryId: 1,
+      categoryLabel: "Adult",
+      count: 1,
+      unitAmount: 248,
+      lineTotal: 248,
+      currency: "EUR",
+    },
+  ],
 };
 
 const defaultBootstrap = {
@@ -154,7 +163,8 @@ const defaultBootstrap = {
   cityName: "Biarritz",
   startTimes: [{ id: START_TIME_ID, hour: 11, minute: 0 }],
   languages: ["EN_GB"],
-  durationText: "2 hours",
+  fromPriceAmount: 124,
+  fromPriceCurrency: "EUR",
 };
 
 async function flushAvailabilitiesLoad() {
@@ -168,9 +178,33 @@ async function flushAvailabilitiesLoad() {
   });
 }
 
+async function openConfiguringStep() {
+  await act(async () => {
+    fireEvent.click(
+      screen.getByRole("button", { name: "Check availability" }),
+    );
+  });
+}
+
 async function selectAvailableDate() {
   await act(async () => {
     fireEvent.click(screen.getByRole("button", { name: "Select a date" }));
+  });
+}
+
+async function waitForQuoteTotal() {
+  await waitFor(() => {
+    expect(screen.getByText("Total")).toBeInTheDocument();
+    expect(screen.getAllByText("€248").length).toBeGreaterThan(0);
+  });
+}
+
+async function goToContactStep() {
+  await openConfiguringStep();
+  await selectAvailableDate();
+  await waitForQuoteTotal();
+  await act(async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Book now" }));
   });
 }
 
@@ -186,22 +220,43 @@ describe("BookingWidget — structure invariants", () => {
     });
   });
 
-  it("participant invariant: renders four counters including infants", async () => {
+  it("shows collapsed state with from price and check availability", async () => {
     render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
 
-    expect(screen.getByText("Adults (18+)")).toBeInTheDocument();
-    expect(screen.getByText("Youth (13-17)")).toBeInTheDocument();
-    expect(screen.getByText("Children (3-12)")).toBeInTheDocument();
-    expect(screen.getByText("Infants (0-2)")).toBeInTheDocument();
+    expect(screen.getByText("From")).toBeInTheDocument();
+    expect(screen.getByText("€124")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Check availability" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Free cancellation")).toBeInTheDocument();
   });
 
-  it("duration invariant: shows read-only durationText, not a duration selector", async () => {
+  it("participant invariant: guests accordion lists four categories", async () => {
     render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
+    await openConfiguringStep();
 
-    expect(screen.getByText(/Duration:/)).toHaveTextContent("2 hours");
-    expect(screen.queryByText("Tour Duration")).not.toBeInTheDocument();
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole("button", { name: /1 participant/i }),
+      );
+    });
+
+    expect(screen.getByText("Adults")).toBeInTheDocument();
+    expect(screen.getByText("Youth")).toBeInTheDocument();
+    expect(screen.getByText("Children")).toBeInTheDocument();
+    expect(screen.getByText("Infants")).toBeInTheDocument();
+  });
+
+  it("does not show legacy duration copy in the widget", async () => {
+    render(
+      <BookingWidget {...defaultBootstrap} durationText="2 hours" />,
+    );
+    await flushAvailabilitiesLoad();
+    await openConfiguringStep();
+
+    expect(screen.queryByText(/Duration:/)).not.toBeInTheDocument();
   });
 });
 
@@ -231,6 +286,7 @@ describe("BookingWidget — availability and quote invariants", () => {
   it("debounce invariant: delays quote fetch until ~400ms after slot selection", async () => {
     render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
+    await openConfiguringStep();
 
     getTourBookingQuoteMock.mockClear();
     await selectAvailableDate();
@@ -256,45 +312,37 @@ describe("BookingWidget — availability and quote invariants", () => {
     );
   });
 
-  it("submit gating invariant: disables send until consent and quote are ready", async () => {
+  it("submit gating invariant: disables send until step 2 consent and quote are ready", async () => {
     render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
+    await goToContactStep();
 
     const submitButton = screen.getByRole("button", { name: "Send request" });
     expect(submitButton).toBeDisabled();
 
-    await selectAvailableDate();
-
-    await waitFor(() => {
-      expect(screen.getByText(/Total:/)).toBeInTheDocument();
-    });
-    expect(submitButton).toBeDisabled();
-
     await act(async () => {
+      fireEvent.change(screen.getByPlaceholderText("Full name"), {
+        target: { value: "Jane Doe" },
+      });
+      fireEvent.change(screen.getByPlaceholderText("Email"), {
+        target: { value: "jane@example.com" },
+      });
       fireEvent.click(screen.getByRole("checkbox"));
     });
 
     expect(submitButton).toBeEnabled();
   });
 
-  it("pre-submit summary invariant: shows booking review above submit when quote is ready", async () => {
+  it("step 2 shows price recap below contact fields", async () => {
     render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
+    await goToContactStep();
 
-    expect(screen.queryByLabelText("Booking summary")).not.toBeInTheDocument();
-
-    await selectAvailableDate();
-
-    await waitFor(() => {
-      expect(screen.getByLabelText("Booking summary")).toBeInTheDocument();
-    });
-
-    const summary = screen.getByLabelText("Booking summary");
-    expect(summary).toHaveTextContent("Your booking");
-    expect(summary).toHaveTextContent("11:00");
-    expect(summary).toHaveTextContent("1 adult");
-    expect(summary).toHaveTextContent("English");
-    expect(summary).toHaveTextContent("€248");
+    expect(screen.getByText("Adult × 1")).toBeInTheDocument();
+    expect(screen.getAllByText("€248").length).toBeGreaterThan(0);
+    expect(
+      screen.getByText("Price includes taxes and fees"),
+    ).toBeInTheDocument();
   });
 });
 
@@ -318,7 +366,7 @@ describe("BookingWidget — slot-driven invariants", () => {
   it("language invariant: prefers slot guidedLanguages over product languages", async () => {
     render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
-
+    await openConfiguringStep();
     await selectAvailableDate();
 
     expect(screen.getByRole("option", { name: "French" })).toBeInTheDocument();
@@ -327,10 +375,10 @@ describe("BookingWidget — slot-driven invariants", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("minParticipants invariant: blocks submit when below minParticipantsToBookNow", async () => {
+  it("minParticipants invariant: blocks Book now when below minParticipantsToBookNow", async () => {
     render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
-
+    await openConfiguringStep();
     await selectAvailableDate();
 
     await waitFor(() => {
@@ -339,10 +387,6 @@ describe("BookingWidget — slot-driven invariants", () => {
       ).toBeInTheDocument();
     });
 
-    await act(async () => {
-      fireEvent.click(screen.getByRole("checkbox"));
-    });
-
-    expect(screen.getByRole("button", { name: "Send request" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
   });
 });

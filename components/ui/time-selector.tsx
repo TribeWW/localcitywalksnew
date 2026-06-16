@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { WIDGET_FIELD_TRIGGER_CLASS } from "@/components/tours/booking-widget/widget-field-styles";
 
 /** Props for `TimeSelector`. */
 interface TimeSelectorProps {
@@ -30,6 +31,8 @@ interface TimeSelectorProps {
   /** Dynamic options from product `startTimes` / availabilities; falls back to legacy static list when omitted. */
   options?: { value: string; label: string }[];
   className?: string;
+  /** Compact bordered trigger for booking widget (LOC-1063). */
+  variant?: "default" | "widget";
 }
 
 /** Legacy static times for `TourRequestForm` when `options` is not passed. */
@@ -59,6 +62,7 @@ const TimeSelector = ({
   disabled = false,
   options,
   className,
+  variant = "default",
 }: TimeSelectorProps) => {
   const timeOptions = options ?? TIME_OPTIONS;
 
@@ -68,7 +72,12 @@ const TimeSelector = ({
       onValueChange={onChange}
       disabled={disabled || timeOptions.length === 0}
     >
-      <SelectTrigger className={cn("w-full", className)}>
+      <SelectTrigger
+        className={cn(
+          variant === "widget" ? WIDGET_FIELD_TRIGGER_CLASS : "w-full",
+          className,
+        )}
+      >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
