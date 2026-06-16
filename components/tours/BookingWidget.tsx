@@ -403,13 +403,7 @@ export default function BookingWidget({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [
-    language,
-    participants,
-    preferredDate,
-    productId,
-    startTimeIdValue,
-  ]);
+  }, [language, participants, preferredDate, productId, startTimeIdValue]);
 
   const isDateDisabled = useCallback(
     (date: Date) => {
@@ -432,10 +426,10 @@ export default function BookingWidget({
     Boolean(preferredDate);
 
   const contactFieldsValid =
-    fullName.trim().length >= 3 && z.string().email().safeParse(email).success;
+    fullName.trim().length >= 3 &&
+    z.string().trim().email().safeParse(email).success;
 
-  const canSubmit =
-    canBookNow && consent && contactFieldsValid;
+  const canSubmit = canBookNow && consent && contactFieldsValid;
 
   const handleParticipantChange = (key: GuestCategoryKey, value: number) => {
     form.setValue(key, value, { shouldDirty: true, shouldValidate: true });
@@ -586,9 +580,7 @@ export default function BookingWidget({
           ) : (
             <div className="mt-6">
               <BookingWidgetContactStep
-                control={
-                  form.control as unknown as Control<FieldValues>
-                }
+                control={form.control as unknown as Control<FieldValues>}
                 quote={quote}
                 quoteLoading={quoteLoading}
                 quoteError={quoteError}

@@ -11,7 +11,13 @@
  * - Below `minParticipantsToBookNow` blocks Book now with inline message
  */
 
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 import type { BokunAvailability, BookingWidgetQuote } from "@/types/bokun";
@@ -102,22 +108,14 @@ vi.mock("@/components/ui/select", () => ({
       {children}
     </select>
   ),
-  SelectTrigger: ({ children }: { children: ReactNode }) => (
-    <>{children}</>
-  ),
+  SelectTrigger: ({ children }: { children: ReactNode }) => <>{children}</>,
   SelectValue: ({ placeholder }: { placeholder?: string }) => (
     <option value="">{placeholder}</option>
   ),
-  SelectContent: ({ children }: { children: ReactNode }) => (
-    <>{children}</>
+  SelectContent: ({ children }: { children: ReactNode }) => <>{children}</>,
+  SelectItem: ({ value, children }: { value: string; children: ReactNode }) => (
+    <option value={value}>{children}</option>
   ),
-  SelectItem: ({
-    value,
-    children,
-  }: {
-    value: string;
-    children: ReactNode;
-  }) => <option value={value}>{children}</option>,
 }));
 
 import BookingWidget from "@/components/tours/BookingWidget";
@@ -180,9 +178,7 @@ async function flushAvailabilitiesLoad() {
 
 async function openConfiguringStep() {
   await act(async () => {
-    fireEvent.click(
-      screen.getByRole("button", { name: "Check availability" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Check availability" }));
   });
 }
 
@@ -238,9 +234,7 @@ describe("BookingWidget — structure invariants", () => {
     await openConfiguringStep();
 
     await act(async () => {
-      fireEvent.click(
-        screen.getByRole("button", { name: /1 participant/i }),
-      );
+      fireEvent.click(screen.getByRole("button", { name: /1 participant/i }));
     });
 
     expect(screen.getByText("Adults")).toBeInTheDocument();
@@ -250,9 +244,7 @@ describe("BookingWidget — structure invariants", () => {
   });
 
   it("does not show legacy duration copy in the widget", async () => {
-    render(
-      <BookingWidget {...defaultBootstrap} durationText="2 hours" />,
-    );
+    render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
     await openConfiguringStep();
 

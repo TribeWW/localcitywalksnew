@@ -92,31 +92,38 @@ export default async function TourPage({
 
   if (!detail.data) notFound();
 
-  let fromPriceAmount: number | undefined;
-  let fromPriceCurrency: string | undefined;
-
-  if (cardsWidgetUpdateEnabled) {
-    const defaultRateIds = new Map<string, number>();
-    if (detail.data.defaultRateId != null) {
-      defaultRateIds.set(id, detail.data.defaultRateId);
-    }
-    const headlines = await enrichProductPricesFromPriceList(
-      [id],
-      defaultRateIds,
-    );
-    const headline = headlines.get(id);
-    if (headline) {
-      fromPriceAmount = headline.amount;
-      fromPriceCurrency = headline.currency;
-    }
-  }
-
   const gpCity = detail.data.googlePlace?.city?.trim();
   const canonicalCity = gpCity ? slugifyForUrl(gpCity) : city;
   const canonicalSlug = `${slugifyForUrl(detail.data.title)}-${id}`;
 
   if (city !== canonicalCity || slug !== canonicalSlug) {
     redirect(`/tours/${canonicalCity}/${canonicalSlug}`);
+  }
+
+  let fromPriceAmount: number | undefined;
+  let fromPriceCurrency: string | undefined;
+
+  if (cardsWidgetUpdateEnabled) {
+    try {
+      const defaultRateIds = new Map<string, number>();
+      if (detail.data.defaultRateId != null) {
+        defaultRateIds.set(id, detail.data.defaultRateId);
+      }
+      const headlines = await enrichProductPricesFromPriceList(
+        [id],
+        defaultRateIds,
+      );
+      const headline = headlines.get(id);
+      if (headline) {
+        fromPriceAmount = headline.amount;
+        fromPriceCurrency = headline.currency;
+      }
+    } catch (error) {
+      console.error("Failed to enrich from-price headline", {
+        tourId: id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 
   const heroImage = pickBestPhotoUrl(detail.data.keyPhoto, [
@@ -169,13 +176,16 @@ export default async function TourPage({
   const tourReviewsResult = await getTourReviews(id);
 
   if (!tourReviewsResult.ok) {
-    console.error("Tour reviews unavailable, falling back to aggregate reviews", {
-      tourId: id,
-      error:
-        tourReviewsResult.error instanceof Error
-          ? tourReviewsResult.error.message
-          : String(tourReviewsResult.error),
-    });
+    console.error(
+      "Tour reviews unavailable, falling back to aggregate reviews",
+      {
+        tourId: id,
+        error:
+          tourReviewsResult.error instanceof Error
+            ? tourReviewsResult.error.message
+            : String(tourReviewsResult.error),
+      },
+    );
   }
 
   const tourReviews = tourReviewsResult.ok ? tourReviewsResult.reviews : [];
@@ -431,7 +441,9 @@ export default async function TourPage({
                   </CardTitle>
                 </CardHeader>
               ) : null}
-              <CardContent className={cardsWidgetUpdateEnabled ? "p-0" : undefined}>
+              <CardContent
+                className={cardsWidgetUpdateEnabled ? "p-0" : undefined}
+              >
                 <TourRequestFormSection
                   cityName={gpCity ?? detail.data.title}
                   cardsWidgetUpdate={cardsWidgetUpdateEnabled}
