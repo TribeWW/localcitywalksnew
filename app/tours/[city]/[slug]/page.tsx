@@ -24,6 +24,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TourRequestFormSection from "@/components/tours/tour-request-form-section";
 import { cardsWidgetUpdate } from "@/flags";
+import { enrichProductPricesFromPriceList } from "@/lib/bokun/enrich-product-prices-from-price-list";
 import TourImageGallery from "@/components/tours/tour-image-gallery";
 import FaqAccordion from "@/components/tours/faq-accordion";
 import sanitizeHtml from "sanitize-html";
@@ -99,6 +100,32 @@ export default async function TourPage({
     redirect(`/tours/${canonicalCity}/${canonicalSlug}`);
   }
 
+  let fromPriceAmount: number | undefined;
+  let fromPriceCurrency: string | undefined;
+
+  if (cardsWidgetUpdateEnabled) {
+    try {
+      const defaultRateIds = new Map<string, number>();
+      if (detail.data.defaultRateId != null) {
+        defaultRateIds.set(id, detail.data.defaultRateId);
+      }
+      const headlines = await enrichProductPricesFromPriceList(
+        [id],
+        defaultRateIds,
+      );
+      const headline = headlines.get(id);
+      if (headline) {
+        fromPriceAmount = headline.amount;
+        fromPriceCurrency = headline.currency;
+      }
+    } catch (error) {
+      console.error("Failed to enrich from-price headline", {
+        tourId: id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
   const heroImage = pickBestPhotoUrl(detail.data.keyPhoto, [
     "large",
     "preview",
@@ -149,13 +176,16 @@ export default async function TourPage({
   const tourReviewsResult = await getTourReviews(id);
 
   if (!tourReviewsResult.ok) {
-    console.error("Tour reviews unavailable, falling back to aggregate reviews", {
-      tourId: id,
-      error:
-        tourReviewsResult.error instanceof Error
-          ? tourReviewsResult.error.message
-          : String(tourReviewsResult.error),
-    });
+    console.error(
+      "Tour reviews unavailable, falling back to aggregate reviews",
+      {
+        tourId: id,
+        error:
+          tourReviewsResult.error instanceof Error
+            ? tourReviewsResult.error.message
+            : String(tourReviewsResult.error),
+      },
+    );
   }
 
   const tourReviews = tourReviewsResult.ok ? tourReviewsResult.reviews : [];
@@ -396,13 +426,24 @@ export default async function TourPage({
           </div>
 
           <div className="space-y-6">
-            <Card id="request">
-              <CardHeader>
-                <CardTitle className="text-nightsky text-xl">
-                  Request your tour
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+            <Card
+              id="request"
+              className={
+                cardsWidgetUpdateEnabled
+                  ? "border-0 bg-transparent shadow-none"
+                  : undefined
+              }
+            >
+              {!cardsWidgetUpdateEnabled ? (
+                <CardHeader>
+                  <CardTitle className="text-nightsky text-xl">
+                    Request your tour
+                  </CardTitle>
+                </CardHeader>
+              ) : null}
+              <CardContent
+                className={cardsWidgetUpdateEnabled ? "p-0" : undefined}
+              >
                 <TourRequestFormSection
                   cityName={gpCity ?? detail.data.title}
                   cardsWidgetUpdate={cardsWidgetUpdateEnabled}
@@ -415,6 +456,8 @@ export default async function TourPage({
                     pricingCategories: detail.data.pricingCategories,
                     durationText: detail.data.durationText,
                     defaultRateId: detail.data.defaultRateId,
+                    fromPriceAmount,
+                    fromPriceCurrency,
                   }}
                 />
               </CardContent>

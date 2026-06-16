@@ -283,6 +283,10 @@ export interface BookingWidgetBootstrap {
   durationText?: string;
   /** Default rate for tiered pricing; used server-side in quote pipeline. */
   defaultRateId?: number;
+  /** Listing headline amount for “From €X per adult” (price-list enrichment). */
+  fromPriceAmount?: number;
+  /** Currency for `fromPriceAmount`. */
+  fromPriceCurrency?: string;
 }
 
 /** Tier band from Bókun `price-list` (subset used for card headline extraction). */

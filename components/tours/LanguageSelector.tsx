@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { WIDGET_FIELD_TRIGGER_CLASS } from "@/components/tours/booking-widget/widget-field-styles";
 
 /** Props for `LanguageSelector`. */
 interface LanguageSelectorProps {
@@ -28,6 +29,8 @@ interface LanguageSelectorProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  /** Compact bordered trigger for booking widget (LOC-1063). */
+  variant?: "default" | "widget";
 }
 
 /**
@@ -42,6 +45,7 @@ const LanguageSelector = ({
   placeholder = "Select language",
   disabled = false,
   className,
+  variant = "default",
 }: LanguageSelectorProps) => {
   const uniqueLanguages = [...new Set(languages.map((code) => code.trim()).filter(Boolean))];
 
@@ -51,7 +55,12 @@ const LanguageSelector = ({
       onValueChange={onChange}
       disabled={disabled || uniqueLanguages.length === 0}
     >
-      <SelectTrigger className={cn("w-full", className)}>
+      <SelectTrigger
+        className={cn(
+          variant === "widget" ? WIDGET_FIELD_TRIGGER_CLASS : "w-full",
+          className,
+        )}
+      >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

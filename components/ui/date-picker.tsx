@@ -3,15 +3,22 @@
 /**
  * Calendar date picker used by tour request and booking widget forms.
  *
+ * Opens a popover anchored to the trigger (not a centered modal).
  * Supports `isDateDisabled` for Bókun sold-out / no-slot dates (LOC-1050).
  */
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { WIDGET_FIELD_TRIGGER_CLASS } from "@/components/tours/booking-widget/widget-field-styles";
 
 /** Props for `DatePicker`. */
 interface DatePickerProps {
@@ -27,6 +34,24 @@ interface DatePickerProps {
   /** When true, the date cannot be selected (e.g. sold-out / no slots). */
   isDateDisabled?: (date: Date) => boolean;
   className?: string;
+  /** Widget chrome: icon provided by `BookingWidgetField`, compact bordered trigger. */
+  variant?: "default" | "widget";
+  hideLeadingIcon?: boolean;
+}
+
+function startOfDay(date: Date): Date {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+}
+
+function resolveVisibleMonth(
+  value: Date | undefined,
+  minDate: Date | undefined,
+): Date {
+  if (value) return startOfDay(value);
+  if (minDate) return startOfDay(minDate);
+  return startOfDay(new Date());
 }
 
 /**
@@ -43,74 +68,85 @@ const DatePicker = ({
   maxDate,
   isDateDisabled,
   className,
+  variant = "default",
+  hideLeadingIcon = false,
 }: DatePickerProps) => {
   const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [month, setMonth] = useState(() => resolveVisibleMonth(value, minDate));
+
+  const useDropdownCaption = Boolean(minDate && maxDate);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (nextOpen) {
+      setMonth(resolveVisibleMonth(value, minDate));
+    }
+  };
 
   const handleDateSelect = (date: Date | undefined) => {
     onChange(date);
+    if (date) {
+      setMonth(startOfDay(date));
+    }
     setOpen(false);
   };
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        setOpen(false);
-      }
-    };
+  const isDayDisabled = (date: Date) => {
+    if (isDateDisabled?.(date)) return true;
 
-    if (open) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [open]);
+    const day = startOfDay(date);
+    if (minDate && day < startOfDay(minDate)) return true;
+    if (maxDate && day > startOfDay(maxDate)) return true;
+    return false;
+  };
 
   return (
-    <div ref={containerRef} className="relative">
-      <Button
-        type="button"
-        variant="outline"
-        className={cn(
-          "w-full justify-start text-left font-normal",
-          !value && "text-muted-foreground",
-          className
-        )}
-        disabled={disabled}
-        onClick={() => setOpen(!open)}
-      >
-        <CalendarIcon className="mr-2 h-4 w-4" />
-        {value ? format(value, "PPP") : placeholder}
-      </Button>
-
-      {open && (
-        <div
-          className="fixed inset-0 flex items-center justify-center z-[60] bg-black/10 bg-opacity-20"
-          onClick={() => setOpen(false)}
-        >
-          <div
-            className="bg-white border border-gray-200 rounded-md shadow-lg p-3"
-            onClick={(e) => e.stopPropagation()}
+    <div className="w-full">
+      <Popover open={open} onOpenChange={handleOpenChange}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            className={cn(
+              variant === "widget"
+                ? WIDGET_FIELD_TRIGGER_CLASS
+                : "w-full justify-start text-left font-normal",
+              !value && "text-muted-foreground",
+              className,
+            )}
+            disabled={disabled}
           >
+            {!hideLeadingIcon ? (
+              <CalendarIcon className="mr-2 h-4 w-4" />
+            ) : null}
+            {value ? format(value, "PPP") : placeholder}
+          </Button>
+        </PopoverTrigger>
+
+        <PopoverContent
+          align="start"
+          side="bottom"
+          sideOffset={4}
+          collisionPadding={12}
+          className="w-[var(--radix-popover-trigger-width)] p-0"
+        >
+          <div className="flex justify-center p-3">
             <Calendar
               mode="single"
               selected={value}
               onSelect={handleDateSelect}
-              disabled={(date) => {
-                if (isDateDisabled?.(date)) return true;
-                if (minDate && date < minDate) return true;
-                if (maxDate && date > maxDate) return true;
-                return false;
-              }}
+              month={month}
+              onMonthChange={setMonth}
+              captionLayout={useDropdownCaption ? "dropdown" : "label"}
+              startMonth={minDate ? startOfDay(minDate) : undefined}
+              endMonth={maxDate ? startOfDay(maxDate) : undefined}
+              disabled={isDayDisabled}
+              showOutsideDays={false}
               initialFocus
             />
           </div>
-        </div>
-      )}
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };
