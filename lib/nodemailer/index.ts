@@ -15,6 +15,7 @@ import {
   buildBookingWidgetEmailDeliveryKey,
   getBookingWidgetEmailDeliveryState,
   markBookingWidgetEmailDelivered,
+  runWithBookingWidgetEmailDeliveryLock,
 } from "@/lib/nodemailer/booking-widget-email-delivery-ledger";
 
 export type { BookingWidgetEmailContent } from "@/lib/nodemailer/booking-widget-email";
@@ -294,17 +295,20 @@ export async function sendBookingWidgetRequestEmails(
   data: BookingWidgetEmailContent,
 ) {
   const deliveryKey = buildBookingWidgetEmailDeliveryKey(data);
-  const deliveryState = getBookingWidgetEmailDeliveryState(deliveryKey);
 
-  if (!deliveryState.team) {
-    await sendBookingWidgetTeamEmail(data);
-    markBookingWidgetEmailDelivered(deliveryKey, "team");
-  }
+  return runWithBookingWidgetEmailDeliveryLock(deliveryKey, async () => {
+    const deliveryState = getBookingWidgetEmailDeliveryState(deliveryKey);
 
-  if (!deliveryState.customer) {
-    await sendTourRequestConfirmationEmail(data);
-    markBookingWidgetEmailDelivered(deliveryKey, "customer");
-  }
+    if (!deliveryState.team) {
+      await sendBookingWidgetTeamEmail(data);
+      markBookingWidgetEmailDelivered(deliveryKey, "team");
+    }
 
-  return { success: true };
+    if (!deliveryState.customer) {
+      await sendTourRequestConfirmationEmail(data);
+      markBookingWidgetEmailDelivered(deliveryKey, "customer");
+    }
+
+    return { success: true as const };
+  });
 }

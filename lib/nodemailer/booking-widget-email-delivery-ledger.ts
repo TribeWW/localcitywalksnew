@@ -25,10 +25,35 @@ export interface BookingWidgetEmailDeliveryState {
 /** TTL for ledger entries (24 hours). */
 const LEDGER_TTL_MS = 24 * 60 * 60 * 1000;
 
+/** Minimum interval between full ledger sweeps (1 minute). */
+const PRUNE_INTERVAL_MS = 60_000;
+
 const deliveryLedger = new Map<string, BookingWidgetEmailDeliveryState>();
+
+/** Per-key promise chains — serialize concurrent senders for the same booking. */
+const keyDeliveryChains = new Map<string, Promise<unknown>>();
+
+let lastLedgerPruneAt = 0;
 
 function isFresh(entry: BookingWidgetEmailDeliveryState, now = Date.now()): boolean {
   return now - entry.updatedAt < LEDGER_TTL_MS;
+}
+
+function pruneExpiredDeliveryLedgerEntries(now = Date.now()): void {
+  for (const [key, entry] of deliveryLedger) {
+    if (!isFresh(entry, now)) {
+      deliveryLedger.delete(key);
+    }
+  }
+}
+
+function maybePruneExpiredDeliveryLedgerEntries(now = Date.now()): void {
+  if (now - lastLedgerPruneAt < PRUNE_INTERVAL_MS) {
+    return;
+  }
+
+  lastLedgerPruneAt = now;
+  pruneExpiredDeliveryLedgerEntries(now);
 }
 
 /**
@@ -62,6 +87,8 @@ export function buildBookingWidgetEmailDeliveryKey(
 export function getBookingWidgetEmailDeliveryState(
   key: string,
 ): BookingWidgetEmailDeliveryState {
+  maybePruneExpiredDeliveryLedgerEntries();
+
   const existing = deliveryLedger.get(key);
   if (existing && isFresh(existing)) {
     return existing;
@@ -75,6 +102,30 @@ export function getBookingWidgetEmailDeliveryState(
 }
 
 /**
+ * Runs `task` exclusively for a booking fingerprint.
+ *
+ * Concurrent callers with the same key queue behind the in-flight send so
+ * read/modify/write in the email orchestrator cannot interleave at `await`.
+ */
+export function runWithBookingWidgetEmailDeliveryLock<T>(
+  key: string,
+  task: () => Promise<T> | T,
+): Promise<T> {
+  const previous = keyDeliveryChains.get(key) ?? Promise.resolve();
+  const run = previous
+    .catch(() => undefined)
+    .then(() => task());
+
+  keyDeliveryChains.set(key, run);
+
+  return run.finally(() => {
+    if (keyDeliveryChains.get(key) === run) {
+      keyDeliveryChains.delete(key);
+    }
+  }) as Promise<T>;
+}
+
+/**
  * Records that a delivery leg completed successfully.
  *
  * @param key - Booking fingerprint key
@@ -84,6 +135,8 @@ export function markBookingWidgetEmailDelivered(
   key: string,
   leg: BookingWidgetEmailDeliveryLeg,
 ): void {
+  maybePruneExpiredDeliveryLedgerEntries();
+
   const current = getBookingWidgetEmailDeliveryState(key);
   deliveryLedger.set(key, {
     ...current,
@@ -95,4 +148,11 @@ export function markBookingWidgetEmailDelivered(
 /** Clears the in-process ledger — for tests only. */
 export function resetBookingWidgetEmailDeliveryLedger(): void {
   deliveryLedger.clear();
+  keyDeliveryChains.clear();
+  lastLedgerPruneAt = 0;
+}
+
+/** Ledger entry count — for tests only. */
+export function getBookingWidgetEmailDeliveryLedgerSizeForTests(): number {
+  return deliveryLedger.size;
 }

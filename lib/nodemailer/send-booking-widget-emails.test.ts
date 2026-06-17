@@ -167,4 +167,20 @@ describe("sendBookingWidgetRequestEmails", () => {
     expect(sendMailMock).toHaveBeenCalledTimes(1);
     expect(sendMailMock.mock.calls[0]![0].to).toBe("jane@example.com");
   });
+
+  it("concurrency invariant: parallel submits for the same booking send each leg once", async () => {
+    sendMailMock.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          setTimeout(() => resolve({ messageId: "ok" }), 15);
+        }),
+    );
+
+    await Promise.all([
+      sendBookingWidgetRequestEmails(samplePayload),
+      sendBookingWidgetRequestEmails(samplePayload),
+    ]);
+
+    expect(sendMailMock).toHaveBeenCalledTimes(2);
+  });
 });

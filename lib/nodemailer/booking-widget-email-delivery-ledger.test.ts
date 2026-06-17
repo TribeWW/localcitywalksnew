@@ -2,13 +2,15 @@
  * Delivery ledger unit tests — idempotency key and resume semantics.
  */
 
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { BookingWidgetEmailContent } from "@/lib/nodemailer/booking-widget-email";
 import {
   buildBookingWidgetEmailDeliveryKey,
+  getBookingWidgetEmailDeliveryLedgerSizeForTests,
   getBookingWidgetEmailDeliveryState,
   markBookingWidgetEmailDelivered,
   resetBookingWidgetEmailDeliveryLedger,
+  runWithBookingWidgetEmailDeliveryLock,
 } from "@/lib/nodemailer/booking-widget-email-delivery-ledger";
 
 const samplePayload: BookingWidgetEmailContent = {
@@ -91,5 +93,50 @@ describe("booking widget email delivery ledger", () => {
     expect(getBookingWidgetEmailDeliveryState(key)).toEqual(
       expect.objectContaining({ team: true, customer: true }),
     );
+  });
+
+  it("prunes expired entries globally without re-accessing each key", () => {
+    vi.useFakeTimers();
+
+    const key1 = buildBookingWidgetEmailDeliveryKey(samplePayload);
+    const key2 = buildBookingWidgetEmailDeliveryKey({
+      ...samplePayload,
+      startTimeId: 11111,
+    });
+    const key3 = buildBookingWidgetEmailDeliveryKey({
+      ...samplePayload,
+      startTimeId: 22222,
+    });
+
+    markBookingWidgetEmailDelivered(key1, "team");
+    markBookingWidgetEmailDelivered(key2, "team");
+    expect(getBookingWidgetEmailDeliveryLedgerSizeForTests()).toBe(2);
+
+    vi.advanceTimersByTime(24 * 60 * 60 * 1000 + 1);
+
+    getBookingWidgetEmailDeliveryState(key3);
+
+    expect(getBookingWidgetEmailDeliveryLedgerSizeForTests()).toBe(0);
+
+    vi.useRealTimers();
+  });
+
+  it("serializes concurrent tasks for the same booking key", async () => {
+    const key = buildBookingWidgetEmailDeliveryKey(samplePayload);
+    const order: number[] = [];
+
+    const first = runWithBookingWidgetEmailDeliveryLock(key, async () => {
+      order.push(1);
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      order.push(2);
+    });
+
+    const second = runWithBookingWidgetEmailDeliveryLock(key, async () => {
+      order.push(3);
+    });
+
+    await Promise.all([first, second]);
+
+    expect(order).toEqual([1, 2, 3]);
   });
 });
