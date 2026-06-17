@@ -355,6 +355,7 @@ describe("BookingWidget — availability and quote invariants", () => {
           productTitle: "Hello Biarritz",
           date: SLOT_DATE_ISO,
           startTimeId: START_TIME_ID,
+          participants: { adults: 1, youth: 0, children: 0, infants: 0 },
           clientQuote: { totalAmount: 248, currency: "EUR" },
           consent: true,
         }),
