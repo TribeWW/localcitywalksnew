@@ -35,6 +35,7 @@ vi.mock("@/lib/config", () => ({
   },
 }));
 
+import { resetBookingWidgetEmailDeliveryLedger } from "@/lib/nodemailer/booking-widget-email-delivery-ledger";
 import {
   sendBookingWidgetRequestEmails,
   sendBookingWidgetTeamEmail,
@@ -112,6 +113,7 @@ describe("sendTourRequestConfirmationEmail", () => {
 
 describe("sendBookingWidgetRequestEmails", () => {
   beforeEach(() => {
+    resetBookingWidgetEmailDeliveryLedger();
     sendMailMock.mockReset();
     verifyMock.mockReset();
     verifyMock.mockResolvedValue(true);
@@ -145,5 +147,24 @@ describe("sendBookingWidgetRequestEmails", () => {
     await expect(sendBookingWidgetRequestEmails(samplePayload)).rejects.toThrow(
       "Failed to send booking widget confirmation email",
     );
+  });
+
+  it("idempotency invariant: retry after partial failure skips already-delivered team email", async () => {
+    sendMailMock
+      .mockResolvedValueOnce({ messageId: "team-1" })
+      .mockRejectedValueOnce(new Error("SMTP rejected"));
+
+    await expect(sendBookingWidgetRequestEmails(samplePayload)).rejects.toThrow(
+      "Failed to send booking widget confirmation email",
+    );
+    expect(sendMailMock).toHaveBeenCalledTimes(2);
+
+    sendMailMock.mockReset();
+    sendMailMock.mockResolvedValue({ messageId: "customer-1" });
+
+    await sendBookingWidgetRequestEmails(samplePayload);
+
+    expect(sendMailMock).toHaveBeenCalledTimes(1);
+    expect(sendMailMock.mock.calls[0]![0].to).toBe("jane@example.com");
   });
 });

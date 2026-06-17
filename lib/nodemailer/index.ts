@@ -11,6 +11,11 @@ import {
   buildBookingWidgetTeamSubject,
   type BookingWidgetEmailContent,
 } from "@/lib/nodemailer/booking-widget-email";
+import {
+  buildBookingWidgetEmailDeliveryKey,
+  getBookingWidgetEmailDeliveryState,
+  markBookingWidgetEmailDelivered,
+} from "@/lib/nodemailer/booking-widget-email-delivery-ledger";
 
 export type { BookingWidgetEmailContent } from "@/lib/nodemailer/booking-widget-email";
 
@@ -280,14 +285,26 @@ export async function sendTourRequestConfirmationEmail(
  * Sends team notification then customer confirmation for a widget booking (LOC-1055).
  *
  * Called by `submitTourBookingRequest` (LOC-1056) after server quote verification.
- * Sends sequentially so a customer-email failure surfaces after the team email attempt.
+ * Uses an in-process delivery ledger keyed by booking fingerprint so a retry after
+ * partial failure skips legs that already succeeded (e.g. team sent, customer failed).
  *
  * @param data - Server-verified booking payload
  */
 export async function sendBookingWidgetRequestEmails(
   data: BookingWidgetEmailContent,
 ) {
-  await sendBookingWidgetTeamEmail(data);
-  await sendTourRequestConfirmationEmail(data);
+  const deliveryKey = buildBookingWidgetEmailDeliveryKey(data);
+  const deliveryState = getBookingWidgetEmailDeliveryState(deliveryKey);
+
+  if (!deliveryState.team) {
+    await sendBookingWidgetTeamEmail(data);
+    markBookingWidgetEmailDelivered(deliveryKey, "team");
+  }
+
+  if (!deliveryState.customer) {
+    await sendTourRequestConfirmationEmail(data);
+    markBookingWidgetEmailDelivered(deliveryKey, "customer");
+  }
+
   return { success: true };
 }

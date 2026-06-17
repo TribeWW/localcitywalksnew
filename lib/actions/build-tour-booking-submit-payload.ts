@@ -86,7 +86,7 @@ export function buildTourBookingSubmitPayload({
     message: trimmedMessage ? trimmedMessage : undefined,
     city: values.city.trim(),
     productId: productId.trim(),
-    productTitle: productTitle.trim(),
+    productTitle: productTitle.trim() || undefined,
     date: format(values.preferredDate, "yyyy-MM-dd"),
     startTimeId,
     language: values.language?.trim() || undefined,

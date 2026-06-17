@@ -234,7 +234,7 @@ export async function executeSubmitTourBookingRequest(
   }
 
   const productTitle =
-    submit.productTitle?.trim() || detail.data.title.trim() || "Tour";
+    detail.data.title.trim() || submit.productTitle?.trim() || "Tour";
   const startTimeLabel = resolveStartTimeLabel(
     detail.data.startTimes,
     submit.startTimeId,
