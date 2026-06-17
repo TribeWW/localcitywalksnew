@@ -24,17 +24,22 @@ import type { BokunAvailability, BookingWidgetQuote } from "@/types/bokun";
 
 const getTourAvailabilitiesMock = vi.fn();
 const getTourBookingQuoteMock = vi.fn();
+const submitTourBookingRequestMock = vi.fn();
 const toastErrorMock = vi.fn();
+const toastSuccessMock = vi.fn();
 
 vi.mock("@/lib/actions/booking-widget.actions", () => ({
   getTourAvailabilities: (...args: unknown[]) =>
     getTourAvailabilitiesMock(...args),
   getTourBookingQuote: (...args: unknown[]) => getTourBookingQuoteMock(...args),
+  submitTourBookingRequest: (...args: unknown[]) =>
+    submitTourBookingRequestMock(...args),
 }));
 
 vi.mock("sonner", () => ({
   toast: {
     error: (...args: unknown[]) => toastErrorMock(...args),
+    success: (...args: unknown[]) => toastSuccessMock(...args),
   },
 }));
 
@@ -204,6 +209,18 @@ async function goToContactStep() {
   });
 }
 
+async function fillContactFields() {
+  await act(async () => {
+    fireEvent.change(screen.getByPlaceholderText("Full name"), {
+      target: { value: "Jane Doe" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("Email"), {
+      target: { value: "jane@example.com" },
+    });
+    fireEvent.click(screen.getByRole("checkbox"));
+  });
+}
+
 describe("BookingWidget — structure invariants", () => {
   beforeEach(() => {
     getTourAvailabilitiesMock.mockResolvedValue({
@@ -312,17 +329,64 @@ describe("BookingWidget — availability and quote invariants", () => {
     const submitButton = screen.getByRole("button", { name: "Send request" });
     expect(submitButton).toBeDisabled();
 
-    await act(async () => {
-      fireEvent.change(screen.getByPlaceholderText("Full name"), {
-        target: { value: "Jane Doe" },
-      });
-      fireEvent.change(screen.getByPlaceholderText("Email"), {
-        target: { value: "jane@example.com" },
-      });
-      fireEvent.click(screen.getByRole("checkbox"));
-    });
+    await fillContactFields();
 
     expect(submitButton).toBeEnabled();
+  });
+
+  it("submit invariant: calls submitTourBookingRequest and shows success toast", async () => {
+    submitTourBookingRequestMock.mockResolvedValue({ success: true });
+
+    render(<BookingWidget {...defaultBootstrap} />);
+    await flushAvailabilitiesLoad();
+    await goToContactStep();
+    await fillContactFields();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Send request" }));
+    });
+
+    await waitFor(() => {
+      expect(submitTourBookingRequestMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fullName: "Jane Doe",
+          email: "jane@example.com",
+          productId: "1079932",
+          productTitle: "Hello Biarritz",
+          date: SLOT_DATE_ISO,
+          startTimeId: START_TIME_ID,
+          participants: { adults: 1, youth: 0, children: 0, infants: 0 },
+          clientQuote: { totalAmount: 248, currency: "EUR" },
+          consent: true,
+        }),
+      );
+    });
+
+    expect(toastSuccessMock).toHaveBeenCalledWith(
+      "Tour request sent successfully! We'll get back to you soon.",
+    );
+  });
+
+  it("submit invariant: surfaces server error toast on failure", async () => {
+    submitTourBookingRequestMock.mockResolvedValue({
+      success: false,
+      error: "Price has changed. Please review your total and try again.",
+    });
+
+    render(<BookingWidget {...defaultBootstrap} />);
+    await flushAvailabilitiesLoad();
+    await goToContactStep();
+    await fillContactFields();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Send request" }));
+    });
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith(
+        "Price has changed. Please review your total and try again.",
+      );
+    });
   });
 
   it("step 2 shows price recap below contact fields", async () => {

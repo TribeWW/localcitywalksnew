@@ -1,32 +1,42 @@
 /**
- * Booking widget server actions (LOC-1047).
+ * Booking widget server actions (LOC-1047 / LOC-1056).
  *
  * Server-only entry points for the tour-page booking widget (`BookingWidget`,
  * LOC-1048). Wraps:
  *
- * - `fetchAvailabilities` — calendar / slot data
- * - `getTourDetailById` — `defaultRateId`, `pricingCategories`
- * - `calculateBookingQuote` — per-category band lookup (LOC-1040)
- * - `parseTourBookingQuoteInput` — Zod validation (LOC-1046)
+ * - `getTourAvailabilities` — calendar / slot data
+ * - `getTourBookingQuote` / `computeTourBookingQuote` — live pricing (LOC-1040)
+ * - `submitTourBookingRequest` — re-quote, anti-tamper, emails (LOC-1056)
  *
- * All Bókun credentials stay server-side. Responses use `{ success, data?, error? }`
- * matching `GetTourDetailResult`. Submit flow (`submitTourBookingRequest`) lands in LOC-1056.
+ * All Bókun credentials stay server-side. Responses use discriminated unions
+ * (`{ success, data?, error? }`). Submit emails use LOC-1055 (`sendBookingWidgetRequestEmails`).
  */
 
 "use server";
 
 import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
+import {
+  BOOKING_WIDGET_PRICE_MISMATCH_ERROR,
+  clientQuoteMatchesServer,
+  resolveStartTimeLabel,
+  submitInputToQuoteInput,
+} from "@/lib/actions/booking-widget-submit";
+import { buildBookingWidgetEmailContent } from "@/lib/nodemailer/build-booking-widget-email-content";
+import { sendBookingWidgetRequestEmails } from "@/lib/nodemailer";
 import { calculateBookingQuote } from "@/lib/bokun/calculate-booking-quote";
 import { fetchAvailabilities } from "@/lib/bokun/fetch-availabilities";
 import {
   parseTourBookingQuoteInput,
+  parseTourBookingSubmitInput,
   SAFE_BOKUN_PRODUCT_ID_REGEX,
   TOUR_BOOKING_ISO_DATE_REGEX,
   type TourBookingQuoteInput,
+  type TourBookingSubmitInput,
 } from "@/lib/validation/tour-booking";
 import type {
   GetTourAvailabilitiesResult,
   GetTourBookingQuoteResult,
+  SubmitTourBookingRequestResult,
 } from "@/types/bokun";
 
 /** Default ISO currency for availabilities fetch and quote (LOC-1041). */
@@ -183,4 +193,87 @@ export async function computeTourBookingQuote(
   }
 
   return { success: true, data: quote };
+}
+
+/** User-facing error when SMTP delivery fails during submit. */
+const SUBMIT_EMAIL_FAILURE_ERROR =
+  "Failed to send tour request. Please try again later.";
+
+/**
+ * Core submit pipeline — re-quote, anti-tamper check, then team + customer emails.
+ *
+ * Steps:
+ * 1. `computeTourBookingQuote` with submit slot + participants
+ * 2. Compare `clientQuote` to server quote (`clientQuoteMatchesServer`)
+ * 3. `getTourDetailById` for `startTimeLabel`, title fallback, `durationText`
+ * 4. `buildBookingWidgetEmailContent` + `sendBookingWidgetRequestEmails`
+ *
+ * Exported for unit tests (avoids `"use server"` boundary in Vitest).
+ *
+ * @param submit - Pre-validated `TourBookingSubmitInput`
+ * @returns `{ success: true }` or `{ success: false, error }` with safe user copy
+ */
+export async function executeSubmitTourBookingRequest(
+  submit: TourBookingSubmitInput,
+): Promise<SubmitTourBookingRequestResult> {
+  const quoteResult = await computeTourBookingQuote(
+    submitInputToQuoteInput(submit),
+  );
+
+  if (!quoteResult.success) {
+    return { success: false, error: quoteResult.error };
+  }
+
+  if (!clientQuoteMatchesServer(submit.clientQuote, quoteResult.data)) {
+    return { success: false, error: BOOKING_WIDGET_PRICE_MISMATCH_ERROR };
+  }
+
+  const detail = await getTourDetailById(submit.productId);
+  if (!detail.success) {
+    return { success: false, error: detail.error };
+  }
+
+  const productTitle =
+    detail.data.title.trim() || submit.productTitle?.trim() || "Tour";
+  const startTimeLabel = resolveStartTimeLabel(
+    detail.data.startTimes,
+    submit.startTimeId,
+  );
+
+  const emailContent = buildBookingWidgetEmailContent({
+    submit,
+    quote: quoteResult.data,
+    startTimeLabel,
+    productTitle,
+    durationText: detail.data.durationText,
+  });
+
+  try {
+    await sendBookingWidgetRequestEmails(emailContent);
+  } catch (error) {
+    console.error("[booking-widget] submit email delivery failed:", error);
+    return { success: false, error: SUBMIT_EMAIL_FAILURE_ERROR };
+  }
+
+  return { success: true };
+}
+
+/**
+ * Validates, re-quotes, and submits a booking-widget tour request (LOC-1056).
+ *
+ * Rejects tampered `clientQuote` totals, then sends team + customer emails
+ * with server-verified pricing via LOC-1055.
+ *
+ * @param input - Untrusted client payload; validated via `parseTourBookingSubmitInput`
+ * @returns `{ success: true }` on email delivery, or `{ success: false, error }`
+ */
+export async function submitTourBookingRequest(
+  input: unknown,
+): Promise<SubmitTourBookingRequestResult> {
+  const parsed = parseTourBookingSubmitInput(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error };
+  }
+
+  return executeSubmitTourBookingRequest(parsed.data);
 }
