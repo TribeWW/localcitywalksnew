@@ -1,10 +1,13 @@
 "use client";
 
 /**
- * Tour-page booking widget with live Bókun pricing and availability (LOC-1048 / LOC-1063).
+ * Tour-page booking widget with live Bókun pricing and availability (LOC-1048 / LOC-1063 / LOC-1056).
  *
- * Two-step UI: collapsed → configuring (mockup) → contact (email fields).
- * Submit wiring lands in LOC-1056 (`submitTourBookingRequest`).
+ * Two-step UI: collapsed → configuring (date/time/language/guests/breakdown) → contact.
+ *
+ * - Availabilities: month-scoped fetch via `getTourAvailabilities`
+ * - Pricing: debounced `getTourBookingQuote` (400ms)
+ * - Submit: `submitTourBookingRequest` with server re-quote + LOC-1055 emails
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -16,7 +19,9 @@ import { z } from "zod";
 import {
   getTourAvailabilities,
   getTourBookingQuote,
+  submitTourBookingRequest,
 } from "@/lib/actions/booking-widget.actions";
+import { buildTourBookingSubmitPayload } from "@/lib/actions/build-tour-booking-submit-payload";
 import { tourBookingParticipantsSchema } from "@/lib/validation/tour-booking";
 import {
   availabilitySlotToIsoDate,
@@ -134,7 +139,8 @@ function monthKey(date: Date): string {
  * collapsed → configuring (date/time/language/guests/breakdown) → contact.
  *
  * Fetches availabilities per month and debounces live quotes from
- * `getTourBookingQuote`. Submit is a placeholder until LOC-1056.
+ * `getTourBookingQuote`. On submit, builds a payload via
+ * `buildTourBookingSubmitPayload` and calls `submitTourBookingRequest` (LOC-1056).
  *
  * @param props - `BookingWidgetBootstrap` from `getTourDetailById`
  */
@@ -155,6 +161,8 @@ export default function BookingWidget({
   const [quote, setQuote] = useState<BookingWidgetQuote | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
+  /** True while `submitTourBookingRequest` is in flight; disables Send request. */
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const loadedMonthsRef = useRef<Set<string>>(new Set());
 
   const minDate = useMemo(() => {
@@ -429,21 +437,74 @@ export default function BookingWidget({
     fullName.trim().length >= 3 &&
     z.string().trim().email().safeParse(email).success;
 
-  const canSubmit = canBookNow && consent && contactFieldsValid;
+  const canSubmit =
+    canBookNow && consent && contactFieldsValid && !isSubmitting;
 
   const handleParticipantChange = (key: GuestCategoryKey, value: number) => {
     form.setValue(key, value, { shouldDirty: true, shouldValidate: true });
   };
 
   /**
-   * Placeholder submit handler until LOC-1056 wires `submitTourBookingRequest`.
+   * Submits the booking request after server-side re-quote and email delivery.
    *
-   * @param _values - Validated form payload (contact + slot + participants)
+   * Builds `TourBookingSubmitInput` from form state + live quote, then calls
+   * `submitTourBookingRequest`. On success, resets the form and collapses the widget.
+   *
+   * @param values - Validated form payload (contact + slot + participants)
    */
-  async function onSubmit(_values: BookingWidgetFormValues) {
-    toast.error(
-      "Booking request submission is not available yet. Pricing and availability are live — email submission ships in the next release.",
-    );
+  async function onSubmit(values: BookingWidgetFormValues) {
+    if (!quote) {
+      toast.error("Unable to submit without a valid price. Please try again.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const payload = buildTourBookingSubmitPayload({
+        values,
+        productId,
+        productTitle,
+        quote,
+      });
+      const result = await submitTourBookingRequest(payload);
+
+      if (!result.success) {
+        toast.error(
+          result.error ??
+            "Failed to send tour request. Please try again later.",
+        );
+        return;
+      }
+
+      toast.success(
+        "Tour request sent successfully! We'll get back to you soon.",
+      );
+      form.reset({
+        fullName: "",
+        email: "",
+        city: cityName,
+        message: "",
+        phoneNumber: "",
+        adults: 1,
+        youth: 0,
+        children: 0,
+        infants: 0,
+        preferredDate: undefined,
+        startTimeId: undefined,
+        language: undefined,
+        consent: false,
+      });
+      setWidgetOpen(false);
+      setStep("configuring");
+      setQuote(null);
+      setQuoteError(null);
+    } catch (error) {
+      console.error("Booking widget submit error:", error);
+      toast.error("Failed to send tour request. Please try again later.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (

@@ -1,8 +1,18 @@
 /* Its is important to make a password in Freshdesk to trigger the email flow! This password has to be the same as the one in the .env file */
 
 "use server";
+
 import nodemailer from "nodemailer";
 import { config } from "@/lib/config";
+import {
+  buildBookingWidgetCustomerHtml,
+  buildBookingWidgetCustomerSubject,
+  buildBookingWidgetTeamHtml,
+  buildBookingWidgetTeamSubject,
+  type BookingWidgetEmailContent,
+} from "@/lib/nodemailer/booking-widget-email";
+
+export type { BookingWidgetEmailContent } from "@/lib/nodemailer/booking-widget-email";
 
 interface EmailContent {
   subject: string;
@@ -195,4 +205,89 @@ export async function sendTourRequestEmail(data: TourRequestEmailContent) {
     });
     throw new Error(`Failed to send tour request email: ${errorMessage}`);
   }
+}
+
+/**
+ * Sends the support-team notification for a booking-widget request (LOC-1055).
+ *
+ * @param data - Server-verified booking payload; totals must not come from `clientQuote`
+ */
+export async function sendBookingWidgetTeamEmail(data: BookingWidgetEmailContent) {
+  try {
+    const isVerified = await verifyTransporter(transporter);
+    if (!isVerified) {
+      throw new Error("Email transporter verification failed");
+    }
+
+    await transporter.sendMail({
+      from: config.email.supportEmail,
+      replyTo: data.email,
+      to: config.email.supportEmail,
+      subject: buildBookingWidgetTeamSubject(data),
+      html: buildBookingWidgetTeamHtml(data),
+    });
+
+    return { success: true };
+  } catch (error) {
+    const emailError = error as EmailError;
+    const errorMessage = emailError.message || "Unknown email delivery error";
+    console.error("Failed to send booking widget team email:", {
+      message: errorMessage,
+      code: emailError.code,
+      command: emailError.command,
+    });
+    throw new Error(`Failed to send booking widget team email: ${errorMessage}`);
+  }
+}
+
+/**
+ * Sends the customer confirmation for a booking-widget request (LOC-1055).
+ *
+ * @param data - Same verified payload as the team email
+ */
+export async function sendTourRequestConfirmationEmail(
+  data: BookingWidgetEmailContent,
+) {
+  try {
+    const isVerified = await verifyTransporter(transporter);
+    if (!isVerified) {
+      throw new Error("Email transporter verification failed");
+    }
+
+    await transporter.sendMail({
+      from: config.email.supportEmail,
+      to: data.email,
+      subject: buildBookingWidgetCustomerSubject(data),
+      html: buildBookingWidgetCustomerHtml(data),
+    });
+
+    return { success: true };
+  } catch (error) {
+    const emailError = error as EmailError;
+    const errorMessage = emailError.message || "Unknown email delivery error";
+    console.error("Failed to send booking widget confirmation email:", {
+      message: errorMessage,
+      code: emailError.code,
+      command: emailError.command,
+    });
+    throw new Error(
+      `Failed to send booking widget confirmation email: ${errorMessage}`,
+    );
+  }
+}
+
+/**
+ * Sends team notification then customer confirmation for a widget booking (LOC-1055).
+ *
+ * Called by `submitTourBookingRequest` (LOC-1056) after server quote verification.
+ * Sends sequentially so a customer-email failure surfaces after the team email attempt.
+ *
+ * @param data - Server-verified booking payload
+ */
+export async function sendBookingWidgetRequestEmails(
+  data: BookingWidgetEmailContent,
+) {
+  await sendBookingWidgetTeamEmail(data);
+  await sendTourRequestConfirmationEmail(data);
+  return { success: true };
 }

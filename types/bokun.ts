@@ -349,6 +349,14 @@ export type GetTourBookingQuoteResult =
   | { success: false; error: string };
 
 /**
+ * Server action response for `submitTourBookingRequest` (LOC-1056).
+ * Success means team + customer emails were sent; failure includes a safe `error` string.
+ */
+export type SubmitTourBookingRequestResult =
+  | { success: true }
+  | { success: false; error: string };
+
+/**
  * Sanity country document structure
  */
 export interface CountryDocument {

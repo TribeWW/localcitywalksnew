@@ -27,11 +27,21 @@ vi.mock("@/lib/bokun/calculate-booking-quote", () => ({
     calculateBookingQuoteMock(...args),
 }));
 
+const sendBookingWidgetRequestEmailsMock = vi.fn();
+
+vi.mock("@/lib/nodemailer", () => ({
+  sendBookingWidgetRequestEmails: (...args: unknown[]) =>
+    sendBookingWidgetRequestEmailsMock(...args),
+}));
+
 import {
   computeTourBookingQuote,
+  executeSubmitTourBookingRequest,
   getTourAvailabilities,
   getTourBookingQuote,
+  submitTourBookingRequest,
 } from "@/lib/actions/booking-widget.actions";
+import { BOOKING_WIDGET_PRICE_MISMATCH_ERROR } from "@/lib/actions/booking-widget-submit";
 
 function futureIsoDate(daysAhead = 7): string {
   const date = new Date();
@@ -72,6 +82,19 @@ const validQuoteInput = {
   date: futureIsoDate(),
   startTimeId: 4252139,
   participants: { adults: 1, youth: 0, children: 0, infants: 0 },
+};
+
+const validSubmitInput = {
+  fullName: "Jane Doe",
+  email: "jane@example.com",
+  city: "Biarritz",
+  productId: "1079932",
+  productTitle: "Hello Biarritz",
+  date: futureIsoDate(),
+  startTimeId: 4252139,
+  participants: { adults: 1, youth: 0, children: 0, infants: 0 },
+  clientQuote: { totalAmount: 448, currency: "EUR" },
+  consent: true,
 };
 
 function stubSuccessfulQuotePipeline() {
@@ -359,5 +382,94 @@ describe("getTourBookingQuote — delegates to computeTourBookingQuote", () => {
     const result = await getTourBookingQuote(validQuoteInput);
 
     expect(result).toEqual({ success: true, data: sampleQuote });
+  });
+});
+
+describe("submitTourBookingRequest — validation and submit pipeline", () => {
+  beforeEach(() => {
+    sendBookingWidgetRequestEmailsMock.mockReset();
+    sendBookingWidgetRequestEmailsMock.mockResolvedValue({ success: true });
+    stubSuccessfulQuotePipeline();
+    getTourDetailByIdMock.mockResolvedValue({
+      success: true,
+      data: {
+        id: "1079932",
+        title: "Hello Biarritz",
+        defaultRateId: 2199582,
+        pricingCategories,
+        startTimes: [{ id: 4252139, hour: 11, minute: 0 }],
+        durationText: "2 hours",
+        keyPhoto: { derived: [] },
+      },
+    });
+  });
+
+  it("validation invariant: rejects invalid submit payload before quote", async () => {
+    const result = await submitTourBookingRequest({
+      ...validSubmitInput,
+      email: "not-an-email",
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: "Please enter a valid email address",
+    });
+    expect(calculateBookingQuoteMock).not.toHaveBeenCalled();
+    expect(sendBookingWidgetRequestEmailsMock).not.toHaveBeenCalled();
+  });
+
+  it("tamper invariant: rejects mismatched clientQuote total", async () => {
+    const result = await submitTourBookingRequest({
+      ...validSubmitInput,
+      clientQuote: { totalAmount: 1, currency: "EUR" },
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: BOOKING_WIDGET_PRICE_MISMATCH_ERROR,
+    });
+    expect(sendBookingWidgetRequestEmailsMock).not.toHaveBeenCalled();
+  });
+
+  it("tamper invariant: rejects mismatched clientQuote currency", async () => {
+    const result = await submitTourBookingRequest({
+      ...validSubmitInput,
+      clientQuote: { totalAmount: 448, currency: "USD" },
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: BOOKING_WIDGET_PRICE_MISMATCH_ERROR,
+    });
+    expect(sendBookingWidgetRequestEmailsMock).not.toHaveBeenCalled();
+  });
+
+  it("happy path invariant: sends emails with server-verified quote", async () => {
+    const result = await submitTourBookingRequest(validSubmitInput);
+
+    expect(result).toEqual({ success: true });
+    expect(sendBookingWidgetRequestEmailsMock).toHaveBeenCalledTimes(1);
+    expect(sendBookingWidgetRequestEmailsMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "jane@example.com",
+        totalAmount: 448,
+        currency: "EUR",
+        startTimeLabel: "11:00",
+        productTitle: "Hello Biarritz",
+      }),
+    );
+  });
+
+  it("email invariant: returns error when delivery fails", async () => {
+    sendBookingWidgetRequestEmailsMock.mockRejectedValue(
+      new Error("SMTP rejected"),
+    );
+
+    const result = await executeSubmitTourBookingRequest(validSubmitInput);
+
+    expect(result).toEqual({
+      success: false,
+      error: "Failed to send tour request. Please try again later.",
+    });
   });
 });
