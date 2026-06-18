@@ -18,8 +18,6 @@ import {
   runWithBookingWidgetEmailDeliveryLock,
 } from "@/lib/nodemailer/booking-widget-email-delivery-ledger";
 
-export type { BookingWidgetEmailContent } from "@/lib/nodemailer/booking-widget-email";
-
 interface EmailContent {
   subject: string;
   email: string;

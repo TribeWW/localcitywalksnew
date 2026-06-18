@@ -11,7 +11,6 @@ import { Star } from "lucide-react";
 import { upsizeBokunCardImageUrl } from "@/lib/bokun/pick-bokun-card-image-url";
 import { slugifyForUrl } from "@/lib/utils";
 import { getCityCardDisplayContent, getCityCardImageAlt } from "@/lib/utils/city-card-display";
-import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
 import { CityCardData } from "@/types/bokun";
 
 interface CityCardProps {
@@ -70,23 +69,6 @@ function normalizeCardImageUrl(image: string): string {
   return upsizeBokunCardImageUrl(trimmed);
 }
 
-function resolveCardPriceAmount(
-  city: CityCardData,
-  cardsWidgetUpdate: boolean,
-): string | null {
-  if (!cardsWidgetUpdate || city.displayPricePerPerson == null) {
-    return null;
-  }
-
-  return formatCataloguePriceAmount(
-    city.displayPricePerPerson,
-    city.displayPriceCurrency?.trim() || "EUR",
-  );
-}
-
-// Temporarily hide card prices until the booking widget ships; enrichment still runs server-side.
-const SHOW_CARD_PRICES = false;
-
 function MinimalCityCardItem({
   href,
   image,
@@ -130,7 +112,7 @@ function MinimalCityCardItem({
           <h3 className="mb-2 text-lg font-semibold leading-tight text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.3)]">
             {title}
           </h3>
-          {SHOW_CARD_PRICES && priceAmount ? (
+          {priceAmount ? (
             <p className="text-sm text-white/90 [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
               From{" "}
               <span className="text-base font-bold text-white">
@@ -166,14 +148,8 @@ const CityCard = ({
         const slugSegment = city.slug ?? city.id;
         const href = `/tours/${citySlug}/${slugSegment}`;
         const imageAlt = getCityCardImageAlt(city.title);
-        const { title, ratingLine, subtitle } = getCityCardDisplayContent(
-          city,
-          cardsWidgetUpdate,
-        );
-        // Keep resolving enriched prices for easy restore when SHOW_CARD_PRICES is true.
-        const priceAmount = SHOW_CARD_PRICES
-          ? resolveCardPriceAmount(city, cardsWidgetUpdate)
-          : null;
+        const { title, ratingLine, subtitle, priceAmount } =
+          getCityCardDisplayContent(city, cardsWidgetUpdate);
 
         if (cardsWidgetUpdate) {
           return (
