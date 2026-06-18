@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "prebuild": "node --env-file-if-exists=.env.local scripts/prepare-flags-definitions.mjs",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -58,6 +59,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/sanitize-html": "^2.16.1",
+    "@vercel/prepare-flags-definitions": "^0.3.0",
     "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.9",

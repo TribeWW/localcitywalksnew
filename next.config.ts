@@ -21,6 +21,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  webpack: (config) => {
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings ?? []),
+      {
+        module: /@vercel\/flags-core/,
+        message: /@vercel\/flags-definitions/,
+      },
+    ];
+    return config;
+  },
 };
 
 export default nextConfig;
