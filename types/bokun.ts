@@ -158,11 +158,26 @@ export interface BokunProductDetail {
   durationText?: string;
   /** IANA timezone (e.g. "Europe/Paris") */
   timeZone?: string;
-  /** Product-level language codes when slot `guidedLanguages` is empty */
+  /** Content translation languages — not used for guided-language UI. */
   languages?: string[];
+  /** Guided-tour language configuration from activity detail. */
+  guidanceTypes?: BokunGuidanceType[];
   pricingCategories?: BokunPricingCategory[];
   startTimes?: BokunStartTime[];
   rates?: BokunActivityRate[];
+}
+
+/** Guided-language row from Bókun activity detail `guidanceTypes`. */
+export interface BokunGuidanceType {
+  guidanceType: string;
+  languages: string[];
+  displayLanguages?: string[];
+}
+
+/** Code + display label for the booking widget language select. */
+export interface BookingWidgetLanguageOption {
+  code: string;
+  label: string;
 }
 
 /** Tier band for a pricing category on an availability slot. */
@@ -200,7 +215,7 @@ export interface BokunAvailability {
   minParticipantsToBookNow?: number;
   defaultRateId?: number;
   pricesByRate: BokunAvailabilityPriceByRate[];
-  /** Slot-specific guided languages; empty → fall back to product `languages` */
+  /** Slot-specific guided languages; empty → use product `guidanceTypes` (GUIDED). */
   guidedLanguages: string[];
   soldOut: boolean;
   unavailable?: boolean;
@@ -275,8 +290,8 @@ export interface BookingWidgetBootstrap {
   cityName: string;
   /** Scheduled times from product detail; intersected with availabilities for the date picker. */
   startTimes: BokunStartTime[];
-  /** Product-level language codes; used when slot `guidedLanguages` is empty. */
-  languages: string[];
+  /** Guided language options from product `guidanceTypes` (GUIDED). */
+  guidedLanguageOptions: BookingWidgetLanguageOption[];
   /** Optional pricing category rows for quote label resolution. */
   pricingCategories?: BokunPricingCategory[];
   /** Read-only duration copy (e.g. “2 hours”); replaces `DurationSelector`. */

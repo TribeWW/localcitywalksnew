@@ -3,12 +3,12 @@
 /**
  * Guided-language dropdown for the booking widget (LOC-1051).
  *
- * Maps Bókun codes (e.g. `EN_GB`) to human labels via `formatBokunLanguage`.
- * Used when the selected slot exposes `guidedLanguages`, else product `languages`.
+ * Renders Bókun `displayLanguages` labels from product `guidanceTypes` (GUIDED).
+ * Slot `guidedLanguages` narrow the option list via `resolveLanguageOptionsForSlot`.
  */
 
 import { cn } from "@/lib/utils";
-import { formatBokunLanguage } from "@/lib/utils/format-bokun-language";
+import type { BookingWidgetLanguageOption } from "@/types/bokun";
 import {
   Select,
   SelectContent,
@@ -24,8 +24,8 @@ interface LanguageSelectorProps {
   value?: string;
   /** Called with the raw code when the user picks a language. */
   onChange: (language: string | undefined) => void;
-  /** Bókun codes from slot `guidedLanguages` or product `languages`. */
-  languages: string[];
+  /** Guided language code + display label pairs. */
+  options: BookingWidgetLanguageOption[];
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -34,26 +34,30 @@ interface LanguageSelectorProps {
 }
 
 /**
- * Select control for tour guided language; dedupes and trims incoming codes.
+ * Select control for tour guided language.
  *
- * @param props.languages - Bókun codes from slot or product metadata
+ * @param props.options - From `guidanceTypes` or narrowed by slot `guidedLanguages`
  */
 const LanguageSelector = ({
   value,
   onChange,
-  languages,
+  options,
   placeholder = "Select language",
   disabled = false,
   className,
   variant = "default",
 }: LanguageSelectorProps) => {
-  const uniqueLanguages = [...new Set(languages.map((code) => code.trim()).filter(Boolean))];
+  const uniqueOptions = options.filter(
+    (option, index, all) =>
+      option.code.trim() &&
+      all.findIndex((candidate) => candidate.code === option.code) === index,
+  );
 
   return (
     <Select
       value={value}
       onValueChange={onChange}
-      disabled={disabled || uniqueLanguages.length === 0}
+      disabled={disabled || uniqueOptions.length === 0}
     >
       <SelectTrigger
         className={cn(
@@ -64,9 +68,9 @@ const LanguageSelector = ({
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {uniqueLanguages.map((code) => (
-          <SelectItem key={code} value={code}>
-            {formatBokunLanguage(code)}
+        {uniqueOptions.map((option) => (
+          <SelectItem key={option.code} value={option.code}>
+            {option.label}
           </SelectItem>
         ))}
       </SelectContent>
