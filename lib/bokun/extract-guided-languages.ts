@@ -86,6 +86,12 @@ export function resolveLanguageOptionsForSlot(
     if (seen.has(normalized)) continue;
     seen.add(normalized);
 
+    const exactProduct = productOptions.find((option) => option.code === code);
+    if (exactProduct) {
+      resolved.push(exactProduct);
+      continue;
+    }
+
     const fromProduct = productByNormalized.get(normalized);
     if (fromProduct) {
       resolved.push({ code: fromProduct.code, label: fromProduct.label });
