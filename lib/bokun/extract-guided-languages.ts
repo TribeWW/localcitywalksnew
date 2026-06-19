@@ -68,12 +68,13 @@ export function resolveLanguageOptionsForSlot(
   slotLanguageCodes: readonly string[],
   productOptions: readonly BookingWidgetLanguageOption[],
 ): BookingWidgetLanguageOption[] {
-  const productByNormalized = new Map(
-    productOptions.map((option) => [
-      normalizeBokunLanguageCode(option.code),
-      option,
-    ]),
-  );
+  const productByNormalized = new Map<string, BookingWidgetLanguageOption>();
+  for (const option of productOptions) {
+    const key = normalizeBokunLanguageCode(option.code);
+    if (!productByNormalized.has(key)) {
+      productByNormalized.set(key, option);
+    }
+  }
 
   const resolved: BookingWidgetLanguageOption[] = [];
   const seen = new Set<string>();
@@ -95,12 +96,6 @@ export function resolveLanguageOptionsForSlot(
     const fromProduct = productByNormalized.get(normalized);
     if (fromProduct) {
       resolved.push({ code: fromProduct.code, label: fromProduct.label });
-      continue;
-    }
-
-    const exactProduct = productOptions.find((option) => option.code === code);
-    if (exactProduct) {
-      resolved.push(exactProduct);
       continue;
     }
 

@@ -68,4 +68,15 @@ describe("resolveLanguageOptionsForSlot", () => {
       { code: "en", label: "English" },
     ]);
   });
+
+  it("prefers exact product code before normalized map lookup", () => {
+    const options = [
+      { code: "en", label: "English (generic)" },
+      { code: "EN_GB", label: "English (UK)" },
+    ];
+
+    expect(resolveLanguageOptionsForSlot(["EN_GB"], options)).toEqual([
+      { code: "EN_GB", label: "English (UK)" },
+    ]);
+  });
 });
