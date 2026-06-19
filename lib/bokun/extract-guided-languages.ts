@@ -95,7 +95,7 @@ export function resolveLanguageOptionsForSlot(
 
     const fromProduct = productByNormalized.get(normalized);
     if (fromProduct) {
-      resolved.push({ code: fromProduct.code, label: fromProduct.label });
+      resolved.push({ code, label: fromProduct.label });
       continue;
     }
 
