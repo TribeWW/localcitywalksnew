@@ -7,7 +7,7 @@
  * - Availabilities fetched on mount for the current month
  * - Quote refetch is debounced (400ms) after date + startTimeId are set
  * - Submit stays disabled until step 2 consent + valid quote + contact fields
- * - Slot `guidedLanguages` override product `languages` for the language control
+ * - Slot `guidedLanguages` narrow product `guidanceTypes` options
  * - Below `minParticipantsToBookNow` blocks Book now with inline message
  */
 
@@ -165,7 +165,10 @@ const defaultBootstrap = {
   productTitle: "Hello Biarritz",
   cityName: "Biarritz",
   startTimes: [{ id: START_TIME_ID, hour: 11, minute: 0 }],
-  languages: ["EN_GB"],
+  guidedLanguageOptions: [
+    { code: "en", label: "English" },
+    { code: "es", label: "Spanish" },
+  ],
   fromPriceAmount: 124,
   fromPriceCurrency: "EUR",
 };
@@ -419,7 +422,7 @@ describe("BookingWidget — slot-driven invariants", () => {
     });
   });
 
-  it("language invariant: prefers slot guidedLanguages over product languages", async () => {
+  it("language invariant: narrows to slot guidedLanguages when set", async () => {
     render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
     await openConfiguringStep();

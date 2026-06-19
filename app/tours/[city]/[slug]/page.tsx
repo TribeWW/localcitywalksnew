@@ -24,6 +24,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TourRequestFormSection from "@/components/tours/tour-request-form-section";
 import { cardsWidgetUpdate } from "@/flags";
+import { extractGuidedLanguagesFromGuidanceTypes } from "@/lib/bokun/extract-guided-languages";
 import { enrichProductPricesFromPriceList } from "@/lib/bokun/enrich-product-prices-from-price-list";
 import TourImageGallery from "@/components/tours/tour-image-gallery";
 import FaqAccordion from "@/components/tours/faq-accordion";
@@ -452,7 +453,9 @@ export default async function TourPage({
                     productTitle: detail.data.title,
                     cityName: gpCity ?? detail.data.title,
                     startTimes: detail.data.startTimes ?? [],
-                    languages: detail.data.languages ?? [],
+                    guidedLanguageOptions: extractGuidedLanguagesFromGuidanceTypes(
+                      detail.data.guidanceTypes,
+                    ),
                     pricingCategories: detail.data.pricingCategories,
                     durationText: detail.data.durationText,
                     defaultRateId: detail.data.defaultRateId,

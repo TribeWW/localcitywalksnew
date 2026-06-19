@@ -48,10 +48,12 @@ import { Input } from "@/components/ui/input";
 import DatePicker from "@/components/ui/date-picker";
 import TimeSelector from "@/components/ui/time-selector";
 import LanguageSelector from "@/components/tours/LanguageSelector";
+import { resolveLanguageOptionsForSlot } from "@/lib/bokun/extract-guided-languages";
 import type {
   BokunAvailability,
   BokunStartTime,
   BookingWidgetBootstrap,
+  BookingWidgetLanguageOption,
   BookingWidgetQuote,
 } from "@/types/bokun";
 import { toast } from "sonner";
@@ -149,7 +151,7 @@ export default function BookingWidget({
   productTitle,
   cityName,
   startTimes,
-  languages,
+  guidedLanguageOptions,
   fromPriceAmount,
   fromPriceCurrency,
 }: BookingWidgetBootstrap) {
@@ -308,12 +310,20 @@ export default function BookingWidget({
     return slotsForSelectedDate.find((slot) => slot.startTimeId === id);
   }, [slotsForSelectedDate, startTimeIdValue]);
 
-  const languageOptions = useMemo(() => {
+  const languageOptions = useMemo((): BookingWidgetLanguageOption[] => {
     if (selectedSlot?.guidedLanguages?.length) {
-      return selectedSlot.guidedLanguages;
+      return resolveLanguageOptionsForSlot(
+        selectedSlot.guidedLanguages,
+        guidedLanguageOptions,
+      );
     }
-    return languages;
-  }, [languages, selectedSlot]);
+    return guidedLanguageOptions;
+  }, [guidedLanguageOptions, selectedSlot]);
+
+  const languageCodes = useMemo(
+    () => languageOptions.map((option) => option.code),
+    [languageOptions],
+  );
 
   const totalParticipants = adults + youth + children + infants;
 
@@ -341,15 +351,15 @@ export default function BookingWidget({
       return;
     }
 
-    if (language && languageOptions.includes(language)) {
+    if (language && languageCodes.includes(language)) {
       return;
     }
 
     form.setValue(
       "language",
-      languageOptions.length === 1 ? languageOptions[0] : undefined,
+      languageOptions.length === 1 ? languageOptions[0]!.code : undefined,
     );
-  }, [form, language, languageOptions]);
+  }, [form, language, languageCodes, languageOptions]);
 
   useEffect(() => {
     const startTimeId = startTimeIdValue ? Number(startTimeIdValue) : NaN;
@@ -597,7 +607,7 @@ export default function BookingWidget({
                           <LanguageSelector
                             value={field.value}
                             onChange={field.onChange}
-                            languages={languageOptions}
+                            options={languageOptions}
                             placeholder="Select language"
                             disabled={!startTimeIdValue}
                             variant="widget"

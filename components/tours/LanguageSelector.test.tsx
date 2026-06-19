@@ -2,9 +2,9 @@
  * LanguageSelector — red/green TDD specs (LOC-1051).
  *
  * Critical invariants:
- * - Bókun codes map to human labels (`EN_GB` → English)
+ * - Renders Bókun displayLanguages labels from options
  * - Duplicate codes are deduplicated
- * - Empty language list disables the control
+ * - Empty options disables the control
  * - Selection calls `onChange` with the raw Bókun code (not the label)
  */
 
@@ -54,23 +54,25 @@ vi.mock("@/components/ui/select", () => ({
 }));
 
 describe("LanguageSelector — label and selection invariants", () => {
-  it("label invariant: maps EN_GB to English in the option text", () => {
+  it("label invariant: renders displayLanguages from options", () => {
     render(
       <LanguageSelector
-        languages={["EN_GB"]}
+        options={[{ code: "en", label: "English" }]}
         onChange={vi.fn()}
       />,
     );
 
-    expect(screen.getByRole("option", { name: "English" })).toHaveValue(
-      "EN_GB",
-    );
+    expect(screen.getByRole("option", { name: "English" })).toHaveValue("en");
   });
 
   it("dedupe invariant: renders each language code once", () => {
     render(
       <LanguageSelector
-        languages={["EN_GB", " EN_GB ", "FR"]}
+        options={[
+          { code: "en", label: "English" },
+          { code: "en", label: "English duplicate" },
+          { code: "es", label: "Spanish" },
+        ]}
         onChange={vi.fn()}
       />,
     );
@@ -78,12 +80,12 @@ describe("LanguageSelector — label and selection invariants", () => {
     const options = screen.getAllByRole("option").filter((el) => el.getAttribute("value"));
     const values = options.map((option) => option.getAttribute("value"));
 
-    expect(values).toEqual(expect.arrayContaining(["EN_GB", "FR"]));
-    expect(values.filter((value) => value === "EN_GB")).toHaveLength(1);
+    expect(values).toEqual(expect.arrayContaining(["en", "es"]));
+    expect(values.filter((value) => value === "en")).toHaveLength(1);
   });
 
-  it("disabled invariant: disables select when languages array is empty", () => {
-    render(<LanguageSelector languages={[]} onChange={vi.fn()} />);
+  it("disabled invariant: disables select when options array is empty", () => {
+    render(<LanguageSelector options={[]} onChange={vi.fn()} />);
 
     expect(screen.getByTestId("language-select")).toBeDisabled();
   });
@@ -93,11 +95,17 @@ describe("LanguageSelector — label and selection invariants", () => {
     const onChange = vi.fn();
 
     render(
-      <LanguageSelector languages={["FR", "EN_GB"]} onChange={onChange} />,
+      <LanguageSelector
+        options={[
+          { code: "es", label: "Spanish" },
+          { code: "en", label: "English" },
+        ]}
+        onChange={onChange}
+      />,
     );
 
-    await user.selectOptions(screen.getByTestId("language-select"), "FR");
+    await user.selectOptions(screen.getByTestId("language-select"), "es");
 
-    expect(onChange).toHaveBeenCalledWith("FR");
+    expect(onChange).toHaveBeenCalledWith("es");
   });
 });
