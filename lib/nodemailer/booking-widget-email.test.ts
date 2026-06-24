@@ -3,7 +3,7 @@
  *
  * Critical invariants:
  * - User-controlled strings are HTML-escaped
- * - Team email includes price, infants, productId, startTimeId, consent
+ * - Team email includes price, infants, and consent; omits internal Bókun ids
  * - Customer email mirrors selections + verified total; omits internal ids
  * - Optional fields (message, phone, language, duration) omitted when empty
  * - Breakdown renders Free for zero line totals
@@ -127,13 +127,13 @@ describe("buildBookingWidgetTeamSubject", () => {
 });
 
 describe("buildBookingWidgetTeamHtml — display invariants", () => {
-  it("ops invariant: includes productId, startTimeId, infants, and consent", () => {
+  it("ops invariant: includes infants and consent; omits internal Bókun ids", () => {
     const html = buildBookingWidgetTeamHtml(samplePayload);
 
-    expect(html).toContain("Bókun product id");
-    expect(html).toContain("1079932");
-    expect(html).toContain("Bókun start time id");
-    expect(html).toContain("12345");
+    expect(html).not.toContain("Bókun product id");
+    expect(html).not.toContain("1079932");
+    expect(html).not.toContain("Bókun start time id");
+    expect(html).not.toContain("<strong>Bókun start time id:</strong>");
     expect(html).toContain("Infants (0–2)");
     expect(html).toContain("Consent given:</strong> Yes");
   });

@@ -13,9 +13,16 @@ lib/
   bokun/
     config.ts                 # Configuration and API endpoints
     index.ts                  # createBokunUrl, generateBokunHeaders, etc.
+    fetch-availabilities.ts   # GET availabilities (booking widget calendar)
+    extract-guided-languages.ts # Guided language options from guidanceTypes
+    calculate-booking-quote.ts  # Live quote from availability + guests
   actions/
     tour.actions.ts           # Search / listing (getProductsPage, getExploreCatalogPage, getAllProducts)
     tour-detail.actions.ts    # Single product by id (getTourDetailById)
+    booking-widget.actions.ts # Widget: availabilities, quote, submit (server actions)
+components/
+  tours/
+    BookingWidget.tsx         # Tour-page booking UI (flag-gated)
 app/
   tours/[city]/[slug]/
     page.tsx                  # City-first tour detail (server)
@@ -78,6 +85,8 @@ The configuration file exports:
 - `PRODUCT_BY_ID`: `/activity.json/{id}` - Get tour by ID
 - `PRODUCT_BY_SLUG`: `/activity.json/slug/{slug}` - Get tour by slug
 - `PICKUP_PLACES`: `/activity.json/{id}/pickup-places` - Get pickup locations
+- `PRICE_LIST`: `/activity.json/{id}/price-list` - Tiered catalogue pricing (listing cards + widget “from” price)
+- `AVAILABILITIES`: `/activity.json/{id}/availabilities` - Live slots for the booking widget (see below)
 
 ### Search: pagination and filtering
 
@@ -123,6 +132,49 @@ The tour page fetches full detail via **`GET /activity.json/{id}`** (`BOKUN_ENDP
 ### Tiered pricing (listings)
 
 Search results expose a numeric `price` that does **not** reliably match a **2-guest** headline. For catalogue cards, the app uses **`GET /activity.json/{id}/price-list`** (with `defaultRateId` from activity detail) — see Bókun docs on [checking availability and pricing](https://bokun.dev/booking-api-rest/vU6sCfxwYdJWd1QAcLt12i/checking-availability-and-pricing/9x4PcziToX5g8WG4j5KMxt). **Implementation** ([`lib/bokun/enrich-product-prices-from-price-list.ts`](../../lib/bokun/enrich-product-prices-from-price-list.ts)): prefetches `defaultRateId`, then fetches price-list per product with bounded concurrency (**6**), a **15-minute** in-memory headline cache (TTL eviction and size cap), max **50** ids per batch; headline rules in [`lib/bokun/extract-price-list-headline.ts`](../../lib/bokun/extract-price-list-headline.ts) (default rate, Adult tier, 2-guest band). **Product/UI overview:** [Listing city cards](./LISTING_CITY_CARDS.md).
+
+### Tour page: booking widget (availabilities, quote, submit)
+
+When the **`cards-widget-update`** feature flag is on (`flags.ts`, Vercel key `cards-widget-update`), the tour page renders **`BookingWidget`** instead of the legacy request form. The widget calls **server actions only** — Bókun credentials never reach the client.
+
+**Server actions** ([`lib/actions/booking-widget.actions.ts`](../../lib/actions/booking-widget.actions.ts)):
+
+| Action | Purpose |
+| ------ | ------- |
+| `getTourAvailabilities` | Calendar / time slots for a date range |
+| `getTourBookingQuote` | Live price breakdown for selected slot + guests |
+| `submitTourBookingRequest` | Re-quote on submit, anti-tamper check, request emails |
+
+**Availabilities** — `GET /activity.json/{id}/availabilities` via [`fetchAvailabilities`](../../lib/bokun/fetch-availabilities.ts):
+
+- Query params: `start`, `end`, `lang`, `currency`, `includeSoldOut` (defaults: `EN`, `EUR`, `false`).
+- **15-minute** in-memory cache; **5-second** request timeout (aligned with tour detail / price-list).
+- Used by the widget date picker to disable sold-out days and list start times per day.
+
+**Quote** — [`calculateBookingQuote`](../../lib/bokun/calculate-booking-quote.ts) uses the selected availability row, guest counts, and product `pricingCategories` / `defaultRateId`. Submit re-runs the quote server-side and rejects mismatched client totals (`BOOKING_WIDGET_PRICE_MISMATCH_ERROR`).
+
+**Guided languages (not product `languages`)** — Bókun’s top-level **`languages`** field is **content translation** (e.g. `EN_GB` for the product page). The widget language selector uses **guided** options from **`guidanceTypes`** where `guidanceType === "GUIDED"`:
+
+- [`extractGuidedLanguagesFromGuidanceTypes`](../../lib/bokun/extract-guided-languages.ts) pairs `languages` + `displayLanguages` from the GUIDED entry into `{ code, label }` options.
+- Each availability slot may expose **`guidedLanguages`**; [`resolveLanguageOptionsForSlot`](../../lib/bokun/extract-guided-languages.ts) narrows product options to codes offered on that slot (exact code match first, then normalized `en` / `EN_GB` style matching).
+- The widget does **not** fall back to product `languages` when guided options are empty.
+
+**Bootstrap** — [`app/tours/[city]/[slug]/page.tsx`](../../app/tours/[city]/[slug]/page.tsx) passes `bookingBootstrap` (product id/title, `guidedLanguageOptions`, `pricingCategories`, `defaultRateId`, `fromPriceAmount`, etc.) into `TourRequestFormSection` → `BookingWidget`.
+
+**User-visible errors** (widget UI):
+
+| Scenario | Behaviour |
+| -------- | --------- |
+| Availabilities fetch fails / times out | Red alert: “Unable to load availability. Please try again.” — **Book now** disabled |
+| Quote fails | Safe error message; user can change date/time/guests |
+| Sold-out slot | Slot not selectable or submit blocked |
+| Below `minParticipantsToBookNow` | Book now disabled until guest count meets minimum |
+| Submit email failure | User sees failure; server uses delivery ledger to avoid duplicate sends on retry |
+| Stale / tampered quote on submit | Server re-quote mismatch → price mismatch error |
+
+**Listing cards:** same flag drives minimal card chrome and “From {price} / adult” — see [Listing city cards](./LISTING_CITY_CARDS.md).
+
+**Implementation plan:** [`documentation/implementation-plans/2026-06-04-feature-booking-widget.md`](../implementation-plans/2026-06-04-feature-booking-widget.md).
 
 ### Tour page: HTML description safety
 

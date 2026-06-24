@@ -30,10 +30,12 @@ export interface BookingWidgetEmailContent {
   message?: string;
   consent: boolean;
   city: string;
+  /** Internal idempotency key component — not shown in email bodies. */
   productId: string;
   productTitle: string;
   /** Selected tour date `YYYY-MM-DD`. */
   date: string;
+  /** Internal idempotency key component — not shown in email bodies. */
   startTimeId: number;
   /** Display label for the chosen start time (e.g. `"11:00"`). */
   startTimeLabel: string;
@@ -264,6 +266,9 @@ function renderMessageSection(message: string | undefined): string {
 /**
  * HTML body for the support team booking-widget notification.
  *
+ * Omits internal Bókun ids (`productId`, `startTimeId`); those remain on the
+ * payload for delivery-ledger idempotency only.
+ *
  * @param data - Verified booking email payload
  */
 export function buildBookingWidgetTeamHtml(
@@ -286,8 +291,6 @@ export function buildBookingWidgetTeamHtml(
         <h3 style="color: #333; margin-top: 0;">Product</h3>
         <p><strong>City:</strong> ${escapeHtml(data.city)}</p>
         <p><strong>Product:</strong> ${escapeHtml(data.productTitle)}</p>
-        <p><strong>Bókun product id:</strong> ${escapeHtml(data.productId)}</p>
-        <p><strong>Bókun start time id:</strong> ${data.startTimeId}</p>
       </div>
 
       ${renderScheduleSection(data)}
