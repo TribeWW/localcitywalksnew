@@ -47,7 +47,8 @@ export default function BokunSpotlightItemInput(props: ObjectInputProps) {
   const { value, onChange, readOnly, elementProps } = props;
   const { id, ref, "aria-describedby": ariaDescribedBy } = elementProps;
 
-  const current = (value as SpotlightItemValue | Record<string, unknown> | undefined) ?? {};
+  const current =
+    (value as SpotlightItemValue | Record<string, unknown> | undefined) ?? {};
   const selectedId =
     typeof (current as SpotlightItemValue).bokunProductId === "string"
       ? (current as SpotlightItemValue).bokunProductId!
@@ -70,7 +71,10 @@ export default function BokunSpotlightItemInput(props: ObjectInputProps) {
     return map;
   }, [options]);
 
-  const visibleOptions = useMemo(() => options.map((o) => ({ value: o.id })), [options]);
+  const visibleOptions = useMemo(
+    () => options.map((o) => ({ value: o.id })),
+    [options],
+  );
 
   useEffect(() => {
     if (!query || query.trim().length < 2) {
@@ -102,7 +106,9 @@ export default function BokunSpotlightItemInput(props: ObjectInputProps) {
     if (!selectedId || selectedTitle) return;
     let cancelled = false;
     (async () => {
-      const res = await fetch(`/api/bokun/product?id=${encodeURIComponent(selectedId)}`);
+      const res = await fetch(
+        `/api/bokun/product?id=${encodeURIComponent(selectedId)}`,
+      );
       if (!res.ok) return;
       const data = (await res.json()) as { item: BokunProductOption | null };
       if (cancelled) return;
@@ -130,7 +136,12 @@ export default function BokunSpotlightItemInput(props: ObjectInputProps) {
         renderOption={(opt) => (
           <Card padding={2} radius={2}>
             <Text size={1}>
-              {formatOptionLabel(optionById.get(opt.value) ?? { id: opt.value, title: opt.value })}
+              {formatOptionLabel(
+                optionById.get(opt.value) ?? {
+                  id: opt.value,
+                  title: opt.value,
+                },
+              )}
             </Text>
           </Card>
         )}
@@ -138,7 +149,8 @@ export default function BokunSpotlightItemInput(props: ObjectInputProps) {
           const o = optionById.get(nextId);
           if (o) return formatSelectedLabel(o);
           if (selectedTitle) return selectedTitle;
-          if (resolvedSelected?.id === nextId) return formatSelectedLabel(resolvedSelected);
+          if (resolvedSelected?.id === nextId)
+            return formatSelectedLabel(resolvedSelected);
           return nextId;
         }}
         onSelect={(nextId) => {
@@ -148,14 +160,15 @@ export default function BokunSpotlightItemInput(props: ObjectInputProps) {
             set({
               ...current,
               bokunProductId: nextId,
-              bokunProductTitle: o?.title ?? (current as SpotlightItemValue).bokunProductTitle,
+              bokunProductTitle:
+                o?.title ?? (current as SpotlightItemValue).bokunProductTitle,
             }),
           );
         }}
       />
 
       <Text size={1} muted>
-        Select by title. Stored as Bokun product ID for the frontend.
+        Select by product title as described in Bokún.
       </Text>
 
       {!readOnly && selectedId ? (
@@ -172,4 +185,3 @@ export default function BokunSpotlightItemInput(props: ObjectInputProps) {
     </Stack>
   );
 }
-
