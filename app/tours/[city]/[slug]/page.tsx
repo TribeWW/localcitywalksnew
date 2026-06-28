@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -26,17 +27,29 @@ import TourRequestFormSection from "@/components/tours/tour-request-form-section
 import { cardsWidgetUpdate } from "@/flags";
 import { extractGuidedLanguagesFromGuidanceTypes } from "@/lib/bokun/extract-guided-languages";
 import { enrichProductPricesFromPriceList } from "@/lib/bokun/enrich-product-prices-from-price-list";
+import {
+  extractTourIdFromSlug,
+  resolveTourPageMetadata,
+} from "@/lib/tour-page-metadata";
 import TourImageGallery from "@/components/tours/tour-image-gallery";
 import FaqAccordion from "@/components/tours/faq-accordion";
 import sanitizeHtml from "sanitize-html";
 
-function extractIdFromSlug(slug: string): string | null {
-  const trimmed = slug.trim();
-  if (!trimmed) return null;
-  const parts = trimmed.split("-").filter(Boolean);
-  if (parts.length === 0) return null;
-  const last = parts[parts.length - 1];
-  return /^\d+$/.test(last) ? last : null;
+/**
+ * Resolves tour page `<title>` and meta description from Sanity when overrides exist.
+ *
+ * Returns `{}` when the slug has no tour id or Sanity has no usable SEO fields,
+ * so `app/layout.tsx` metadata remains in effect.
+ *
+ * @param params - Route params promise containing `{ city, slug }`
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ city: string; slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  return resolveTourPageMetadata(slug);
 }
 
 function pickBestPhotoUrl(photo: unknown, preferred: string[]): string | null {
@@ -80,7 +93,7 @@ export default async function TourPage({
 
   const cardsWidgetUpdateEnabled = await cardsWidgetUpdate();
 
-  const id = extractIdFromSlug(slug);
+  const id = extractTourIdFromSlug(slug);
   if (!id) notFound();
 
   const detail = await getTourDetailById(id);

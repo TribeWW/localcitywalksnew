@@ -15,4 +15,5 @@ export const structure: StructureResolver = (S) =>
       S.documentTypeListItem("city").title("Cities"),
       S.documentTypeListItem("country").title("Countries"),
       S.documentTypeListItem("review").title("Tour reviews"),
+      S.documentTypeListItem("tourSeoMetadata").title("Tour SEO"),
     ]);
