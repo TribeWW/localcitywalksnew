@@ -36,8 +36,7 @@ export const tourSeoMetadata = defineType({
             rule
               .required()
               .custom((value) =>
-                typeof value === "string" &&
-                isDigitsOnlyBokunProductId(value)
+                typeof value === "string" && isDigitsOnlyBokunProductId(value)
                   ? true
                   : "Use digits only — the Bokun product id from the tour URL",
               ),
@@ -57,7 +56,14 @@ export const tourSeoMetadata = defineType({
       type: "string",
       description: "Google title tag (recommended ≤60 characters).",
       validation: (rule) =>
-        rule.max(60).warning("Recommended ≤60 characters for Google title tags"),
+        rule
+          .custom((value) =>
+            value == null || (typeof value === "string" && value.trim() !== "")
+              ? true
+              : "Leave empty or enter a non-blank SEO title",
+          )
+          .max(60)
+          .warning("Recommended ≤60 characters for Google title tags"),
     }),
     defineField({
       name: "metaDescription",
@@ -67,6 +73,11 @@ export const tourSeoMetadata = defineType({
       description: "Google snippet description (recommended ≤160 characters).",
       validation: (rule) =>
         rule
+          .custom((value) =>
+            value == null || (typeof value === "string" && value.trim() !== "")
+              ? true
+              : "Leave empty or enter a non-blank meta description",
+          )
           .max(160)
           .warning("Recommended ≤160 characters for Google meta descriptions"),
     }),

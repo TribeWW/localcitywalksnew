@@ -44,7 +44,8 @@ export type SanityDraftPublishedIds = {
 
 const DEFAULT_PREVIEW_TITLE = "Tour SEO Meta Data";
 
-const DUPLICATE_TOUR_SEO_MESSAGE = "An SEO document already exists for this tour";
+const DUPLICATE_TOUR_SEO_MESSAGE =
+  "An SEO document already exists for this tour";
 
 /**
  * Returns whether `value` is a non-empty Bokun product id (digits only).
@@ -64,9 +65,7 @@ export function resolveSanityDraftPublishedIds(
   rawId: string,
 ): SanityDraftPublishedIds {
   const publishedId = rawId.replace(/^drafts\./, "");
-  const draftId = rawId.startsWith("drafts.")
-    ? rawId
-    : `drafts.${publishedId}`;
+  const draftId = rawId.startsWith("drafts.") ? rawId : `drafts.${publishedId}`;
 
   return { publishedId, draftId };
 }
@@ -91,8 +90,7 @@ export function prepareTourSeoMetadataPreview(
 
   return {
     title,
-    subtitle:
-      subtitleParts.length > 0 ? subtitleParts.join(" · ") : undefined,
+    subtitle: subtitleParts.length > 0 ? subtitleParts.join(" · ") : undefined,
   };
 }
 
@@ -120,11 +118,15 @@ export async function validateUniqueTourSeoDocument(
   const { publishedId, draftId } = resolveSanityDraftPublishedIds(rawId);
 
   const client = context.getClient({ apiVersion });
-  const count = await client.fetch<number>(TOUR_SEO_DUPLICATE_COUNT_QUERY, {
-    tourId,
-    publishedId,
-    draftId,
-  });
+  try {
+    const count = await client.fetch<number>(TOUR_SEO_DUPLICATE_COUNT_QUERY, {
+      tourId,
+      publishedId,
+      draftId,
+    });
 
-  return count === 0 || DUPLICATE_TOUR_SEO_MESSAGE;
+    return count === 0 || DUPLICATE_TOUR_SEO_MESSAGE;
+  } catch {
+    return "Could not verify Tour SEO uniqueness. Please try again.";
+  }
 }
