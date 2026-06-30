@@ -16,6 +16,11 @@ const IUBENDA_SITE_ID = process.env.NEXT_PUBLIC_IUBENDA_SITE_ID;
 const IUBENDA_COOKIE_POLICY_ID =
   process.env.NEXT_PUBLIC_IUBENDA_COOKIE_POLICY_ID;
 
+/** Iubenda CMP injects data-cmp-* attrs and reorders <head> scripts before React hydrates. */
+const loadThirdPartyScripts =
+  process.env.NODE_ENV === "production" ||
+  process.env.NEXT_PUBLIC_LOAD_TRACKING_SCRIPTS === "true";
+
 const outfit = Outfit({
   variable: "--font-outfit",
   subsets: ["latin"],
@@ -79,13 +84,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={outfit.className}>
+    <html lang="en" className={outfit.className} suppressHydrationWarning>
       <head>
-        <Script
-          src="https://embeds.iubenda.com/widgets/2eb2fdb3-d356-4f87-b69e-90958c564119.js"
-          strategy="beforeInteractive"
-        />
-        {IUBENDA_SITE_ID && IUBENDA_COOKIE_POLICY_ID && (
+        {loadThirdPartyScripts && (
+          <Script
+            src="https://embeds.iubenda.com/widgets/2eb2fdb3-d356-4f87-b69e-90958c564119.js"
+            strategy="beforeInteractive"
+          />
+        )}
+        {loadThirdPartyScripts &&
+          IUBENDA_SITE_ID &&
+          IUBENDA_COOKIE_POLICY_ID && (
           <>
             <Script id="iubenda-cs-config" strategy="beforeInteractive">
               {`
@@ -106,7 +115,7 @@ export default function RootLayout({
           </>
         )}
         {/* Google Tag Manager */}
-        {GTM_ID && (
+        {loadThirdPartyScripts && GTM_ID && (
           <Script id="google-tag-manager" strategy="beforeInteractive">
             {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -116,7 +125,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           </Script>
         )}
         {/* Google tag (gtag.js) */}
-        {GA4_ID && (
+        {loadThirdPartyScripts && GA4_ID && (
           <>
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`}
@@ -162,7 +171,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         className={`${outfit.className} antialiased h-screen min-h-screen bg-white`}
       >
         {/* Google Tag Manager (noscript) */}
-        {GTM_ID && (
+        {loadThirdPartyScripts && GTM_ID && (
           <noscript>
             <iframe
               src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}

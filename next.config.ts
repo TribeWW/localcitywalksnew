@@ -19,6 +19,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "bokun.s3.amazonaws.com",
       },
+      {
+        protocol: "https",
+        hostname: "*.gumlet.io",
+      },
     ],
   },
   webpack: (config) => {
