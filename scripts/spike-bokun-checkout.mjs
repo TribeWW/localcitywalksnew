@@ -55,10 +55,7 @@ function bokunHeaders(method, apiPath) {
  * (api.bokuntest.com is a separate generic sandbox — not LCW test channel)
  */
 function bokunBaseUrls() {
-  return [
-    `https://${domain}.bokuntest.com`,
-    `https://${domain}.bokun.io`,
-  ];
+  return [`https://${domain}.bokuntest.com`, `https://${domain}.bokun.io`];
 }
 
 function bokunUrl(base, apiPath, queryParams) {
@@ -74,7 +71,9 @@ function signedApiPath(apiPath, queryParams) {
 
 async function bokunFetch(method, apiPath, { body, query, base } = {}) {
   if (!base) {
-    throw new Error("bokunFetch requires base URL (set activeBase from product probe)");
+    throw new Error(
+      "bokunFetch requires base URL (set activeBase from product probe)",
+    );
   }
   const signPath = signedApiPath(apiPath, query);
   const url = bokunUrl(base, apiPath, query);
@@ -170,9 +169,13 @@ if (!productRes?.ok) {
   process.exit(1);
 }
 
-const categoryMapping = resolveCategoryMapping(productRes.json.pricingCategories);
+const categoryMapping = resolveCategoryMapping(
+  productRes.json.pricingCategories,
+);
 if (!categoryMapping) {
-  console.error("Could not resolve pricing category mapping from product detail");
+  console.error(
+    "Could not resolve pricing category mapping from product detail",
+  );
   process.exit(1);
 }
 console.log("Category mapping:", categoryMapping);
@@ -224,19 +227,23 @@ writeFixture("02-availabilities-sample", {
   firstSlot: slots[0] ?? null,
 });
 
+if (!availRes.ok) {
+  console.error("Availability fetch failed", availRes.status);
+  console.error(JSON.stringify(availRes.json, null, 2).slice(0, 2000));
+  process.exit(1);
+}
+
 const slot = slots[0];
 if (!slot) {
   console.error("No available slots in range");
   process.exit(1);
 }
-
 const date = toIsoDate(slot.date);
 const startTimeId = slot.startTimeId;
 const rateId = slot.defaultRateId ?? productRes.json.defaultRateId;
 const slotGuidedLanguage =
   slot.guidedLanguages?.[0] ??
-  productRes.json.guidanceTypes
-    ?.find((g) => g.guidanceType === "GUIDED")
+  productRes.json.guidanceTypes?.find((g) => g.guidanceType === "GUIDED")
     ?.languages?.[0];
 
 // --- 3. Checkout options ---
@@ -330,22 +337,27 @@ if (hasReserve && isTestEnv) {
     body: submitRes.json,
   });
 
-  const confirmationCode =
-    submitRes.json?.booking?.confirmationCode ??
-    submitRes.json?.booking?.activityBookings?.[0]?.productConfirmationCode;
-
-  if (submitRes.ok && confirmationCode) {
-    console.log("Reserved confirmation code:", confirmationCode);
-
     const confirmPath = `/checkout.json/confirm-reserved/${confirmationCode}`;
+    const confirmationAmount = options[0]?.amount;
+    if (typeof confirmationAmount !== "number") {
+      console.error("Cannot confirm reserved booking: checkout option amount missing");
+      console.error(JSON.stringify(options[0] ?? null, null, 2));
+      process.exit(1);
+    }
     const confirmBody = {
-      amount: options[0]?.amount ?? 248,
+      amount: confirmationAmount,
       currency: "EUR",
       sendNotificationToMainContact: true,
       transactionDetails: {
         transactionDate: new Date()
           .toISOString()
           .replace("T", " ")
+          .slice(0, 19),
+        transactionId: `pi_spike_${Date.now()}`,
+        cardBrand: "visa",
+        last4: "4242",
+      },
+    };          .replace("T", " ")
           .slice(0, 19),
         transactionId: `pi_spike_${Date.now()}`,
         cardBrand: "visa",

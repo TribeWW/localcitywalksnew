@@ -70,26 +70,26 @@ export function CheckoutPaymentSection({
         <Checkbox
           id="checkout-terms"
           checked={termsAccepted}
-          onCheckedChange={(checked) =>
-            onTermsAcceptedChange(checked === true)
-          }
+          onCheckedChange={(checked) => onTermsAcceptedChange(checked === true)}
           className="mt-0.5 bg-white"
           aria-required
         />
-        <Label
-          htmlFor="checkout-terms"
-          className="text-sm font-normal leading-relaxed text-nightsky"
-        >
-          I accept the{" "}
+        <div className="text-sm font-normal leading-relaxed text-nightsky">
+          <Label
+            htmlFor="checkout-terms"
+            className="inline font-normal text-inherit"
+          >
+            I accept the terms &amp; conditions.
+          </Label>{" "}
           <a
             href={termsHref}
             target="_blank"
             rel="noopener noreferrer"
             className="text-watermelon underline underline-offset-[3px] hover:text-tangerine"
           >
-            terms &amp; conditions
+            Read terms
           </a>
-        </Label>
+        </div>{" "}
       </div>
 
       <Button

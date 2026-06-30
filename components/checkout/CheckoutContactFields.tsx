@@ -6,6 +6,8 @@
  * Controlled presentational component; validation and submit wiring land in Phase 2+.
  */
 
+import type { ChangeEvent } from "react";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,7 +45,7 @@ export function CheckoutContactFields({
 }: CheckoutContactFieldsProps) {
   const handleChange =
     (field: keyof CheckoutContactFieldsValues) =>
-    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       onFieldChange(field, event.target.value);
     };
 
