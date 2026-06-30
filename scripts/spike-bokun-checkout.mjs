@@ -337,10 +337,20 @@ if (hasReserve && isTestEnv) {
     body: submitRes.json,
   });
 
+  if (submitRes.ok) {
+    const confirmationCode = submitRes.json?.booking?.confirmationCode;
+    if (!confirmationCode) {
+      console.error("Reserve succeeded but no confirmation code in response");
+      console.error(JSON.stringify(submitRes.json, null, 2).slice(0, 2000));
+      process.exit(1);
+    }
+
     const confirmPath = `/checkout.json/confirm-reserved/${confirmationCode}`;
     const confirmationAmount = options[0]?.amount;
     if (typeof confirmationAmount !== "number") {
-      console.error("Cannot confirm reserved booking: checkout option amount missing");
+      console.error(
+        "Cannot confirm reserved booking: checkout option amount missing",
+      );
       console.error(JSON.stringify(options[0] ?? null, null, 2));
       process.exit(1);
     }
@@ -352,12 +362,6 @@ if (hasReserve && isTestEnv) {
         transactionDate: new Date()
           .toISOString()
           .replace("T", " ")
-          .slice(0, 19),
-        transactionId: `pi_spike_${Date.now()}`,
-        cardBrand: "visa",
-        last4: "4242",
-      },
-    };          .replace("T", " ")
           .slice(0, 19),
         transactionId: `pi_spike_${Date.now()}`,
         cardBrand: "visa",
@@ -385,7 +389,9 @@ if (hasReserve && isTestEnv) {
       console.log("Product confirmation code:", productCode);
     }
   } else {
-    console.error("Reserve failed or no confirmation code");
+    console.error("Reserve failed", submitRes.status);
+    console.error(JSON.stringify(submitRes.json, null, 2).slice(0, 2000));
+    process.exit(1);
   }
 } else {
   console.log("Skipping reserve step (no RESERVE method or not test domain)");

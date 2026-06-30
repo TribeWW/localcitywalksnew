@@ -27,7 +27,7 @@ export interface CheckoutPaymentSectionProps {
   payLabel: string;
   termsAccepted: boolean;
   onTermsAcceptedChange: (accepted: boolean) => void;
-  onPayClick?: () => void;
+  onPayClick: () => void;
   payDisabled?: boolean;
   payLoading?: boolean;
   termsHref?: string;
@@ -46,7 +46,6 @@ export function CheckoutPaymentSection({
   termsHref = DEFAULT_TERMS_HREF,
 }: CheckoutPaymentSectionProps) {
   const isPayDisabled = payDisabled || !termsAccepted || payLoading;
-
   return (
     <section>
       <CheckoutSectionHeading
