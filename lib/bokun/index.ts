@@ -57,13 +57,28 @@ export function generateBokunHeaders(
 }
 
 /**
+ * Bókun vendor API host. Test channel: `{domain}.bokuntest.com` (see spike script).
+ * Production: `{domain}.bokun.io`. Override with `BOKUN_API_HOST` or `BOKUN_USE_TEST=true`.
+ */
+export function getBokunApiHost(): string {
+  const explicit = process.env.BOKUN_API_HOST;
+  if (explicit === "bokuntest.com" || explicit === "bokun.io") {
+    return explicit;
+  }
+  if (process.env.BOKUN_USE_TEST === "true") {
+    return "bokuntest.com";
+  }
+  return process.env.NODE_ENV === "production" ? "bokun.io" : "bokuntest.com";
+}
+
+/**
  * Creates a fully qualified Bokun API URL with optional query parameters
  */
 export function createBokunUrl(
   path: string,
   queryParams?: Record<string, string>
 ): string {
-  const baseUrl = `https://${bokunConfig.domain}.bokun.io${path}`;
+  const baseUrl = `https://${bokunConfig.domain}.${getBokunApiHost()}${path}`;
   if (!queryParams) return baseUrl;
 
   const searchParams = new URLSearchParams(queryParams);
