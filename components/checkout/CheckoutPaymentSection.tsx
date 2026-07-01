@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 
 import {
   CHECKOUT_CARD_CLASS,
+  CHECKOUT_CHECKBOX_CLASS,
   CHECKOUT_PRIMARY_BUTTON_CLASS,
 } from "./checkout-field-styles";
 import { CheckoutSectionHeading } from "./CheckoutSectionHeading";
@@ -56,7 +57,7 @@ export function CheckoutPaymentSection({
       <div
         className={cn(
           CHECKOUT_CARD_CLASS,
-          "mb-8 flex min-h-[120px] items-center justify-center bg-pearl-gray p-4",
+          "mb-6 flex min-h-[120px] items-center justify-center bg-pearl-gray p-4 sm:mb-8",
         )}
         aria-hidden
       >
@@ -65,12 +66,12 @@ export function CheckoutPaymentSection({
         </span>
       </div>
 
-      <div className="mb-8 flex items-start gap-3">
+      <div className="mb-6 flex items-start gap-3 sm:mb-8">
         <Checkbox
           id="checkout-terms"
           checked={termsAccepted}
           onCheckedChange={(checked) => onTermsAcceptedChange(checked === true)}
-          className="mt-0.5 bg-white"
+          className={CHECKOUT_CHECKBOX_CLASS}
           aria-required
         />
         <div className="text-sm font-normal leading-relaxed text-nightsky">
