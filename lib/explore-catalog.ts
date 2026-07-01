@@ -1,9 +1,11 @@
-import { createBokunUrl, generateBokunHeaders } from "@/lib/bokun";
+import {
+  BOKUN_SEARCH_PAGE_SIZE,
+  fetchBokunSearchPageRaw,
+} from "@/lib/bokun/fetch-all-search-products";
 import { scheduleSyncFromSearchItems } from "@/lib/bokun/schedule-search-sync";
 import { transformSearchProductToCityCard } from "@/lib/bokun/transform-search-product-to-city-card";
 import {
   BokunProduct,
-  BokunSearchResponse,
   CityCardData,
   GetProductsPageResult,
 } from "@/types/bokun";
@@ -21,8 +23,7 @@ type ExploreSortedBuildResult =
 const inFlightBuilds = new Map<string, Promise<ExploreSortedBuildResult>>();
 
 const CACHE_TTL = 15 * 60 * 1000;
-const PAGE_SIZE = 20;
-const EXPLORE_FETCH_TIMEOUT_MS = 12_000;
+const PAGE_SIZE = BOKUN_SEARCH_PAGE_SIZE;
 
 function buildCompleteCountryList(items: CityCardData[]) {
   const byCode = new Map<string, string>();
@@ -42,80 +43,6 @@ function buildCompleteCountryList(items: CityCardData[]) {
   return Array.from(byCode.entries())
     .map(([countryCode, country]) => ({ countryCode, country }))
     .sort((a, b) => a.country.localeCompare(b.country));
-}
-
-/**
- * Fetches a single page of Bokun search results and returns validated items.
- *
- * Sends a POST search request to Bokun, optionally restricting results to the provided `countryCode`, and validates the response structure before returning items.
- *
- * @param page - Page number (will be normalized to an integer >= 1)
- * @param pageSize - Number of items requested for the page
- * @param countryCode - Optional ISO country code to filter results by country
- * @returns `ok: true` with `items` (array of `BokunProduct`) and optional `totalHits` when the response is valid; otherwise `ok: false` with an error message describing the failure
- */
-async function fetchBokunSearchPageRaw(
-  page: number,
-  pageSize: number,
-  countryCode?: string,
-): Promise<
-  | { ok: true; items: BokunProduct[]; totalHits?: number }
-  | { ok: false; error: string }
-> {
-  try {
-    const url = createBokunUrl("/activity.json/search");
-    const headers = generateBokunHeaders("POST", "/activity.json/search");
-    const body: {
-      page: number;
-      pageSize: number;
-      sortField: string;
-      facetFilters?: Array<{
-        name: string;
-        values: string[];
-        excluded?: boolean;
-      }>;
-    } = {
-      page: Math.max(1, Math.floor(page)),
-      pageSize,
-      sortField: "BEST_SELLING_GLOBAL",
-    };
-    if (countryCode) {
-      body.facetFilters = [
-        { name: "country", values: [countryCode], excluded: false },
-      ];
-    }
-    const controller = new AbortController();
-    const timeoutId = setTimeout(
-      () => controller.abort(),
-      EXPLORE_FETCH_TIMEOUT_MS,
-    );
-    const response = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-    if (!response.ok) {
-      throw new Error(
-        `Bokun API request failed with status: ${response.status}`,
-      );
-    }
-    const data: BokunSearchResponse = await response.json();
-    if (!data.items || !Array.isArray(data.items)) {
-      throw new Error("Invalid response format from Bokun API");
-    }
-    return {
-      ok: true,
-      items: data.items as BokunProduct[],
-      totalHits: data.totalHits,
-    };
-  } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred",
-    };
-  }
 }
 
 /**
