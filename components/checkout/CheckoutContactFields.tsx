@@ -123,7 +123,9 @@ export function CheckoutContactFields({
           <div className="space-y-2">
             <Label htmlFor="checkout-comments">
               Comments{" "}
-              <span className="font-normal text-muted-foreground">(optional)</span>
+              <span className="font-normal text-muted-foreground">
+                (optional)
+              </span>
             </Label>
             <Textarea
               id="checkout-comments"

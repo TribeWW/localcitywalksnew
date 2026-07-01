@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
 import { cn } from "@/lib/utils";
 
-import { CHECKOUT_CARD_CLASS } from "./checkout-field-styles";
+import { CHECKOUT_CARD_CLASS, CHECKOUT_CARD_PADDING_CLASS } from "./checkout-field-styles";
 
 /**
  * Sticky order summary card for checkout (LOC-1147).
@@ -37,8 +37,15 @@ export function OrderSummaryCard({
   const itemLabel = itemCount === 1 ? "1 item" : `${itemCount} items`;
 
   return (
-    <div className={cn(CHECKOUT_CARD_CLASS, "flex flex-col gap-6 p-6", className)}>
-      <div className="flex items-baseline justify-between gap-4">
+    <div
+      className={cn(
+        CHECKOUT_CARD_CLASS,
+        CHECKOUT_CARD_PADDING_CLASS,
+        "flex flex-col gap-6",
+        className,
+      )}
+    >
+      <div className="flex flex-col gap-1 min-[480px]:flex-row min-[480px]:items-baseline min-[480px]:justify-between min-[480px]:gap-4">
         <h2 className="text-xl font-semibold text-watermelon">Order summary</h2>
         <span className="text-sm text-muted-foreground">{itemLabel}</span>
       </div>

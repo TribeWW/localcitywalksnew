@@ -46,7 +46,7 @@ export function OrderSummaryLineItem({
 
   return (
     <article className={cn("flex gap-4", className)}>
-      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-pearl-gray">
+      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-pearl-gray sm:h-20 sm:w-20">
         <Image
           src={imageUrl}
           alt={imageAlt}

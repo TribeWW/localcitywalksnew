@@ -1,5 +1,11 @@
 import type { ReactNode } from "react";
 
+import {
+  CHECKOUT_PAGE_PADDING_CLASS,
+  CHECKOUT_SUMMARY_GRID_CLASS,
+  CHECKOUT_SUMMARY_MAX_WIDTH_CLASS,
+} from "./checkout-field-styles";
+
 /**
  * Two-column checkout summary page shell (LOC-1147).
  *
@@ -15,17 +21,19 @@ export interface CheckoutPageLayoutProps {
 }
 
 /**
- * Renders the checkout summary grid: stacked on mobile, two columns from 961px.
+ * Renders the checkout summary grid: stacked on mobile, two columns from 960px.
  */
 export function CheckoutPageLayout({
   leftColumn,
   rightColumn,
 }: CheckoutPageLayoutProps) {
   return (
-    <main className="mx-auto max-w-[1140px] px-6 pt-12 pb-20">
-      <div className="grid grid-cols-1 items-start gap-8 min-[961px]:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] min-[961px]:gap-12">
-        <div className="flex flex-col gap-12">{leftColumn}</div>
-        <div className="min-[961px]:sticky min-[961px]:top-8">{rightColumn}</div>
+    <main
+      className={`mx-auto ${CHECKOUT_SUMMARY_MAX_WIDTH_CLASS} ${CHECKOUT_PAGE_PADDING_CLASS}`}
+    >
+      <div className={CHECKOUT_SUMMARY_GRID_CLASS}>
+        <div className="flex flex-col gap-8 min-[960px]:gap-12">{leftColumn}</div>
+        <div className="min-[960px]:sticky min-[960px]:top-8">{rightColumn}</div>
       </div>
     </main>
   );
