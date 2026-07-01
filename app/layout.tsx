@@ -16,9 +16,13 @@ const IUBENDA_SITE_ID = process.env.NEXT_PUBLIC_IUBENDA_SITE_ID;
 const IUBENDA_COOKIE_POLICY_ID =
   process.env.NEXT_PUBLIC_IUBENDA_COOKIE_POLICY_ID;
 
-/** Iubenda CMP injects data-cmp-* attrs and reorders <head> scripts before React hydrates. */
+/**
+ * Third-party scripts (Iubenda, GTM, GA4) load only on the production Vercel
+ * deployment — not on preview/staging (NODE_ENV is "production" there too).
+ * Set NEXT_PUBLIC_LOAD_TRACKING_SCRIPTS=true to force-enable (e.g. local QA).
+ */
 const loadThirdPartyScripts =
-  process.env.NODE_ENV === "production" ||
+  process.env.VERCEL_ENV === "production" ||
   process.env.NEXT_PUBLIC_LOAD_TRACKING_SCRIPTS === "true";
 
 const outfit = Outfit({
