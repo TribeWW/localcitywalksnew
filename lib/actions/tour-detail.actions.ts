@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { createBokunUrl, generateBokunHeaders } from "@/lib/bokun";
 import { BOKUN_ENDPOINTS } from "@/lib/bokun/config";
 // Single-product fetch uses PRODUCT_BY_ID only; URL slug is our format (slugify(title)-id), not Bokun's.
@@ -17,19 +18,16 @@ const REQUEST_TIMEOUT_MS = 5000;
 const SAFE_ID_REGEX = /^[a-zA-Z0-9_-]+$/;
 
 /**
- * Fetches full tour detail from Bokun by product id.
- * Used by the tour page after parsing id from the URL slug (slug format: slugifiedTitle-id).
- * @param id - Bokun product id (e.g. "1077682")
- * @returns GetTourDetailResult with data on success or error message on failure
+ * Loads tour detail from the TTL cache or Bokun API for a validated product id.
+ *
+ * Wrapped by {@link getTourDetailByIdRequest} (`React.cache`) so `generateMetadata`
+ * and the tour page share one in-flight request per render pass.
+ *
+ * @param trimmedId - Validated, trimmed Bokun product id
  */
-export async function getTourDetailById(
-  id: string,
+async function loadTourDetailById(
+  trimmedId: string,
 ): Promise<GetTourDetailResult> {
-  const trimmedId = id?.trim();
-  if (!trimmedId || !SAFE_ID_REGEX.test(trimmedId)) {
-    return { success: false, error: "Invalid product id" };
-  }
-
   const cacheKey = `bokun-tour-${trimmedId}`;
   const cached = detailCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -79,4 +77,27 @@ export async function getTourDetailById(
     console.error("Bokun tour detail request failed:", message);
     return { success: false, error: "Unable to load tour" };
   }
+}
+
+/**
+ * Per-request memoized tour detail loader (dedupes parallel callers such as
+ * `generateMetadata` and the tour page component).
+ */
+const getTourDetailByIdRequest = cache(loadTourDetailById);
+
+/**
+ * Fetches full tour detail from Bokun by product id.
+ * Used by the tour page after parsing id from the URL slug (slug format: slugifiedTitle-id).
+ * @param id - Bokun product id (e.g. "1077682")
+ * @returns GetTourDetailResult with data on success or error message on failure
+ */
+export async function getTourDetailById(
+  id: string,
+): Promise<GetTourDetailResult> {
+  const trimmedId = id?.trim();
+  if (!trimmedId || !SAFE_ID_REGEX.test(trimmedId)) {
+    return { success: false, error: "Invalid product id" };
+  }
+
+  return getTourDetailByIdRequest(trimmedId);
 }

@@ -19,15 +19,17 @@ describe("getTourSeoMetadata", () => {
     fetchMock.mockReset();
   });
 
-  it("returns published seoTitle and metaDescription for a valid tour id", async () => {
+  it("returns published seoTitle, metaDescription, and focusKeyword for a valid tour id", async () => {
     fetchMock.mockResolvedValue({
       seoTitle: "Best Toledo Walking Tour",
       metaDescription: "Explore Toledo with a local guide.",
+      focusKeyword: "toledo private walking tour",
     });
 
     await expect(getTourSeoMetadata("1077682")).resolves.toEqual({
       seoTitle: "Best Toledo Walking Tour",
       metaDescription: "Explore Toledo with a local guide.",
+      focusKeyword: "toledo private walking tour",
     });
 
     expect(fetchMock).toHaveBeenCalledWith(TOUR_SEO_QUERY, { tourId: "1077682" });

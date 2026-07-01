@@ -415,8 +415,13 @@ export interface CitySyncResult {
     tourPagePathsPatched?: string[];
   };
   errors: Array<{
-    type: "country" | "city";
-    identifier: string; // countryCode or cityCode
+    type: "country" | "city" | "tourSeo";
+    identifier: string; // countryCode, cityCode, or Bokun product id
     error: string;
   }>;
+  /** Tour SEO shell documents auto-provisioned from Bokun products */
+  tourSeo?: {
+    created: string[];
+    existing: string[];
+  };
 }
