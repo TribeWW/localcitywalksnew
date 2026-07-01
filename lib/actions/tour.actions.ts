@@ -1,7 +1,6 @@
 "use server";
 
 import { createBokunUrl, generateBokunHeaders } from "@/lib/bokun";
-import { scheduleTourSeoBackfillFromBokun } from "@/lib/bokun/schedule-tour-seo-backfill";
 import { scheduleSyncFromSearchItems } from "@/lib/bokun/schedule-search-sync";
 import { transformSearchProductToCityCard } from "@/lib/bokun/transform-search-product-to-city-card";
 import { getExploreCatalogPage as loadExploreCatalogPage } from "@/lib/explore-catalog";
@@ -113,11 +112,6 @@ export async function getProductsPage(
     const totalHits = data.totalHits ?? 0;
 
     scheduleSyncFromSearchItems(data.items as BokunProduct[]);
-
-    // Homepage (page 1, all countries): full Tour SEO backfill after response on cache miss.
-    if (pageNum === 1 && !countryCode) {
-      scheduleTourSeoBackfillFromBokun();
-    }
 
     const cityCards: CityCardData[] = data.items.map(
       transformSearchProductToCityCard,
