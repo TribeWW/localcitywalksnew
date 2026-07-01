@@ -17,6 +17,10 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
+  const token = request.headers.get("x-dev-sync-token");
+  if (token !== process.env.DEV_SYNC_TOKEN) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   if (searchParams.get("confirm") !== "yes") {
     return NextResponse.json(
       {
@@ -38,13 +42,17 @@ export async function GET(request: Request) {
 
     const syncResult = await syncTourSeoFromProducts(catalog.products);
 
-    return NextResponse.json({
-      success: syncResult.errors.length === 0,
-      bokunProductsFetched: catalog.products.length,
-      created: syncResult.created,
-      existing: syncResult.existing,
-      errors: syncResult.errors.length ? syncResult.errors : undefined,
-    });
+    const hasErrors = syncResult.errors.length > 0;
+    return NextResponse.json(
+      {
+        success: !hasErrors,
+        bokunProductsFetched: catalog.products.length,
+        created: syncResult.created,
+        existing: syncResult.existing,
+        errors: hasErrors ? syncResult.errors : undefined,
+      },
+      { status: hasErrors ? 207 : 200 },
+    );
   } catch (error) {
     console.error("[sync-tour-seo]", error);
     return NextResponse.json(
