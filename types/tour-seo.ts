@@ -1,9 +1,10 @@
 /**
  * Published Tour SEO overrides loaded from Sanity for a single Bokun product page.
  *
- * Both fields are optional in Studio; callers should only inject values that are present.
+ * All fields are optional in Studio; callers merge with code fallbacks when empty.
  */
 export type TourSeoMetadata = {
   seoTitle?: string | null;
   metaDescription?: string | null;
+  focusKeyword?: string | null;
 };

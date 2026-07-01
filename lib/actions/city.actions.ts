@@ -5,6 +5,7 @@ import { writeClient } from "@/sanity/lib/write-client";
 import { transformSearchProductToCityCard } from "@/lib/bokun/transform-search-product-to-city-card";
 import { slugifyForUrl, stripAccents } from "@/lib/utils";
 import { BokunProduct, CitySyncResult } from "@/types/bokun";
+import { syncTourSeoFromProducts } from "@/lib/actions/tour-seo-sync.actions";
 
 /**
  * City sync actions for Sanity
@@ -558,6 +559,7 @@ function emptyCitySyncResult(): CitySyncResult {
   return {
     countries: { created: [], updated: [] },
     cities: { created: [], updated: [], existing: [] },
+    tourSeo: { created: [], existing: [] },
     errors: [],
   };
 }
@@ -659,13 +661,29 @@ export async function syncCitiesFromProducts(
     const allCities = await extractUniqueCities(products);
 
     if (allCities.length === 0) {
+      const tourPathResult = await syncTourPagePathsFromProducts(products);
+      const tourSeoResult = await syncTourSeoFromProducts(products);
+
       return {
         countries: {
           created: countryResult.created,
           updated: countryResult.updated,
         },
-        cities: { created: [], updated: [], existing: [] },
-        errors: countryResult.errors,
+        cities: {
+          created: [],
+          updated: [],
+          existing: [],
+          tourPagePathsPatched: tourPathResult.patched,
+        },
+        tourSeo: {
+          created: tourSeoResult.created,
+          existing: tourSeoResult.existing,
+        },
+        errors: [
+          ...countryResult.errors,
+          ...tourPathResult.errors,
+          ...tourSeoResult.errors,
+        ],
       };
     }
 
@@ -688,7 +706,10 @@ export async function syncCitiesFromProducts(
     // Step 7: Backfill / update `tourPagePath` on city docs (footer city links)
     const tourPathResult = await syncTourPagePathsFromProducts(products);
 
-    // Step 8: Combine country, migration, city, and tour path results
+    // Step 8: Auto-provision Tour SEO shell documents for new Bokun products
+    const tourSeoResult = await syncTourSeoFromProducts(products);
+
+    // Step 9: Combine country, migration, city, tour path, and tour SEO results
     return {
       countries: {
         created: countryResult.created,
@@ -700,11 +721,16 @@ export async function syncCitiesFromProducts(
         existing: existingCityCodes,
         tourPagePathsPatched: tourPathResult.patched,
       },
+      tourSeo: {
+        created: tourSeoResult.created,
+        existing: tourSeoResult.existing,
+      },
       errors: [
         ...countryResult.errors,
         ...migrationResult.errors,
         ...createResult.errors,
         ...tourPathResult.errors,
+        ...tourSeoResult.errors,
       ],
     };
   } catch (error) {

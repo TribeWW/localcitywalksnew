@@ -16,7 +16,8 @@ const DRAFT_EXCLUDED = `!(_id in path("drafts.**"))`;
  */
 export const TOUR_SEO_QUERY = `*[_type == "tourSeoMetadata" && ${DRAFT_EXCLUDED} && tour.bokunProductId == $tourId][0]{
   seoTitle,
-  metaDescription
+  metaDescription,
+  focusKeyword
 }`;
 
 const DIGITS_ONLY_TOUR_ID = /^\d+$/;
@@ -31,7 +32,7 @@ function isValidTourId(tourId: string): boolean {
 }
 
 /**
- * Loads published Tour SEO title/description overrides for a Bokun product.
+ * Loads published Tour SEO overrides for a Bokun product.
  *
  * Invalid ids short-circuit to `null` without hitting Sanity. Fetch failures are logged
  * and also return `null` so tour pages keep working with layout defaults.

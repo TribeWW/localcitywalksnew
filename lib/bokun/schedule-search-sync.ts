@@ -44,6 +44,15 @@ export function scheduleSyncFromSearchItems(items: BokunProduct[]): void {
           patched.join(", "),
         );
       }
+      const tourSeoCreated = syncResult.tourSeo?.created;
+      if (tourSeoCreated != null && tourSeoCreated.length > 0) {
+        console.log(
+          "[Tour SEO Sync] Background: created",
+          tourSeoCreated.length,
+          "tour SEO documents:",
+          tourSeoCreated.join(", "),
+        );
+      }
       if (syncResult.errors.length > 0) {
         console.error(
           "[City Sync] Background sync had",

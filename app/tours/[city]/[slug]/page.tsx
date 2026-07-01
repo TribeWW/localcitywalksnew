@@ -36,10 +36,9 @@ import FaqAccordion from "@/components/tours/faq-accordion";
 import sanitizeHtml from "sanitize-html";
 
 /**
- * Resolves tour page `<title>` and meta description from Sanity when overrides exist.
+ * Resolves tour page SEO metadata from Sanity overrides and city-templated code fallbacks.
  *
- * Returns `{}` when the slug has no tour id or Sanity has no usable SEO fields,
- * so `app/layout.tsx` metadata remains in effect.
+ * Returns `{}` when the slug has no tour id, or when Bokun and Sanity both lack usable fields.
  *
  * @param params - Route params promise containing `{ city, slug }`
  */
