@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { syncTourSeoFromProducts } from "@/lib/actions/tour-seo-sync.actions";
+import {
+  devSyncUnauthorizedResponse,
+  isDevSyncRequestAuthorized,
+} from "@/lib/dev/verify-dev-sync-request";
 import { fetchAllBokunSearchProducts } from "@/lib/bokun/fetch-all-search-products";
-
 /** Allow enough time for full-catalog Bokun fetch + sequential Sanity creates. */
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
@@ -12,16 +15,15 @@ export const dynamic = "force-dynamic";
  * Awaits the sync (unlike the fire-and-forget explore listing path) so Vercel/serverless
  * completes writes before the HTTP response ends.
  *
- * GET /api/dev/sync-tour-seo?confirm=yes
+ * GET /api/dev/sync-tour-seo?confirm=yes&token=YOUR_DEV_SYNC_TOKEN
  * Requires `SANITY_WRITE_TOKEN` and Bokun API credentials.
+ * In production, set `DEV_SYNC_TOKEN` and pass it as `token` (browser) or `x-dev-sync-token` (curl).
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const token = request.headers.get("x-dev-sync-token");
-  if (token !== process.env.DEV_SYNC_TOKEN) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  if (searchParams.get("confirm") !== "yes") {
+  if (!isDevSyncRequestAuthorized(request)) {
+    return devSyncUnauthorizedResponse();
+  }  if (searchParams.get("confirm") !== "yes") {
     return NextResponse.json(
       {
         error:
