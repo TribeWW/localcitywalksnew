@@ -2,6 +2,8 @@
  * Checkout UI primitives (LOC-1147 / Phase 1).
  */
 
+export { CheckoutHandoffErrorView } from "./CheckoutHandoffErrorView";
+export type { CheckoutHandoffErrorViewProps } from "./CheckoutHandoffErrorView";
 export { CheckoutMockupPreview } from "./CheckoutMockupPreview";
 export { CheckoutSummaryView } from "./CheckoutSummaryView";
 export type { CheckoutSummaryViewProps } from "./CheckoutSummaryView";
