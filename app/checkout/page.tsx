@@ -31,12 +31,11 @@ export default async function CheckoutPage({
   if (result.status === "quote_unavailable") {
     return (
       <CheckoutHandoffErrorView
-        message="This time slot is no longer available. Please choose another date or time."
+        message={result.message}
         tourPageHref={result.tourPageHref}
       />
     );
   }
-
   return (
     <CheckoutHandoffErrorView
       message={resolveCheckoutHandoffErrorMessage(result.reason)}

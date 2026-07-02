@@ -19,9 +19,7 @@ import { resolveCheckoutTourPageHref } from "@/lib/checkout/resolve-checkout-tou
 import type { CheckoutOrderFixture } from "@/components/checkout/checkout-mock-fixture";
 
 /** Why a handoff token could not be used on `/checkout`. */
-export type CheckoutHandoffErrorReason =
-  | "missing"
-  | VerifyCheckoutHandoffError;
+export type CheckoutHandoffErrorReason = "missing" | VerifyCheckoutHandoffError;
 
 /** Successful summary load with server-verified order recap. */
 export interface CheckoutSummaryReady {
@@ -61,7 +59,12 @@ export type LoadCheckoutSummaryResult =
 export function resolveCheckoutHandoffErrorMessage(
   reason: CheckoutHandoffErrorReason,
 ): string {
-  if (reason === "missing" || reason === "malformed" || reason === "invalid_signature" || reason === "invalid_payload") {
+  if (
+    reason === "missing" ||
+    reason === "malformed" ||
+    reason === "invalid_signature" ||
+    reason === "invalid_payload"
+  ) {
     return "This checkout link isn't valid. Please return to the tour page and try again.";
   }
 
@@ -102,11 +105,17 @@ export async function loadCheckoutSummary(
   const { payload } = verified;
 
   const detail = await getTourDetailById(payload.productId);
+  if (!detail.success) {
+    return {
+      status: "quote_unavailable",
+      productId: payload.productId,
+      message: "We couldn't load this tour's details. Please try again.",
+      tourPageHref: resolveCheckoutTourPageHref(payload.productId),
+    };
+  }
   const productTitle =
-    (detail.success ? detail.data.title.trim() : "") ||
-    payload.productTitle?.trim() ||
-    "Tour";
-  const cityName = detail.success ? detail.data.googlePlace?.city : undefined;
+    detail.data.title.trim() || payload.productTitle?.trim() || "Tour";
+  const cityName = detail.data.googlePlace?.city;
   const tourPageHref = resolveCheckoutTourPageHref(
     payload.productId,
     productTitle,
@@ -125,12 +134,11 @@ export async function loadCheckoutSummary(
       tourPageHref,
     };
   }
-  const imageUrl = detail.success
-    ? pickBokunCardImageUrl(detail.data.keyPhoto)
-    : "/placeholder-city.jpg";
-  const startTimeLabel = detail.success
-    ? resolveStartTimeLabel(detail.data.startTimes, payload.startTimeId)
-    : `Start time ${payload.startTimeId}`;
+  const imageUrl = pickBokunCardImageUrl(detail.data.keyPhoto);
+  const startTimeLabel = resolveStartTimeLabel(
+    detail.data.startTimes,
+    payload.startTimeId,
+  );
 
   const order = buildCheckoutOrderFromHandoff({
     payload,

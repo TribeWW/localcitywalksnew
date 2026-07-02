@@ -21,6 +21,10 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "bokundemo.s3.amazonaws.com",
+      },
+      {
+        protocol: "https",
         hostname: "*.gumlet.io",
       },
     ],

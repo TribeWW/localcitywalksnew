@@ -87,6 +87,27 @@ describe("loadCheckoutSummary", () => {
     });
   });
 
+  it("returns quote_unavailable when tour detail cannot be loaded", async () => {
+    verifyCheckoutHandoffTokenMock.mockReturnValue({
+      success: true,
+      payload: handoffPayload,
+    });
+    getTourDetailByIdMock.mockResolvedValue({
+      success: false,
+      error: "Tour not found",
+    });
+
+    const result = await loadCheckoutSummary("valid.token");
+
+    expect(result).toEqual({
+      status: "quote_unavailable",
+      productId: "1079932",
+      message: "We couldn't load this tour's details. Please try again.",
+      tourPageHref: "/explore",
+    });
+    expect(computeTourBookingQuoteMock).not.toHaveBeenCalled();
+  });
+
   it("returns quote_unavailable when server re-quote fails", async () => {
     verifyCheckoutHandoffTokenMock.mockReturnValue({
       success: true,

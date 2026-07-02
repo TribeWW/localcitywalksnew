@@ -29,10 +29,11 @@ export const CHECKOUT_HANDOFF_UNAVAILABLE_ERROR =
  * Validated widget → checkout handoff payload.
  * Slot selection + `clientQuote` only — contact fields are collected on summary.
  */
-export const startCheckoutHandoffInputSchema = tourBookingQuoteInputSchema.extend({
-  clientQuote: tourBookingClientQuoteSchema,
-  productTitle: z.string().trim().min(1).optional(),
-});
+export const startCheckoutHandoffInputSchema =
+  tourBookingQuoteInputSchema.extend({
+    clientQuote: tourBookingClientQuoteSchema,
+    productTitle: z.string().trim().min(1).optional(),
+  });
 
 /** Parsed input for `startCheckoutHandoff`. */
 export type StartCheckoutHandoffInput = z.infer<
@@ -55,7 +56,8 @@ export function parseStartCheckoutHandoffInput(
   if (!result.success) {
     return {
       success: false,
-      error: result.error.issues[0]?.message ?? "Invalid checkout handoff request",
+      error:
+        result.error.issues[0]?.message ?? "Invalid checkout handoff request",
     };
   }
 
@@ -104,12 +106,15 @@ export async function executeStartCheckoutHandoff(
   let productTitle = input.productTitle?.trim();
 
   if (!productTitle) {
-    const detail = await getTourDetailById(input.productId);
-    if (detail.success) {
-      productTitle = detail.data.title.trim() || undefined;
+    try {
+      const detail = await getTourDetailById(input.productId);
+      if (detail.success) {
+        productTitle = detail.data.title.trim() || undefined;
+      }
+    } catch (error) {
+      console.error("[checkout-handoff] tour title lookup failed:", error);
     }
   }
-
   try {
     const token = signCheckoutHandoffToken({
       ...handoffInputToQuoteInput(input),
