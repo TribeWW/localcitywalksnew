@@ -1,12 +1,14 @@
+/**
+ * explore-catalog — unit tests for cached explore catalog pagination.
+ *
+ * Catalog builds no longer trigger Sanity sync; provisioning runs via the daily cron job.
+ */
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/bokun", () => ({
   createBokunUrl: vi.fn(() => "https://bokun.test/activity.json/search"),
   generateBokunHeaders: vi.fn(() => ({ "Content-Type": "application/json" })),
-}));
-
-vi.mock("@/lib/bokun/schedule-search-sync", () => ({
-  scheduleSyncFromSearchItems: vi.fn(),
 }));
 
 vi.mock("@/lib/bokun/transform-search-product-to-city-card", () => ({

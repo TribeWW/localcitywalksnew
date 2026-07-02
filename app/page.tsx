@@ -4,7 +4,6 @@ import HomeSpotlight from "@/components/home/HomeSpotlight";
 import CustomTourBanner from "@/components/home/CustomTourBanner";
 import Reviews from "@/components/home/Reviews";
 import StepsSection from "@/components/home/StepsSection";
-import { scheduleTourSeoSyncFromBokunCatalog } from "@/lib/bokun/schedule-tour-seo-sync";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -16,8 +15,6 @@ import Link from "next/link";
  * @returns The page's JSX layout with the `Reviews` section.
  */
 export default async function Home() {
-  scheduleTourSeoSyncFromBokunCatalog();
-
   return (
     <>
       <main className="relative items-left justify-center bg-gradient-to-r from-tangerine to-grapefruit">
