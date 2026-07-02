@@ -10,9 +10,8 @@
 
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import BookingSubmitSummary, {
-  formatParticipantSummary,
-} from "@/components/tours/BookingSubmitSummary";
+import { formatParticipantSummary } from "@/lib/booking/format-participant-summary";
+import BookingSubmitSummary from "@/components/tours/BookingSubmitSummary";
 import type { BookingWidgetQuote } from "@/types/bokun";
 
 const sampleQuote: BookingWidgetQuote = {

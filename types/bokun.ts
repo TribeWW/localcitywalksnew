@@ -363,12 +363,17 @@ export type GetTourBookingQuoteResult =
   | { success: true; data: BookingWidgetQuote }
   | { success: false; error: string };
 
-/**
- * Server action response for `submitTourBookingRequest` (LOC-1056).
- * Success means team + customer emails were sent; failure includes a safe `error` string.
- */
+/** Server action response for `submitTourBookingRequest` (LOC-1056). */
 export type SubmitTourBookingRequestResult =
   | { success: true }
+  | { success: false; error: string };
+
+/**
+ * Server action response for `startCheckoutHandoff` (LOC-1153).
+ * Success includes a signed `/checkout?h=…` redirect URL.
+ */
+export type StartCheckoutHandoffResult =
+  | { success: true; redirectUrl: string }
   | { success: false; error: string };
 
 /**
