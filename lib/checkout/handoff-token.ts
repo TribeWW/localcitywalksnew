@@ -36,7 +36,9 @@ const checkoutHandoffPayloadSchema = z.object({
 });
 
 /** Verified handoff payload embedded in the signed token. */
-export type CheckoutHandoffPayload = z.infer<typeof checkoutHandoffPayloadSchema>;
+export type CheckoutHandoffPayload = z.infer<
+  typeof checkoutHandoffPayloadSchema
+>;
 
 /** Input for minting a handoff token after server quote validation. */
 export interface SignCheckoutHandoffInput extends TourBookingQuoteInput {
@@ -57,7 +59,15 @@ export type VerifyCheckoutHandoffResult =
 
 function getHandoffSecret(): string | null {
   const secret = process.env.CHECKOUT_HANDOFF_SECRET?.trim();
-  return secret ? secret : null;
+  if (!secret || secret.length < 32) {
+    if (secret) {
+      console.error(
+        "[checkout-handoff] CHECKOUT_HANDOFF_SECRET must be at least 32 characters",
+      );
+    }
+    return null;
+  }
+  return secret;
 }
 
 function encodeBase64Url(value: string): string {
@@ -92,7 +102,9 @@ function signaturesMatch(expected: string, actual: string): boolean {
  *
  * @throws Error when `CHECKOUT_HANDOFF_SECRET` is not configured
  */
-export function signCheckoutHandoffToken(input: SignCheckoutHandoffInput): string {
+export function signCheckoutHandoffToken(
+  input: SignCheckoutHandoffInput,
+): string {
   const secret = getHandoffSecret();
   if (!secret) {
     throw new Error("CHECKOUT_HANDOFF_SECRET is not configured");
