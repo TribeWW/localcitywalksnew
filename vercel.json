@@ -2,7 +2,8 @@
   "crons": [
     {
       "path": "/api/cron/sync-bokun-catalog",
-      "schedule": "0 3 * * *"
+      "schedule": "0 3 * * *",
+      "maxDuration": 300
     }
   ]
 }
