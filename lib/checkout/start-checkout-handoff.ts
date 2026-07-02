@@ -103,17 +103,14 @@ export async function executeStartCheckoutHandoff(
     return { success: false, error: BOOKING_WIDGET_PRICE_MISMATCH_ERROR };
   }
 
-  let productTitle = input.productTitle?.trim();
-
-  if (!productTitle) {
-    try {
-      const detail = await getTourDetailById(input.productId);
-      if (detail.success) {
-        productTitle = detail.data.title.trim() || undefined;
-      }
-    } catch (error) {
-      console.error("[checkout-handoff] tour title lookup failed:", error);
+  let productTitle: string | undefined;
+  try {
+    const detail = await getTourDetailById(input.productId);
+    if (detail.success) {
+      productTitle = detail.data.title.trim() || undefined;
     }
+  } catch (error) {
+    console.error("[checkout-handoff] tour title lookup failed:", error);
   }
   try {
     const token = signCheckoutHandoffToken({
@@ -121,7 +118,6 @@ export async function executeStartCheckoutHandoff(
       clientQuote: input.clientQuote,
       productTitle,
     });
-
     return {
       success: true,
       redirectUrl: `/checkout?h=${encodeURIComponent(token)}`,
