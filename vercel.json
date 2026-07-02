@@ -4,5 +4,10 @@
       "path": "/api/cron/sync-bokun-catalog",
       "schedule": "0 3 * * *"
     }
-  ]
+  ],
+  "functions": {
+    "app/api/cron/sync-bokun-catalog/route.ts": {
+      "maxDuration": 300
+    }
+  }
 }
