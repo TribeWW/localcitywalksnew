@@ -19,7 +19,7 @@ describe("isDevSyncRequestAuthorized", () => {
 
     expect(
       isDevSyncRequestAuthorized(
-        new Request("http://localhost/api/dev/sync-tour-seo?confirm=yes"),
+        new Request("http://localhost/api/dev/publish-all-cities?confirm=yes"),
       ),
     ).toBe(true);
   });
@@ -31,7 +31,7 @@ describe("isDevSyncRequestAuthorized", () => {
     expect(
       isDevSyncRequestAuthorized(
         new Request(
-          "https://example.com/api/dev/sync-tour-seo?confirm=yes",
+          "https://example.com/api/dev/publish-all-cities?confirm=yes",
         ),
       ),
     ).toBe(false);
@@ -39,7 +39,7 @@ describe("isDevSyncRequestAuthorized", () => {
     expect(
       isDevSyncRequestAuthorized(
         new Request(
-          "https://example.com/api/dev/sync-tour-seo?confirm=yes&token=secret-token",
+          "https://example.com/api/dev/publish-all-cities?confirm=yes&token=secret-token",
         ),
       ),
     ).toBe(true);

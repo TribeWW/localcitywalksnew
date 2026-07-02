@@ -1,11 +1,9 @@
 "use server";
 
 import { createBokunUrl, generateBokunHeaders } from "@/lib/bokun";
-import { scheduleSyncFromSearchItems } from "@/lib/bokun/schedule-search-sync";
 import { transformSearchProductToCityCard } from "@/lib/bokun/transform-search-product-to-city-card";
 import { getExploreCatalogPage as loadExploreCatalogPage } from "@/lib/explore-catalog";
 import {
-  BokunProduct,
   BokunSearchResponse,
   CityCardData,
   GetAllProductsResult,
@@ -111,8 +109,6 @@ export async function getProductsPage(
 
     const totalHits = data.totalHits ?? 0;
 
-    scheduleSyncFromSearchItems(data.items as BokunProduct[]);
-
     const cityCards: CityCardData[] = data.items.map(
       transformSearchProductToCityCard,
     );
@@ -138,7 +134,7 @@ export async function getProductsPage(
 }
 
 /**
- * Fetches products from the Bokun API, transforms them into `CityCardData` items, schedules background synchronization, and caches the result.
+ * Fetches products from the Bokun API, transforms them into `CityCardData` items, and caches the result.
  *
  * Uses an in-memory cache with a 15-minute TTL and enforces a 5-second request timeout. On success stores transformed products in the cache and returns them; on failure returns an error message.
  *
@@ -189,8 +185,6 @@ export async function getAllProducts(): Promise<GetAllProductsResult> {
     if (!data.items || !Array.isArray(data.items)) {
       throw new Error("Invalid response format from Bokun API");
     }
-
-    scheduleSyncFromSearchItems(data.items as BokunProduct[]);
 
     // Transform products to CityCardData format
     const cityCards: CityCardData[] = data.items.map(

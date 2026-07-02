@@ -2,13 +2,8 @@ import {
   BOKUN_SEARCH_PAGE_SIZE,
   fetchBokunSearchPageRaw,
 } from "@/lib/bokun/fetch-all-search-products";
-import { scheduleSyncFromSearchItems } from "@/lib/bokun/schedule-search-sync";
 import { transformSearchProductToCityCard } from "@/lib/bokun/transform-search-product-to-city-card";
-import {
-  BokunProduct,
-  CityCardData,
-  GetProductsPageResult,
-} from "@/types/bokun";
+import { CityCardData, GetProductsPageResult } from "@/types/bokun";
 
 const exploreSortedCache = new Map<
   string,
@@ -78,7 +73,6 @@ async function getOrBuildExploreSortedList(
   const buildPromise = (async (): Promise<ExploreSortedBuildResult> => {
     try {
       const byId = new Map<string, CityCardData>();
-      const allItems: BokunProduct[] = [];
       const countryScopes =
         normalizedCountryCodes.length > 0 ? normalizedCountryCodes : [undefined];
 
@@ -96,7 +90,6 @@ async function getOrBuildExploreSortedList(
             totalHits = res.totalHits;
             first = false;
           }
-          allItems.push(...res.items);
           for (const p of res.items) {
             const card = transformSearchProductToCityCard(p);
             byId.set(card.id, card);
@@ -118,9 +111,6 @@ async function getOrBuildExploreSortedList(
             break;
           }
         }
-      }
-      if (allItems.length > 0) {
-        scheduleSyncFromSearchItems(allItems);
       }
 
       const sorted = Array.from(byId.values()).sort((a, b) => {

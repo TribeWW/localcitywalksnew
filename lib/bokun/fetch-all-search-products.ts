@@ -1,7 +1,7 @@
 /**
- * fetch-all-search-products — paginated Bokun catalog fetch for ops/sync routes.
+ * fetch-all-search-products — paginated Bokun catalog fetch for sync and listing routes.
  *
- * Shared by the explore catalog build and dev backfill endpoints.
+ * Shared by the explore catalog build and the daily cron sync endpoint.
  */
 
 import { createBokunUrl, generateBokunHeaders } from "@/lib/bokun";
