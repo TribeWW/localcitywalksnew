@@ -7,7 +7,7 @@ import {
 } from "@/lib/cron/verify-cron-request";
 
 /** Allow enough time for full-catalog Bokun fetch + sequential Sanity writes. */
-export const maxDuration = 60;
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 /**
