@@ -1,5 +1,5 @@
 /**
- * BookingWidgetStepOneFooter — red/green TDD specs (LOC-1063).
+ * BookingWidgetStepOneFooter — checkout CTA specs (LOC-1157).
  */
 
 import { fireEvent, render, screen } from "@testing-library/react";
@@ -7,32 +7,51 @@ import { describe, expect, it, vi } from "vitest";
 import BookingWidgetStepOneFooter from "@/components/tours/booking-widget/BookingWidgetStepOneFooter";
 
 describe("BookingWidgetStepOneFooter", () => {
-  it("disables Book now when canBookNow is false", () => {
+  it("renders Continue to checkout in checkout mode", () => {
     render(
-      <BookingWidgetStepOneFooter canBookNow={false} onBookNow={vi.fn()} />,
+      <BookingWidgetStepOneFooter
+        canBookNow
+        mode="checkout"
+        onPrimaryAction={vi.fn()}
+      />,
     );
 
-    expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Continue to checkout" }),
+    ).toBeEnabled();
+    expect(
+      screen.queryByRole("button", { name: "Book now" }),
+    ).not.toBeInTheDocument();
   });
 
-  it("enables Book now and calls onBookNow when canBookNow is true", () => {
-    const onBookNow = vi.fn();
+  it("disables checkout CTA while handoff is in flight", () => {
     render(
-      <BookingWidgetStepOneFooter canBookNow onBookNow={onBookNow} />,
+      <BookingWidgetStepOneFooter
+        canBookNow
+        mode="checkout"
+        continuing
+        onPrimaryAction={vi.fn()}
+      />,
     );
 
-    const button = screen.getByRole("button", { name: "Book now" });
-    expect(button).toBeEnabled();
-
-    fireEvent.click(button);
-    expect(onBookNow).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByRole("button", { name: "Continue to checkout" }),
+    ).toBeDisabled();
   });
 
-  it("renders trust badge below CTA", () => {
+  it("calls onPrimaryAction when checkout CTA is clicked", () => {
+    const onPrimaryAction = vi.fn();
     render(
-      <BookingWidgetStepOneFooter canBookNow={false} onBookNow={vi.fn()} />,
+      <BookingWidgetStepOneFooter
+        canBookNow
+        mode="checkout"
+        onPrimaryAction={onPrimaryAction}
+      />,
     );
 
-    expect(screen.getByText("Free cancellation")).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Continue to checkout" }),
+    );
+    expect(onPrimaryAction).toHaveBeenCalledTimes(1);
   });
 });

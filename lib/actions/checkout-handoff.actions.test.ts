@@ -1,5 +1,5 @@
 /**
- * startCheckoutHandoff — red/green TDD specs (LOC-1153).
+ * startCheckoutHandoff pipeline — red/green TDD specs (LOC-1153 / LOC-1158).
  *
  * Critical invariants:
  * - Invalid quote / clientQuote input never reaches Bókun or token minting
@@ -30,7 +30,7 @@ import {
 import { BOOKING_WIDGET_PRICE_MISMATCH_ERROR } from "@/lib/actions/booking-widget-submit";
 import { verifyCheckoutHandoffToken } from "@/lib/checkout/handoff-token";
 
-const HANDOFF_SECRET = "test-handoff-secret-for-actions";
+const HANDOFF_SECRET = "test-handoff-secret-with-32-characters-min";
 
 function futureIsoDate(daysAhead = 7): string {
   const date = new Date();

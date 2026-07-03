@@ -4,8 +4,8 @@
  * Tour-page request card — branches between legacy form and booking widget (LOC-1052).
  *
  * When `cardsWidgetUpdate` is true and `bookingBootstrap` is provided, renders
- * `BookingWidget`; otherwise keeps `TourRequestForm` for flag-off rollout and
- * `CustomTourBanner` parity.
+ * `BookingWidget` with checkout handoff (LOC-1157); otherwise keeps
+ * `TourRequestForm` for flag-off rollout.
  */
 
 import TourRequestForm from "@/components/forms/TourRequestForm";

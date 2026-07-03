@@ -16,6 +16,8 @@ import { CheckoutContactFields } from "./CheckoutContactFields";
 import type { CheckoutContactFieldsValues } from "./CheckoutContactFields";
 import { CheckoutPageLayout } from "./CheckoutPageLayout";
 import { CheckoutPaymentSection } from "./CheckoutPaymentSection";
+import { CheckoutPriceUpdatedBanner } from "./CheckoutPriceUpdatedBanner";
+import type { CheckoutPriceUpdate } from "@/lib/checkout/checkout-price-update";
 import type { CheckoutOrderFixture } from "./checkout-mock-fixture";
 import { OrderSummaryCard } from "./OrderSummaryCard";
 import { OrderSummaryLineItem } from "./OrderSummaryLineItem";
@@ -30,6 +32,10 @@ const EMPTY_CONTACT: CheckoutContactFieldsValues = {
 
 export interface CheckoutSummaryViewProps {
   order: CheckoutOrderFixture;
+  /** When set, Pay is blocked until the customer accepts the updated total. */
+  priceUpdate?: CheckoutPriceUpdate | null;
+  /** Tour page href for price-update return link. */
+  tourPageHref?: string;
   /** Pay CTA handler; no-op in static mock when omitted. */
   onPayClick?: () => void;
 }
@@ -39,11 +45,18 @@ export interface CheckoutSummaryViewProps {
  */
 export function CheckoutSummaryView({
   order,
+  priceUpdate = null,
+  tourPageHref = "/explore",
   onPayClick,
 }: CheckoutSummaryViewProps) {
   const [contact, setContact] =
     useState<CheckoutContactFieldsValues>(EMPTY_CONTACT);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [priceAcknowledged, setPriceAcknowledged] = useState(false);
+
+  const requiresPriceAcknowledgement = priceUpdate != null;
+  const isPriceGateOpen =
+    !requiresPriceAcknowledgement || priceAcknowledged;
 
   const formattedTotal = formatCataloguePriceAmount(
     order.totalAmount,
@@ -62,6 +75,14 @@ export function CheckoutSummaryView({
     <CheckoutPageLayout
       leftColumn={
         <>
+          {priceUpdate ? (
+            <CheckoutPriceUpdatedBanner
+              priceUpdate={priceUpdate}
+              tourPageHref={tourPageHref}
+              acknowledged={priceAcknowledged}
+              onAcknowledgedChange={setPriceAcknowledged}
+            />
+          ) : null}
           <CheckoutContactFields
             values={contact}
             onFieldChange={handleFieldChange}
@@ -72,6 +93,7 @@ export function CheckoutSummaryView({
             termsAccepted={termsAccepted}
             onTermsAcceptedChange={setTermsAccepted}
             onPayClick={onPayClick ?? (() => {})}
+            payDisabled={!isPriceGateOpen}
           />
         </>
       }
