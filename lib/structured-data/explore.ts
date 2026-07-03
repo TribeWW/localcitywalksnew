@@ -22,6 +22,21 @@ export type BuildExploreCollectionPageJsonLdInput = {
 };
 
 /**
+ * Maps Bokun city card rows to explore JSON-LD list items.
+ */
+export function toExploreJsonLdItems(
+  cards: Array<{ title: string; citySlug?: string; slug?: string }>,
+): ExploreCatalogJsonLdItem[] {
+  return cards
+    .filter((card) => card.citySlug?.trim() && card.slug?.trim())
+    .map((card) => ({
+      title: card.title,
+      citySlug: card.citySlug!.trim(),
+      slug: card.slug!.trim(),
+    }));
+}
+
+/**
  * Builds a `CollectionPage` JSON-LD document with an `ItemList` of tour URLs.
  *
  * Items without both `citySlug` and `slug` are skipped.

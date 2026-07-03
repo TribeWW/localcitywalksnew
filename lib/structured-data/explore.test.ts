@@ -3,7 +3,10 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { buildExploreCollectionPageJsonLd } from "@/lib/structured-data/explore";
+import {
+  buildExploreCollectionPageJsonLd,
+  toExploreJsonLdItems,
+} from "@/lib/structured-data/explore";
 
 describe("buildExploreCollectionPageJsonLd", () => {
   it("builds a CollectionPage with an ItemList of tour URLs", () => {
@@ -76,5 +79,16 @@ describe("buildExploreCollectionPageJsonLd", () => {
     ).mainEntity;
     expect(list.numberOfItems).toBe(1);
     expect(list.itemListElement).toHaveLength(1);
+  });
+});
+
+describe("toExploreJsonLdItems", () => {
+  it("maps valid city cards and skips incomplete rows", () => {
+    expect(
+      toExploreJsonLdItems([
+        { title: "Toledo", citySlug: "toledo", slug: "hello-toledo-1" },
+        { title: "No slug", citySlug: "arles", slug: "" },
+      ]),
+    ).toEqual([{ title: "Toledo", citySlug: "toledo", slug: "hello-toledo-1" }]);
   });
 });

@@ -48,9 +48,20 @@ describe("durationTextToIso8601", () => {
     expect(durationTextToIso8601("1 hour")).toBe("PT1H");
   });
 
+  it("converts minute-based duration text to ISO 8601", () => {
+    expect(durationTextToIso8601("30 minutes")).toBe("PT30M");
+    expect(durationTextToIso8601("1 minute")).toBe("PT1M");
+  });
+
+  it("converts day-based duration text to ISO 8601", () => {
+    expect(durationTextToIso8601("1 day")).toBe("P1D");
+    expect(durationTextToIso8601("3 days")).toBe("P3D");
+  });
+
   it("returns undefined for unrecognized duration strings", () => {
     expect(durationTextToIso8601("")).toBeUndefined();
     expect(durationTextToIso8601("half day")).toBeUndefined();
+    expect(durationTextToIso8601("0 hours")).toBeUndefined();
   });
 });
 

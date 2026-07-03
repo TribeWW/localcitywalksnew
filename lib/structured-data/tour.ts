@@ -55,17 +55,31 @@ export function plainTextForSchema(input: PlainTextInput): string {
 }
 
 /**
- * Converts Bókun `durationText` (e.g. `"2 hours"`) to ISO 8601 duration.
+ * Converts Bókun `durationText` (e.g. `"2 hours"`, `"30 minutes"`, `"3 days"`) to ISO 8601 duration.
  *
- * @returns ISO 8601 duration string (e.g. `PT2H`), or `undefined` when not parseable.
+ * @returns ISO 8601 duration string (e.g. `PT2H`, `PT30M`, `P3D`), or `undefined` when not parseable.
  */
-export function durationTextToIso8601(durationText: string): string | undefined {
+export function durationTextToIso8601(
+  durationText: string,
+): string | undefined {
   const trimmed = durationText.trim();
-  const match = /^(\d+)\s*hours?$/i.exec(trimmed);
-  if (!match) return undefined;
-  const hours = Number(match[1]);
-  if (!Number.isFinite(hours) || hours <= 0) return undefined;
-  return `PT${hours}H`;
+  if (!trimmed) return undefined;
+
+  const patterns: Array<{ regex: RegExp; format: (n: number) => string }> = [
+    { regex: /^(\d+)\s*days?$/i, format: (n) => `P${n}D` },
+    { regex: /^(\d+)\s*hours?$/i, format: (n) => `PT${n}H` },
+    { regex: /^(\d+)\s*minutes?$/i, format: (n) => `PT${n}M` },
+  ];
+
+  for (const { regex, format } of patterns) {
+    const match = regex.exec(trimmed);
+    if (!match) continue;
+    const amount = Number(match[1]);
+    if (!Number.isFinite(amount) || amount <= 0) return undefined;
+    return format(amount);
+  }
+
+  return undefined;
 }
 
 /** Clamps review rating to 0–5 integer stars (aligned with ReviewCard). */
@@ -139,7 +153,6 @@ export function buildTourPageJsonLd(
     "@context": SCHEMA_CONTEXT,
     "@type": "TouristTrip",
     name: input.title,
-    description,
     url: input.url,
     touristType: "Sightseeing",
     provider: {
@@ -149,6 +162,9 @@ export function buildTourPageJsonLd(
     },
   };
 
+  if (description) {
+    trip.description = description;
+  }
   if (input.imageUrl) {
     trip.image = input.imageUrl;
   }
@@ -168,10 +184,7 @@ export function buildTourPageJsonLd(
     trip.duration = duration;
   }
 
-  if (
-    input.fromPriceAmount != null &&
-    input.fromPriceCurrency?.trim()
-  ) {
+  if (input.fromPriceAmount != null && input.fromPriceCurrency?.trim()) {
     trip.offers = {
       "@type": "Offer",
       price: String(input.fromPriceAmount),
