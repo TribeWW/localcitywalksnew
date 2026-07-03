@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
+import type { SanityReviewListItem } from "@/types/review";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -28,9 +29,15 @@ import { cardsWidgetUpdate } from "@/flags";
 import { extractGuidedLanguagesFromGuidanceTypes } from "@/lib/bokun/extract-guided-languages";
 import { enrichProductPricesFromPriceList } from "@/lib/bokun/enrich-product-prices-from-price-list";
 import {
+  pickBokunHeroPhotoUrl,
+  pickBokunOgImageUrl,
+} from "@/lib/bokun/pick-bokun-photo-url";
+import { tourPageUrl } from "@/lib/site";
+import {
   extractTourIdFromSlug,
   resolveTourPageMetadata,
 } from "@/lib/tour-page-metadata";
+import { TourJsonLd } from "@/components/seo/TourJsonLd";
 import TourImageGallery from "@/components/tours/tour-image-gallery";
 import FaqAccordion from "@/components/tours/faq-accordion";
 import sanitizeHtml from "sanitize-html";
@@ -47,28 +54,8 @@ export async function generateMetadata({
 }: {
   params: Promise<{ city: string; slug: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params;
-  return resolveTourPageMetadata(slug);
-}
-
-function pickBestPhotoUrl(photo: unknown, preferred: string[]): string | null {
-  const photoData = photo as {
-    originalUrl?: string;
-    derived?: Array<{ name?: string; url?: string }>;
-  };
-
-  // Prefer original image for fullscreen quality when available.
-  if (photoData?.originalUrl) return photoData.originalUrl;
-
-  const derived = photoData?.derived;
-  if (!derived?.length) return null;
-
-  for (const name of preferred) {
-    const hit = derived.find((d) => d?.name === name && d?.url);
-    if (hit?.url) return hit.url;
-  }
-  const any = derived.find((d) => d?.url);
-  return any?.url ?? null;
+  const { city, slug } = await params;
+  return resolveTourPageMetadata(city, slug);
 }
 
 /**
@@ -139,13 +126,9 @@ export default async function TourPage({
     }
   }
 
-  const heroImage = pickBestPhotoUrl(detail.data.keyPhoto, [
-    "large",
-    "preview",
-    "thumbnail",
-  ]);
+  const heroImage = pickBokunHeroPhotoUrl(detail.data.keyPhoto);
   const gallery = (detail.data.photos ?? [])
-    .map((p) => pickBestPhotoUrl(p, ["large", "preview", "thumbnail"]))
+    .map((p) => pickBokunHeroPhotoUrl(p))
     .filter((u): u is string => !!u)
     .slice(0, 8);
   const allImages = Array.from(
@@ -175,6 +158,8 @@ export default async function TourPage({
     : "";
 
   let reviewsSection: ReactNode = null;
+  /** Reviews included in JSON-LD — mirrors visible ReviewsSection data. */
+  let jsonLdReviews: SanityReviewListItem[] = [];
   /** Shown under the title when reviews exist (same basis as ReviewsSection). */
   let heroReviewStats: {
     ratingLabel: string;
@@ -222,6 +207,7 @@ export default async function TourPage({
       reviewCount,
       usesFallbackReviews: false,
     };
+    jsonLdReviews = tourReviews;
     reviewsSection = (
       <ReviewsSection
         title="Traveller reviews"
@@ -248,6 +234,7 @@ export default async function TourPage({
         reviewCount,
         usesFallbackReviews: true,
       };
+      jsonLdReviews = fallbackReviews;
       reviewsSection = (
         <ReviewsSection
           title="Traveller reviews"
@@ -259,8 +246,24 @@ export default async function TourPage({
     }
   }
 
+  const canonicalTourUrl = tourPageUrl(canonicalCity, canonicalSlug);
+  const schemaImageUrl = pickBokunOgImageUrl(detail.data.keyPhoto);
+
   return (
     <main className="min-h-screen bg-white">
+      <TourJsonLd
+        title={productTitle}
+        excerpt={excerpt || undefined}
+        htmlDescription={aboutHtml || undefined}
+        url={canonicalTourUrl}
+        imageUrl={schemaImageUrl}
+        cityName={gpCity}
+        durationText={detail.data.durationText}
+        fromPriceAmount={fromPriceAmount}
+        fromPriceCurrency={fromPriceCurrency}
+        heroReviewStats={heroReviewStats}
+        reviews={jsonLdReviews.length > 0 ? jsonLdReviews : undefined}
+      />
       <div className="mx-auto w-full max-w-6xl px-4 md:px-8 xl:px-0 py-6">
         <div className="mb-6 flex items-center justify-between gap-4">
           <Breadcrumb>

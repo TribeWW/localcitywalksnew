@@ -95,7 +95,95 @@ describe("buildTourPageMetadata", () => {
       }),
     ).toEqual({});
   });
+
+  it("includes canonical, openGraph, and twitter when context is provided", () => {
+    const canonicalUrl =
+      "https://www.localcitywalks.com/tours/toledo/hello-toledo-private-walk-1077682";
+    const ogImageUrl =
+      "https://imgcdn.bokun.tools/example.jpg?w=660&h=660";
+
+    expect(
+      buildTourPageMetadata(
+        {
+          seoTitle: "Toledo Private Walking Tour | LocalCityWalks",
+          metaDescription: "Discover Toledo with a local guide.",
+          focusKeyword: "toledo private walking tour",
+        },
+        { canonicalUrl, ogImageUrl },
+      ),
+    ).toEqual({
+      title: "Toledo Private Walking Tour | LocalCityWalks",
+      description: "Discover Toledo with a local guide.",
+      keywords: "toledo private walking tour",
+      alternates: { canonical: canonicalUrl },
+      openGraph: {
+        title: "Toledo Private Walking Tour | LocalCityWalks",
+        description: "Discover Toledo with a local guide.",
+        url: canonicalUrl,
+        type: "website",
+        siteName: "LocalCityWalks",
+        images: [
+          {
+            url: ogImageUrl,
+            alt: "Toledo Private Walking Tour | LocalCityWalks",
+          },
+        ],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: "Toledo Private Walking Tour | LocalCityWalks",
+        description: "Discover Toledo with a local guide.",
+        images: [ogImageUrl],
+      },
+    });
+  });
+
+  it("omits openGraph images and twitter images when ogImageUrl is null", () => {
+    const canonicalUrl =
+      "https://www.localcitywalks.com/tours/toledo/hello-toledo-1077682";
+
+    const metadata = buildTourPageMetadata(
+      { seoTitle: "Toledo Tour" },
+      { canonicalUrl, ogImageUrl: null },
+    );
+
+    expect(metadata.alternates).toEqual({ canonical: canonicalUrl });
+    expect(metadata.openGraph).toMatchObject({
+      title: "Toledo Tour",
+      url: canonicalUrl,
+      type: "website",
+      siteName: "LocalCityWalks",
+    });
+    expect(metadata.openGraph?.images).toBeUndefined();
+    expect(metadata.twitter).toMatchObject({
+      card: "summary_large_image",
+      title: "Toledo Tour",
+    });
+    expect(metadata.twitter?.images).toBeUndefined();
+  });
 });
+
+const BOKUN_DETAIL = {
+  title: "Hello Toledo: Private 2-Hour Intro City Walk",
+  googlePlace: {
+    city: "Toledo",
+    countryCode: "ES",
+    country: "Spain",
+    cityCode: "Toledo",
+  },
+  keyPhoto: {
+    derived: [
+      {
+        name: "preview",
+        url: "https://imgcdn.bokun.tools/example.jpg?w=300&h=300",
+      },
+      {
+        name: "large",
+        url: "https://imgcdn.bokun.tools/example.jpg?w=660&h=660",
+      },
+    ],
+  },
+};
 
 describe("resolveTourPageMetadata", () => {
   beforeEach(() => {
@@ -116,11 +204,15 @@ describe("resolveTourPageMetadata", () => {
     });
 
     await expect(
-      resolveTourPageMetadata("hello-toledo-private-walk-1077682"),
-    ).resolves.toEqual({
+      resolveTourPageMetadata("toledo", "hello-toledo-private-walk-1077682"),
+    ).resolves.toMatchObject({
       title: "Custom title",
       description: FALLBACKS.metaDescription,
       keywords: FALLBACKS.focusKeyword,
+      alternates: {
+        canonical:
+          "https://www.localcitywalks.com/tours/toledo/hello-toledo-1077682",
+      },
     });
 
     expect(getTourSeoMetadataMock).toHaveBeenCalledWith("1077682");
@@ -142,16 +234,20 @@ describe("resolveTourPageMetadata", () => {
     });
 
     await expect(
-      resolveTourPageMetadata("hello-toledo-private-walk-1077682"),
-    ).resolves.toEqual({
+      resolveTourPageMetadata("toledo", "hello-toledo-private-walk-1077682"),
+    ).resolves.toMatchObject({
       title: FALLBACKS.seoTitle,
       description: FALLBACKS.metaDescription,
       keywords: FALLBACKS.focusKeyword,
+      alternates: {
+        canonical:
+          "https://www.localcitywalks.com/tours/toledo/hello-toledo-1077682",
+      },
     });
   });
 
   it("returns an empty object when the slug has no tour id", async () => {
-    await expect(resolveTourPageMetadata("invalid-slug")).resolves.toEqual({});
+    await expect(resolveTourPageMetadata("toledo", "invalid-slug")).resolves.toEqual({});
     expect(getTourSeoMetadataMock).not.toHaveBeenCalled();
     expect(getTourDetailByIdMock).not.toHaveBeenCalled();
   });
@@ -164,7 +260,7 @@ describe("resolveTourPageMetadata", () => {
     });
 
     await expect(
-      resolveTourPageMetadata("hello-toledo-private-walk-1077682"),
+      resolveTourPageMetadata("toledo", "hello-toledo-private-walk-1077682"),
     ).resolves.toEqual({});
   });
 
@@ -179,10 +275,62 @@ describe("resolveTourPageMetadata", () => {
     });
 
     await expect(
-      resolveTourPageMetadata("hello-toledo-private-walk-1077682"),
+      resolveTourPageMetadata("toledo", "hello-toledo-private-walk-1077682"),
     ).resolves.toEqual({
       title: "Sanity title",
       description: "Sanity description",
     });
+  });
+
+  it("adds canonical, openGraph large image, and twitter tags from Bokun detail", async () => {
+    getTourSeoMetadataMock.mockResolvedValue(null);
+    getTourDetailByIdMock.mockResolvedValue({
+      success: true,
+      data: BOKUN_DETAIL,
+    });
+
+    const metadata = await resolveTourPageMetadata(
+      "toledo",
+      "hello-toledo-private-walk-1077682",
+    );
+
+    expect(metadata.alternates?.canonical).toBe(
+      "https://www.localcitywalks.com/tours/toledo/hello-toledo-private-2-hour-intro-city-walk-1077682",
+    );
+    expect(metadata.openGraph).toMatchObject({
+      url: "https://www.localcitywalks.com/tours/toledo/hello-toledo-private-2-hour-intro-city-walk-1077682",
+      type: "website",
+      siteName: "LocalCityWalks",
+      images: [
+        {
+          url: "https://imgcdn.bokun.tools/example.jpg?w=660&h=660",
+          alt: FALLBACKS.seoTitle,
+        },
+      ],
+    });
+    expect(metadata.twitter).toMatchObject({
+      card: "summary_large_image",
+      images: ["https://imgcdn.bokun.tools/example.jpg?w=660&h=660"],
+    });
+  });
+
+  it("uses route city param when Bokun googlePlace city is missing", async () => {
+    getTourSeoMetadataMock.mockResolvedValue(null);
+    getTourDetailByIdMock.mockResolvedValue({
+      success: true,
+      data: {
+        title: "Hello Mystery Walk",
+        keyPhoto: { derived: [] },
+      },
+    });
+
+    const metadata = await resolveTourPageMetadata(
+      "fallback-city",
+      "hello-mystery-walk-999",
+    );
+
+    expect(metadata.alternates?.canonical).toBe(
+      "https://www.localcitywalks.com/tours/fallback-city/hello-mystery-walk-999",
+    );
   });
 });
