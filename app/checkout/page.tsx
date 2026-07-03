@@ -3,6 +3,10 @@ import type { Metadata } from "next";
 import { CheckoutHandoffErrorView } from "@/components/checkout/CheckoutHandoffErrorView";
 import { CheckoutSummaryView } from "@/components/checkout/CheckoutSummaryView";
 import {
+  resolveCheckoutHandoffErrorTitle,
+  resolveCheckoutQuoteUnavailableTitle,
+} from "@/lib/checkout/checkout-error-messages";
+import {
   loadCheckoutSummary,
   resolveCheckoutHandoffErrorMessage,
 } from "@/lib/checkout/load-checkout-summary";
@@ -25,19 +29,28 @@ export default async function CheckoutPage({
   const result = await loadCheckoutSummary(h);
 
   if (result.status === "ready") {
-    return <CheckoutSummaryView order={result.order} />;
+    return (
+      <CheckoutSummaryView
+        order={result.order}
+        priceUpdate={result.priceUpdate}
+        tourPageHref={result.tourPageHref}
+      />
+    );
   }
 
   if (result.status === "quote_unavailable") {
     return (
       <CheckoutHandoffErrorView
+        title={resolveCheckoutQuoteUnavailableTitle(result.reason)}
         message={result.message}
         tourPageHref={result.tourPageHref}
       />
     );
   }
+
   return (
     <CheckoutHandoffErrorView
+      title={resolveCheckoutHandoffErrorTitle(result.reason)}
       message={resolveCheckoutHandoffErrorMessage(result.reason)}
       tourPageHref={result.tourPageHref}
     />

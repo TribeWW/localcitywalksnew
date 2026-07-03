@@ -3,25 +3,25 @@
 /**
  * Tour-page booking widget with live Bókun pricing and availability (LOC-1048 / LOC-1063 / LOC-1056).
  *
- * Two-step UI: collapsed → configuring (date/time/language/guests/breakdown) → contact.
+ * Two-step UI: collapsed → configuring (date/time/language/guests/breakdown) → checkout.
  *
  * - Availabilities: month-scoped fetch via `getTourAvailabilities`
  * - Pricing: debounced `getTourBookingQuote` (400ms)
- * - Submit: `submitTourBookingRequest` with server re-quote + LOC-1055 emails
+ * - Checkout: `startCheckoutHandoff` → `/checkout?h=…` (LOC-1157)
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { Calendar, Clock, Globe } from "lucide-react";
-import { useForm, type Control, type FieldValues } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
   getTourAvailabilities,
   getTourBookingQuote,
-  submitTourBookingRequest,
 } from "@/lib/actions/booking-widget.actions";
-import { buildTourBookingSubmitPayload } from "@/lib/actions/build-tour-booking-submit-payload";
+import { startCheckoutHandoff } from "@/lib/actions/checkout-handoff.actions";
+import { buildStartCheckoutHandoffInput } from "@/lib/booking/build-start-checkout-handoff-input";
 import { tourBookingParticipantsSchema } from "@/lib/validation/tour-booking";
 import {
   availabilitySlotToIsoDate,
@@ -33,7 +33,6 @@ import BookingWidgetFromPrice from "@/components/tours/booking-widget/BookingWid
 import BookingWidgetField from "@/components/tours/booking-widget/BookingWidgetField";
 import BookingGuestsPicker from "@/components/tours/booking-widget/BookingGuestsPicker";
 import BookingWidgetBreakdown from "@/components/tours/booking-widget/BookingWidgetBreakdown";
-import BookingWidgetContactStep from "@/components/tours/booking-widget/BookingWidgetContactStep";
 import BookingWidgetCollapsed from "@/components/tours/booking-widget/BookingWidgetCollapsed";
 import BookingWidgetStepOneFooter from "@/components/tours/booking-widget/BookingWidgetStepOneFooter";
 import type { GuestCategoryKey } from "@/components/tours/booking-widget/guest-categories";
@@ -60,9 +59,6 @@ import { toast } from "sonner";
 
 /** Debounce delay before calling `getTourBookingQuote` after selection changes (ms). */
 const QUOTE_DEBOUNCE_MS = 400;
-
-/** Active UI step once the widget is expanded (LOC-1063 two-step flow). */
-type WidgetStep = "configuring" | "contact";
 
 /** Client-side Zod schema for the booking widget form (contact + slot fields). */
 const bookingWidgetFormSchema = z.object({
@@ -137,12 +133,12 @@ function monthKey(date: Date): string {
 /**
  * Bókun-backed booking form for the tour page `#request` card.
  *
- * Orchestrates the LOC-1063 two-step UI via subcomponents in `booking-widget/`:
- * collapsed → configuring (date/time/language/guests/breakdown) → contact.
+ * Orchestrates the LOC-1063 widget UI via subcomponents in `booking-widget/`:
+ * collapsed → configuring (date/time/language/guests/breakdown) → checkout handoff.
  *
  * Fetches availabilities per month and debounces live quotes from
- * `getTourBookingQuote`. On submit, builds a payload via
- * `buildTourBookingSubmitPayload` and calls `submitTourBookingRequest` (LOC-1056).
+ * `getTourBookingQuote`. On continue, builds handoff input and calls
+ * `startCheckoutHandoff` (LOC-1157).
  *
  * @param props - `BookingWidgetBootstrap` from `getTourDetailById`
  */
@@ -156,15 +152,14 @@ export default function BookingWidget({
   fromPriceCurrency,
 }: BookingWidgetBootstrap) {
   const [widgetOpen, setWidgetOpen] = useState(false);
-  const [step, setStep] = useState<WidgetStep>("configuring");
   const [availabilities, setAvailabilities] = useState<BokunAvailability[]>([]);
   const [availLoading, setAvailLoading] = useState(false);
   const [availError, setAvailError] = useState<string | null>(null);
   const [quote, setQuote] = useState<BookingWidgetQuote | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
-  /** True while `submitTourBookingRequest` is in flight; disables Send request. */
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  /** True while `startCheckoutHandoff` is in flight; disables Continue to checkout. */
+  const [isContinuingToCheckout, setIsContinuingToCheckout] = useState(false);
   const loadedMonthsRef = useRef<Set<string>>(new Set());
 
   const minDate = useMemo(() => {
@@ -204,9 +199,6 @@ export default function BookingWidget({
   const youth = form.watch("youth");
   const children = form.watch("children");
   const infants = form.watch("infants");
-  const consent = form.watch("consent");
-  const fullName = form.watch("fullName");
-  const email = form.watch("email");
 
   const participants = useMemo(
     () => ({ adults, youth, children, infants }),
@@ -443,84 +435,61 @@ export default function BookingWidget({
     Boolean(startTimeIdValue) &&
     Boolean(preferredDate);
 
-  const contactFieldsValid =
-    fullName.trim().length >= 3 &&
-    z.string().trim().email().safeParse(email).success;
-
-  const canSubmit =
-    canBookNow && consent && contactFieldsValid && !isSubmitting;
-
   const handleParticipantChange = (key: GuestCategoryKey, value: number) => {
     form.setValue(key, value, { shouldDirty: true, shouldValidate: true });
   };
 
   /**
-   * Submits the booking request after server-side re-quote and email delivery.
+   * Starts checkout handoff after server-side re-quote and token minting.
    *
-   * Builds `TourBookingSubmitInput` from form state + live quote, then calls
-   * `submitTourBookingRequest`. On success, resets the form and collapses the widget.
-   *
-   * @param values - Validated form payload (contact + slot + participants)
+   * Builds `StartCheckoutHandoffInput` from step-1 form state + live quote,
+   * then redirects to `/checkout?h=…` on success.
    */
-  async function onSubmit(values: BookingWidgetFormValues) {
-    if (!quote) {
-      toast.error("Unable to submit without a valid price. Please try again.");
+  async function handleContinueToCheckout() {
+    if (!quote || !canBookNow || isContinuingToCheckout) {
       return;
     }
 
-    setIsSubmitting(true);
+    setIsContinuingToCheckout(true);
 
     try {
-      const payload = buildTourBookingSubmitPayload({
-        values,
+      const payload = buildStartCheckoutHandoffInput({
+        values: {
+          preferredDate,
+          startTimeId: startTimeIdValue,
+          language,
+          adults,
+          youth,
+          children,
+          infants,
+        },
         productId,
         productTitle,
         quote,
       });
-      const result = await submitTourBookingRequest(payload);
+      const result = await startCheckoutHandoff(payload);
 
       if (!result.success) {
         toast.error(
           result.error ??
-            "Failed to send tour request. Please try again later.",
+            "Unable to continue to checkout. Please try again later.",
         );
         return;
       }
 
-      toast.success(
-        "Tour request sent successfully! We'll get back to you soon.",
-      );
-      form.reset({
-        fullName: "",
-        email: "",
-        city: cityName,
-        message: "",
-        phoneNumber: "",
-        adults: 1,
-        youth: 0,
-        children: 0,
-        infants: 0,
-        preferredDate: undefined,
-        startTimeId: undefined,
-        language: undefined,
-        consent: false,
-      });
-      setWidgetOpen(false);
-      setStep("configuring");
-      setQuote(null);
-      setQuoteError(null);
+      window.location.assign(result.redirectUrl);
     } catch (error) {
-      console.error("Booking widget submit error:", error);
-      toast.error("Failed to send tour request. Please try again later.");
+      console.error("Booking widget checkout handoff error:", error);
+      toast.error("Unable to continue to checkout. Please try again later.");
     } finally {
-      setIsSubmitting(false);
+      setIsContinuingToCheckout(false);
     }
   }
 
   return (
     <BookingWidgetShell>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0">
+        <form className="space-y-0" onSubmit={(event) => event.preventDefault()}>
           <BookingWidgetFromPrice
             amount={fromPriceAmount}
             currency={fromPriceCurrency}
@@ -531,7 +500,7 @@ export default function BookingWidget({
               className={fromPriceAmount != null ? "mt-4" : undefined}
               onCheckAvailability={() => setWidgetOpen(true)}
             />
-          ) : step === "configuring" ? (
+          ) : (
             <div className="mt-6 space-y-3">
               {availError ? (
                 <p className="text-sm text-destructive" role="alert">
@@ -645,18 +614,11 @@ export default function BookingWidget({
 
               <BookingWidgetStepOneFooter
                 canBookNow={canBookNow}
-                onBookNow={() => setStep("contact")}
-              />
-            </div>
-          ) : (
-            <div className="mt-6">
-              <BookingWidgetContactStep
-                control={form.control as unknown as Control<FieldValues>}
-                quote={quote}
-                quoteLoading={quoteLoading}
-                quoteError={quoteError}
-                canSubmit={canSubmit}
-                onBack={() => setStep("configuring")}
+                mode="checkout"
+                continuing={isContinuingToCheckout}
+                onPrimaryAction={() => {
+                  void handleContinueToCheckout();
+                }}
               />
             </div>
           )}

@@ -55,7 +55,12 @@ export type VerifyCheckoutHandoffError =
 
 export type VerifyCheckoutHandoffResult =
   | { success: true; payload: CheckoutHandoffPayload }
-  | { success: false; error: VerifyCheckoutHandoffError };
+  | {
+      success: false;
+      error: VerifyCheckoutHandoffError;
+      /** Signed payload recovered on expiry — used for tour-page error links. */
+      recoveryPayload?: CheckoutHandoffPayload;
+    };
 
 function getHandoffSecret(): string | null {
   const secret = process.env.CHECKOUT_HANDOFF_SECRET?.trim();
@@ -176,7 +181,11 @@ export function verifyCheckoutHandoffToken(
   }
 
   if (parsed.data.exp <= Math.floor(Date.now() / 1000)) {
-    return { success: false, error: "expired" };
+    return {
+      success: false,
+      error: "expired",
+      recoveryPayload: parsed.data,
+    };
   }
 
   return { success: true, payload: parsed.data };

@@ -1,5 +1,5 @@
 /**
- * Checkout handoff token — sign/verify invariants (LOC-1152).
+ * Checkout handoff token — sign/verify invariants (LOC-1152 / LOC-1158).
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -10,7 +10,7 @@ import {
 } from "@/lib/checkout/handoff-token";
 import type { SignCheckoutHandoffInput } from "@/lib/checkout/handoff-token";
 
-const HANDOFF_SECRET = "test-handoff-secret";
+const HANDOFF_SECRET = "test-handoff-secret-with-32-characters-min";
 
 const handoffInput: SignCheckoutHandoffInput = {
   productId: "1079932",
@@ -63,9 +63,15 @@ describe("signCheckoutHandoffToken / verifyCheckoutHandoffToken", () => {
       new Date(Date.now() + CHECKOUT_HANDOFF_TTL_SECONDS * 1000 + 1),
     );
 
-    expect(verifyCheckoutHandoffToken(token)).toEqual({
-      success: false,
-      error: "expired",
+    const result = verifyCheckoutHandoffToken(token);
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+
+    expect(result.error).toBe("expired");
+    expect(result.recoveryPayload).toMatchObject({
+      productId: handoffInput.productId,
+      productTitle: handoffInput.productTitle,
     });
   });
 

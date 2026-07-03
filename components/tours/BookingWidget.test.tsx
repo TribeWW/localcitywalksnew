@@ -3,12 +3,12 @@
  *
  * Critical invariants:
  * - Guests accordion with four participant categories
- * - Collapsed → configuring → contact two-step flow
+ * - Collapsed → configuring flow with checkout handoff (LOC-1157)
  * - Availabilities fetched on mount for the current month
  * - Quote refetch is debounced (400ms) after date + startTimeId are set
- * - Submit stays disabled until step 2 consent + valid quote + contact fields
+ * - Continue to checkout calls `startCheckoutHandoff` and redirects
  * - Slot `guidedLanguages` narrow product `guidanceTypes` options
- * - Below `minParticipantsToBookNow` blocks Book now with inline message
+ * - Below `minParticipantsToBookNow` blocks Continue to checkout with inline message
  */
 
 import {
@@ -24,16 +24,20 @@ import type { BokunAvailability, BookingWidgetQuote } from "@/types/bokun";
 
 const getTourAvailabilitiesMock = vi.fn();
 const getTourBookingQuoteMock = vi.fn();
-const submitTourBookingRequestMock = vi.fn();
+const startCheckoutHandoffMock = vi.fn();
 const toastErrorMock = vi.fn();
 const toastSuccessMock = vi.fn();
+const locationAssignMock = vi.fn();
 
 vi.mock("@/lib/actions/booking-widget.actions", () => ({
   getTourAvailabilities: (...args: unknown[]) =>
     getTourAvailabilitiesMock(...args),
   getTourBookingQuote: (...args: unknown[]) => getTourBookingQuoteMock(...args),
-  submitTourBookingRequest: (...args: unknown[]) =>
-    submitTourBookingRequestMock(...args),
+}));
+
+vi.mock("@/lib/actions/checkout-handoff.actions", () => ({
+  startCheckoutHandoff: (...args: unknown[]) =>
+    startCheckoutHandoffMock(...args),
 }));
 
 vi.mock("sonner", () => ({
@@ -203,29 +207,19 @@ async function waitForQuoteTotal() {
   });
 }
 
-async function goToContactStep() {
+async function completeStep1WithQuote() {
   await openConfiguringStep();
   await selectAvailableDate();
   await waitForQuoteTotal();
-  await act(async () => {
-    fireEvent.click(screen.getByRole("button", { name: "Book now" }));
-  });
-}
-
-async function fillContactFields() {
-  await act(async () => {
-    fireEvent.change(screen.getByPlaceholderText("Full name"), {
-      target: { value: "Jane Doe" },
-    });
-    fireEvent.change(screen.getByPlaceholderText("Email"), {
-      target: { value: "jane@example.com" },
-    });
-    fireEvent.click(screen.getByRole("checkbox"));
-  });
 }
 
 describe("BookingWidget — structure invariants", () => {
   beforeEach(() => {
+    locationAssignMock.mockReset();
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { assign: locationAssignMock },
+    });
     getTourAvailabilitiesMock.mockResolvedValue({
       success: true,
       data: [buildOpenSlot()],
@@ -274,6 +268,11 @@ describe("BookingWidget — structure invariants", () => {
 
 describe("BookingWidget — availability and quote invariants", () => {
   beforeEach(() => {
+    locationAssignMock.mockReset();
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { assign: locationAssignMock },
+    });
     getTourAvailabilitiesMock.mockResolvedValue({
       success: true,
       data: [buildOpenSlot()],
@@ -324,65 +323,67 @@ describe("BookingWidget — availability and quote invariants", () => {
     );
   });
 
-  it("submit gating invariant: disables send until step 2 consent and quote are ready", async () => {
+  it("checkout invariant: disables Continue to checkout until quote is ready", async () => {
     render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
-    await goToContactStep();
+    await openConfiguringStep();
+    await selectAvailableDate();
 
-    const submitButton = screen.getByRole("button", { name: "Send request" });
-    expect(submitButton).toBeDisabled();
+    const checkoutButton = screen.getByRole("button", {
+      name: "Continue to checkout",
+    });
+    expect(checkoutButton).toBeDisabled();
 
-    await fillContactFields();
-
-    expect(submitButton).toBeEnabled();
+    await waitForQuoteTotal();
+    expect(checkoutButton).toBeEnabled();
   });
 
-  it("submit invariant: calls submitTourBookingRequest and shows success toast", async () => {
-    submitTourBookingRequestMock.mockResolvedValue({ success: true });
+  it("checkout invariant: calls startCheckoutHandoff and redirects on success", async () => {
+    startCheckoutHandoffMock.mockResolvedValue({
+      success: true,
+      redirectUrl: "/checkout?h=signed.token",
+    });
 
     render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
-    await goToContactStep();
-    await fillContactFields();
+    await completeStep1WithQuote();
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Send request" }));
+      fireEvent.click(
+        screen.getByRole("button", { name: "Continue to checkout" }),
+      );
     });
 
     await waitFor(() => {
-      expect(submitTourBookingRequestMock).toHaveBeenCalledWith(
+      expect(startCheckoutHandoffMock).toHaveBeenCalledWith(
         expect.objectContaining({
-          fullName: "Jane Doe",
-          email: "jane@example.com",
           productId: "1079932",
           productTitle: "Hello Biarritz",
           date: SLOT_DATE_ISO,
           startTimeId: START_TIME_ID,
           participants: { adults: 1, youth: 0, children: 0, infants: 0 },
           clientQuote: { totalAmount: 248, currency: "EUR" },
-          consent: true,
         }),
       );
     });
 
-    expect(toastSuccessMock).toHaveBeenCalledWith(
-      "Tour request sent successfully! We'll get back to you soon.",
-    );
+    expect(locationAssignMock).toHaveBeenCalledWith("/checkout?h=signed.token");
   });
 
-  it("submit invariant: surfaces server error toast on failure", async () => {
-    submitTourBookingRequestMock.mockResolvedValue({
+  it("checkout invariant: surfaces server error toast on handoff failure", async () => {
+    startCheckoutHandoffMock.mockResolvedValue({
       success: false,
       error: "Price has changed. Please review your total and try again.",
     });
 
     render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
-    await goToContactStep();
-    await fillContactFields();
+    await completeStep1WithQuote();
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Send request" }));
+      fireEvent.click(
+        screen.getByRole("button", { name: "Continue to checkout" }),
+      );
     });
 
     await waitFor(() => {
@@ -390,12 +391,13 @@ describe("BookingWidget — availability and quote invariants", () => {
         "Price has changed. Please review your total and try again.",
       );
     });
+    expect(locationAssignMock).not.toHaveBeenCalled();
   });
 
-  it("step 2 shows price recap below contact fields", async () => {
+  it("step 1 shows price recap in the breakdown", async () => {
     render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
-    await goToContactStep();
+    await completeStep1WithQuote();
 
     expect(screen.getByText("Adult × 1")).toBeInTheDocument();
     expect(screen.getAllByText("€248").length).toBeGreaterThan(0);
@@ -407,6 +409,11 @@ describe("BookingWidget — availability and quote invariants", () => {
 
 describe("BookingWidget — slot-driven invariants", () => {
   beforeEach(() => {
+    locationAssignMock.mockReset();
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { assign: locationAssignMock },
+    });
     getTourAvailabilitiesMock.mockResolvedValue({
       success: true,
       data: [
@@ -434,7 +441,7 @@ describe("BookingWidget — slot-driven invariants", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("minParticipants invariant: blocks Book now when below minParticipantsToBookNow", async () => {
+  it("minParticipants invariant: blocks Continue to checkout when below minParticipantsToBookNow", async () => {
     render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
     await openConfiguringStep();
@@ -446,6 +453,8 @@ describe("BookingWidget — slot-driven invariants", () => {
       ).toBeInTheDocument();
     });
 
-    expect(screen.getByRole("button", { name: "Book now" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Continue to checkout" }),
+    ).toBeDisabled();
   });
 });

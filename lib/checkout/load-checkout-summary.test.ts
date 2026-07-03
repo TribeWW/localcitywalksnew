@@ -87,6 +87,27 @@ describe("loadCheckoutSummary", () => {
     });
   });
 
+  it("returns invalid_handoff with tour link when expired token has recovery payload", async () => {
+    verifyCheckoutHandoffTokenMock.mockReturnValue({
+      success: false,
+      error: "expired",
+      recoveryPayload: handoffPayload,
+    });
+    getTourDetailByIdMock.mockResolvedValue({
+      success: true,
+      data: tourDetail,
+    });
+
+    const result = await loadCheckoutSummary("expired.token");
+
+    expect(result.status).toBe("invalid_handoff");
+    if (result.status !== "invalid_handoff") return;
+
+    expect(result.reason).toBe("expired");
+    expect(result.tourPageHref).toContain("/tours/biarritz/");
+    expect(computeTourBookingQuoteMock).not.toHaveBeenCalled();
+  });
+
   it("returns quote_unavailable when tour detail cannot be loaded", async () => {
     verifyCheckoutHandoffTokenMock.mockReturnValue({
       success: true,
@@ -101,14 +122,15 @@ describe("loadCheckoutSummary", () => {
 
     expect(result).toEqual({
       status: "quote_unavailable",
+      reason: "tour_detail_unavailable",
       productId: "1079932",
-      message: "We couldn't load this tour's details. Please try again.",
+      message: "We couldn't load this tour's details. Please try again from the tour page.",
       tourPageHref: "/explore",
     });
     expect(computeTourBookingQuoteMock).not.toHaveBeenCalled();
   });
 
-  it("returns quote_unavailable when server re-quote fails", async () => {
+  it("returns sold_out quote_unavailable with policy copy when slot is gone", async () => {
     verifyCheckoutHandoffTokenMock.mockReturnValue({
       success: true,
       payload: handoffPayload,
@@ -127,8 +149,33 @@ describe("loadCheckoutSummary", () => {
     expect(result.status).toBe("quote_unavailable");
     if (result.status !== "quote_unavailable") return;
 
+    expect(result.reason).toBe("sold_out");
+    expect(result.message).toContain("no longer available");
+    expect(result.tourPageHref).toContain("/tours/biarritz/");
+  });
+
+  it("returns quote_unavailable when server re-quote fails", async () => {
+    verifyCheckoutHandoffTokenMock.mockReturnValue({
+      success: true,
+      payload: handoffPayload,
+    });
+    getTourDetailByIdMock.mockResolvedValue({
+      success: true,
+      data: tourDetail,
+    });
+    computeTourBookingQuoteMock.mockResolvedValue({
+      success: false,
+      error: "Unable to load availabilities",
+    });
+
+    const result = await loadCheckoutSummary("valid.token");
+
+    expect(result.status).toBe("quote_unavailable");
+    if (result.status !== "quote_unavailable") return;
+
     expect(result.productId).toBe("1079932");
-    expect(result.message).toBe("Unable to calculate quote for this selection");
+    expect(result.reason).toBe("quote_error");
+    expect(result.message).toContain("couldn't confirm availability");
     expect(result.tourPageHref).toContain("/tours/biarritz/");
   });
 
@@ -168,5 +215,37 @@ describe("loadCheckoutSummary", () => {
         startTimeId: 4252139,
       }),
     );
+    expect(result.priceUpdate).toBeNull();
+  });
+
+  it("returns priceUpdate when server re-quote differs from handoff clientQuote", async () => {
+    verifyCheckoutHandoffTokenMock.mockReturnValue({
+      success: true,
+      payload: {
+        ...handoffPayload,
+        clientQuote: { totalAmount: 448, currency: "EUR" },
+      },
+    });
+    computeTourBookingQuoteMock.mockResolvedValue({
+      success: true,
+      data: { ...serverQuote, totalAmount: 496 },
+    });
+    getTourDetailByIdMock.mockResolvedValue({
+      success: true,
+      data: tourDetail,
+    });
+
+    const result = await loadCheckoutSummary("valid.token");
+
+    expect(result.status).toBe("ready");
+    if (result.status !== "ready") return;
+
+    expect(result.priceUpdate).toEqual({
+      previousTotalAmount: 448,
+      previousCurrency: "EUR",
+      currentTotalAmount: 496,
+      currentCurrency: "EUR",
+    });
+    expect(result.order.totalAmount).toBe(496);
   });
 });
