@@ -7,6 +7,7 @@ import Footer from "@/components/shared/Footer";
 
 import Script from "next/script";
 import { config } from "@/lib/config";
+import { SITE_URL, absoluteUrl } from "@/lib/site";
 
 // Environment variables for analytics
 const GA4_ID = config.analytics.ga4Id;
@@ -32,23 +33,24 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Book Guided Walking Tours with Trusted Local Guides - LocalCityWalks",
   description:
     "Discover cities like a local. Small group walking tours led by trusted local guides. Real stories, real connections, real cities.",
   alternates: {
-    canonical: "https://www.localcitywalks.com/",
+    canonical: absoluteUrl("/"),
   },
   openGraph: {
     title:
       "Book Guided Walking Tours with Trusted Local Guides - LocalCityWalks",
     description:
       "Discover cities like a local. Small group walking tours led by trusted local guides. Real stories, real connections, real cities.",
-    url: "https://www.localcitywalks.com/",
+    url: absoluteUrl("/"),
     type: "website",
     siteName: "LocalCityWalks",
     images: [
       {
-        url: "https://www.localcitywalks.com/guide.png",
+        url: absoluteUrl("/guide.png"),
         height: 630,
         alt: "Book Guided Walking Tours with Trusted Local Guides - LocalCityWalks",
       },
@@ -60,7 +62,7 @@ export const metadata: Metadata = {
       "Book Guided Walking Tours with Trusted Local Guides - LocalCityWalks",
     description:
       "Discover cities like a local. Small group walking tours led by trusted local guides. Real stories, real connections, real cities.",
-    images: ["https://www.localcitywalks.com/guide.png"],
+    images: [absoluteUrl("/guide.png")],
   },
   icons: {
     icon: [
@@ -154,8 +156,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
               name: "LocalCityWalks",
               description:
                 "Discover cities like a local. Small group walking tours led by trusted local guides. Real stories, real connections, real cities.",
-              url: "https://www.localcitywalks.com",
-              logo: "https://www.localcitywalks.com/logo-icon.svg",
+              url: SITE_URL,
+              logo: absoluteUrl("/logo-icon.svg"),
             }),
           }}
         />
@@ -165,7 +167,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              url: "https://www.localcitywalks.com",
+              url: SITE_URL,
               name: "LocalCityWalks",
             }),
           }}

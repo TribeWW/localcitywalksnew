@@ -1,20 +1,18 @@
-import type { Metadata } from "next";
+import { Suspense } from "react";
 import Image from "next/image";
 import ExploreCatalog from "@/components/explore/ExploreCatalog";
+import { ExploreJsonLdSection } from "@/components/seo/ExploreJsonLdSection";
+import { buildExplorePageMetadata } from "@/lib/explore-page-metadata";
 
-export const metadata: Metadata = {
-  title: "Explore tours - LocalCityWalks",
-  description:
-    "Browse all city walking tours. Filter by country and sort alphabetically.",
-  alternates: {
-    canonical: "https://www.localcitywalks.com/explore",
-  },
-};
+export const metadata = buildExplorePageMetadata();
 
-/** Render the Explore page catalog. */
-export default async function ExplorePage() {
+/** Render the Explore page catalog; JSON-LD loads in a separate Suspense boundary. */
+export default function ExplorePage() {
   return (
     <main className="bg-white">
+      <Suspense fallback={null}>
+        <ExploreJsonLdSection />
+      </Suspense>
       <div className="bg-[#F7F7F7]">
         <div className="mx-auto w-full max-w-[1140px] px-6 pb-6 pt-8 lg:px-0">
           <h1 className="mb-2 text-[32px] font-bold leading-[1.3] text-[#0F172A]">

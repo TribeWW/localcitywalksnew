@@ -175,3 +175,27 @@ export async function getExploreCatalogPage(
     };
   }
 }
+
+/**
+ * Returns the full deduplicated explore catalog for structured data (ItemList JSON-LD).
+ *
+ * Unlike {@link getExploreCatalogPage}, this returns every tour row — not a single page slice.
+ */
+export async function getExploreCatalogForStructuredData(): Promise<
+  | { success: true; items: CityCardData[] }
+  | { success: false; error: string }
+> {
+  try {
+    const built = await getOrBuildExploreSortedList(null, true);
+    if (!built.ok) {
+      return { success: false, error: built.error };
+    }
+    return { success: true, items: built.sorted };
+  } catch (error) {
+    console.error("Error building explore catalog for structured data:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}

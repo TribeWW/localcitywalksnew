@@ -8,9 +8,21 @@
 
 import type { Metadata } from "next";
 import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
-import { buildTourSeoFallbacks, type TourSeoFallbacks } from "@/lib/tour-seo-fallbacks";
+import { pickBokunOgImageUrl } from "@/lib/bokun/pick-bokun-photo-url";
+import {
+  buildTourSeoFallbacks,
+  type TourSeoFallbacks,
+} from "@/lib/tour-seo-fallbacks";
 import { getTourSeoMetadata } from "@/lib/tour-seo";
+import { tourPageUrl } from "@/lib/site";
+import { slugifyForUrl } from "@/lib/utils";
 import type { TourSeoMetadata } from "@/types/tour-seo";
+
+/** Optional URL context for canonical, Open Graph, and Twitter metadata. */
+export type TourPageMetadataContext = {
+  canonicalUrl: string;
+  ogImageUrl: string | null;
+};
 
 /**
  * Extracts the numeric Bokun product id from a tour URL slug suffix.
@@ -81,11 +93,15 @@ export function mergeTourSeoFields(
  * Maps resolved Tour SEO fields to Next.js `Metadata`.
  *
  * Only non-empty values are included so partial output and layout defaults can coexist.
+ * When {@link TourPageMetadataContext} is provided, adds canonical URL, Open Graph,
+ * and Twitter card tags (OG image uses Bókun `large` derived size when available).
  *
  * @param seo - Merged Sanity + fallback fields
+ * @param context - Optional canonical URL and OG image for social metadata
  */
 export function buildTourPageMetadata(
   seo: TourSeoMetadata | null,
+  context?: TourPageMetadataContext,
 ): Metadata {
   if (!seo) return {};
 
@@ -98,21 +114,72 @@ export function buildTourPageMetadata(
   if (description) metadata.description = description;
   if (focusKeyword) metadata.keywords = focusKeyword;
 
+  if (!context) return metadata;
+
+  const { canonicalUrl, ogImageUrl } = context;
+
+  metadata.alternates = { canonical: canonicalUrl };
+
+  const openGraph: NonNullable<Metadata["openGraph"]> = {
+    title: title || undefined,
+    description: description || undefined,
+    url: canonicalUrl,
+    type: "website",
+    siteName: "LocalCityWalks",
+  };
+
+  if (ogImageUrl) {
+    openGraph.images = [
+      {
+        url: ogImageUrl,
+        alt: title ?? "LocalCityWalks tour",
+      },
+    ];
+  }
+
+  metadata.openGraph = openGraph;
+
+  const twitter: NonNullable<Metadata["twitter"]> = {
+    card: "summary_large_image",
+    title: title || undefined,
+    description: description || undefined,
+  };
+
+  if (ogImageUrl) {
+    twitter.images = [ogImageUrl];
+  }
+
+  metadata.twitter = twitter;
+
   return metadata;
 }
 
 /**
- * Resolves tour page metadata from the route slug via Sanity overrides and Bokun fallbacks.
+ * Resolves canonical city slug from Bokun `googlePlace.city` or route param.
+ */
+export function resolveTourCitySlug(
+  routeCity: string,
+  bokunCity?: string | null,
+): string {
+  const gpCity = bokunCity?.trim();
+  return gpCity ? slugifyForUrl(gpCity) : slugifyForUrl(routeCity);
+}
+
+/**
+ * Resolves tour page metadata from route params via Sanity overrides and Bokun fallbacks.
  *
  * Fetches Sanity and Bokun in parallel. When Bokun is unavailable, returns Sanity-only
- * metadata if overrides exist; otherwise `{}`.
+ * metadata if overrides exist; otherwise `{}`. When Bokun succeeds, includes per-tour
+ * canonical URL and Open Graph image from `keyPhoto.derived` (`large` preferred).
  *
- * @param slug - Tour URL slug segment from route params
+ * @param routeCity - City segment from route params (e.g. `"toledo"`)
+ * @param tourSlug - Tour slug segment from route params
  */
 export async function resolveTourPageMetadata(
-  slug: string,
+  routeCity: string,
+  tourSlug: string,
 ): Promise<Metadata> {
-  const tourId = extractTourIdFromSlug(slug);
+  const tourId = extractTourIdFromSlug(tourSlug);
   if (!tourId) return {};
 
   const [sanitySeo, tourDetail] = await Promise.all([
@@ -129,5 +196,10 @@ export async function resolveTourPageMetadata(
   const fallbacks = buildTourSeoFallbacks(cityName);
   const merged = mergeTourSeoFields(sanitySeo, fallbacks);
 
-  return buildTourPageMetadata(merged);
+  const citySlug = resolveTourCitySlug(routeCity, cityName);
+  const canonicalSlug = `${slugifyForUrl(tourDetail.data.title)}-${tourId}`;
+  const canonicalUrl = tourPageUrl(citySlug, canonicalSlug);
+  const ogImageUrl = pickBokunOgImageUrl(tourDetail.data.keyPhoto);
+
+  return buildTourPageMetadata(merged, { canonicalUrl, ogImageUrl });
 }
