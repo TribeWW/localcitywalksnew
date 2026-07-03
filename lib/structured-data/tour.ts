@@ -48,7 +48,7 @@ export function plainTextForSchema(input: PlainTextInput): string {
 
   return html
     .replace(/<br\s*\/?>/gi, " ")
-    .replace(/<\/p>/gi, " ")
+    .replace(/<\/(p|div|li|h[1-6]|ul|ol|blockquote|section)>/gi, " ")
     .replace(/<[^>]+>/g, "")
     .replace(/\s+/g, " ")
     .trim();

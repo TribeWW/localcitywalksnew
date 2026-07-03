@@ -9,7 +9,10 @@
 import type { Metadata } from "next";
 import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
 import { pickBokunOgImageUrl } from "@/lib/bokun/pick-bokun-photo-url";
-import { buildTourSeoFallbacks, type TourSeoFallbacks } from "@/lib/tour-seo-fallbacks";
+import {
+  buildTourSeoFallbacks,
+  type TourSeoFallbacks,
+} from "@/lib/tour-seo-fallbacks";
 import { getTourSeoMetadata } from "@/lib/tour-seo";
 import { tourPageUrl } from "@/lib/site";
 import { slugifyForUrl } from "@/lib/utils";
@@ -118,8 +121,8 @@ export function buildTourPageMetadata(
   metadata.alternates = { canonical: canonicalUrl };
 
   const openGraph: NonNullable<Metadata["openGraph"]> = {
-    title: title ?? undefined,
-    description: description ?? undefined,
+    title: title || undefined,
+    description: description || undefined,
     url: canonicalUrl,
     type: "website",
     siteName: "LocalCityWalks",
@@ -138,8 +141,8 @@ export function buildTourPageMetadata(
 
   const twitter: NonNullable<Metadata["twitter"]> = {
     card: "summary_large_image",
-    title: title ?? undefined,
-    description: description ?? undefined,
+    title: title || undefined,
+    description: description || undefined,
   };
 
   if (ogImageUrl) {
@@ -159,7 +162,7 @@ export function resolveTourCitySlug(
   bokunCity?: string | null,
 ): string {
   const gpCity = bokunCity?.trim();
-  return gpCity ? slugifyForUrl(gpCity) : routeCity.trim();
+  return gpCity ? slugifyForUrl(gpCity) : slugifyForUrl(routeCity);
 }
 
 /**
