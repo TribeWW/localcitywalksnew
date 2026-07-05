@@ -28,4 +28,8 @@ export const BOKUN_ENDPOINTS = {
   PRICE_LIST: (id: string) => `/activity.json/${id}/price-list`,
   /** `GET` with query params: `start`, `end`, `lang`, `currency`, `includeSoldOut` */
   AVAILABILITIES: (id: string) => `/activity.json/${id}/availabilities`,
+  /** `POST` with `currency` query — checkout options for a booking request */
+  CHECKOUT_OPTIONS: "/checkout.json/options/booking-request",
+  /** `POST` with `currency` query — submit checkout (reserve / pay) */
+  CHECKOUT_SUBMIT: "/checkout.json/submit",
 } as const;
