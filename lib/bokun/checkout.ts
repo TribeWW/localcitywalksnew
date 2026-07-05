@@ -188,7 +188,13 @@ export function buildBokunBookingRequest(
   input: ReserveBokunCheckoutInput,
 ): BokunBookingRequest {
   const activityBooking: BokunActivityBookingRequest = {
-    activityId: Number(input.productId),
+    activityId: (() => {
+      const id = Number(input.productId);
+      if (!Number.isInteger(id)) {
+        throw new Error(`Invalid productId: ${input.productId}`);
+      }
+      return id;
+    })(),
     rateId: input.rateId,
     date: input.date,
     startTimeId: input.startTimeId,
@@ -216,11 +222,7 @@ export function buildBokunBookingRequest(
 export function getCheckoutOptionAllowedMethods(
   option: BokunCheckoutOption,
 ): string[] {
-  return (
-    option.paymentMethods?.allowedMethods ??
-    option.allowedMethods ??
-    []
-  );
+  return option.paymentMethods?.allowedMethods ?? option.allowedMethods ?? [];
 }
 
 /**
@@ -295,8 +297,7 @@ export async function fetchBokunCheckoutOptions(
   bookingRequest: BokunBookingRequest,
   currency: string = BOKUN_CHECKOUT_DEFAULT_CURRENCY,
 ): Promise<
-  | { success: true; data: BokunCheckoutOptionsResponse }
-  | { success: false }
+  { success: true; data: BokunCheckoutOptionsResponse } | { success: false }
 > {
   const path = buildCheckoutPathWithCurrency(
     BOKUN_ENDPOINTS.CHECKOUT_OPTIONS,
@@ -346,8 +347,7 @@ export async function submitBokunCheckoutReserve(
   submitBody: BokunReserveSubmitRequest,
   currency: string = BOKUN_CHECKOUT_DEFAULT_CURRENCY,
 ): Promise<
-  | { success: true; data: BokunCheckoutSubmitResponse }
-  | { success: false }
+  { success: true; data: BokunCheckoutSubmitResponse } | { success: false }
 > {
   const path = buildCheckoutPathWithCurrency(
     BOKUN_ENDPOINTS.CHECKOUT_SUBMIT,
@@ -388,6 +388,28 @@ export async function submitBokunCheckoutReserve(
 }
 
 /**
+ * Verifies a Bókun checkout option amount/currency match the server-verified quote.
+ *
+ * @param option - Reserve checkout option from options response
+ * @param quote - Server-verified quote from checkout summary re-quote
+ */
+export function checkoutOptionMatchesQuote(
+  option: Pick<BokunCheckoutOption, "amount" | "currency">,
+  quote: BookingWidgetQuote,
+): boolean {
+  if (option.amount !== quote.totalAmount) {
+    return false;
+  }
+
+  const expectedCurrency = quote.currency || BOKUN_CHECKOUT_DEFAULT_CURRENCY;
+  if (option.currency && option.currency !== expectedCurrency) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * Reserves a Bókun booking for external Stripe payment (Pay click).
  *
  * Calls checkout options, verifies `RESERVE_FOR_EXTERNAL_PAYMENT` is offered,
@@ -409,9 +431,7 @@ export async function reserveBokunCheckout(
     return { success: false, error: "options_failed" };
   }
 
-  const reserveOption = findReserveCheckoutOption(
-    optionsResult.data.options,
-  );
+  const reserveOption = findReserveCheckoutOption(optionsResult.data.options);
   if (!reserveOption?.type) {
     return { success: false, error: "reserve_unavailable" };
   }
@@ -424,10 +444,14 @@ export async function reserveBokunCheckout(
     return { success: false, error: "invalid_response" };
   }
 
-  const submitBody = buildReserveSubmitBody(
-    reserveOption.type,
-    bookingRequest,
-  );
+  if (!checkoutOptionMatchesQuote(reserveOption, input.quote)) {
+    console.error(
+      `[bokun-checkout] reserve option amount/currency mismatch for ref ${input.externalBookingReference}`,
+    );
+    return { success: false, error: "invalid_response" };
+  }
+
+  const submitBody = buildReserveSubmitBody(reserveOption.type, bookingRequest);
   const submitResult = await submitBokunCheckoutReserve(submitBody, currency);
   if (!submitResult.success) {
     return { success: false, error: "reserve_failed" };

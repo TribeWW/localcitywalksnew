@@ -39,6 +39,7 @@ import {
   buildCheckoutPassengersFromQuote,
   buildMainContactDetails,
   buildReserveSubmitBody,
+  checkoutOptionMatchesQuote,
   extractBokunConfirmationCode,
   findReserveCheckoutOption,
   reserveBokunCheckout,
@@ -221,6 +222,39 @@ describe("createBokunUrl — test host", () => {
   });
 });
 
+describe("checkoutOptionMatchesQuote", () => {
+  it("accepts when amount and currency match the server quote", () => {
+    expect(
+      checkoutOptionMatchesQuote(
+        { amount: 496, currency: "EUR" },
+        quote,
+      ),
+    ).toBe(true);
+  });
+
+  it("accepts when option omits currency and amount matches", () => {
+    expect(checkoutOptionMatchesQuote({ amount: 496 }, quote)).toBe(true);
+  });
+
+  it("rejects when checkout option amount differs from quote total", () => {
+    expect(
+      checkoutOptionMatchesQuote(
+        { amount: 500, currency: "EUR" },
+        quote,
+      ),
+    ).toBe(false);
+  });
+
+  it("rejects when checkout option currency differs from quote", () => {
+    expect(
+      checkoutOptionMatchesQuote(
+        { amount: 496, currency: "USD" },
+        quote,
+      ),
+    ).toBe(false);
+  });
+});
+
 describe("reserveBokunCheckout", () => {
   beforeEach(() => {
     fetchMock.mockReset();
@@ -319,6 +353,46 @@ describe("reserveBokunCheckout", () => {
       success: false,
       error: "reserve_failed",
     });
+  });
+
+  it("returns invalid_response when checkout option amount mismatches quote", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        options: [
+          {
+            ...optionsResponse.options[0],
+            amount: 500,
+          },
+        ],
+      }),
+    });
+
+    await expect(reserveBokunCheckout(reserveInput)).resolves.toEqual({
+      success: false,
+      error: "invalid_response",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns invalid_response when checkout option currency mismatches quote", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        options: [
+          {
+            ...optionsResponse.options[0],
+            currency: "USD",
+          },
+        ],
+      }),
+    });
+
+    await expect(reserveBokunCheckout(reserveInput)).resolves.toEqual({
+      success: false,
+      error: "invalid_response",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("returns invalid_response when submit succeeds without confirmationCode", async () => {
