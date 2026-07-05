@@ -190,7 +190,7 @@ export function buildBokunBookingRequest(
   const activityBooking: BokunActivityBookingRequest = {
     activityId: (() => {
       const id = Number(input.productId);
-      if (!Number.isInteger(id)) {
+      if (!Number.isInteger(id) || id <= 0) {
         throw new Error(`Invalid productId: ${input.productId}`);
       }
       return id;
