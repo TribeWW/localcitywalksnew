@@ -65,6 +65,8 @@ export interface PendingCheckoutRecord {
 
 /** Input for creating a new pending checkout row. */
 export interface CreatePendingCheckoutInput {
+  /** Optional predetermined id — used as Bókun `externalBookingReference`. */
+  id?: string;
   productId: string;
   date: string;
   startTimeId: number;
@@ -212,7 +214,7 @@ export async function createPendingCheckout(
   );
 
   const record: PendingCheckoutRecord = {
-    id: randomUUID(),
+    id: input.id ?? randomUUID(),
     status: "pending",
     productId: input.productId,
     date: input.date,

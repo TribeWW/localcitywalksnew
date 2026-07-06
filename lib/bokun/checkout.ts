@@ -472,3 +472,52 @@ export async function reserveBokunCheckout(
     },
   };
 }
+
+/**
+ * Aborts a Bókun reservation created via `RESERVE_FOR_EXTERNAL_PAYMENT`.
+ *
+ * Use when Pay-click infrastructure fails after reserve (KV/Stripe) so inventory
+ * is not held for the full 30-minute TTL.
+ *
+ * @param confirmationCode - `booking.confirmationCode` from reserve submit
+ */
+export async function abortReservedBokunCheckout(
+  confirmationCode: string,
+): Promise<{ success: true } | { success: false }> {
+  const trimmedCode = confirmationCode.trim();
+  if (!trimmedCode) {
+    return { success: false };
+  }
+
+  const path = BOKUN_ENDPOINTS.ABORT_RESERVED(trimmedCode);
+  const url = createBokunUrl(path);
+  const headers = generateBokunHeaders("POST", path);
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      console.error(
+        `[bokun-checkout] abort reserved failed (${response.status}) for ${trimmedCode}`,
+      );
+      return { success: false };
+    }
+
+    return { success: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(
+      `[bokun-checkout] abort reserved error for ${trimmedCode}: ${message}`,
+    );
+    return { success: false };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}

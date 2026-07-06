@@ -377,6 +377,14 @@ export type StartCheckoutHandoffResult =
   | { success: false; error: string };
 
 /**
+ * Server action response for `initiateCheckoutPayment` (LOC-1161).
+ * Success includes a Stripe hosted Checkout redirect URL.
+ */
+export type InitiateCheckoutPaymentResult =
+  | { success: true; redirectUrl: string }
+  | { success: false; error: string };
+
+/**
  * Sanity country document structure
  */
 export interface CountryDocument {

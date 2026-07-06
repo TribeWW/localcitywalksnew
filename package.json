@@ -44,6 +44,7 @@
     "sanitize-html": "^2.17.2",
     "sanity": "^4.22.0",
     "sonner": "^2.0.5",
+    "stripe": "^22.3.0",
     "styled-components": "^6.3.8",
     "tailwind-merge": "^3.3.0",
     "zod": "^3.25.56"

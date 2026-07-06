@@ -30,6 +30,8 @@ vi.mock("@/lib/bokun/config", () => ({
   BOKUN_ENDPOINTS: {
     CHECKOUT_OPTIONS: "/checkout.json/options/booking-request",
     CHECKOUT_SUBMIT: "/checkout.json/submit",
+    ABORT_RESERVED: (confirmationCode: string) =>
+      `/booking.json/${confirmationCode}/abort-reserved`,
   },
 }));
 
@@ -43,6 +45,7 @@ import {
   extractBokunConfirmationCode,
   findReserveCheckoutOption,
   reserveBokunCheckout,
+  abortReservedBokunCheckout,
   type ReserveBokunCheckoutInput,
 } from "@/lib/bokun/checkout";
 
@@ -409,6 +412,39 @@ describe("reserveBokunCheckout", () => {
     await expect(reserveBokunCheckout(reserveInput)).resolves.toEqual({
       success: false,
       error: "invalid_response",
+    });
+  });
+});
+
+describe("abortReservedBokunCheckout", () => {
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("posts abort-reserved for the confirmation code", async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({}) });
+
+    await expect(abortReservedBokunCheckout("LOC-T123")).resolves.toEqual({
+      success: true,
+    });
+
+    const url = String(fetchMock.mock.calls[0]?.[0]);
+    expect(url).toContain("/booking.json/LOC-T123/abort-reserved");
+    expect(fetchMock.mock.calls[0]?.[1]).toEqual(
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("returns failure when abort request is not ok", async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 409 });
+
+    await expect(abortReservedBokunCheckout("LOC-T123")).resolves.toEqual({
+      success: false,
     });
   });
 });
