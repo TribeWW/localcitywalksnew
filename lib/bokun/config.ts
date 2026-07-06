@@ -32,4 +32,7 @@ export const BOKUN_ENDPOINTS = {
   CHECKOUT_OPTIONS: "/checkout.json/options/booking-request",
   /** `POST` with `currency` query — submit checkout (reserve / pay) */
   CHECKOUT_SUBMIT: "/checkout.json/submit",
+  /** `POST` — abort a reserved booking after external payment failure */
+  ABORT_RESERVED: (confirmationCode: string) =>
+    `/booking.json/${confirmationCode}/abort-reserved`,
 } as const;

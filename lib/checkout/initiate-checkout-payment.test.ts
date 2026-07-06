@@ -14,6 +14,7 @@ import type { BookingWidgetQuote } from "@/types/bokun";
 const computeTourBookingQuoteMock = vi.fn();
 const getTourDetailByIdMock = vi.fn();
 const reserveBokunCheckoutMock = vi.fn();
+const abortReservedBokunCheckoutMock = vi.fn();
 const createPendingCheckoutMock = vi.fn();
 const updatePendingCheckoutMock = vi.fn();
 const createStripeCheckoutSessionMock = vi.fn();
@@ -30,6 +31,8 @@ vi.mock("@/lib/actions/tour-detail.actions", () => ({
 vi.mock("@/lib/bokun/checkout", () => ({
   reserveBokunCheckout: (...args: unknown[]) =>
     reserveBokunCheckoutMock(...args),
+  abortReservedBokunCheckout: (...args: unknown[]) =>
+    abortReservedBokunCheckoutMock(...args),
 }));
 
 vi.mock("@/lib/checkout/pending-checkout-store", () => ({
@@ -107,6 +110,8 @@ describe("runInitiateCheckoutPayment — validation gates", () => {
     computeTourBookingQuoteMock.mockReset();
     getTourDetailByIdMock.mockReset();
     reserveBokunCheckoutMock.mockReset();
+    abortReservedBokunCheckoutMock.mockReset();
+    abortReservedBokunCheckoutMock.mockResolvedValue({ success: true });
     createPendingCheckoutMock.mockReset();
     updatePendingCheckoutMock.mockReset();
     createStripeCheckoutSessionMock.mockReset();
@@ -155,6 +160,8 @@ describe("executeInitiateCheckoutPayment — pipeline invariants", () => {
     computeTourBookingQuoteMock.mockReset();
     getTourDetailByIdMock.mockReset();
     reserveBokunCheckoutMock.mockReset();
+    abortReservedBokunCheckoutMock.mockReset();
+    abortReservedBokunCheckoutMock.mockResolvedValue({ success: true });
     createPendingCheckoutMock.mockReset();
     updatePendingCheckoutMock.mockReset();
     createStripeCheckoutSessionMock.mockReset();
@@ -252,7 +259,7 @@ describe("executeInitiateCheckoutPayment — pipeline invariants", () => {
     );
   });
 
-  it("returns unavailable when KV create fails after reserve", async () => {
+  it("aborts Bókun reservation when KV create fails after reserve", async () => {
     createPendingCheckoutMock.mockResolvedValue({
       success: false,
       error: "unavailable",
@@ -264,7 +271,36 @@ describe("executeInitiateCheckoutPayment — pipeline invariants", () => {
       success: false,
       error: CHECKOUT_PAYMENT_UNAVAILABLE_ERROR,
     });
+    expect(abortReservedBokunCheckoutMock).toHaveBeenCalledWith("LOC-T123");
     expect(createStripeCheckoutSessionMock).not.toHaveBeenCalled();
+  });
+
+  it("aborts Bókun reservation when Stripe session create fails", async () => {
+    createStripeCheckoutSessionMock.mockResolvedValue({ success: false });
+
+    const result = await executeInitiateCheckoutPayment(paymentInput);
+
+    expect(result).toEqual({
+      success: false,
+      error: CHECKOUT_PAYMENT_UNAVAILABLE_ERROR,
+    });
+    expect(abortReservedBokunCheckoutMock).toHaveBeenCalledWith("LOC-T123");
+    expect(updatePendingCheckoutMock).not.toHaveBeenCalled();
+  });
+
+  it("aborts Bókun reservation when KV stripe index update fails", async () => {
+    updatePendingCheckoutMock.mockResolvedValue({
+      success: false,
+      error: "unavailable",
+    });
+
+    const result = await executeInitiateCheckoutPayment(paymentInput);
+
+    expect(result).toEqual({
+      success: false,
+      error: CHECKOUT_PAYMENT_UNAVAILABLE_ERROR,
+    });
+    expect(abortReservedBokunCheckoutMock).toHaveBeenCalledWith("LOC-T123");
   });
 
   it("happy path: reserve → KV → Stripe session → redirect URL", async () => {
@@ -308,5 +344,6 @@ describe("executeInitiateCheckoutPayment — pipeline invariants", () => {
       expect.any(String),
       { stripeSessionId: "cs_test_123" },
     );
+    expect(abortReservedBokunCheckoutMock).not.toHaveBeenCalled();
   });
 });

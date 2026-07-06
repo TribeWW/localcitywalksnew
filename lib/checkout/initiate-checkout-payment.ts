@@ -14,7 +14,7 @@ import {
   clientQuoteMatchesServer,
 } from "@/lib/actions/booking-widget-submit";
 import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
-import { reserveBokunCheckout } from "@/lib/bokun/checkout";
+import { reserveBokunCheckout, abortReservedBokunCheckout } from "@/lib/bokun/checkout";
 import {
   CHECKOUT_SOLD_OUT_QUOTE_ERROR,
   resolveCheckoutQuoteUnavailableMessage,
@@ -85,6 +85,28 @@ export function buildPendingCheckoutContact(
       : {}),
     termsAcceptedAt,
   };
+}
+
+/**
+ * Releases a Bókun hold when post-reserve Pay infrastructure fails.
+ *
+ * Logs when abort fails so ops can reconcile orphaned reservations.
+ *
+ * @param confirmationCode - Bókun confirmation code from successful reserve
+ * @param checkoutId - Internal checkout id for log correlation
+ * @param stage - Failed pipeline stage (for logging)
+ */
+export async function releaseBokunReservationAfterPaymentFailure(
+  confirmationCode: string,
+  checkoutId: string,
+  stage: string,
+): Promise<void> {
+  const aborted = await abortReservedBokunCheckout(confirmationCode);
+  if (!aborted.success) {
+    console.error(
+      `[checkout-payment] failed to abort Bókun reservation ${confirmationCode} after ${stage} (checkout ${checkoutId})`,
+    );
+  }
 }
 
 /**
@@ -184,6 +206,11 @@ export async function executeInitiateCheckoutPayment(
   });
 
   if (!pendingResult.success) {
+    await releaseBokunReservationAfterPaymentFailure(
+      reserveResult.data.confirmationCode,
+      checkoutId,
+      "pending-checkout create",
+    );
     return { success: false, error: CHECKOUT_PAYMENT_UNAVAILABLE_ERROR };
   }
 
@@ -196,6 +223,11 @@ export async function executeInitiateCheckoutPayment(
   });
 
   if (!stripeResult.success) {
+    await releaseBokunReservationAfterPaymentFailure(
+      reserveResult.data.confirmationCode,
+      checkoutId,
+      "stripe session create",
+    );
     return { success: false, error: CHECKOUT_PAYMENT_UNAVAILABLE_ERROR };
   }
 
@@ -204,6 +236,11 @@ export async function executeInitiateCheckoutPayment(
   });
 
   if (!updateResult.success) {
+    await releaseBokunReservationAfterPaymentFailure(
+      reserveResult.data.confirmationCode,
+      checkoutId,
+      "pending-checkout stripe index update",
+    );
     return { success: false, error: CHECKOUT_PAYMENT_UNAVAILABLE_ERROR };
   }
 
