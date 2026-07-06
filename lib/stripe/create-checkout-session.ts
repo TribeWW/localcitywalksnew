@@ -88,6 +88,17 @@ export function buildStripeCheckoutRedirectUrls(handoffToken: string): {
 }
 
 /**
+ * Stripe idempotency key for Checkout Session create — one session per checkout id.
+ *
+ * @param checkoutId - Internal pending-checkout uuid
+ */
+export function buildStripeCheckoutSessionIdempotencyKey(
+  checkoutId: string,
+): string {
+  return `checkout-session-${checkoutId}`;
+}
+
+/**
  * Creates a hosted Stripe Checkout Session for a pending checkout row.
  *
  * @param input - Checkout id, verified quote, customer email, and handoff token
@@ -107,31 +118,38 @@ export async function createStripeCheckoutSession(
   const currency = input.quote.currency.toLowerCase();
 
   try {
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      customer_email: input.customerEmail,
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency,
-            unit_amount: quoteAmountToStripeMinorUnits(
-              input.quote.totalAmount,
-              input.quote.currency,
-            ),
-            product_data: {
-              name: input.productTitle,
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: "payment",
+        customer_email: input.customerEmail,
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency,
+              unit_amount: quoteAmountToStripeMinorUnits(
+                input.quote.totalAmount,
+                input.quote.currency,
+              ),
+              product_data: {
+                name: input.productTitle,
+              },
             },
           },
+        ],
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        expires_at: resolveStripeCheckoutExpiresAt(),
+        metadata: {
+          checkoutId: input.checkoutId,
         },
-      ],
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      expires_at: resolveStripeCheckoutExpiresAt(),
-      metadata: {
-        checkoutId: input.checkoutId,
       },
-    });
+      {
+        idempotencyKey: buildStripeCheckoutSessionIdempotencyKey(
+          input.checkoutId,
+        ),
+      },
+    );
 
     if (!session.url || !session.id) {
       console.error(

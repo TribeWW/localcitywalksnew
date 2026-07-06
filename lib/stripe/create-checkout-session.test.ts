@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CHECKOUT_HANDOFF_TTL_SECONDS } from "@/lib/checkout/handoff-token";
 import {
   buildStripeCheckoutRedirectUrls,
+  buildStripeCheckoutSessionIdempotencyKey,
   createStripeCheckoutSession,
   quoteAmountToStripeMinorUnits,
   resolveStripeCheckoutExpiresAt,
@@ -109,6 +110,11 @@ describe("createStripeCheckoutSession", () => {
           }),
         ],
       }),
+      {
+        idempotencyKey: buildStripeCheckoutSessionIdempotencyKey(
+          "550e8400-e29b-41d4-a716-446655440000",
+        ),
+      },
     );
   });
 

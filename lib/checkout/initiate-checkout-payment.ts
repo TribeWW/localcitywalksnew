@@ -56,7 +56,7 @@ export function resolveBokunReserveFailureMessage(
     | "reserve_failed"
     | "invalid_response",
 ): string {
-  if (error === "options_failed" || error === "reserve_failed") {
+  if (error === "reserve_failed") {
     return resolveCheckoutQuoteUnavailableMessage("sold_out");
   }
 
@@ -192,62 +192,77 @@ export async function executeInitiateCheckoutPayment(
     };
   }
 
-  const termsAcceptedAt = new Date().toISOString();
-  const pendingResult = await createPendingCheckout({
-    id: checkoutId,
-    productId: payload.productId,
-    date: payload.date,
-    startTimeId: payload.startTimeId,
-    participants: payload.participants,
-    language: payload.language,
-    quoteSnapshot: quoteResult.data,
-    contact: buildPendingCheckoutContact(input.contact, termsAcceptedAt),
-    bokunConfirmationCode: reserveResult.data.confirmationCode,
-  });
+  const confirmationCode = reserveResult.data.confirmationCode;
 
-  if (!pendingResult.success) {
-    await releaseBokunReservationAfterPaymentFailure(
-      reserveResult.data.confirmationCode,
+  try {
+    const termsAcceptedAt = new Date().toISOString();
+    const pendingResult = await createPendingCheckout({
+      id: checkoutId,
+      productId: payload.productId,
+      date: payload.date,
+      startTimeId: payload.startTimeId,
+      participants: payload.participants,
+      language: payload.language,
+      quoteSnapshot: quoteResult.data,
+      contact: buildPendingCheckoutContact(input.contact, termsAcceptedAt),
+      bokunConfirmationCode: confirmationCode,
+    });
+
+    if (!pendingResult.success) {
+      await releaseBokunReservationAfterPaymentFailure(
+        confirmationCode,
+        checkoutId,
+        "pending-checkout create",
+      );
+      return { success: false, error: CHECKOUT_PAYMENT_UNAVAILABLE_ERROR };
+    }
+
+    const stripeResult = await createStripeCheckoutSession({
       checkoutId,
-      "pending-checkout create",
+      quote: quoteResult.data,
+      customerEmail: input.contact.email,
+      productTitle,
+      handoffToken: input.handoffToken,
+    });
+
+    if (!stripeResult.success) {
+      await releaseBokunReservationAfterPaymentFailure(
+        confirmationCode,
+        checkoutId,
+        "stripe session create",
+      );
+      return { success: false, error: CHECKOUT_PAYMENT_UNAVAILABLE_ERROR };
+    }
+
+    const updateResult = await updatePendingCheckout(checkoutId, {
+      stripeSessionId: stripeResult.data.sessionId,
+    });
+
+    if (!updateResult.success) {
+      await releaseBokunReservationAfterPaymentFailure(
+        confirmationCode,
+        checkoutId,
+        "pending-checkout stripe index update",
+      );
+      return { success: false, error: CHECKOUT_PAYMENT_UNAVAILABLE_ERROR };
+    }
+
+    return {
+      success: true,
+      redirectUrl: stripeResult.data.url,
+    };
+  } catch (error) {
+    console.error(
+      `[checkout-payment] post-reserve failure for checkout ${checkoutId}:`,
+      error instanceof Error ? error.message : String(error),
+    );
+    await releaseBokunReservationAfterPaymentFailure(
+      confirmationCode,
+      checkoutId,
+      "post-reserve exception",
     );
     return { success: false, error: CHECKOUT_PAYMENT_UNAVAILABLE_ERROR };
   }
-
-  const stripeResult = await createStripeCheckoutSession({
-    checkoutId,
-    quote: quoteResult.data,
-    customerEmail: input.contact.email,
-    productTitle,
-    handoffToken: input.handoffToken,
-  });
-
-  if (!stripeResult.success) {
-    await releaseBokunReservationAfterPaymentFailure(
-      reserveResult.data.confirmationCode,
-      checkoutId,
-      "stripe session create",
-    );
-    return { success: false, error: CHECKOUT_PAYMENT_UNAVAILABLE_ERROR };
-  }
-
-  const updateResult = await updatePendingCheckout(checkoutId, {
-    stripeSessionId: stripeResult.data.sessionId,
-  });
-
-  if (!updateResult.success) {
-    await releaseBokunReservationAfterPaymentFailure(
-      reserveResult.data.confirmationCode,
-      checkoutId,
-      "pending-checkout stripe index update",
-    );
-    return { success: false, error: CHECKOUT_PAYMENT_UNAVAILABLE_ERROR };
-  }
-
-  return {
-    success: true,
-    redirectUrl: stripeResult.data.url,
-  };
 }
 
 /**

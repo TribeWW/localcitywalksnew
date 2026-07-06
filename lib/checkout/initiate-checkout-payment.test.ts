@@ -253,9 +253,15 @@ describe("executeInitiateCheckoutPayment — pipeline invariants", () => {
     expect(reserveBokunCheckoutMock).not.toHaveBeenCalled();
   });
 
-  it("maps Bókun reserve failure to sold-out copy", () => {
+  it("maps Bókun reserve_failed to sold-out copy", () => {
     expect(resolveBokunReserveFailureMessage("reserve_failed")).toContain(
       "no longer available",
+    );
+  });
+
+  it("maps Bókun options_failed to payment unavailable copy", () => {
+    expect(resolveBokunReserveFailureMessage("options_failed")).toBe(
+      CHECKOUT_PAYMENT_UNAVAILABLE_ERROR,
     );
   });
 
@@ -301,6 +307,19 @@ describe("executeInitiateCheckoutPayment — pipeline invariants", () => {
       error: CHECKOUT_PAYMENT_UNAVAILABLE_ERROR,
     });
     expect(abortReservedBokunCheckoutMock).toHaveBeenCalledWith("LOC-T123");
+  });
+
+  it("aborts Bókun reservation when post-reserve step throws", async () => {
+    createPendingCheckoutMock.mockRejectedValue(new Error("redis timeout"));
+
+    const result = await executeInitiateCheckoutPayment(paymentInput);
+
+    expect(result).toEqual({
+      success: false,
+      error: CHECKOUT_PAYMENT_UNAVAILABLE_ERROR,
+    });
+    expect(abortReservedBokunCheckoutMock).toHaveBeenCalledWith("LOC-T123");
+    expect(createStripeCheckoutSessionMock).not.toHaveBeenCalled();
   });
 
   it("happy path: reserve → KV → Stripe session → redirect URL", async () => {
