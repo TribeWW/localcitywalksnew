@@ -1,28 +1,24 @@
-import { MetadataRoute } from "next";
+import type { MetadataRoute } from "next";
+
+import { getExploreCatalogForStructuredData } from "@/lib/explore-catalog";
+import {
+  buildFullSitemapEntries,
+  buildStaticSitemapEntries,
+} from "@/lib/sitemap/build-sitemap-entries";
 
 /**
- * Build the sitemap entries for https://www.localcitywalks.com.
+ * Builds the sitemap for https://www.localcitywalks.com.
  *
- * @returns The sitemap as a MetadataRoute.Sitemap — an array of entries each with `url`, `lastModified`, `changeFrequency`, and `priority`.
+ * Includes home, explore, and every tour detail page from the Bokun catalog.
+ * Falls back to static routes only when the catalog fetch fails.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://www.localcitywalks.com";
+  const catalog = await getExploreCatalogForStructuredData();
 
-  // Define your main routes
-  const routes: MetadataRoute.Sitemap = [
-    {
-      url: `${baseUrl}/`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/explore`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
-  ];
+  if (!catalog.success) {
+    console.error("[sitemap] catalog fetch failed:", catalog.error);
+    return buildStaticSitemapEntries();
+  }
 
-  return routes;
+  return buildFullSitemapEntries(catalog.items);
 }
