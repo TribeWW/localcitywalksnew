@@ -47,7 +47,7 @@ describe("TourJsonLd", () => {
     });
   });
 
-  it("includes aggregateRating and reviews when provided", () => {
+  it("includes aggregateRating and reviews on Product when provided", () => {
     const { container } = render(
       <TourJsonLd
         title="Hello Arles Walk"
@@ -63,13 +63,23 @@ describe("TourJsonLd", () => {
         ?.textContent ?? "{}",
     );
 
-    expect(parsed.aggregateRating).toMatchObject({
+    const graph = parsed["@graph"] as Record<string, unknown>[];
+    const trip = graph.find((node) => node["@type"] === "TouristTrip");
+    const product = graph.find((node) => node["@type"] === "Product");
+
+    expect(trip).toBeDefined();
+    expect(trip).not.toHaveProperty("aggregateRating");
+    expect(trip).not.toHaveProperty("review");
+
+    expect(product?.aggregateRating).toMatchObject({
       "@type": "AggregateRating",
       ratingValue: "4.7",
       reviewCount: "3",
     });
-    expect(parsed.review).toHaveLength(1);
-    expect(parsed.review[0].author.name).toBe("Jane Doe");
+    expect(product?.review).toHaveLength(1);
+    expect(
+      (product?.review as { author: { name: string } }[])?.[0].author.name,
+    ).toBe("Jane Doe");
   });
 
   it("omits review fields when no reviews are visible on the page", () => {
@@ -86,6 +96,8 @@ describe("TourJsonLd", () => {
         ?.textContent ?? "{}",
     );
 
+    expect(parsed["@type"]).toBe("TouristTrip");
+    expect(parsed).not.toHaveProperty("@graph");
     expect(parsed).not.toHaveProperty("aggregateRating");
     expect(parsed).not.toHaveProperty("review");
   });

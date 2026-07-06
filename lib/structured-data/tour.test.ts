@@ -10,6 +10,19 @@ import {
   plainTextForSchema,
 } from "@/lib/structured-data/tour";
 
+/** Reads the TouristTrip node from a tour page JSON-LD payload. */
+function getTouristTripNode(json: Record<string, unknown>) {
+  if (json["@type"] === "TouristTrip") return json;
+  const graph = json["@graph"] as Record<string, unknown>[] | undefined;
+  return graph?.find((node) => node["@type"] === "TouristTrip");
+}
+
+/** Reads the Product node from a tour page JSON-LD payload (reviews/ratings). */
+function getProductNode(json: Record<string, unknown>) {
+  const graph = json["@graph"] as Record<string, unknown>[] | undefined;
+  return graph?.find((node) => node["@type"] === "Product");
+}
+
 const sampleReview: SanityReviewListItem = {
   _id: "rev-1",
   tourId: "9751538",
@@ -113,35 +126,67 @@ describe("buildTourPageJsonLd", () => {
       imageUrl: null,
     });
 
-    expect(json).toMatchObject({
+    const trip = getTouristTripNode(json);
+    expect(trip).toMatchObject({
       "@type": "TouristTrip",
       name: "Hello Dijon Walk",
     });
-    expect(json).not.toHaveProperty("image");
-    expect(json).not.toHaveProperty("offers");
-    expect(json).not.toHaveProperty("itinerary");
-    expect(json).not.toHaveProperty("duration");
-    expect(json).not.toHaveProperty("aggregateRating");
-    expect(json).not.toHaveProperty("review");
+    expect(trip).not.toHaveProperty("image");
+    expect(trip).not.toHaveProperty("offers");
+    expect(trip).not.toHaveProperty("itinerary");
+    expect(trip).not.toHaveProperty("duration");
+    expect(trip).not.toHaveProperty("aggregateRating");
+    expect(trip).not.toHaveProperty("review");
+    expect(json).not.toHaveProperty("@graph");
   });
 
-  it("includes aggregateRating and reviews when hero stats and reviews are provided", () => {
+  it("puts aggregateRating and reviews on a Product node in @graph, not on TouristTrip", () => {
     const json = buildTourPageJsonLd({
-      title: "Hello Arles Walk",
+      title: "Hello Ghent Walk",
       excerpt: "A great tour.",
-      url: "https://www.localcitywalks.com/tours/arles/hello-arles-9751538",
-      imageUrl: null,
+      url: "https://www.localcitywalks.com/tours/ghent/hello-ghent-12345",
+      imageUrl: "https://imgcdn.bokun.tools/ghent.jpg?w=660&h=660",
+      cityName: "Ghent",
+      durationText: "2 hours",
+      fromPriceAmount: 89,
+      fromPriceCurrency: "EUR",
       heroReviewStats: { ratingLabel: "4.7", reviewCount: 3 },
       reviews: [sampleReview],
     });
 
-    expect(json).toMatchObject({
+    expect(json["@context"]).toBe("https://schema.org");
+    expect(json["@graph"]).toHaveLength(2);
+
+    const trip = getTouristTripNode(json);
+    expect(trip).toMatchObject({
+      "@type": "TouristTrip",
+      name: "Hello Ghent Walk",
+      touristType: "Sightseeing",
+      duration: "PT2H",
+    });
+    expect(trip).not.toHaveProperty("aggregateRating");
+    expect(trip).not.toHaveProperty("review");
+
+    const product = getProductNode(json);
+    expect(product).toMatchObject({
+      "@type": "Product",
+      name: "Hello Ghent Walk",
+      url: "https://www.localcitywalks.com/tours/ghent/hello-ghent-12345",
+      image: "https://imgcdn.bokun.tools/ghent.jpg?w=660&h=660",
+      description: "A great tour.",
       aggregateRating: {
         "@type": "AggregateRating",
         ratingValue: "4.7",
         reviewCount: "3",
         bestRating: "5",
         worstRating: "1",
+      },
+      offers: {
+        "@type": "Offer",
+        price: "89",
+        priceCurrency: "EUR",
+        availability: "https://schema.org/InStock",
+        url: "https://www.localcitywalks.com/tours/ghent/hello-ghent-12345",
       },
       review: [
         {
@@ -169,7 +214,8 @@ describe("buildTourPageJsonLd", () => {
       reviews: [{ ...sampleReview, body: null }],
     });
 
-    const review = (json as { review: Record<string, unknown>[] }).review[0];
+    const product = getProductNode(json);
+    const review = (product?.review as Record<string, unknown>[])?.[0];
     expect(review).not.toHaveProperty("reviewBody");
   });
 });

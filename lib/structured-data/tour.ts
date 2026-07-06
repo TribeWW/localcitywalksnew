@@ -1,5 +1,8 @@
 /**
- * JSON-LD builders for tour detail pages (TouristTrip, AggregateRating, Review).
+ * JSON-LD builders for tour detail pages.
+ *
+ * Uses a split `@graph` when reviews are visible: `TouristTrip` for trip semantics
+ * and `Product` for `aggregateRating` / `review` (Google rich results require Product).
  */
 
 import { SITE_URL, tourPageUrl } from "@/lib/site";
@@ -32,6 +35,15 @@ export type BuildTourPageJsonLdInput = {
 type PlainTextInput = {
   excerpt?: string | null;
   htmlDescription?: string | null;
+};
+
+type TourJsonLdSharedFields = {
+  title: string;
+  description: string;
+  url: string;
+  imageUrl: string | null;
+  fromPriceAmount?: number;
+  fromPriceCurrency?: string;
 };
 
 /**
@@ -135,22 +147,31 @@ export function buildReviewJsonLd(
   return entry;
 }
 
-/**
- * Builds a complete `TouristTrip` JSON-LD document for a tour detail page.
- *
- * Optionally nests `aggregateRating` and `review` when review data is visible
- * on the page. Omit `heroReviewStats` / `reviews` when no reviews are shown.
- */
-export function buildTourPageJsonLd(
-  input: BuildTourPageJsonLdInput,
-): Record<string, unknown> {
-  const description = plainTextForSchema({
-    excerpt: input.excerpt,
-    htmlDescription: input.htmlDescription,
-  });
+/** Builds an `Offer` node when price data is available. */
+function buildOfferJsonLd(
+  fields: TourJsonLdSharedFields,
+): Record<string, string> | undefined {
+  if (fields.fromPriceAmount == null || !fields.fromPriceCurrency?.trim()) {
+    return undefined;
+  }
 
+  return {
+    "@type": "Offer",
+    price: String(fields.fromPriceAmount),
+    priceCurrency: fields.fromPriceCurrency.trim(),
+    availability: IN_STOCK,
+    url: fields.url,
+  };
+}
+
+/**
+ * Builds a `TouristTrip` node (trip semantics only — no reviews or ratings).
+ */
+export function buildTouristTripJsonLd(
+  input: BuildTourPageJsonLdInput,
+  description: string,
+): Record<string, unknown> {
   const trip: Record<string, unknown> = {
-    "@context": SCHEMA_CONTEXT,
     "@type": "TouristTrip",
     name: input.title,
     url: input.url,
@@ -184,19 +205,66 @@ export function buildTourPageJsonLd(
     trip.duration = duration;
   }
 
-  if (input.fromPriceAmount != null && input.fromPriceCurrency?.trim()) {
-    trip.offers = {
-      "@type": "Offer",
-      price: String(input.fromPriceAmount),
-      priceCurrency: input.fromPriceCurrency.trim(),
-      availability: IN_STOCK,
-      url: input.url,
-    };
+  const shared: TourJsonLdSharedFields = {
+    title: input.title,
+    description,
+    url: input.url,
+    imageUrl: input.imageUrl,
+    fromPriceAmount: input.fromPriceAmount,
+    fromPriceCurrency: input.fromPriceCurrency,
+  };
+  const offers = buildOfferJsonLd(shared);
+  if (offers) {
+    trip.offers = offers;
+  }
+
+  return trip;
+}
+
+/**
+ * Builds a `Product` node for review rich results.
+ *
+ * Google accepts `aggregateRating` and `review` on `Product`, not on `TouristTrip`.
+ */
+export function buildTourProductJsonLd(
+  input: BuildTourPageJsonLdInput,
+  description: string,
+): Record<string, unknown> {
+  const shared: TourJsonLdSharedFields = {
+    title: input.title,
+    description,
+    url: input.url,
+    imageUrl: input.imageUrl,
+    fromPriceAmount: input.fromPriceAmount,
+    fromPriceCurrency: input.fromPriceCurrency,
+  };
+
+  const product: Record<string, unknown> = {
+    "@type": "Product",
+    name: input.title,
+    url: input.url,
+    brand: {
+      "@type": "Organization",
+      name: "LocalCityWalks",
+      url: SITE_URL,
+    },
+  };
+
+  if (description) {
+    product.description = description;
+  }
+  if (input.imageUrl) {
+    product.image = input.imageUrl;
+  }
+
+  const offers = buildOfferJsonLd(shared);
+  if (offers) {
+    product.offers = offers;
   }
 
   const stats = input.heroReviewStats;
   if (stats && stats.reviewCount > 0) {
-    trip.aggregateRating = buildAggregateRatingJsonLd(
+    product.aggregateRating = buildAggregateRatingJsonLd(
       stats.ratingLabel,
       stats.reviewCount,
     );
@@ -204,10 +272,50 @@ export function buildTourPageJsonLd(
 
   const reviews = input.reviews ?? [];
   if (reviews.length > 0) {
-    trip.review = reviews.map(buildReviewJsonLd);
+    product.review = reviews.map(buildReviewJsonLd);
   }
 
-  return trip;
+  return product;
+}
+
+/** Returns true when the page shows review data that belongs on a Product node. */
+function hasVisibleReviews(input: BuildTourPageJsonLdInput): boolean {
+  const stats = input.heroReviewStats;
+  const hasStats = Boolean(stats && stats.reviewCount > 0);
+  const hasReviews = (input.reviews?.length ?? 0) > 0;
+  return hasStats || hasReviews;
+}
+
+/**
+ * Builds the tour page JSON-LD document.
+ *
+ * Without visible reviews, returns a single `TouristTrip` object.
+ * With reviews, returns `@graph` containing separate `TouristTrip` and `Product` nodes
+ * so Google can validate ratings without invalid parent types.
+ */
+export function buildTourPageJsonLd(
+  input: BuildTourPageJsonLdInput,
+): Record<string, unknown> {
+  const description = plainTextForSchema({
+    excerpt: input.excerpt,
+    htmlDescription: input.htmlDescription,
+  });
+
+  const touristTrip = buildTouristTripJsonLd(input, description);
+
+  if (!hasVisibleReviews(input)) {
+    return {
+      "@context": SCHEMA_CONTEXT,
+      ...touristTrip,
+    };
+  }
+
+  const product = buildTourProductJsonLd(input, description);
+
+  return {
+    "@context": SCHEMA_CONTEXT,
+    "@graph": [touristTrip, product],
+  };
 }
 
 /** Re-export for callers building explore-style lists from tour cards. */
