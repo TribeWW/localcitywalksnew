@@ -7,6 +7,8 @@
  * See `documentation/implementation-plans/checklists/2026-07-07-checkout-pay-initiation-integration-checklist.md`.
  */
 
+import "./load-local-env.mjs";
+
 import {
   getMissingCheckoutPayIntegrationEnvVars,
   isCheckoutPayIntegrationEnabled,

@@ -24,45 +24,39 @@ describe("initiateCheckoutPayment — live integration (LOC-1164)", () => {
     return;
   }
 
-  it(
-    "reserves in Bókun, persists KV pending, and returns Stripe Checkout redirect",
-    async () => {
-      const { resolveCheckoutPayIntegrationContext } = await import(
-        "@/lib/checkout/resolve-checkout-pay-integration-context"
-      );
-      const { executeInitiateCheckoutPayment } = await import(
-        "@/lib/checkout/initiate-checkout-payment"
-      );
-      const { extractStripeCheckoutSessionId } = await import(
-        "@/lib/checkout/extract-stripe-checkout-session-id"
-      );
-      const { handleStripeCheckoutCancel } = await import(
-        "@/lib/checkout/handle-stripe-checkout-cancel"
-      );
-      const { getPendingCheckoutById } = await import(
-        "@/lib/checkout/pending-checkout-store"
-      );
-      const { getStripeClient } = await import("@/lib/stripe/stripe-client");
+  it("reserves in Bókun, persists KV pending, and returns Stripe Checkout redirect", async () => {
+    const { resolveCheckoutPayIntegrationContext } =
+      await import("@/lib/checkout/resolve-checkout-pay-integration-context");
+    const { executeInitiateCheckoutPayment } =
+      await import("@/lib/checkout/initiate-checkout-payment");
+    const { extractStripeCheckoutSessionId } =
+      await import("@/lib/checkout/extract-stripe-checkout-session-id");
+    const { handleStripeCheckoutCancel } =
+      await import("@/lib/checkout/handle-stripe-checkout-cancel");
+    const { getPendingCheckoutById } =
+      await import("@/lib/checkout/pending-checkout-store");
+    const { getStripeClient } = await import("@/lib/stripe/stripe-client");
 
-      const context = await resolveCheckoutPayIntegrationContext();
-      const result = await executeInitiateCheckoutPayment(context.paymentInput);
+    const context = await resolveCheckoutPayIntegrationContext();
+    const result = await executeInitiateCheckoutPayment(context.paymentInput);
 
-      expect(result.success).toBe(true);
-      if (!result.success) {
-        return;
-      }
+    expect(result.success).toBe(true);
+    if (!result.success) {
+      return;
+    }
 
-      expect(result.redirectUrl).toMatch(/^https:\/\/checkout\.stripe\.com\//);
+    expect(result.redirectUrl).toMatch(/^https:\/\/checkout\.stripe\.com\//);
 
-      const sessionId = extractStripeCheckoutSessionId(result.redirectUrl);
-      expect(sessionId).toBeTruthy();
+    const sessionId = extractStripeCheckoutSessionId(result.redirectUrl);
+    expect(sessionId).toBeTruthy();
 
-      const stripe = getStripeClient();
-      expect(stripe).not.toBeNull();
+    const stripe = getStripeClient();
+    expect(stripe).not.toBeNull();
 
-      const session = await stripe!.checkout.sessions.retrieve(sessionId!);
-      const checkoutId = session.metadata?.checkoutId;
-      expect(checkoutId).toBeTruthy();
+    const session = await stripe!.checkout.sessions.retrieve(sessionId!);
+    const checkoutId = session.metadata?.checkoutId;
+    expect(checkoutId).toBeTruthy();
+    try {
       expect(session.amount_total).toBe(
         Math.round(context.paymentInput.clientQuote.totalAmount * 100),
       );
@@ -71,15 +65,14 @@ describe("initiateCheckoutPayment — live integration (LOC-1164)", () => {
       expect(pending?.status).toBe("pending");
       expect(pending?.bokunConfirmationCode).toBeTruthy();
       expect(pending?.stripeSessionId).toBe(sessionId);
-
+    } finally {
       const cleanup = await handleStripeCheckoutCancel(checkoutId!);
       expect(cleanup.success).toBe(true);
 
       const cleaned = await getPendingCheckoutById(checkoutId!);
       expect(cleaned?.status).toBe("failed");
-    },
-    120_000,
-  );
+    }
+  }, 120_000);
 });
 
 describe("initiateCheckoutPayment — live integration prerequisites", () => {
