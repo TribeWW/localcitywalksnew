@@ -87,11 +87,15 @@ describe("handleStripeCheckoutCancel", () => {
     });
 
     expect(abortReservedBokunCheckoutMock).toHaveBeenCalledWith("LOC-T123");
-    expect(updatePendingCheckoutMock).toHaveBeenCalledWith(
+    expect(updatePendingCheckoutMock).toHaveBeenNthCalledWith(
+      1,
       CHECKOUT_ID,
       { status: "failed" },
       { expectedStatus: "pending" },
     );
+    expect(updatePendingCheckoutMock).toHaveBeenNthCalledWith(2, CHECKOUT_ID, {
+      bokunConfirmationCode: undefined,
+    });
   });
 
   it("is idempotent when pending checkout is already failed without a reservation", async () => {
@@ -119,10 +123,12 @@ describe("handleStripeCheckoutCancel", () => {
     });
 
     expect(abortReservedBokunCheckoutMock).toHaveBeenCalledWith("LOC-T123");
-    expect(updatePendingCheckoutMock).not.toHaveBeenCalled();
+    expect(updatePendingCheckoutMock).toHaveBeenCalledWith(CHECKOUT_ID, {
+      bokunConfirmationCode: undefined,
+    });
   });
 
-  it("keeps checkout pending when abort fails so a later cancel can retry", async () => {
+  it("keeps reservation code when abort fails after claiming cancel", async () => {
     getPendingCheckoutByIdMock.mockResolvedValue(buildPendingRecord());
     abortReservedBokunCheckoutMock.mockResolvedValue({ success: false });
 
@@ -131,7 +137,12 @@ describe("handleStripeCheckoutCancel", () => {
       releasedReservation: false,
     });
 
-    expect(updatePendingCheckoutMock).not.toHaveBeenCalled();
+    expect(updatePendingCheckoutMock).toHaveBeenCalledWith(
+      CHECKOUT_ID,
+      { status: "failed" },
+      { expectedStatus: "pending" },
+    );
+    expect(updatePendingCheckoutMock).toHaveBeenCalledTimes(1);
   });
 
   it("returns not_found when checkout id is unknown", async () => {
@@ -143,7 +154,7 @@ describe("handleStripeCheckoutCancel", () => {
     });
   });
 
-  it("does not mark checkout failed when concurrent payment won the race", async () => {
+  it("does not abort when concurrent payment wins the pending claim", async () => {
     getPendingCheckoutByIdMock.mockResolvedValue(buildPendingRecord());
     updatePendingCheckoutMock.mockResolvedValue({
       success: false,
@@ -152,11 +163,29 @@ describe("handleStripeCheckoutCancel", () => {
 
     await expect(handleStripeCheckoutCancel(CHECKOUT_ID)).resolves.toEqual({
       success: true,
-      releasedReservation: true,
+      releasedReservation: false,
     });
 
-    expect(abortReservedBokunCheckoutMock).toHaveBeenCalledWith("LOC-T123");
-    expect(updatePendingCheckoutMock).toHaveBeenCalled();
+    expect(updatePendingCheckoutMock).toHaveBeenCalledWith(
+      CHECKOUT_ID,
+      { status: "failed" },
+      { expectedStatus: "pending" },
+    );
+    expect(abortReservedBokunCheckoutMock).not.toHaveBeenCalled();
+  });
+
+  it("does not abort when checkout already transitioned to paid", async () => {
+    getPendingCheckoutByIdMock.mockResolvedValue(
+      buildPendingRecord({ status: "paid" }),
+    );
+
+    await expect(handleStripeCheckoutCancel(CHECKOUT_ID)).resolves.toEqual({
+      success: true,
+      releasedReservation: false,
+    });
+
+    expect(abortReservedBokunCheckoutMock).not.toHaveBeenCalled();
+    expect(updatePendingCheckoutMock).not.toHaveBeenCalled();
   });
 
   it("returns unavailable when pending checkout store lookup fails", async () => {
@@ -177,7 +206,7 @@ describe("handleStripeCheckoutCancel", () => {
       error: "unavailable",
     });
 
-    expect(abortReservedBokunCheckoutMock).toHaveBeenCalledWith("LOC-T123");
+    expect(abortReservedBokunCheckoutMock).not.toHaveBeenCalled();
   });
 
   it("returns unavailable when pending checkout store is not configured", async () => {
