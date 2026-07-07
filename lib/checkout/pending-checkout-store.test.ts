@@ -231,6 +231,31 @@ describe("updatePendingCheckout", () => {
 
     expect(result).toEqual({ success: false, error: "not_found" });
   });
+
+  it("returns conflict when expectedStatus does not match the stored row", async () => {
+    const existing = {
+      id: checkoutId,
+      status: "paid" as const,
+      productId: "1079932",
+      date: "2026-07-15",
+      startTimeId: 4252139,
+      participants: createInput.participants,
+      quoteSnapshot: quote,
+      contact: createInput.contact,
+      createdAt: "2026-07-01T12:00:00.000Z",
+      expiresAt: "2026-07-01T12:30:00.000Z",
+    };
+    mockGet.mockResolvedValue(existing);
+
+    const result = await updatePendingCheckout(
+      checkoutId,
+      { status: "failed" },
+      { expectedStatus: "pending" },
+    );
+
+    expect(result).toEqual({ success: false, error: "conflict" });
+    expect(mockSet).not.toHaveBeenCalled();
+  });
 });
 
 describe("createPendingCheckout — unavailable", () => {

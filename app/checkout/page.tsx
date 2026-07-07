@@ -11,7 +11,7 @@ import {
   loadCheckoutSummary,
   resolveCheckoutHandoffErrorMessage,
 } from "@/lib/checkout/load-checkout-summary";
-import { parseCheckoutCancelReturn } from "@/lib/checkout/parse-checkout-cancel-return";
+import { parseCheckoutCancelReturn, authorizeCheckoutCancelCleanup } from "@/lib/checkout/parse-checkout-cancel-return";
 
 export const metadata: Metadata = {
   title: "Checkout",
@@ -38,11 +38,18 @@ export default async function CheckoutPage({
   const cancelReturn = parseCheckoutCancelReturn(params);
 
   if (cancelReturn.isPaymentCancelled && cancelReturn.checkoutId) {
-    const cleanup = await handleStripeCheckoutCancel(cancelReturn.checkoutId);
-    if (!cleanup.success && cleanup.error !== "not_found") {
-      console.error(
-        `[checkout] Stripe cancel cleanup failed for ${cancelReturn.checkoutId}`,
-      );
+    const mayCleanup = await authorizeCheckoutCancelCleanup(
+      params.h,
+      cancelReturn.checkoutId,
+    );
+
+    if (mayCleanup) {
+      const cleanup = await handleStripeCheckoutCancel(cancelReturn.checkoutId);
+      if (!cleanup.success && cleanup.error !== "not_found") {
+        console.error(
+          `[checkout] Stripe cancel cleanup failed for ${cancelReturn.checkoutId}`,
+        );
+      }
     }
   }
 

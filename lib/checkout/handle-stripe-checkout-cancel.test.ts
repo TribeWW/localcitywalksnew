@@ -12,6 +12,11 @@ import type { PendingCheckoutRecord } from "@/lib/checkout/pending-checkout-stor
 const getPendingCheckoutByIdMock = vi.fn();
 const updatePendingCheckoutMock = vi.fn();
 const abortReservedBokunCheckoutMock = vi.fn();
+const getPendingCheckoutRedisMock = vi.fn();
+
+vi.mock("@/lib/checkout/pending-checkout-redis", () => ({
+  getPendingCheckoutRedis: () => getPendingCheckoutRedisMock(),
+}));
 
 vi.mock("@/lib/checkout/pending-checkout-store", () => ({
   getPendingCheckoutById: (...args: unknown[]) =>
@@ -63,6 +68,8 @@ describe("handleStripeCheckoutCancel", () => {
     getPendingCheckoutByIdMock.mockReset();
     updatePendingCheckoutMock.mockReset();
     abortReservedBokunCheckoutMock.mockReset();
+    getPendingCheckoutRedisMock.mockReset();
+    getPendingCheckoutRedisMock.mockReturnValue({});
     abortReservedBokunCheckoutMock.mockResolvedValue({ success: true });
     updatePendingCheckoutMock.mockResolvedValue({
       success: true,
@@ -78,10 +85,12 @@ describe("handleStripeCheckoutCancel", () => {
       releasedReservation: true,
     });
 
+    expect(updatePendingCheckoutMock).toHaveBeenCalledWith(
+      CHECKOUT_ID,
+      { status: "failed" },
+      { expectedStatus: "pending" },
+    );
     expect(abortReservedBokunCheckoutMock).toHaveBeenCalledWith("LOC-T123");
-    expect(updatePendingCheckoutMock).toHaveBeenCalledWith(CHECKOUT_ID, {
-      status: "failed",
-    });
   });
 
   it("is idempotent when pending checkout is already failed", async () => {
@@ -105,5 +114,31 @@ describe("handleStripeCheckoutCancel", () => {
       success: false,
       error: "not_found",
     });
+  });
+
+  it("does not abort Bókun when checkout already moved out of pending", async () => {
+    getPendingCheckoutByIdMock.mockResolvedValue(buildPendingRecord());
+    updatePendingCheckoutMock.mockResolvedValue({
+      success: false,
+      error: "conflict",
+    });
+
+    await expect(handleStripeCheckoutCancel(CHECKOUT_ID)).resolves.toEqual({
+      success: true,
+      releasedReservation: false,
+    });
+
+    expect(abortReservedBokunCheckoutMock).not.toHaveBeenCalled();
+  });
+
+  it("returns unavailable when pending checkout store is not configured", async () => {
+    getPendingCheckoutRedisMock.mockReturnValue(null);
+
+    await expect(handleStripeCheckoutCancel(CHECKOUT_ID)).resolves.toEqual({
+      success: false,
+      error: "unavailable",
+    });
+
+    expect(getPendingCheckoutByIdMock).not.toHaveBeenCalled();
   });
 });

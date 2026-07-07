@@ -68,8 +68,7 @@ export function CheckoutSummaryView({
   const [isPayLoading, setIsPayLoading] = useState(false);
 
   const requiresPriceAcknowledgement = priceUpdate != null;
-  const isPriceGateOpen =
-    !requiresPriceAcknowledgement || priceAcknowledged;
+  const isPriceGateOpen = !requiresPriceAcknowledgement || priceAcknowledged;
 
   const formattedTotal = formatCataloguePriceAmount(
     order.totalAmount,
@@ -97,6 +96,7 @@ export function CheckoutSummaryView({
 
     if (handoffToken) {
       setIsPayLoading(true);
+      let didRedirect = false;
 
       try {
         const input = buildInitiateCheckoutPaymentInput({
@@ -114,6 +114,7 @@ export function CheckoutSummaryView({
         );
 
         if (outcome.type === "redirect") {
+          didRedirect = true;
           window.location.assign(outcome.redirectUrl);
           return;
         }
@@ -121,11 +122,11 @@ export function CheckoutSummaryView({
         toast.error(outcome.error);
       } catch (error) {
         console.error("Checkout summary Pay error:", error);
-        toast.error(
-          "Unable to complete payment. Please try again later.",
-        );
+        toast.error("Unable to complete payment. Please try again later.");
       } finally {
-        setIsPayLoading(false);
+        if (!didRedirect) {
+          setIsPayLoading(false);
+        }
       }
 
       return;
@@ -133,7 +134,6 @@ export function CheckoutSummaryView({
 
     onPayClick?.();
   }
-
   return (
     <CheckoutPageLayout
       leftColumn={

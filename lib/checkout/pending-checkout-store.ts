@@ -96,9 +96,15 @@ export type CreatePendingCheckoutResult =
   | { success: true; data: PendingCheckoutRecord }
   | { success: false; error: "unavailable" };
 
+/** Optional guards for `updatePendingCheckout`. */
+export interface UpdatePendingCheckoutOptions {
+  /** Update applies only when the stored row still has this status. */
+  expectedStatus?: PendingCheckoutStatus;
+}
+
 export type UpdatePendingCheckoutResult =
   | { success: true; data: PendingCheckoutRecord }
-  | { success: false; error: "unavailable" | "not_found" };
+  | { success: false; error: "unavailable" | "not_found" | "conflict" };
 
 const pendingCheckoutContactSchema = z.object({
   firstName: z.string().trim().min(1),
@@ -284,10 +290,12 @@ export async function getPendingCheckoutByStripeSessionId(
  *
  * @param checkoutId - Internal checkout uuid
  * @param update - Fields to merge into the stored record
+ * @param options - Optional optimistic concurrency guard on current status
  */
 export async function updatePendingCheckout(
   checkoutId: string,
   update: UpdatePendingCheckoutInput,
+  options?: UpdatePendingCheckoutOptions,
 ): Promise<UpdatePendingCheckoutResult> {
   const redis = getPendingCheckoutRedis();
   if (!redis) {
@@ -297,6 +305,13 @@ export async function updatePendingCheckout(
   const existing = await getPendingCheckoutById(checkoutId);
   if (!existing) {
     return { success: false, error: "not_found" };
+  }
+
+  if (
+    options?.expectedStatus !== undefined &&
+    existing.status !== options.expectedStatus
+  ) {
+    return { success: false, error: "conflict" };
   }
 
   const merged: PendingCheckoutRecord = {
