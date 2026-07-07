@@ -345,6 +345,7 @@ describe("executeInitiateCheckoutPayment — pipeline invariants", () => {
       expect.objectContaining({
         id: expect.any(String),
         bokunConfirmationCode: "LOC-T123",
+        handoffTokenDigest: expect.any(String),
         contact: expect.objectContaining({
           termsAcceptedAt: expect.any(String),
         }),

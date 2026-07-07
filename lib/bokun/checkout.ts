@@ -504,6 +504,11 @@ export async function abortReservedBokunCheckout(
     });
 
     if (!response.ok) {
+      if (response.status === 404) {
+        // Idempotent cleanup — hold already aborted or expired on Bókun side.
+        return { success: true };
+      }
+
       console.error(
         `[bokun-checkout] abort reserved failed (${response.status}) for ${trimmedCode}`,
       );

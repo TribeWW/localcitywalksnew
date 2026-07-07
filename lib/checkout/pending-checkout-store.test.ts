@@ -50,6 +50,7 @@ const createInput = {
     termsAcceptedAt: "2026-07-01T12:00:00.000Z",
   },
   bokunConfirmationCode: "LOC-T123",
+  handoffTokenDigest: "a".repeat(64),
 };
 
 const checkoutId = "550e8400-e29b-41d4-a716-446655440000";
@@ -127,6 +128,25 @@ describe("getPendingCheckoutById", () => {
       participants: createInput.participants,
       quoteSnapshot: quote,
       contact: createInput.contact,
+      handoffTokenDigest: createInput.handoffTokenDigest,
+      createdAt: "2026-07-01T12:00:00.000Z",
+      expiresAt: "2026-07-01T12:30:00.000Z",
+    };
+    mockGet.mockResolvedValue(record);
+
+    await expect(getPendingCheckoutById(checkoutId)).resolves.toEqual(record);
+  });
+
+  it("parses pre-deploy records without handoffTokenDigest", async () => {
+    const record = {
+      id: checkoutId,
+      status: "pending" as const,
+      productId: "1079932",
+      date: "2026-07-15",
+      startTimeId: 4252139,
+      participants: createInput.participants,
+      quoteSnapshot: quote,
+      contact: createInput.contact,
       createdAt: "2026-07-01T12:00:00.000Z",
       expiresAt: "2026-07-01T12:30:00.000Z",
     };
@@ -154,6 +174,7 @@ describe("getPendingCheckoutByStripeSessionId", () => {
       participants: createInput.participants,
       quoteSnapshot: quote,
       contact: createInput.contact,
+      handoffTokenDigest: createInput.handoffTokenDigest,
       stripeSessionId: "cs_test_123",
       createdAt: "2026-07-01T12:00:00.000Z",
       expiresAt: "2026-07-01T12:30:00.000Z",
@@ -196,6 +217,7 @@ describe("updatePendingCheckout", () => {
       participants: createInput.participants,
       quoteSnapshot: quote,
       contact: createInput.contact,
+      handoffTokenDigest: createInput.handoffTokenDigest,
       createdAt: "2026-07-01T12:00:00.000Z",
       expiresAt: "2026-07-01T12:30:00.000Z",
     };
@@ -230,6 +252,32 @@ describe("updatePendingCheckout", () => {
     });
 
     expect(result).toEqual({ success: false, error: "not_found" });
+  });
+
+  it("returns conflict when expectedStatus does not match the stored row", async () => {
+    const existing = {
+      id: checkoutId,
+      status: "paid" as const,
+      productId: "1079932",
+      date: "2026-07-15",
+      startTimeId: 4252139,
+      participants: createInput.participants,
+      quoteSnapshot: quote,
+      contact: createInput.contact,
+      handoffTokenDigest: createInput.handoffTokenDigest,
+      createdAt: "2026-07-01T12:00:00.000Z",
+      expiresAt: "2026-07-01T12:30:00.000Z",
+    };
+    mockGet.mockResolvedValue(existing);
+
+    const result = await updatePendingCheckout(
+      checkoutId,
+      { status: "failed" },
+      { expectedStatus: "pending" },
+    );
+
+    expect(result).toEqual({ success: false, error: "conflict" });
+    expect(mockSet).not.toHaveBeenCalled();
   });
 });
 

@@ -6,10 +6,12 @@ import {
   resolveCheckoutHandoffErrorTitle,
   resolveCheckoutQuoteUnavailableTitle,
 } from "@/lib/checkout/checkout-error-messages";
+import { handleStripeCheckoutCancel } from "@/lib/checkout/handle-stripe-checkout-cancel";
 import {
   loadCheckoutSummary,
   resolveCheckoutHandoffErrorMessage,
 } from "@/lib/checkout/load-checkout-summary";
+import { parseCheckoutCancelReturn, authorizeCheckoutCancelCleanup } from "@/lib/checkout/parse-checkout-cancel-return";
 
 export const metadata: Metadata = {
   title: "Checkout",
@@ -19,14 +21,39 @@ export const metadata: Metadata = {
 
 /**
  * Live checkout summary — verifies handoff token, re-quotes, renders summary UI.
+ *
+ * When returning from Stripe cancel (`cancelled=1`), releases the Bókun hold
+ * and shows recovery copy while preserving the original handoff token (LOC-1163).
  */
 export default async function CheckoutPage({
   searchParams,
 }: {
-  searchParams: Promise<{ h?: string }>;
+  searchParams: Promise<{
+    h?: string;
+    cancelled?: string;
+    checkoutId?: string;
+  }>;
 }) {
-  const { h } = await searchParams;
-  const result = await loadCheckoutSummary(h);
+  const params = await searchParams;
+  const cancelReturn = parseCheckoutCancelReturn(params);
+
+  if (cancelReturn.isPaymentCancelled && cancelReturn.checkoutId) {
+    const mayCleanup = await authorizeCheckoutCancelCleanup(
+      params.h,
+      cancelReturn.checkoutId,
+    );
+
+    if (mayCleanup) {
+      const cleanup = await handleStripeCheckoutCancel(cancelReturn.checkoutId);
+      if (!cleanup.success && cleanup.error !== "not_found") {
+        console.error(
+          `[checkout] Stripe cancel cleanup failed for ${cancelReturn.checkoutId}`,
+        );
+      }
+    }
+  }
+
+  const result = await loadCheckoutSummary(params.h);
 
   if (result.status === "ready") {
     return (
@@ -34,6 +61,8 @@ export default async function CheckoutPage({
         order={result.order}
         priceUpdate={result.priceUpdate}
         tourPageHref={result.tourPageHref}
+        handoffToken={result.handoffToken}
+        paymentCancelled={cancelReturn.isPaymentCancelled}
       />
     );
   }

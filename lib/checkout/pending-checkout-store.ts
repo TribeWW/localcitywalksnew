@@ -56,6 +56,8 @@ export interface PendingCheckoutRecord {
   quoteSnapshot: BookingWidgetQuote;
   contact: PendingCheckoutContact;
   bokunConfirmationCode?: string;
+  /** HMAC digest of the handoff token active when Pay was clicked. */
+  handoffTokenDigest?: string;
   stripeSessionId?: string;
   bokunBookingId?: string;
   productConfirmationCode?: string;
@@ -75,6 +77,7 @@ export interface CreatePendingCheckoutInput {
   quoteSnapshot: BookingWidgetQuote;
   contact: PendingCheckoutContact;
   bokunConfirmationCode?: string;
+  handoffTokenDigest: string;
 }
 
 /** Partial update applied via `updatePendingCheckout`. */
@@ -96,9 +99,15 @@ export type CreatePendingCheckoutResult =
   | { success: true; data: PendingCheckoutRecord }
   | { success: false; error: "unavailable" };
 
+/** Optional guards for `updatePendingCheckout`. */
+export interface UpdatePendingCheckoutOptions {
+  /** Update applies only when the stored row still has this status. */
+  expectedStatus?: PendingCheckoutStatus;
+}
+
 export type UpdatePendingCheckoutResult =
   | { success: true; data: PendingCheckoutRecord }
-  | { success: false; error: "unavailable" | "not_found" };
+  | { success: false; error: "unavailable" | "not_found" | "conflict" };
 
 const pendingCheckoutContactSchema = z.object({
   firstName: z.string().trim().min(1),
@@ -136,6 +145,7 @@ const pendingCheckoutRecordSchema = z.object({
   quoteSnapshot: bookingWidgetQuoteSchema,
   contact: pendingCheckoutContactSchema,
   bokunConfirmationCode: z.string().trim().min(1).optional(),
+  handoffTokenDigest: z.string().trim().min(1).optional(),
   stripeSessionId: z.string().trim().min(1).optional(),
   bokunBookingId: z.string().trim().min(1).optional(),
   productConfirmationCode: z.string().trim().min(1).optional(),
@@ -224,6 +234,7 @@ export async function createPendingCheckout(
     quoteSnapshot: input.quoteSnapshot,
     contact: input.contact,
     bokunConfirmationCode: input.bokunConfirmationCode,
+    handoffTokenDigest: input.handoffTokenDigest,
     createdAt: now.toISOString(),
     expiresAt: expiresAt.toISOString(),
   };
@@ -284,10 +295,12 @@ export async function getPendingCheckoutByStripeSessionId(
  *
  * @param checkoutId - Internal checkout uuid
  * @param update - Fields to merge into the stored record
+ * @param options - Optional optimistic concurrency guard on current status
  */
 export async function updatePendingCheckout(
   checkoutId: string,
   update: UpdatePendingCheckoutInput,
+  options?: UpdatePendingCheckoutOptions,
 ): Promise<UpdatePendingCheckoutResult> {
   const redis = getPendingCheckoutRedis();
   if (!redis) {
@@ -297,6 +310,13 @@ export async function updatePendingCheckout(
   const existing = await getPendingCheckoutById(checkoutId);
   if (!existing) {
     return { success: false, error: "not_found" };
+  }
+
+  if (
+    options?.expectedStatus !== undefined &&
+    existing.status !== options.expectedStatus
+  ) {
+    return { success: false, error: "conflict" };
   }
 
   const merged: PendingCheckoutRecord = {

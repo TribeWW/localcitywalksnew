@@ -440,6 +440,14 @@ describe("abortReservedBokunCheckout", () => {
     );
   });
 
+  it("treats 404 as idempotent success when reservation is already gone", async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 404 });
+
+    await expect(abortReservedBokunCheckout("LOC-T123")).resolves.toEqual({
+      success: true,
+    });
+  });
+
   it("returns failure when abort request is not ok", async () => {
     fetchMock.mockResolvedValueOnce({ ok: false, status: 409 });
 

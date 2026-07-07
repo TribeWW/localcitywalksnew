@@ -6,6 +6,7 @@
  * still succeed and flags resolve via the live SDK at runtime.
  */
 
+import "./load-local-env.mjs";
 import { prepareFlagsDefinitions } from "@vercel/prepare-flags-definitions";
 
 try {

@@ -6,6 +6,7 @@
  */
 
 import { CHECKOUT_HANDOFF_TTL_SECONDS } from "@/lib/checkout/handoff-token";
+import { buildStripeCheckoutCancelUrl } from "@/lib/stripe/build-stripe-checkout-cancel-url";
 import { getStripeClient } from "@/lib/stripe/stripe-client";
 import { resolveCheckoutOrigin } from "@/lib/stripe/checkout-origin";
 import type { BookingWidgetQuote } from "@/types/bokun";
@@ -72,18 +73,24 @@ export function resolveStripeCheckoutExpiresAt(): number {
 /**
  * Builds success and cancel URLs for a hosted Checkout Session.
  *
+ * Cancel URL **preserves** the handoff token (no re-mint) and includes the
+ * pending checkout id for Bókun reserve cleanup — see {@link buildStripeCheckoutCancelUrl}.
+ *
  * @param handoffToken - Raw handoff token for cancel return to summary
+ * @param checkoutId - Internal checkout uuid for cancel cleanup
  */
-export function buildStripeCheckoutRedirectUrls(handoffToken: string): {
+export function buildStripeCheckoutRedirectUrls(
+  handoffToken: string,
+  checkoutId: string,
+): {
   successUrl: string;
   cancelUrl: string;
 } {
   const origin = resolveCheckoutOrigin();
-  const encodedHandoff = encodeURIComponent(handoffToken);
 
   return {
     successUrl: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancelUrl: `${origin}/checkout?h=${encodedHandoff}`,
+    cancelUrl: buildStripeCheckoutCancelUrl({ handoffToken, checkoutId }),
   };
 }
 
@@ -114,6 +121,7 @@ export async function createStripeCheckoutSession(
 
   const { successUrl, cancelUrl } = buildStripeCheckoutRedirectUrls(
     input.handoffToken,
+    input.checkoutId,
   );
   const currency = input.quote.currency.toLowerCase();
 
