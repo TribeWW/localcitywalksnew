@@ -29,6 +29,10 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("@/lib/actions/checkout-payment.actions", () => ({
+  initiateCheckoutPayment: vi.fn(),
+}));
+
 const priceUpdate = {
   previousTotalAmount: 448,
   previousCurrency: "EUR",

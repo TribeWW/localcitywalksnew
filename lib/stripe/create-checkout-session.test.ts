@@ -53,11 +53,18 @@ describe("resolveStripeCheckoutExpiresAt", () => {
 });
 
 describe("buildStripeCheckoutRedirectUrls", () => {
-  it("returns success and cancel URLs with encoded handoff token", () => {
-    const urls = buildStripeCheckoutRedirectUrls("signed.token.value");
+  it("returns success and cancel URLs with preserved handoff and checkout id", () => {
+    const urls = buildStripeCheckoutRedirectUrls(
+      "signed.token.value",
+      "550e8400-e29b-41d4-a716-446655440000",
+    );
 
     expect(urls.successUrl).toContain("/checkout/success?session_id=");
     expect(urls.cancelUrl).toContain("/checkout?h=signed.token.value");
+    expect(urls.cancelUrl).toContain(
+      "checkoutId=550e8400-e29b-41d4-a716-446655440000",
+    );
+    expect(urls.cancelUrl).toContain("cancelled=1");
   });
 });
 
