@@ -9,12 +9,9 @@ import { z } from "zod";
 
 import {
   verifyCheckoutHandoffToken,
-  type CheckoutHandoffPayload,
+  pendingCheckoutHandoffTokenMatches,
 } from "@/lib/checkout/handoff-token";
-import {
-  getPendingCheckoutById,
-  type PendingCheckoutRecord,
-} from "@/lib/checkout/pending-checkout-store";
+import { getPendingCheckoutById } from "@/lib/checkout/pending-checkout-store";
 
 const checkoutIdSchema = z.string().uuid();
 
@@ -74,22 +71,6 @@ export function parseCheckoutCancelReturn(
   };
 }
 
-function pendingCheckoutMatchesHandoff(
-  pending: PendingCheckoutRecord,
-  payload: CheckoutHandoffPayload,
-): boolean {
-  return (
-    pending.productId === payload.productId &&
-    pending.date === payload.date &&
-    pending.startTimeId === payload.startTimeId &&
-    pending.language === payload.language &&
-    pending.participants.adults === payload.participants.adults &&
-    pending.participants.youth === payload.participants.youth &&
-    pending.participants.children === payload.participants.children &&
-    pending.participants.infants === payload.participants.infants
-  );
-}
-
 /**
  * Returns whether a cancel-return checkout id belongs to the active handoff.
  *
@@ -112,10 +93,16 @@ export async function authorizeCheckoutCancelCleanup(
     return false;
   }
 
-  const pending = await getPendingCheckoutById(checkoutId);
+  let pending;
+  try {
+    pending = await getPendingCheckoutById(checkoutId);
+  } catch {
+    return false;
+  }
+
   if (!pending) {
     return false;
   }
 
-  return pendingCheckoutMatchesHandoff(pending, verified.payload);
+  return pendingCheckoutHandoffTokenMatches(pending, trimmedToken);
 }

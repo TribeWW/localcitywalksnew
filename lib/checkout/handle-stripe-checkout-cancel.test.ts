@@ -57,6 +57,7 @@ function buildPendingRecord(
       termsAcceptedAt: "2026-07-06T10:00:00.000Z",
     },
     bokunConfirmationCode: "LOC-T123",
+    handoffTokenDigest: "b".repeat(64),
     createdAt: "2026-07-06T10:00:00.000Z",
     expiresAt: "2026-07-06T10:30:00.000Z",
     ...overrides,

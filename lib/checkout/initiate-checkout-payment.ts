@@ -20,7 +20,10 @@ import {
   resolveCheckoutQuoteUnavailableMessage,
 } from "@/lib/checkout/checkout-error-messages";
 import { handoffPayloadToQuoteInput } from "@/lib/checkout/handoff-payload-to-quote-input";
-import { verifyCheckoutHandoffToken } from "@/lib/checkout/handoff-token";
+import {
+  hashCheckoutHandoffTokenForPendingCheckout,
+  verifyCheckoutHandoffToken,
+} from "@/lib/checkout/handoff-token";
 import {
   createPendingCheckout,
   updatePendingCheckout,
@@ -193,6 +196,17 @@ export async function executeInitiateCheckoutPayment(
   }
 
   const confirmationCode = reserveResult.data.confirmationCode;
+  const handoffTokenDigest = hashCheckoutHandoffTokenForPendingCheckout(
+    input.handoffToken,
+  );
+  if (!handoffTokenDigest) {
+    await releaseBokunReservationAfterPaymentFailure(
+      confirmationCode,
+      checkoutId,
+      "handoff digest",
+    );
+    return { success: false, error: CHECKOUT_PAYMENT_UNAVAILABLE_ERROR };
+  }
 
   try {
     const termsAcceptedAt = new Date().toISOString();
@@ -206,6 +220,7 @@ export async function executeInitiateCheckoutPayment(
       quoteSnapshot: quoteResult.data,
       contact: buildPendingCheckoutContact(input.contact, termsAcceptedAt),
       bokunConfirmationCode: confirmationCode,
+      handoffTokenDigest,
     });
 
     if (!pendingResult.success) {

@@ -114,13 +114,20 @@ async function main(): Promise<void> {
     console.log("Integration run complete.");
   } finally {
     if (redirectUrl) {
-      const checkoutId = await resolveCheckoutIdForCleanup(redirectUrl);
-      if (checkoutId) {
-        const cleanup = await handleStripeCheckoutCancel(checkoutId);
-        console.log("Cleanup:", cleanup);
-      } else {
+      try {
+        const checkoutId = await resolveCheckoutIdForCleanup(redirectUrl);
+        if (checkoutId) {
+          const cleanup = await handleStripeCheckoutCancel(checkoutId);
+          console.log("Cleanup:", cleanup);
+        } else {
+          console.error(
+            "Cleanup skipped: could not resolve checkout id from redirect URL",
+          );
+        }
+      } catch (error) {
         console.error(
-          "Cleanup skipped: could not resolve checkout id from redirect URL",
+          "[integration:checkout:pay] cleanup failed:",
+          error instanceof Error ? error.message : String(error),
         );
       }
     }

@@ -56,6 +56,8 @@ export interface PendingCheckoutRecord {
   quoteSnapshot: BookingWidgetQuote;
   contact: PendingCheckoutContact;
   bokunConfirmationCode?: string;
+  /** HMAC digest of the handoff token active when Pay was clicked. */
+  handoffTokenDigest: string;
   stripeSessionId?: string;
   bokunBookingId?: string;
   productConfirmationCode?: string;
@@ -75,6 +77,7 @@ export interface CreatePendingCheckoutInput {
   quoteSnapshot: BookingWidgetQuote;
   contact: PendingCheckoutContact;
   bokunConfirmationCode?: string;
+  handoffTokenDigest: string;
 }
 
 /** Partial update applied via `updatePendingCheckout`. */
@@ -142,6 +145,7 @@ const pendingCheckoutRecordSchema = z.object({
   quoteSnapshot: bookingWidgetQuoteSchema,
   contact: pendingCheckoutContactSchema,
   bokunConfirmationCode: z.string().trim().min(1).optional(),
+  handoffTokenDigest: z.string().trim().min(1),
   stripeSessionId: z.string().trim().min(1).optional(),
   bokunBookingId: z.string().trim().min(1).optional(),
   productConfirmationCode: z.string().trim().min(1).optional(),
@@ -230,6 +234,7 @@ export async function createPendingCheckout(
     quoteSnapshot: input.quoteSnapshot,
     contact: input.contact,
     bokunConfirmationCode: input.bokunConfirmationCode,
+    handoffTokenDigest: input.handoffTokenDigest,
     createdAt: now.toISOString(),
     expiresAt: expiresAt.toISOString(),
   };

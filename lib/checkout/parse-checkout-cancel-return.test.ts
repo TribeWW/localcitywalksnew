@@ -9,7 +9,10 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PendingCheckoutRecord } from "@/lib/checkout/pending-checkout-store";
-import { signCheckoutHandoffToken } from "@/lib/checkout/handoff-token";
+import {
+  hashCheckoutHandoffTokenForPendingCheckout,
+  signCheckoutHandoffToken,
+} from "@/lib/checkout/handoff-token";
 import type { SignCheckoutHandoffInput } from "@/lib/checkout/handoff-token";
 
 const getPendingCheckoutByIdMock = vi.fn();
@@ -38,6 +41,7 @@ const handoffInput: SignCheckoutHandoffInput = {
 };
 
 function buildPendingRecord(
+  token: string,
   overrides: Partial<PendingCheckoutRecord> = {},
 ): PendingCheckoutRecord {
   return {
@@ -48,6 +52,8 @@ function buildPendingRecord(
     startTimeId: handoffInput.startTimeId,
     participants: handoffInput.participants,
     language: handoffInput.language,
+    handoffTokenDigest:
+      hashCheckoutHandoffTokenForPendingCheckout(token) ?? "missing",
     quoteSnapshot: {
       totalAmount: 496,
       currency: "EUR",
@@ -103,6 +109,7 @@ describe("parseCheckoutCancelReturn", () => {
 
 describe("authorizeCheckoutCancelCleanup", () => {
   let handoffToken: string;
+  let otherHandoffToken: string;
 
   beforeEach(() => {
     process.env.CHECKOUT_HANDOFF_SECRET = HANDOFF_SECRET;
@@ -110,6 +117,9 @@ describe("authorizeCheckoutCancelCleanup", () => {
     vi.setSystemTime(new Date("2026-07-01T12:00:00.000Z"));
     getPendingCheckoutByIdMock.mockReset();
     handoffToken = signCheckoutHandoffToken(handoffInput);
+    vi.setSystemTime(new Date("2026-07-01T12:01:00.000Z"));
+    otherHandoffToken = signCheckoutHandoffToken(handoffInput);
+    vi.setSystemTime(new Date("2026-07-01T12:00:00.000Z"));
   });
 
   afterEach(() => {
@@ -118,16 +128,16 @@ describe("authorizeCheckoutCancelCleanup", () => {
   });
 
   it("authorizes cleanup when pending checkout matches the handoff", async () => {
-    getPendingCheckoutByIdMock.mockResolvedValue(buildPendingRecord());
+    getPendingCheckoutByIdMock.mockResolvedValue(buildPendingRecord(handoffToken));
 
     await expect(
       authorizeCheckoutCancelCleanup(handoffToken, CHECKOUT_ID),
     ).resolves.toBe(true);
   });
 
-  it("rejects cleanup when pending checkout does not match the handoff slot", async () => {
+  it("rejects cleanup when pending checkout was issued for a different handoff", async () => {
     getPendingCheckoutByIdMock.mockResolvedValue(
-      buildPendingRecord({ productId: "9999999" }),
+      buildPendingRecord(otherHandoffToken),
     );
 
     await expect(
@@ -135,8 +145,28 @@ describe("authorizeCheckoutCancelCleanup", () => {
     ).resolves.toBe(false);
   });
 
+  it("rejects cleanup when pending checkout has no stored handoff digest", async () => {
+    getPendingCheckoutByIdMock.mockResolvedValue(
+      buildPendingRecord(handoffToken, {
+        handoffTokenDigest: undefined as unknown as string,
+      }),
+    );
+
+    await expect(
+      authorizeCheckoutCancelCleanup(handoffToken, CHECKOUT_ID),
+    ).resolves.toBe(false);
+  });
+
+  it("rejects cleanup when pending checkout store lookup fails", async () => {
+    getPendingCheckoutByIdMock.mockRejectedValue(new Error("redis unavailable"));
+
+    await expect(
+      authorizeCheckoutCancelCleanup(handoffToken, CHECKOUT_ID),
+    ).resolves.toBe(false);
+  });
+
   it("rejects cleanup when handoff token is missing or invalid", async () => {
-    getPendingCheckoutByIdMock.mockResolvedValue(buildPendingRecord());
+    getPendingCheckoutByIdMock.mockResolvedValue(buildPendingRecord(handoffToken));
 
     await expect(
       authorizeCheckoutCancelCleanup(undefined, CHECKOUT_ID),

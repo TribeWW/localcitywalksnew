@@ -50,6 +50,7 @@ const createInput = {
     termsAcceptedAt: "2026-07-01T12:00:00.000Z",
   },
   bokunConfirmationCode: "LOC-T123",
+  handoffTokenDigest: "a".repeat(64),
 };
 
 const checkoutId = "550e8400-e29b-41d4-a716-446655440000";
@@ -127,6 +128,7 @@ describe("getPendingCheckoutById", () => {
       participants: createInput.participants,
       quoteSnapshot: quote,
       contact: createInput.contact,
+      handoffTokenDigest: createInput.handoffTokenDigest,
       createdAt: "2026-07-01T12:00:00.000Z",
       expiresAt: "2026-07-01T12:30:00.000Z",
     };
@@ -154,6 +156,7 @@ describe("getPendingCheckoutByStripeSessionId", () => {
       participants: createInput.participants,
       quoteSnapshot: quote,
       contact: createInput.contact,
+      handoffTokenDigest: createInput.handoffTokenDigest,
       stripeSessionId: "cs_test_123",
       createdAt: "2026-07-01T12:00:00.000Z",
       expiresAt: "2026-07-01T12:30:00.000Z",
@@ -196,6 +199,7 @@ describe("updatePendingCheckout", () => {
       participants: createInput.participants,
       quoteSnapshot: quote,
       contact: createInput.contact,
+      handoffTokenDigest: createInput.handoffTokenDigest,
       createdAt: "2026-07-01T12:00:00.000Z",
       expiresAt: "2026-07-01T12:30:00.000Z",
     };
@@ -242,6 +246,7 @@ describe("updatePendingCheckout", () => {
       participants: createInput.participants,
       quoteSnapshot: quote,
       contact: createInput.contact,
+      handoffTokenDigest: createInput.handoffTokenDigest,
       createdAt: "2026-07-01T12:00:00.000Z",
       expiresAt: "2026-07-01T12:30:00.000Z",
     };

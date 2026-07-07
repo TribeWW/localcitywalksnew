@@ -190,3 +190,54 @@ export function verifyCheckoutHandoffToken(
 
   return { success: true, payload: parsed.data };
 }
+
+/**
+ * Hashes the handoff token bound to a pending checkout row at Pay click.
+ *
+ * Stored on the KV record so cancel cleanup can authorize the exact handoff
+ * session without relying on slot/headcount matching.
+ *
+ * @param handoffToken - Raw signed handoff token from `/checkout?h=…`
+ */
+export function hashCheckoutHandoffTokenForPendingCheckout(
+  handoffToken: string,
+): string | null {
+  const secret = getHandoffSecret();
+  if (!secret) {
+    return null;
+  }
+
+  return createHmac("sha256", secret)
+    .update(handoffToken.trim())
+    .digest("hex");
+}
+
+function handoffTokenDigestsMatch(expected: string, actual: string): boolean {
+  const expectedBuffer = Buffer.from(expected);
+  const actualBuffer = Buffer.from(actual);
+
+  if (expectedBuffer.length !== actualBuffer.length) {
+    return false;
+  }
+
+  return timingSafeEqual(expectedBuffer, actualBuffer);
+}
+
+/**
+ * Returns whether a stored pending-checkout digest matches a handoff token.
+ */
+export function pendingCheckoutHandoffTokenMatches(
+  pending: { handoffTokenDigest?: string },
+  handoffToken: string,
+): boolean {
+  if (!pending.handoffTokenDigest) {
+    return false;
+  }
+
+  const digest = hashCheckoutHandoffTokenForPendingCheckout(handoffToken);
+  if (!digest) {
+    return false;
+  }
+
+  return handoffTokenDigestsMatch(pending.handoffTokenDigest, digest);
+}
