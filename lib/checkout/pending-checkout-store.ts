@@ -39,11 +39,7 @@ export const PENDING_CHECKOUT_PAID_CLAIM_PREFIX = "checkout:paid-claim:";
 export const PENDING_CHECKOUT_PAID_CLAIM_TTL_SECONDS = 120;
 
 /** Lifecycle status for a pending checkout row. */
-export type PendingCheckoutStatus =
-  | "pending"
-  | "paid"
-  | "failed"
-  | "expired";
+export type PendingCheckoutStatus = "pending" | "paid" | "failed" | "expired";
 
 /** Contact captured on the checkout summary page before Pay. */
 export interface PendingCheckoutContact {
@@ -248,9 +244,15 @@ export async function releasePendingCheckoutPaidFulfilment(
     return;
   }
 
-  await redis.del(buildPendingCheckoutPaidClaimKey(checkoutId));
+  try {
+    await redis.del(buildPendingCheckoutPaidClaimKey(checkoutId));
+  } catch (error) {
+    console.error(
+      `[pending-checkout-store] failed to release paid-fulfilment claim for ${checkoutId}`,
+      error,
+    );
+  }
 }
-
 /**
  * Computes KV TTL seconds from `expiresAt`, capped at handoff TTL.
  *
