@@ -81,13 +81,23 @@ async function persistBokunFulfilment(
   data: { bokunBookingId: string; productConfirmationCode: string },
 ): Promise<boolean> {
   for (let attempt = 1; attempt <= FULFILMENT_PERSIST_MAX_ATTEMPTS; attempt += 1) {
-    const updateResult = await updatePendingCheckout(checkoutId, {
-      bokunBookingId: data.bokunBookingId,
-      productConfirmationCode: data.productConfirmationCode,
-    });
+    try {
+      const updateResult = await updatePendingCheckout(checkoutId, {
+        bokunBookingId: data.bokunBookingId,
+        productConfirmationCode: data.productConfirmationCode,
+      });
 
-    if (updateResult.success) {
-      return true;
+      if (updateResult.success) {
+        return true;
+      }
+    } catch (error) {
+      // Treat transient redis.get/redis.set throws as retryable alongside
+      // `unavailable` results; keep looping until attempts are exhausted so a
+      // post-confirm blip does not escape and bypass the recovery path below.
+      console.error(
+        `[fulfil-paid-checkout] persistence attempt ${attempt} threw for ${checkoutId}`,
+        error,
+      );
     }
   }
 

@@ -242,6 +242,48 @@ describe("fulfilPaidCheckout", () => {
     expect(releasePendingCheckoutPaidFulfilmentMock).not.toHaveBeenCalled();
   });
 
+  it("treats a thrown KV error as retryable and keeps the claim post-confirm", async () => {
+    updatePendingCheckoutMock.mockRejectedValue(new Error("redis timeout"));
+
+    await expect(
+      fulfilPaidCheckout(CHECKOUT_ID, buildSession(), CLAIM_TOKEN),
+    ).resolves.toEqual({
+      success: false,
+      error: "unavailable",
+    });
+
+    // The throw must not escape the retry loop; all attempts are exhausted and
+    // the claim is retained so a Stripe retry cannot re-confirm at Bókun.
+    expect(updatePendingCheckoutMock).toHaveBeenCalledTimes(
+      FULFILMENT_PERSIST_MAX_ATTEMPTS,
+    );
+    expect(releasePendingCheckoutPaidFulfilmentMock).not.toHaveBeenCalled();
+  });
+
+  it("recovers when a thrown KV error succeeds on a later attempt post-confirm", async () => {
+    updatePendingCheckoutMock
+      .mockRejectedValueOnce(new Error("redis timeout"))
+      .mockResolvedValueOnce({
+        success: true,
+        data: buildPendingRecord({
+          bokunBookingId: "987654",
+          productConfirmationCode: "LOC-P456",
+        }),
+      });
+
+    await expect(
+      fulfilPaidCheckout(CHECKOUT_ID, buildSession(), CLAIM_TOKEN),
+    ).resolves.toEqual({
+      success: true,
+      checkoutId: CHECKOUT_ID,
+      alreadyFulfilled: false,
+      productConfirmationCode: "LOC-P456",
+    });
+
+    expect(updatePendingCheckoutMock).toHaveBeenCalledTimes(2);
+    expect(releasePendingCheckoutPaidFulfilmentMock).not.toHaveBeenCalled();
+  });
+
   it("recovers when a transient KV failure succeeds on retry post-confirm", async () => {
     updatePendingCheckoutMock
       .mockResolvedValueOnce({ success: false, error: "unavailable" })
