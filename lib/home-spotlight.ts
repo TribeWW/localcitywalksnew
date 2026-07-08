@@ -28,6 +28,7 @@ const PREVIEW_SPOTLIGHT_IDS = [
   "15686",
   "15687",
   "15688",
+  "15689",
 ];
 
 /**
@@ -56,7 +57,10 @@ async function getSpotlightProductIds(): Promise<string[] | null> {
     return null;
   }
 
-  return normalizeBokunProductIds(doc?.items?.map((row) => row.id) ?? [], MAX_ITEMS);
+  return normalizeBokunProductIds(
+    doc?.items?.map((row) => row.id) ?? [],
+    MAX_ITEMS,
+  );
 }
 
 /**
