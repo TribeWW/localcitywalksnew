@@ -607,6 +607,7 @@ export function buildConfirmReservedBody(
     | "last4"
   >,
 ): BokunConfirmReservedRequest {
+  const currency = input.currency.trim() || BOKUN_CHECKOUT_DEFAULT_CURRENCY;
   const transactionDetails: BokunConfirmTransactionDetails = {
     transactionDate: formatBokunTransactionDate(
       input.transactionDate ?? new Date(),
@@ -626,7 +627,7 @@ export function buildConfirmReservedBody(
 
   return {
     amount: input.amount,
-    currency: input.currency,
+    currency,
     sendNotificationToMainContact: input.sendNotificationToMainContact ?? true,
     transactionDetails,
   };

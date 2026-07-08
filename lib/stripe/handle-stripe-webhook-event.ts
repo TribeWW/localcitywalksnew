@@ -82,6 +82,7 @@ export async function handleStripeWebhookEvent(
   const fulfilmentResult = await fulfilPaidCheckout(
     paymentResult.checkoutId,
     session,
+    paymentResult.claimToken,
   );
   if (!fulfilmentResult.success) {
     await releaseStripeWebhookEventClaim(event.id);

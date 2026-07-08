@@ -34,6 +34,7 @@ import { handleCheckoutSessionCompleted } from "@/lib/checkout/handle-checkout-s
 
 const CHECKOUT_ID = "550e8400-e29b-41d4-a716-446655440000";
 const SESSION_ID = "cs_test_123";
+const CLAIM_TOKEN = "claim-token-abc";
 
 function buildPendingRecord(
   overrides: Partial<PendingCheckoutRecord> = {},
@@ -88,6 +89,7 @@ describe("handleCheckoutSessionCompleted", () => {
     claimPendingCheckoutPaidFulfilmentMock.mockResolvedValue({
       success: true,
       outcome: "claimed",
+      token: CLAIM_TOKEN,
     });
     releasePendingCheckoutPaidFulfilmentMock.mockResolvedValue(undefined);
   });
@@ -137,6 +139,7 @@ describe("handleCheckoutSessionCompleted", () => {
         success: true,
         checkoutId: CHECKOUT_ID,
         shouldFulfil: true,
+        claimToken: CLAIM_TOKEN,
         alreadyPaid: false,
         productConfirmationCode: undefined,
       },
@@ -184,6 +187,7 @@ describe("handleCheckoutSessionCompleted", () => {
         success: true,
         checkoutId: CHECKOUT_ID,
         shouldFulfil: true,
+        claimToken: CLAIM_TOKEN,
         alreadyPaid: true,
         productConfirmationCode: undefined,
       },
@@ -245,6 +249,7 @@ describe("handleCheckoutSessionCompleted", () => {
 
     expect(releasePendingCheckoutPaidFulfilmentMock).toHaveBeenCalledWith(
       CHECKOUT_ID,
+      CLAIM_TOKEN,
     );
   });
 });

@@ -22,7 +22,16 @@ export type HandleCheckoutSessionCompletedResult =
       success: true;
       checkoutId: string;
       /** True only for the delivery that won the atomic claim and may fulfil. */
-      shouldFulfil: boolean;
+      shouldFulfil: true;
+      /** Fencing token for the won claim; required to release it. */
+      claimToken: string;
+      alreadyPaid: boolean;
+      productConfirmationCode?: string;
+    }
+  | {
+      success: true;
+      checkoutId: string;
+      shouldFulfil: false;
       alreadyPaid: boolean;
       productConfirmationCode?: string;
     }
@@ -79,6 +88,8 @@ export async function handleCheckoutSessionCompleted(
     };
   }
 
+  const claimToken = claim.token;
+
   if (pending.status === "pending") {
     const updateResult = await updatePendingCheckout(
       pending.id,
@@ -90,11 +101,11 @@ export async function handleCheckoutSessionCompleted(
       // The paid-fulfilment claim was won above; release it so a Stripe retry
       // can re-acquire and re-run fulfilment instead of waiting for the lease.
       if (updateResult.error === "unavailable") {
-        await releasePendingCheckoutPaidFulfilment(pending.id);
+        await releasePendingCheckoutPaidFulfilment(pending.id, claimToken);
         return { success: false, error: "unavailable" };
       }
       if (updateResult.error === "not_found") {
-        await releasePendingCheckoutPaidFulfilment(pending.id);
+        await releasePendingCheckoutPaidFulfilment(pending.id, claimToken);
         return { success: false, error: "not_found" };
       }
       // A conflict here would mean the row left `pending` despite winning the
@@ -106,6 +117,7 @@ export async function handleCheckoutSessionCompleted(
     success: true,
     checkoutId: pending.id,
     shouldFulfil: true,
+    claimToken,
     alreadyPaid: pending.status === "paid",
     productConfirmationCode: pending.productConfirmationCode,
   };

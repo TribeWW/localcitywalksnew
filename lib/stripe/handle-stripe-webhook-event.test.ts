@@ -35,6 +35,7 @@ import { handleStripeWebhookEvent } from "@/lib/stripe/handle-stripe-webhook-eve
 
 const EVENT_ID = "evt_test_checkout_completed";
 const CHECKOUT_ID = "550e8400-e29b-41d4-a716-446655440000";
+const CLAIM_TOKEN = "claim-token-abc";
 
 function buildEvent(
   overrides: Partial<Stripe.Event> = {},
@@ -71,6 +72,7 @@ describe("handleStripeWebhookEvent", () => {
       success: true,
       checkoutId: CHECKOUT_ID,
       shouldFulfil: true,
+      claimToken: CLAIM_TOKEN,
       alreadyPaid: false,
     });
     fulfilPaidCheckoutMock.mockResolvedValue({
@@ -144,6 +146,7 @@ describe("handleStripeWebhookEvent", () => {
     expect(fulfilPaidCheckoutMock).toHaveBeenCalledWith(
       CHECKOUT_ID,
       buildEvent().data.object,
+      CLAIM_TOKEN,
     );
     expect(releaseStripeWebhookEventClaimMock).not.toHaveBeenCalled();
   });
@@ -168,6 +171,7 @@ describe("handleStripeWebhookEvent", () => {
       success: true,
       checkoutId: CHECKOUT_ID,
       shouldFulfil: true,
+      claimToken: CLAIM_TOKEN,
       alreadyPaid: false,
     });
     fulfilPaidCheckoutMock.mockResolvedValue({

@@ -14,7 +14,11 @@ import type { BookingWidgetQuote } from "@/types/bokun";
 const mockGet = vi.fn();
 const mockSet = vi.fn();
 const mockDel = vi.fn();
+const mockEval = vi.fn();
 const getRedisMock = vi.fn();
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 vi.mock("@/lib/checkout/pending-checkout-redis", () => ({
   getPendingCheckoutRedis: () => getRedisMock(),
@@ -62,6 +66,7 @@ function mockRedisClient() {
     get: (...args: unknown[]) => mockGet(...args),
     set: (...args: unknown[]) => mockSet(...args),
     del: (...args: unknown[]) => mockDel(...args),
+    eval: (...args: unknown[]) => mockEval(...args),
   });
 }
 
@@ -289,18 +294,25 @@ describe("claimPendingCheckoutPaidFulfilment", () => {
     mockGet.mockReset();
     mockSet.mockReset();
     mockDel.mockReset();
+    mockEval.mockReset();
   });
 
-  it("returns claimed when the atomic NX set wins the lease", async () => {
+  it("returns claimed with a unique fencing token stored as the value", async () => {
     mockSet.mockResolvedValue("OK");
 
-    await expect(
-      claimPendingCheckoutPaidFulfilment(checkoutId),
-    ).resolves.toEqual({ success: true, outcome: "claimed" });
+    const result = await claimPendingCheckoutPaidFulfilment(checkoutId);
 
+    expect(result.success).toBe(true);
+    if (!result.success || result.outcome !== "claimed") {
+      throw new Error("expected claimed outcome");
+    }
+    expect(result.token).toMatch(UUID_PATTERN);
+
+    // The token is persisted as the claim value (not a constant) so release can
+    // compare-and-delete against it.
     expect(mockSet).toHaveBeenCalledWith(
       `checkout:paid-claim:${checkoutId}`,
-      "1",
+      result.token,
       { nx: true, ex: 120 },
     );
   });
@@ -328,23 +340,30 @@ describe("releasePendingCheckoutPaidFulfilment", () => {
     mockGet.mockReset();
     mockSet.mockReset();
     mockDel.mockReset();
+    mockEval.mockReset();
   });
 
-  it("deletes the paid-fulfilment claim key", async () => {
-    mockDel.mockResolvedValue(1);
+  it("compare-and-deletes the claim only for the matching fencing token", async () => {
+    mockEval.mockResolvedValue(1);
 
-    await releasePendingCheckoutPaidFulfilment(checkoutId);
+    await releasePendingCheckoutPaidFulfilment(checkoutId, "token-abc");
 
-    expect(mockDel).toHaveBeenCalledWith(`checkout:paid-claim:${checkoutId}`);
+    expect(mockEval).toHaveBeenCalledWith(
+      expect.stringContaining("redis.call"),
+      [`checkout:paid-claim:${checkoutId}`],
+      ["token-abc"],
+    );
+    // Never an unconditional DEL that could clear a newer worker's claim.
+    expect(mockDel).not.toHaveBeenCalled();
   });
 
   it("is a no-op when Redis is not configured", async () => {
     getRedisMock.mockReturnValue(null);
 
     await expect(
-      releasePendingCheckoutPaidFulfilment(checkoutId),
+      releasePendingCheckoutPaidFulfilment(checkoutId, "token-abc"),
     ).resolves.toBeUndefined();
-    expect(mockDel).not.toHaveBeenCalled();
+    expect(mockEval).not.toHaveBeenCalled();
   });
 });
 

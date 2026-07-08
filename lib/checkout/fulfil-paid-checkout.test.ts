@@ -30,9 +30,13 @@ vi.mock("@/lib/bokun/checkout", () => ({
     confirmReservedBokunCheckoutMock(...args),
 }));
 
-import { fulfilPaidCheckout } from "@/lib/checkout/fulfil-paid-checkout";
+import {
+  FULFILMENT_PERSIST_MAX_ATTEMPTS,
+  fulfilPaidCheckout,
+} from "@/lib/checkout/fulfil-paid-checkout";
 
 const CHECKOUT_ID = "550e8400-e29b-41d4-a716-446655440000";
+const CLAIM_TOKEN = "claim-token-abc";
 
 function buildPendingRecord(
   overrides: Partial<PendingCheckoutRecord> = {},
@@ -105,7 +109,7 @@ describe("fulfilPaidCheckout", () => {
     getPendingCheckoutByIdMock.mockResolvedValue(null);
 
     await expect(
-      fulfilPaidCheckout(CHECKOUT_ID, buildSession()),
+      fulfilPaidCheckout(CHECKOUT_ID, buildSession(), CLAIM_TOKEN),
     ).resolves.toEqual({
       success: false,
       error: "not_found",
@@ -118,7 +122,7 @@ describe("fulfilPaidCheckout", () => {
     );
 
     await expect(
-      fulfilPaidCheckout(CHECKOUT_ID, buildSession()),
+      fulfilPaidCheckout(CHECKOUT_ID, buildSession(), CLAIM_TOKEN),
     ).resolves.toEqual({
       success: false,
       error: "not_paid",
@@ -131,7 +135,7 @@ describe("fulfilPaidCheckout", () => {
     );
 
     await expect(
-      fulfilPaidCheckout(CHECKOUT_ID, buildSession()),
+      fulfilPaidCheckout(CHECKOUT_ID, buildSession(), CLAIM_TOKEN),
     ).resolves.toEqual({
       success: false,
       error: "missing_reservation",
@@ -147,7 +151,7 @@ describe("fulfilPaidCheckout", () => {
     );
 
     await expect(
-      fulfilPaidCheckout(CHECKOUT_ID, buildSession()),
+      fulfilPaidCheckout(CHECKOUT_ID, buildSession(), CLAIM_TOKEN),
     ).resolves.toEqual({
       success: true,
       checkoutId: CHECKOUT_ID,
@@ -161,7 +165,7 @@ describe("fulfilPaidCheckout", () => {
 
   it("confirms Bókun reserved booking and persists fulfilment fields", async () => {
     await expect(
-      fulfilPaidCheckout(CHECKOUT_ID, buildSession()),
+      fulfilPaidCheckout(CHECKOUT_ID, buildSession(), CLAIM_TOKEN),
     ).resolves.toEqual({
       success: true,
       checkoutId: CHECKOUT_ID,
@@ -184,7 +188,11 @@ describe("fulfilPaidCheckout", () => {
   });
 
   it("falls back to checkout session id when payment_intent is missing", async () => {
-    await fulfilPaidCheckout(CHECKOUT_ID, buildSession({ payment_intent: null }));
+    await fulfilPaidCheckout(
+      CHECKOUT_ID,
+      buildSession({ payment_intent: null }),
+      CLAIM_TOKEN,
+    );
 
     expect(confirmReservedBokunCheckoutMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -200,7 +208,7 @@ describe("fulfilPaidCheckout", () => {
     });
 
     await expect(
-      fulfilPaidCheckout(CHECKOUT_ID, buildSession()),
+      fulfilPaidCheckout(CHECKOUT_ID, buildSession(), CLAIM_TOKEN),
     ).resolves.toEqual({
       success: false,
       error: "confirm_failed",
@@ -209,24 +217,52 @@ describe("fulfilPaidCheckout", () => {
     expect(updatePendingCheckoutMock).not.toHaveBeenCalled();
     expect(releasePendingCheckoutPaidFulfilmentMock).toHaveBeenCalledWith(
       CHECKOUT_ID,
+      CLAIM_TOKEN,
     );
   });
 
-  it("releases the claim and returns unavailable when KV update fails", async () => {
+  it("keeps the claim and retries persistence when KV update fails post-confirm", async () => {
     updatePendingCheckoutMock.mockResolvedValue({
       success: false,
       error: "unavailable",
     });
 
     await expect(
-      fulfilPaidCheckout(CHECKOUT_ID, buildSession()),
+      fulfilPaidCheckout(CHECKOUT_ID, buildSession(), CLAIM_TOKEN),
     ).resolves.toEqual({
       success: false,
       error: "unavailable",
     });
 
-    expect(releasePendingCheckoutPaidFulfilmentMock).toHaveBeenCalledWith(
-      CHECKOUT_ID,
+    // Bókun already confirmed: the claim must NOT be released (a retry would
+    // otherwise re-confirm and double-book), and persistence is retried.
+    expect(updatePendingCheckoutMock).toHaveBeenCalledTimes(
+      FULFILMENT_PERSIST_MAX_ATTEMPTS,
     );
+    expect(releasePendingCheckoutPaidFulfilmentMock).not.toHaveBeenCalled();
+  });
+
+  it("recovers when a transient KV failure succeeds on retry post-confirm", async () => {
+    updatePendingCheckoutMock
+      .mockResolvedValueOnce({ success: false, error: "unavailable" })
+      .mockResolvedValueOnce({
+        success: true,
+        data: buildPendingRecord({
+          bokunBookingId: "987654",
+          productConfirmationCode: "LOC-P456",
+        }),
+      });
+
+    await expect(
+      fulfilPaidCheckout(CHECKOUT_ID, buildSession(), CLAIM_TOKEN),
+    ).resolves.toEqual({
+      success: true,
+      checkoutId: CHECKOUT_ID,
+      alreadyFulfilled: false,
+      productConfirmationCode: "LOC-P456",
+    });
+
+    expect(updatePendingCheckoutMock).toHaveBeenCalledTimes(2);
+    expect(releasePendingCheckoutPaidFulfilmentMock).not.toHaveBeenCalled();
   });
 });
