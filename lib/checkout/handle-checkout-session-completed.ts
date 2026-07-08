@@ -1,21 +1,30 @@
 /**
  * Marks a pending checkout paid when Stripe Checkout completes (LOC-1165).
  *
- * Resolves the KV row via the Stripe session id index and performs a CAS
- * `pending → paid` transition. Bókun confirm runs in `fulfilPaidCheckout`
- * (LOC-1166); confirmation email is LOC-1170.
+ * Resolves the KV row via the Stripe session id index, then uses an atomic
+ * Redis claim so only one concurrent webhook delivery advances to Bókun
+ * fulfilment (`shouldFulfil: true`); losers exit without advancing. The winner
+ * performs the `pending → paid` transition. Bókun confirm runs in
+ * `fulfilPaidCheckout` (LOC-1166); confirmation email is LOC-1170.
  */
 
 import type Stripe from "stripe";
 
 import {
-  getPendingCheckoutById,
+  claimPendingCheckoutPaidFulfilment,
   getPendingCheckoutByStripeSessionId,
   updatePendingCheckout,
 } from "@/lib/checkout/pending-checkout-store";
 
 export type HandleCheckoutSessionCompletedResult =
-  | { success: true; checkoutId: string; alreadyPaid: boolean }
+  | {
+      success: true;
+      checkoutId: string;
+      /** True only for the delivery that won the atomic claim and may fulfil. */
+      shouldFulfil: boolean;
+      alreadyPaid: boolean;
+      productConfirmationCode?: string;
+    }
   | {
       success: false;
       error: "invalid_session" | "not_found" | "unavailable" | "conflict";
@@ -43,15 +52,7 @@ export async function handleCheckoutSessionCompleted(
     return { success: false, error: "not_found" };
   }
 
-  if (pending.status === "paid") {
-    return {
-      success: true,
-      checkoutId: pending.id,
-      alreadyPaid: true,
-    };
-  }
-
-  if (pending.status !== "pending") {
+  if (pending.status !== "pending" && pending.status !== "paid") {
     return { success: false, error: "conflict" };
   }
 
@@ -62,36 +63,45 @@ export async function handleCheckoutSessionCompleted(
     );
   }
 
-  const updateResult = await updatePendingCheckout(
-    pending.id,
-    { status: "paid" },
-    { expectedStatus: "pending" },
-  );
-
-  if (updateResult.success) {
-    return {
-      success: true,
-      checkoutId: pending.id,
-      alreadyPaid: false,
-    };
-  }
-
-  if (updateResult.error === "conflict") {
-    const latest = await getPendingCheckoutById(pending.id);
-    if (latest?.status === "paid") {
-      return {
-        success: true,
-        checkoutId: pending.id,
-        alreadyPaid: true,
-      };
-    }
-
-    return { success: false, error: "conflict" };
-  }
-
-  if (updateResult.error === "unavailable") {
+  const claim = await claimPendingCheckoutPaidFulfilment(pending.id);
+  if (!claim.success) {
     return { success: false, error: "unavailable" };
   }
 
-  return { success: false, error: "not_found" };
+  if (claim.outcome === "in_progress") {
+    return {
+      success: true,
+      checkoutId: pending.id,
+      shouldFulfil: false,
+      alreadyPaid: true,
+      productConfirmationCode: pending.productConfirmationCode,
+    };
+  }
+
+  if (pending.status === "pending") {
+    const updateResult = await updatePendingCheckout(
+      pending.id,
+      { status: "paid" },
+      { expectedStatus: "pending" },
+    );
+
+    if (!updateResult.success) {
+      if (updateResult.error === "unavailable") {
+        return { success: false, error: "unavailable" };
+      }
+      if (updateResult.error === "not_found") {
+        return { success: false, error: "not_found" };
+      }
+      // A conflict here would mean the row left `pending` despite winning the
+      // claim; treat the payment as already recorded and let fulfilment proceed.
+    }
+  }
+
+  return {
+    success: true,
+    checkoutId: pending.id,
+    shouldFulfil: true,
+    alreadyPaid: pending.status === "paid",
+    productConfirmationCode: pending.productConfirmationCode,
+  };
 }

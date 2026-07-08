@@ -26,6 +26,18 @@ export const PENDING_CHECKOUT_KEY_PREFIX = "checkout:pending:";
 /** KV key prefix for Stripe session id → checkout id index. */
 export const PENDING_CHECKOUT_STRIPE_INDEX_PREFIX = "checkout:stripe:";
 
+/** KV key prefix for the atomic paid-fulfilment claim (one winner per checkout). */
+export const PENDING_CHECKOUT_PAID_CLAIM_PREFIX = "checkout:paid-claim:";
+
+/**
+ * Lease TTL for the paid-fulfilment claim.
+ *
+ * Long enough to block a concurrent burst of duplicate webhook deliveries while
+ * one worker confirms Bókun, yet short enough that a later Stripe retry (minutes
+ * apart) can re-acquire and recover a failed fulfilment.
+ */
+export const PENDING_CHECKOUT_PAID_CLAIM_TTL_SECONDS = 120;
+
 /** Lifecycle status for a pending checkout row. */
 export type PendingCheckoutStatus =
   | "pending"
@@ -171,6 +183,52 @@ export function buildPendingCheckoutStripeIndexKey(
   stripeSessionId: string,
 ): string {
   return `${PENDING_CHECKOUT_STRIPE_INDEX_PREFIX}${stripeSessionId}`;
+}
+
+/**
+ * Builds the atomic paid-fulfilment claim key for a checkout id.
+ *
+ * @param checkoutId - Internal checkout uuid
+ */
+export function buildPendingCheckoutPaidClaimKey(checkoutId: string): string {
+  return `${PENDING_CHECKOUT_PAID_CLAIM_PREFIX}${checkoutId}`;
+}
+
+/** Outcome of an atomic paid-fulfilment claim attempt. */
+export type ClaimPendingCheckoutPaidResult =
+  | { success: true; outcome: "claimed" | "in_progress" }
+  | { success: false; error: "unavailable" };
+
+/**
+ * Atomically claims the right to confirm payment + fulfilment for a checkout.
+ *
+ * Uses Redis `SET … NX EX` so exactly one concurrent webhook delivery wins the
+ * claim (`outcome: "claimed"`); losers observe `outcome: "in_progress"` and must
+ * exit without advancing the checkout. The claim expires so a later retry can
+ * recover a fulfilment that failed after payment was recorded.
+ *
+ * @param checkoutId - Internal checkout uuid
+ * @param ttlSeconds - Lease duration in seconds
+ */
+export async function claimPendingCheckoutPaidFulfilment(
+  checkoutId: string,
+  ttlSeconds: number = PENDING_CHECKOUT_PAID_CLAIM_TTL_SECONDS,
+): Promise<ClaimPendingCheckoutPaidResult> {
+  const redis = getPendingCheckoutRedis();
+  if (!redis) {
+    return { success: false, error: "unavailable" };
+  }
+
+  const claimed = await redis.set(
+    buildPendingCheckoutPaidClaimKey(checkoutId),
+    "1",
+    { nx: true, ex: ttlSeconds },
+  );
+
+  return {
+    success: true,
+    outcome: claimed === "OK" ? "claimed" : "in_progress",
+  };
 }
 
 /**

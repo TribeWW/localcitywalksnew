@@ -37,7 +37,21 @@ export async function processStripeWebhookRequest(
 
   const handled = await handleStripeWebhookEvent(verification.event);
   if (!handled.success) {
-    return { status: 500, body: { error: handled.error } };
+    // Stripe retries on non-2xx responses. Only return 500 for errors that are
+    // likely transient (infra / concurrency / upstream). For terminal errors,
+    // log and acknowledge so Stripe does not replay indefinitely.
+    const transientErrors = new Set(["unavailable", "conflict", "confirm_failed"]);
+    if (transientErrors.has(handled.error)) {
+      return { status: 500, body: { error: handled.error } };
+    }
+
+    console.error("[stripe-webhook] terminal event failure:", {
+      eventId: verification.event.id,
+      type: verification.event.type,
+      error: handled.error,
+    });
+
+    return { status: 200, body: { received: true } };
   }
 
   return { status: 200, body: { received: true } };

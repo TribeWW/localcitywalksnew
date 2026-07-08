@@ -14,6 +14,7 @@ import type { PendingCheckoutRecord } from "@/lib/checkout/pending-checkout-stor
 const getPendingCheckoutByStripeSessionIdMock = vi.fn();
 const updatePendingCheckoutMock = vi.fn();
 const getPendingCheckoutByIdMock = vi.fn();
+const claimPendingCheckoutPaidFulfilmentMock = vi.fn();
 
 vi.mock("@/lib/checkout/pending-checkout-store", () => ({
   getPendingCheckoutByStripeSessionId: (...args: unknown[]) =>
@@ -22,6 +23,8 @@ vi.mock("@/lib/checkout/pending-checkout-store", () => ({
     updatePendingCheckoutMock(...args),
   getPendingCheckoutById: (...args: unknown[]) =>
     getPendingCheckoutByIdMock(...args),
+  claimPendingCheckoutPaidFulfilment: (...args: unknown[]) =>
+    claimPendingCheckoutPaidFulfilmentMock(...args),
 }));
 
 import { handleCheckoutSessionCompleted } from "@/lib/checkout/handle-checkout-session-completed";
@@ -77,6 +80,11 @@ describe("handleCheckoutSessionCompleted", () => {
     getPendingCheckoutByStripeSessionIdMock.mockReset();
     updatePendingCheckoutMock.mockReset();
     getPendingCheckoutByIdMock.mockReset();
+    claimPendingCheckoutPaidFulfilmentMock.mockReset();
+    claimPendingCheckoutPaidFulfilmentMock.mockResolvedValue({
+      success: true,
+      outcome: "claimed",
+    });
   });
 
   it("returns invalid_session when the session id is missing", async () => {
@@ -110,7 +118,7 @@ describe("handleCheckoutSessionCompleted", () => {
     );
   });
 
-  it("marks a pending checkout paid via CAS", async () => {
+  it("wins the atomic claim, marks the row paid, and may fulfil", async () => {
     getPendingCheckoutByStripeSessionIdMock.mockResolvedValue(
       buildPendingRecord(),
     );
@@ -123,10 +131,15 @@ describe("handleCheckoutSessionCompleted", () => {
       {
         success: true,
         checkoutId: CHECKOUT_ID,
+        shouldFulfil: true,
         alreadyPaid: false,
+        productConfirmationCode: undefined,
       },
     );
 
+    expect(claimPendingCheckoutPaidFulfilmentMock).toHaveBeenCalledWith(
+      CHECKOUT_ID,
+    );
     expect(updatePendingCheckoutMock).toHaveBeenCalledWith(
       CHECKOUT_ID,
       { status: "paid" },
@@ -134,31 +147,30 @@ describe("handleCheckoutSessionCompleted", () => {
     );
   });
 
-  it("is idempotent when the pending checkout is already paid", async () => {
+  it("exits without fulfilling when a concurrent delivery holds the claim", async () => {
     getPendingCheckoutByStripeSessionIdMock.mockResolvedValue(
-      buildPendingRecord({ status: "paid" }),
+      buildPendingRecord(),
     );
+    claimPendingCheckoutPaidFulfilmentMock.mockResolvedValue({
+      success: true,
+      outcome: "in_progress",
+    });
 
     await expect(handleCheckoutSessionCompleted(buildSession())).resolves.toEqual(
       {
         success: true,
         checkoutId: CHECKOUT_ID,
+        shouldFulfil: false,
         alreadyPaid: true,
+        productConfirmationCode: undefined,
       },
     );
 
     expect(updatePendingCheckoutMock).not.toHaveBeenCalled();
   });
 
-  it("treats CAS conflict as success when another worker marked paid", async () => {
+  it("wins the claim on an already-paid row and may re-attempt fulfilment", async () => {
     getPendingCheckoutByStripeSessionIdMock.mockResolvedValue(
-      buildPendingRecord(),
-    );
-    updatePendingCheckoutMock.mockResolvedValue({
-      success: false,
-      error: "conflict",
-    });
-    getPendingCheckoutByIdMock.mockResolvedValue(
       buildPendingRecord({ status: "paid" }),
     );
 
@@ -166,9 +178,32 @@ describe("handleCheckoutSessionCompleted", () => {
       {
         success: true,
         checkoutId: CHECKOUT_ID,
+        shouldFulfil: true,
         alreadyPaid: true,
+        productConfirmationCode: undefined,
       },
     );
+
+    expect(updatePendingCheckoutMock).not.toHaveBeenCalled();
+  });
+
+  it("returns unavailable when the atomic claim store is unavailable", async () => {
+    getPendingCheckoutByStripeSessionIdMock.mockResolvedValue(
+      buildPendingRecord(),
+    );
+    claimPendingCheckoutPaidFulfilmentMock.mockResolvedValue({
+      success: false,
+      error: "unavailable",
+    });
+
+    await expect(handleCheckoutSessionCompleted(buildSession())).resolves.toEqual(
+      {
+        success: false,
+        error: "unavailable",
+      },
+    );
+
+    expect(updatePendingCheckoutMock).not.toHaveBeenCalled();
   });
 
   it("returns conflict when the row is terminal but not paid", async () => {

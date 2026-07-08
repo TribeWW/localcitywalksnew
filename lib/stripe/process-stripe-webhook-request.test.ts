@@ -113,7 +113,7 @@ describe("processStripeWebhookRequest", () => {
     expect(handleStripeWebhookEventMock).toHaveBeenCalledWith(event);
   });
 
-  it("returns 500 when fulfilment fails so Stripe retries", async () => {
+  it("acknowledges terminal fulfilment failures so Stripe does not retry forever", async () => {
     constructStripeWebhookEventMock.mockReturnValue({
       success: true,
       event: { id: "evt_test", type: "checkout.session.completed" },
@@ -123,10 +123,30 @@ describe("processStripeWebhookRequest", () => {
       error: "not_found",
     });
 
-    await expect(processStripeWebhookRequest("payload", "sig")).resolves.toEqual({
-      status: 500,
-      body: { error: "not_found" },
+    await expect(processStripeWebhookRequest("payload", "sig")).resolves.toEqual(
+      {
+        status: 200,
+        body: { received: true },
+      },
+    );
+  });
+
+  it("returns 500 for transient fulfilment failures so Stripe retries", async () => {
+    constructStripeWebhookEventMock.mockReturnValue({
+      success: true,
+      event: { id: "evt_unavailable", type: "checkout.session.completed" },
     });
+    handleStripeWebhookEventMock.mockResolvedValue({
+      success: false,
+      error: "unavailable",
+    });
+
+    await expect(processStripeWebhookRequest("payload", "sig")).resolves.toEqual(
+      {
+        status: 500,
+        body: { error: "unavailable" },
+      },
+    );
   });
 
   it("returns 200 for duplicate and ignored events", async () => {

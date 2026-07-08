@@ -122,6 +122,8 @@ export interface ConfirmReservedBokunCheckoutInput {
   amount: number;
   currency: string;
   transactionId: string;
+  /** Payment completion time; defaults to now when omitted. */
+  transactionDate?: Date;
   sendNotificationToMainContact?: boolean;
   cardBrand?: string;
   last4?: string;
@@ -597,6 +599,7 @@ export function buildConfirmReservedBody(
   input: Pick<
     ConfirmReservedBokunCheckoutInput,
     | "amount"
+    | "transactionDate"
     | "currency"
     | "transactionId"
     | "sendNotificationToMainContact"
@@ -605,7 +608,9 @@ export function buildConfirmReservedBody(
   >,
 ): BokunConfirmReservedRequest {
   const transactionDetails: BokunConfirmTransactionDetails = {
-    transactionDate: formatBokunTransactionDate(new Date()),
+    transactionDate: formatBokunTransactionDate(
+      input.transactionDate ?? new Date(),
+    ),
     transactionId: input.transactionId.trim(),
   };
 
@@ -626,7 +631,6 @@ export function buildConfirmReservedBody(
     transactionDetails,
   };
 }
-
 /**
  * Reads booking id and product confirmation code from confirm-reserved response.
  */
@@ -637,7 +641,11 @@ export function extractBokunFulfilmentDetails(
     response.booking?.activityBookings?.[0]?.productConfirmationCode?.trim();
   const bookingId = response.booking?.id;
 
-  if (!productConfirmationCode || bookingId === undefined || bookingId === null) {
+  if (
+    !productConfirmationCode ||
+    bookingId === undefined ||
+    bookingId === null
+  ) {
     return null;
   }
 

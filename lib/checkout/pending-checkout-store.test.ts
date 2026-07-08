@@ -22,6 +22,7 @@ vi.mock("@/lib/checkout/pending-checkout-redis", () => ({
 }));
 
 import {
+  claimPendingCheckoutPaidFulfilment,
   createPendingCheckout,
   getPendingCheckoutById,
   getPendingCheckoutByStripeSessionId,
@@ -278,6 +279,45 @@ describe("updatePendingCheckout", () => {
 
     expect(result).toEqual({ success: false, error: "conflict" });
     expect(mockSet).not.toHaveBeenCalled();
+  });
+});
+
+describe("claimPendingCheckoutPaidFulfilment", () => {
+  beforeEach(() => {
+    mockRedisClient();
+    mockGet.mockReset();
+    mockSet.mockReset();
+    mockDel.mockReset();
+  });
+
+  it("returns claimed when the atomic NX set wins the lease", async () => {
+    mockSet.mockResolvedValue("OK");
+
+    await expect(
+      claimPendingCheckoutPaidFulfilment(checkoutId),
+    ).resolves.toEqual({ success: true, outcome: "claimed" });
+
+    expect(mockSet).toHaveBeenCalledWith(
+      `checkout:paid-claim:${checkoutId}`,
+      "1",
+      { nx: true, ex: 120 },
+    );
+  });
+
+  it("returns in_progress when the lease is already held", async () => {
+    mockSet.mockResolvedValue(null);
+
+    await expect(
+      claimPendingCheckoutPaidFulfilment(checkoutId),
+    ).resolves.toEqual({ success: true, outcome: "in_progress" });
+  });
+
+  it("returns unavailable when Redis is not configured", async () => {
+    getRedisMock.mockReturnValue(null);
+
+    await expect(
+      claimPendingCheckoutPaidFulfilment(checkoutId),
+    ).resolves.toEqual({ success: false, error: "unavailable" });
   });
 });
 

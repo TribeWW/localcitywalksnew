@@ -10,16 +10,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type Stripe from "stripe";
 
-const hasProcessedStripeWebhookEventMock = vi.fn();
-const markStripeWebhookEventProcessedMock = vi.fn();
+const claimStripeWebhookEventMock = vi.fn();
+const releaseStripeWebhookEventClaimMock = vi.fn();
 const handleCheckoutSessionCompletedMock = vi.fn();
 const fulfilPaidCheckoutMock = vi.fn();
 
 vi.mock("@/lib/stripe/stripe-webhook-idempotency", () => ({
-  hasProcessedStripeWebhookEvent: (...args: unknown[]) =>
-    hasProcessedStripeWebhookEventMock(...args),
-  markStripeWebhookEventProcessed: (...args: unknown[]) =>
-    markStripeWebhookEventProcessedMock(...args),
+  claimStripeWebhookEvent: (...args: unknown[]) =>
+    claimStripeWebhookEventMock(...args),
+  releaseStripeWebhookEventClaim: (...args: unknown[]) =>
+    releaseStripeWebhookEventClaimMock(...args),
 }));
 
 vi.mock("@/lib/checkout/handle-checkout-session-completed", () => ({
@@ -57,16 +57,20 @@ function buildEvent(
 
 describe("handleStripeWebhookEvent", () => {
   beforeEach(() => {
-    hasProcessedStripeWebhookEventMock.mockReset();
-    markStripeWebhookEventProcessedMock.mockReset();
+    claimStripeWebhookEventMock.mockReset();
+    releaseStripeWebhookEventClaimMock.mockReset();
     handleCheckoutSessionCompletedMock.mockReset();
     fulfilPaidCheckoutMock.mockReset();
 
-    hasProcessedStripeWebhookEventMock.mockResolvedValue(false);
-    markStripeWebhookEventProcessedMock.mockResolvedValue({ success: true });
+    claimStripeWebhookEventMock.mockResolvedValue({
+      success: true,
+      outcome: "claimed",
+    });
+    releaseStripeWebhookEventClaimMock.mockResolvedValue(undefined);
     handleCheckoutSessionCompletedMock.mockResolvedValue({
       success: true,
       checkoutId: CHECKOUT_ID,
+      shouldFulfil: true,
       alreadyPaid: false,
     });
     fulfilPaidCheckoutMock.mockResolvedValue({
@@ -78,7 +82,10 @@ describe("handleStripeWebhookEvent", () => {
   });
 
   it("short-circuits duplicate Stripe event ids", async () => {
-    hasProcessedStripeWebhookEventMock.mockResolvedValue(true);
+    claimStripeWebhookEventMock.mockResolvedValue({
+      success: true,
+      outcome: "duplicate",
+    });
 
     await expect(handleStripeWebhookEvent(buildEvent())).resolves.toEqual({
       success: true,
@@ -86,10 +93,30 @@ describe("handleStripeWebhookEvent", () => {
     });
 
     expect(handleCheckoutSessionCompletedMock).not.toHaveBeenCalled();
-    expect(markStripeWebhookEventProcessedMock).not.toHaveBeenCalled();
+    expect(fulfilPaidCheckoutMock).not.toHaveBeenCalled();
   });
 
-  it("ignores unhandled event types and marks them processed", async () => {
+  it("returns unavailable when the event id cannot be claimed", async () => {
+    claimStripeWebhookEventMock.mockResolvedValue({
+      success: false,
+      error: "unavailable",
+    });
+
+    await expect(handleStripeWebhookEvent(buildEvent())).resolves.toEqual({
+      success: false,
+      error: "unavailable",
+    });
+
+    expect(handleCheckoutSessionCompletedMock).not.toHaveBeenCalled();
+  });
+
+  it("claims the event id before any fulfilment work", async () => {
+    await handleStripeWebhookEvent(buildEvent());
+
+    expect(claimStripeWebhookEventMock).toHaveBeenCalledWith(EVENT_ID);
+  });
+
+  it("ignores unhandled event types after claiming them", async () => {
     await expect(
       handleStripeWebhookEvent(buildEvent({ type: "payment_intent.succeeded" })),
     ).resolves.toEqual({
@@ -98,10 +125,11 @@ describe("handleStripeWebhookEvent", () => {
     });
 
     expect(handleCheckoutSessionCompletedMock).not.toHaveBeenCalled();
-    expect(markStripeWebhookEventProcessedMock).toHaveBeenCalledWith(EVENT_ID);
+    expect(claimStripeWebhookEventMock).toHaveBeenCalledWith(EVENT_ID);
+    expect(releaseStripeWebhookEventClaimMock).not.toHaveBeenCalled();
   });
 
-  it("marks checkout paid, confirms Bókun, and records the event id", async () => {
+  it("marks checkout paid and confirms Bókun without releasing the claim", async () => {
     await expect(handleStripeWebhookEvent(buildEvent())).resolves.toEqual({
       success: true,
       action: "checkout_paid",
@@ -117,10 +145,10 @@ describe("handleStripeWebhookEvent", () => {
       CHECKOUT_ID,
       buildEvent().data.object,
     );
-    expect(markStripeWebhookEventProcessedMock).toHaveBeenCalledWith(EVENT_ID);
+    expect(releaseStripeWebhookEventClaimMock).not.toHaveBeenCalled();
   });
 
-  it("does not mark processed when payment confirmation fails", async () => {
+  it("releases the claim when payment confirmation fails", async () => {
     handleCheckoutSessionCompletedMock.mockResolvedValue({
       success: false,
       error: "not_found",
@@ -131,14 +159,15 @@ describe("handleStripeWebhookEvent", () => {
       error: "not_found",
     });
 
-    expect(markStripeWebhookEventProcessedMock).not.toHaveBeenCalled();
+    expect(releaseStripeWebhookEventClaimMock).toHaveBeenCalledWith(EVENT_ID);
     expect(fulfilPaidCheckoutMock).not.toHaveBeenCalled();
   });
 
-  it("does not mark processed when Bókun fulfilment fails", async () => {
+  it("releases the claim when Bókun fulfilment fails so Stripe can retry", async () => {
     handleCheckoutSessionCompletedMock.mockResolvedValue({
       success: true,
       checkoutId: CHECKOUT_ID,
+      shouldFulfil: true,
       alreadyPaid: false,
     });
     fulfilPaidCheckoutMock.mockResolvedValue({
@@ -151,18 +180,27 @@ describe("handleStripeWebhookEvent", () => {
       error: "confirm_failed",
     });
 
-    expect(markStripeWebhookEventProcessedMock).not.toHaveBeenCalled();
+    expect(releaseStripeWebhookEventClaimMock).toHaveBeenCalledWith(EVENT_ID);
   });
 
-  it("returns unavailable when idempotency storage fails after fulfilment", async () => {
-    markStripeWebhookEventProcessedMock.mockResolvedValue({
-      success: false,
-      error: "unavailable",
+  it("acknowledges the loser without fulfilling when it did not win the claim", async () => {
+    handleCheckoutSessionCompletedMock.mockResolvedValue({
+      success: true,
+      checkoutId: CHECKOUT_ID,
+      shouldFulfil: false,
+      alreadyPaid: true,
+      productConfirmationCode: "LOC-P456",
     });
 
     await expect(handleStripeWebhookEvent(buildEvent())).resolves.toEqual({
-      success: false,
-      error: "unavailable",
+      success: true,
+      action: "checkout_paid",
+      checkoutId: CHECKOUT_ID,
+      alreadyPaid: true,
+      productConfirmationCode: "LOC-P456",
     });
+
+    expect(fulfilPaidCheckoutMock).not.toHaveBeenCalled();
+    expect(releaseStripeWebhookEventClaimMock).not.toHaveBeenCalled();
   });
 });

@@ -11,8 +11,8 @@ import type Stripe from "stripe";
 import { fulfilPaidCheckout } from "@/lib/checkout/fulfil-paid-checkout";
 import { handleCheckoutSessionCompleted } from "@/lib/checkout/handle-checkout-session-completed";
 import {
-  hasProcessedStripeWebhookEvent,
-  markStripeWebhookEventProcessed,
+  claimStripeWebhookEvent,
+  releaseStripeWebhookEventClaim,
 } from "@/lib/stripe/stripe-webhook-idempotency";
 
 export type HandleStripeWebhookEventResult =
@@ -44,23 +44,39 @@ export type HandleStripeWebhookEventResult =
 export async function handleStripeWebhookEvent(
   event: Stripe.Event,
 ): Promise<HandleStripeWebhookEventResult> {
-  if (await hasProcessedStripeWebhookEvent(event.id)) {
+  // Atomically claim the event id before any fulfilment work so duplicate
+  // deliveries of the same event cannot both reach Bókun.
+  const claim = await claimStripeWebhookEvent(event.id);
+  if (!claim.success) {
+    return { success: false, error: "unavailable" };
+  }
+
+  if (claim.outcome === "duplicate") {
     return { success: true, action: "duplicate" };
   }
 
   if (event.type !== "checkout.session.completed") {
-    const markResult = await markStripeWebhookEventProcessed(event.id);
-    if (!markResult.success) {
-      return { success: false, error: "unavailable" };
-    }
-
     return { success: true, action: "ignored" };
   }
 
   const session = event.data.object as Stripe.Checkout.Session;
   const paymentResult = await handleCheckoutSessionCompleted(session);
   if (!paymentResult.success) {
+    // Release the claim so Stripe's retry can re-attempt this event.
+    await releaseStripeWebhookEventClaim(event.id);
     return paymentResult;
+  }
+
+  // Only the delivery that won the atomic claim advances to Bókun fulfilment;
+  // a concurrent loser acknowledges without re-confirming the reservation.
+  if (!paymentResult.shouldFulfil) {
+    return {
+      success: true,
+      action: "checkout_paid",
+      checkoutId: paymentResult.checkoutId,
+      alreadyPaid: paymentResult.alreadyPaid,
+      productConfirmationCode: paymentResult.productConfirmationCode,
+    };
   }
 
   const fulfilmentResult = await fulfilPaidCheckout(
@@ -68,12 +84,8 @@ export async function handleStripeWebhookEvent(
     session,
   );
   if (!fulfilmentResult.success) {
+    await releaseStripeWebhookEventClaim(event.id);
     return fulfilmentResult;
-  }
-
-  const markResult = await markStripeWebhookEventProcessed(event.id);
-  if (!markResult.success) {
-    return { success: false, error: "unavailable" };
   }
 
   return {
