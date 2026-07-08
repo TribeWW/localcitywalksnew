@@ -15,6 +15,7 @@ const getPendingCheckoutByStripeSessionIdMock = vi.fn();
 const updatePendingCheckoutMock = vi.fn();
 const getPendingCheckoutByIdMock = vi.fn();
 const claimPendingCheckoutPaidFulfilmentMock = vi.fn();
+const releasePendingCheckoutPaidFulfilmentMock = vi.fn();
 
 vi.mock("@/lib/checkout/pending-checkout-store", () => ({
   getPendingCheckoutByStripeSessionId: (...args: unknown[]) =>
@@ -25,6 +26,8 @@ vi.mock("@/lib/checkout/pending-checkout-store", () => ({
     getPendingCheckoutByIdMock(...args),
   claimPendingCheckoutPaidFulfilment: (...args: unknown[]) =>
     claimPendingCheckoutPaidFulfilmentMock(...args),
+  releasePendingCheckoutPaidFulfilment: (...args: unknown[]) =>
+    releasePendingCheckoutPaidFulfilmentMock(...args),
 }));
 
 import { handleCheckoutSessionCompleted } from "@/lib/checkout/handle-checkout-session-completed";
@@ -81,10 +84,12 @@ describe("handleCheckoutSessionCompleted", () => {
     updatePendingCheckoutMock.mockReset();
     getPendingCheckoutByIdMock.mockReset();
     claimPendingCheckoutPaidFulfilmentMock.mockReset();
+    releasePendingCheckoutPaidFulfilmentMock.mockReset();
     claimPendingCheckoutPaidFulfilmentMock.mockResolvedValue({
       success: true,
       outcome: "claimed",
     });
+    releasePendingCheckoutPaidFulfilmentMock.mockResolvedValue(undefined);
   });
 
   it("returns invalid_session when the session id is missing", async () => {
@@ -204,6 +209,7 @@ describe("handleCheckoutSessionCompleted", () => {
     );
 
     expect(updatePendingCheckoutMock).not.toHaveBeenCalled();
+    expect(releasePendingCheckoutPaidFulfilmentMock).not.toHaveBeenCalled();
   });
 
   it("returns conflict when the row is terminal but not paid", async () => {
@@ -221,7 +227,7 @@ describe("handleCheckoutSessionCompleted", () => {
     expect(updatePendingCheckoutMock).not.toHaveBeenCalled();
   });
 
-  it("returns unavailable when KV update fails", async () => {
+  it("releases the paid-fulfilment claim when KV update fails", async () => {
     getPendingCheckoutByStripeSessionIdMock.mockResolvedValue(
       buildPendingRecord(),
     );
@@ -235,6 +241,10 @@ describe("handleCheckoutSessionCompleted", () => {
         success: false,
         error: "unavailable",
       },
+    );
+
+    expect(releasePendingCheckoutPaidFulfilmentMock).toHaveBeenCalledWith(
+      CHECKOUT_ID,
     );
   });
 });

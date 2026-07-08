@@ -131,6 +131,24 @@ describe("processStripeWebhookRequest", () => {
     );
   });
 
+  it("acknowledges conflicts (terminal checkout state) so Stripe does not retry", async () => {
+    constructStripeWebhookEventMock.mockReturnValue({
+      success: true,
+      event: { id: "evt_conflict", type: "checkout.session.completed" },
+    });
+    handleStripeWebhookEventMock.mockResolvedValue({
+      success: false,
+      error: "conflict",
+    });
+
+    await expect(processStripeWebhookRequest("payload", "sig")).resolves.toEqual(
+      {
+        status: 200,
+        body: { received: true },
+      },
+    );
+  });
+
   it("returns 500 for transient fulfilment failures so Stripe retries", async () => {
     constructStripeWebhookEventMock.mockReturnValue({
       success: true,

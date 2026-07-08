@@ -13,6 +13,7 @@ import type { PendingCheckoutRecord } from "@/lib/checkout/pending-checkout-stor
 
 const getPendingCheckoutByIdMock = vi.fn();
 const updatePendingCheckoutMock = vi.fn();
+const releasePendingCheckoutPaidFulfilmentMock = vi.fn();
 const confirmReservedBokunCheckoutMock = vi.fn();
 
 vi.mock("@/lib/checkout/pending-checkout-store", () => ({
@@ -20,6 +21,8 @@ vi.mock("@/lib/checkout/pending-checkout-store", () => ({
     getPendingCheckoutByIdMock(...args),
   updatePendingCheckout: (...args: unknown[]) =>
     updatePendingCheckoutMock(...args),
+  releasePendingCheckoutPaidFulfilment: (...args: unknown[]) =>
+    releasePendingCheckoutPaidFulfilmentMock(...args),
 }));
 
 vi.mock("@/lib/bokun/checkout", () => ({
@@ -77,8 +80,10 @@ describe("fulfilPaidCheckout", () => {
   beforeEach(() => {
     getPendingCheckoutByIdMock.mockReset();
     updatePendingCheckoutMock.mockReset();
+    releasePendingCheckoutPaidFulfilmentMock.mockReset();
     confirmReservedBokunCheckoutMock.mockReset();
 
+    releasePendingCheckoutPaidFulfilmentMock.mockResolvedValue(undefined);
     getPendingCheckoutByIdMock.mockResolvedValue(buildPendingRecord());
     confirmReservedBokunCheckoutMock.mockResolvedValue({
       success: true,
@@ -175,6 +180,7 @@ describe("fulfilPaidCheckout", () => {
       bokunBookingId: "987654",
       productConfirmationCode: "LOC-P456",
     });
+    expect(releasePendingCheckoutPaidFulfilmentMock).not.toHaveBeenCalled();
   });
 
   it("falls back to checkout session id when payment_intent is missing", async () => {
@@ -187,7 +193,7 @@ describe("fulfilPaidCheckout", () => {
     );
   });
 
-  it("returns confirm_failed when Bókun confirm fails", async () => {
+  it("releases the claim and returns confirm_failed when Bókun confirm fails", async () => {
     confirmReservedBokunCheckoutMock.mockResolvedValue({
       success: false,
       error: "confirm_failed",
@@ -201,9 +207,12 @@ describe("fulfilPaidCheckout", () => {
     });
 
     expect(updatePendingCheckoutMock).not.toHaveBeenCalled();
+    expect(releasePendingCheckoutPaidFulfilmentMock).toHaveBeenCalledWith(
+      CHECKOUT_ID,
+    );
   });
 
-  it("returns unavailable when KV update fails after Bókun confirm", async () => {
+  it("releases the claim and returns unavailable when KV update fails", async () => {
     updatePendingCheckoutMock.mockResolvedValue({
       success: false,
       error: "unavailable",
@@ -215,5 +224,9 @@ describe("fulfilPaidCheckout", () => {
       success: false,
       error: "unavailable",
     });
+
+    expect(releasePendingCheckoutPaidFulfilmentMock).toHaveBeenCalledWith(
+      CHECKOUT_ID,
+    );
   });
 });

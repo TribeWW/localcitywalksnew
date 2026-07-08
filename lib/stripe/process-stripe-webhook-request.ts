@@ -37,10 +37,20 @@ export async function processStripeWebhookRequest(
 
   const handled = await handleStripeWebhookEvent(verification.event);
   if (!handled.success) {
+    // A conflict means the checkout is already in a terminal state; retrying
+    // cannot recover it, so acknowledge (200) rather than triggering retries.
+    if (handled.error === "conflict") {
+      console.error("[stripe-webhook] conflict — checkout already terminal:", {
+        eventId: verification.event.id,
+        type: verification.event.type,
+      });
+      return { status: 200, body: { received: true } };
+    }
+
     // Stripe retries on non-2xx responses. Only return 500 for errors that are
     // likely transient (infra / concurrency / upstream). For terminal errors,
     // log and acknowledge so Stripe does not replay indefinitely.
-    const transientErrors = new Set(["unavailable", "conflict", "confirm_failed"]);
+    const transientErrors = new Set(["unavailable", "confirm_failed"]);
     if (transientErrors.has(handled.error)) {
       return { status: 500, body: { error: handled.error } };
     }

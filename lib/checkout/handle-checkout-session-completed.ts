@@ -13,6 +13,7 @@ import type Stripe from "stripe";
 import {
   claimPendingCheckoutPaidFulfilment,
   getPendingCheckoutByStripeSessionId,
+  releasePendingCheckoutPaidFulfilment,
   updatePendingCheckout,
 } from "@/lib/checkout/pending-checkout-store";
 
@@ -86,10 +87,14 @@ export async function handleCheckoutSessionCompleted(
     );
 
     if (!updateResult.success) {
+      // The paid-fulfilment claim was won above; release it so a Stripe retry
+      // can re-acquire and re-run fulfilment instead of waiting for the lease.
       if (updateResult.error === "unavailable") {
+        await releasePendingCheckoutPaidFulfilment(pending.id);
         return { success: false, error: "unavailable" };
       }
       if (updateResult.error === "not_found") {
+        await releasePendingCheckoutPaidFulfilment(pending.id);
         return { success: false, error: "not_found" };
       }
       // A conflict here would mean the row left `pending` despite winning the

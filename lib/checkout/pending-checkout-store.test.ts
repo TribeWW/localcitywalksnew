@@ -26,6 +26,7 @@ import {
   createPendingCheckout,
   getPendingCheckoutById,
   getPendingCheckoutByStripeSessionId,
+  releasePendingCheckoutPaidFulfilment,
   updatePendingCheckout,
 } from "@/lib/checkout/pending-checkout-store";
 
@@ -318,6 +319,32 @@ describe("claimPendingCheckoutPaidFulfilment", () => {
     await expect(
       claimPendingCheckoutPaidFulfilment(checkoutId),
     ).resolves.toEqual({ success: false, error: "unavailable" });
+  });
+});
+
+describe("releasePendingCheckoutPaidFulfilment", () => {
+  beforeEach(() => {
+    mockRedisClient();
+    mockGet.mockReset();
+    mockSet.mockReset();
+    mockDel.mockReset();
+  });
+
+  it("deletes the paid-fulfilment claim key", async () => {
+    mockDel.mockResolvedValue(1);
+
+    await releasePendingCheckoutPaidFulfilment(checkoutId);
+
+    expect(mockDel).toHaveBeenCalledWith(`checkout:paid-claim:${checkoutId}`);
+  });
+
+  it("is a no-op when Redis is not configured", async () => {
+    getRedisMock.mockReturnValue(null);
+
+    await expect(
+      releasePendingCheckoutPaidFulfilment(checkoutId),
+    ).resolves.toBeUndefined();
+    expect(mockDel).not.toHaveBeenCalled();
   });
 });
 

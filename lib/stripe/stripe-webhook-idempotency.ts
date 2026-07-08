@@ -15,12 +15,12 @@ export const STRIPE_WEBHOOK_EVENT_KEY_PREFIX = "checkout:stripe-event:";
 /**
  * TTL for a claimed Stripe webhook event id.
  *
- * Must outlive Stripe's automatic retry window (up to ~3 days in live mode) so
+ * Must outlive Stripe's automatic retry window (up to ~3 days) so
  * a late redelivery of an already-processed event is still deduplicated. Kept
  * independent of the checkout handoff TTL, which tracks a different lifecycle.
  */
-export const STRIPE_WEBHOOK_EVENT_TTL_SECONDS = 3 * 24 * 60 * 60;
-
+// Slightly longer than Stripe's ~3-day retry window to survive a late redelivery.
+export const STRIPE_WEBHOOK_EVENT_TTL_SECONDS = 4 * 24 * 60 * 60;
 export type ClaimStripeWebhookEventResult =
   | { success: true; outcome: "claimed" | "duplicate" }
   | { success: false; error: "unavailable" };

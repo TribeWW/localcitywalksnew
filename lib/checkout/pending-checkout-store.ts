@@ -232,6 +232,26 @@ export async function claimPendingCheckoutPaidFulfilment(
 }
 
 /**
+ * Releases the atomic paid-fulfilment claim for a checkout id.
+ *
+ * Called when fulfilment fails so a Stripe retry can immediately re-acquire the
+ * claim instead of waiting for the lease TTL to expire. A no-op when Redis is
+ * unconfigured (the lease would simply expire on its own).
+ *
+ * @param checkoutId - Internal checkout uuid
+ */
+export async function releasePendingCheckoutPaidFulfilment(
+  checkoutId: string,
+): Promise<void> {
+  const redis = getPendingCheckoutRedis();
+  if (!redis) {
+    return;
+  }
+
+  await redis.del(buildPendingCheckoutPaidClaimKey(checkoutId));
+}
+
+/**
  * Computes KV TTL seconds from `expiresAt`, capped at handoff TTL.
  *
  * @param expiresAt - ISO expiry timestamp on the record

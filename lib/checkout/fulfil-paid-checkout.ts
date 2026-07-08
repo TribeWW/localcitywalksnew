@@ -10,6 +10,7 @@ import type Stripe from "stripe";
 
 import {
   getPendingCheckoutById,
+  releasePendingCheckoutPaidFulfilment,
   updatePendingCheckout,
 } from "@/lib/checkout/pending-checkout-store";
 import { confirmReservedBokunCheckout } from "@/lib/bokun/checkout";
@@ -67,10 +68,31 @@ export function resolveStripeCheckoutTransactionId(
 /**
  * Confirms a paid pending checkout with Bókun and stores fulfilment fields.
  *
+ * Releases the atomic paid-fulfilment claim whenever processing fails so a
+ * Stripe retry can immediately re-acquire it rather than waiting for the lease
+ * TTL. Successful fulfilment keeps the claim (idempotency covers replays).
+ *
  * @param checkoutId - Internal pending checkout uuid
  * @param stripeSession - Completed Stripe Checkout Session from the webhook
  */
 export async function fulfilPaidCheckout(
+  checkoutId: string,
+  stripeSession: Stripe.Checkout.Session,
+): Promise<FulfilPaidCheckoutResult> {
+  const result = await runFulfilPaidCheckout(checkoutId, stripeSession);
+  if (!result.success) {
+    await releasePendingCheckoutPaidFulfilment(checkoutId);
+  }
+  return result;
+}
+
+/**
+ * Runs the fulfilment steps without claim lifecycle side effects.
+ *
+ * @param checkoutId - Internal pending checkout uuid
+ * @param stripeSession - Completed Stripe Checkout Session from the webhook
+ */
+async function runFulfilPaidCheckout(
   checkoutId: string,
   stripeSession: Stripe.Checkout.Session,
 ): Promise<FulfilPaidCheckoutResult> {
