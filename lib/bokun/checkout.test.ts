@@ -319,6 +319,7 @@ describe("reserveBokunCheckout", () => {
       ok: false,
       status: 400,
       json: async () => ({ message: "bad request" }),
+      text: async () => JSON.stringify({ message: "bad request" }),
     });
 
     await expect(reserveBokunCheckout(reserveInput)).resolves.toEqual({
@@ -356,6 +357,7 @@ describe("reserveBokunCheckout", () => {
         ok: false,
         status: 409,
         json: async () => ({ message: "sold out" }),
+        text: async () => JSON.stringify({ message: "sold out" }),
       });
 
     await expect(reserveBokunCheckout(reserveInput)).resolves.toEqual({

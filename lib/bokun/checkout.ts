@@ -372,8 +372,9 @@ export async function fetchBokunCheckoutOptions(
     });
 
     if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
       console.error(
-        `[bokun-checkout] options failed (${response.status}) for ref ${bookingRequest.externalBookingReference}`,
+        `[bokun-checkout] options failed (${response.status}) for ref ${bookingRequest.externalBookingReference}: ${errorBody.slice(0, 1000)}`,
       );
       return { success: false };
     }
@@ -422,8 +423,9 @@ export async function submitBokunCheckoutReserve(
     });
 
     if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
       console.error(
-        `[bokun-checkout] reserve submit failed (${response.status}) for ref ${submitBody.externalBookingReference}`,
+        `[bokun-checkout] reserve submit failed (${response.status}) for ref ${submitBody.externalBookingReference}: ${errorBody.slice(0, 1000)}`,
       );
       return { success: false };
     }
