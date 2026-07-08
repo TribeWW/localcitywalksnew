@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const fetchMock = vi.fn();
 const getTourDetailByIdMock = vi.fn();
@@ -23,6 +23,12 @@ describe("getHomeSpotlightCityCards", () => {
   beforeEach(() => {
     fetchMock.mockReset();
     getTourDetailByIdMock.mockReset();
+    // Default to production so the Sanity branch is exercised; preview test overrides.
+    vi.stubEnv("VERCEL_ENV", "production");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("maps spotlight ids to CityCardData compatible with listing enrichment", async () => {
@@ -100,5 +106,29 @@ describe("getHomeSpotlightCityCards", () => {
 
     await expect(getHomeSpotlightCityCards()).resolves.toEqual([]);
     expect(getTourDetailByIdMock).not.toHaveBeenCalled();
+  });
+
+  it("uses curated bokuntest ids and skips Sanity outside production", async () => {
+    vi.stubEnv("VERCEL_ENV", "preview");
+    getTourDetailByIdMock.mockResolvedValue({
+      success: true,
+      data: {
+        id: 15683,
+        title: "Test Walk",
+        keyPhoto,
+        googlePlace: {
+          city: "Testville",
+          country: "Testland",
+          countryCode: "TT",
+          cityCode: "testville",
+        },
+      },
+    });
+
+    const cards = await getHomeSpotlightCityCards();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(getTourDetailByIdMock).toHaveBeenCalledWith("15683");
+    expect(cards.length).toBeGreaterThan(0);
   });
 });
