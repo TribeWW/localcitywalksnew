@@ -14,7 +14,11 @@ import type { BookingWidgetQuote } from "@/types/bokun";
 const mockGet = vi.fn();
 const mockSet = vi.fn();
 const mockDel = vi.fn();
+const mockEval = vi.fn();
 const getRedisMock = vi.fn();
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 vi.mock("@/lib/checkout/pending-checkout-redis", () => ({
   getPendingCheckoutRedis: () => getRedisMock(),
@@ -22,9 +26,11 @@ vi.mock("@/lib/checkout/pending-checkout-redis", () => ({
 }));
 
 import {
+  claimPendingCheckoutPaidFulfilment,
   createPendingCheckout,
   getPendingCheckoutById,
   getPendingCheckoutByStripeSessionId,
+  releasePendingCheckoutPaidFulfilment,
   updatePendingCheckout,
 } from "@/lib/checkout/pending-checkout-store";
 
@@ -60,6 +66,7 @@ function mockRedisClient() {
     get: (...args: unknown[]) => mockGet(...args),
     set: (...args: unknown[]) => mockSet(...args),
     del: (...args: unknown[]) => mockDel(...args),
+    eval: (...args: unknown[]) => mockEval(...args),
   });
 }
 
@@ -278,6 +285,85 @@ describe("updatePendingCheckout", () => {
 
     expect(result).toEqual({ success: false, error: "conflict" });
     expect(mockSet).not.toHaveBeenCalled();
+  });
+});
+
+describe("claimPendingCheckoutPaidFulfilment", () => {
+  beforeEach(() => {
+    mockRedisClient();
+    mockGet.mockReset();
+    mockSet.mockReset();
+    mockDel.mockReset();
+    mockEval.mockReset();
+  });
+
+  it("returns claimed with a unique fencing token stored as the value", async () => {
+    mockSet.mockResolvedValue("OK");
+
+    const result = await claimPendingCheckoutPaidFulfilment(checkoutId);
+
+    expect(result.success).toBe(true);
+    if (!result.success || result.outcome !== "claimed") {
+      throw new Error("expected claimed outcome");
+    }
+    expect(result.token).toMatch(UUID_PATTERN);
+
+    // The token is persisted as the claim value (not a constant) so release can
+    // compare-and-delete against it.
+    expect(mockSet).toHaveBeenCalledWith(
+      `checkout:paid-claim:${checkoutId}`,
+      result.token,
+      { nx: true, ex: 120 },
+    );
+  });
+
+  it("returns in_progress when the lease is already held", async () => {
+    mockSet.mockResolvedValue(null);
+
+    await expect(
+      claimPendingCheckoutPaidFulfilment(checkoutId),
+    ).resolves.toEqual({ success: true, outcome: "in_progress" });
+  });
+
+  it("returns unavailable when Redis is not configured", async () => {
+    getRedisMock.mockReturnValue(null);
+
+    await expect(
+      claimPendingCheckoutPaidFulfilment(checkoutId),
+    ).resolves.toEqual({ success: false, error: "unavailable" });
+  });
+});
+
+describe("releasePendingCheckoutPaidFulfilment", () => {
+  beforeEach(() => {
+    mockRedisClient();
+    mockGet.mockReset();
+    mockSet.mockReset();
+    mockDel.mockReset();
+    mockEval.mockReset();
+  });
+
+  it("compare-and-deletes the claim only for the matching fencing token", async () => {
+    mockEval.mockResolvedValue(1);
+
+    await releasePendingCheckoutPaidFulfilment(checkoutId, "token-abc");
+
+    expect(mockEval).toHaveBeenCalledWith(
+      expect.stringContaining("redis.call"),
+      [`checkout:paid-claim:${checkoutId}`],
+      ["token-abc"],
+    );
+    // Never an unconditional DEL that could clear a newer worker's claim.
+    expect(mockDel).not.toHaveBeenCalled();
+  });
+
+  it("is a no-op when Redis is not configured", async () => {
+    getRedisMock.mockReturnValue(null);
+
+    await expect(
+      releasePendingCheckoutPaidFulfilment(checkoutId, "token-abc"),
+    ).resolves.toBeUndefined();
+    expect(mockEval).not.toHaveBeenCalled();
   });
 });
 

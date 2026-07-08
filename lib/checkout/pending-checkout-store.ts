@@ -26,12 +26,20 @@ export const PENDING_CHECKOUT_KEY_PREFIX = "checkout:pending:";
 /** KV key prefix for Stripe session id → checkout id index. */
 export const PENDING_CHECKOUT_STRIPE_INDEX_PREFIX = "checkout:stripe:";
 
+/** KV key prefix for the atomic paid-fulfilment claim (one winner per checkout). */
+export const PENDING_CHECKOUT_PAID_CLAIM_PREFIX = "checkout:paid-claim:";
+
+/**
+ * Lease TTL for the paid-fulfilment claim.
+ *
+ * Long enough to block a concurrent burst of duplicate webhook deliveries while
+ * one worker confirms Bókun, yet short enough that a later Stripe retry (minutes
+ * apart) can re-acquire and recover a failed fulfilment.
+ */
+export const PENDING_CHECKOUT_PAID_CLAIM_TTL_SECONDS = 120;
+
 /** Lifecycle status for a pending checkout row. */
-export type PendingCheckoutStatus =
-  | "pending"
-  | "paid"
-  | "failed"
-  | "expired";
+export type PendingCheckoutStatus = "pending" | "paid" | "failed" | "expired";
 
 /** Contact captured on the checkout summary page before Pay. */
 export interface PendingCheckoutContact {
@@ -173,6 +181,113 @@ export function buildPendingCheckoutStripeIndexKey(
   return `${PENDING_CHECKOUT_STRIPE_INDEX_PREFIX}${stripeSessionId}`;
 }
 
+/**
+ * Builds the atomic paid-fulfilment claim key for a checkout id.
+ *
+ * @param checkoutId - Internal checkout uuid
+ */
+export function buildPendingCheckoutPaidClaimKey(checkoutId: string): string {
+  return `${PENDING_CHECKOUT_PAID_CLAIM_PREFIX}${checkoutId}`;
+}
+
+/** Outcome of an atomic paid-fulfilment claim attempt. */
+export type ClaimPendingCheckoutPaidResult =
+  | { success: true; outcome: "claimed"; token: string }
+  | { success: true; outcome: "in_progress" }
+  | { success: false; error: "unavailable" };
+
+/**
+ * Lua compare-and-delete: only remove the claim when the stored fencing token
+ * still matches the caller's token, so a stale worker whose lease already
+ * expired cannot delete a newer worker's active claim.
+ */
+const RELEASE_PAID_CLAIM_SCRIPT = `
+if redis.call("get", KEYS[1]) == ARGV[1] then
+  return redis.call("del", KEYS[1])
+end
+return 0
+`;
+
+/**
+ * Atomically claims the right to confirm payment + fulfilment for a checkout.
+ *
+ * Uses Redis `SET … NX EX` with a unique per-attempt fencing token as the value
+ * so exactly one concurrent webhook delivery wins the claim (`outcome:
+ * "claimed"`) and receives the `token`; losers observe `outcome: "in_progress"`
+ * and must exit without advancing the checkout. The claim expires so a later
+ * retry can recover a fulfilment that failed after payment was recorded. The
+ * returned token must be passed to `releasePendingCheckoutPaidFulfilment`.
+ *
+ * @param checkoutId - Internal checkout uuid
+ * @param ttlSeconds - Lease duration in seconds
+ */
+export async function claimPendingCheckoutPaidFulfilment(
+  checkoutId: string,
+  ttlSeconds: number = PENDING_CHECKOUT_PAID_CLAIM_TTL_SECONDS,
+): Promise<ClaimPendingCheckoutPaidResult> {
+  const redis = getPendingCheckoutRedis();
+  if (!redis) {
+    return { success: false, error: "unavailable" };
+  }
+
+  const token = randomUUID();
+
+  try {
+    const claimed = await redis.set(
+      buildPendingCheckoutPaidClaimKey(checkoutId),
+      token,
+      { nx: true, ex: ttlSeconds },
+    );
+
+    if (claimed === "OK") {
+      return { success: true, outcome: "claimed", token };
+    }
+
+    return { success: true, outcome: "in_progress" };
+  } catch (error) {
+    console.error(
+      `[pending-checkout-store] failed to claim paid-fulfilment for ${checkoutId}`,
+      error,
+    );
+    return { success: false, error: "unavailable" };
+  }
+}
+
+/**
+ * Releases the atomic paid-fulfilment claim for a checkout id.
+ *
+ * Called when fulfilment fails so a Stripe retry can immediately re-acquire the
+ * claim instead of waiting for the lease TTL to expire. Uses an atomic
+ * compare-and-delete keyed on the fencing `token` returned by
+ * `claimPendingCheckoutPaidFulfilment`, so a stale worker cannot clear a newer
+ * active claim. A no-op when Redis is unconfigured (the lease expires on its
+ * own).
+ *
+ * @param checkoutId - Internal checkout uuid
+ * @param token - Fencing token returned when the claim was won
+ */
+export async function releasePendingCheckoutPaidFulfilment(
+  checkoutId: string,
+  token: string,
+): Promise<void> {
+  const redis = getPendingCheckoutRedis();
+  if (!redis) {
+    return;
+  }
+
+  try {
+    await redis.eval(
+      RELEASE_PAID_CLAIM_SCRIPT,
+      [buildPendingCheckoutPaidClaimKey(checkoutId)],
+      [token],
+    );
+  } catch (error) {
+    console.error(
+      `[pending-checkout-store] failed to release paid-fulfilment claim for ${checkoutId}`,
+      error,
+    );
+  }
+}
 /**
  * Computes KV TTL seconds from `expiresAt`, capped at handoff TTL.
  *

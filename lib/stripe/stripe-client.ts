@@ -1,5 +1,5 @@
 /**
- * Stripe SDK client for hosted Checkout Sessions (LOC-1161 / PRD Task 3.3).
+ * Stripe SDK client for hosted Checkout Sessions (LOC-1161 / LOC-1176).
  *
  * Server-only — never import from client components. Returns null when
  * `STRIPE_SECRET_KEY` is missing so callers can fail safely in tests.
@@ -7,15 +7,14 @@
 
 import Stripe from "stripe";
 
+import { getStripeSecretKey } from "@/lib/stripe/stripe-env";
+
+/** Pinned API version for the installed `stripe` SDK (checkout + webhooks). */
+export const STRIPE_API_VERSION = "2026-06-24.dahlia" as const;
+
 let stripeClient: Stripe | null | undefined;
 
-/**
- * Reads the Stripe secret key from environment.
- */
-export function getStripeSecretKey(): string | null {
-  const key = process.env.STRIPE_SECRET_KEY?.trim();
-  return key || null;
-}
+export { getStripeSecretKey } from "@/lib/stripe/stripe-env";
 
 /**
  * Returns a singleton Stripe client, or null when the secret key is missing.
@@ -31,7 +30,9 @@ export function getStripeClient(): Stripe | null {
     return stripeClient;
   }
 
-  stripeClient = new Stripe(secretKey);
+  stripeClient = new Stripe(secretKey, {
+    apiVersion: STRIPE_API_VERSION,
+  });
   return stripeClient;
 }
 
