@@ -32,6 +32,8 @@ vi.mock("@/lib/bokun/config", () => ({
     CHECKOUT_SUBMIT: "/checkout.json/submit",
     ABORT_RESERVED: (confirmationCode: string) =>
       `/booking.json/${confirmationCode}/abort-reserved`,
+    CONFIRM_RESERVED: (confirmationCode: string) =>
+      `/checkout.json/confirm-reserved/${confirmationCode}`,
   },
 }));
 
@@ -46,6 +48,10 @@ import {
   findReserveCheckoutOption,
   reserveBokunCheckout,
   abortReservedBokunCheckout,
+  confirmReservedBokunCheckout,
+  buildConfirmReservedBody,
+  extractBokunFulfilmentDetails,
+  formatBokunTransactionDate,
   type ReserveBokunCheckoutInput,
 } from "@/lib/bokun/checkout";
 
@@ -453,6 +459,138 @@ describe("abortReservedBokunCheckout", () => {
 
     await expect(abortReservedBokunCheckout("LOC-T123")).resolves.toEqual({
       success: false,
+    });
+  });
+});
+
+describe("confirmReservedBokunCheckout", () => {
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubGlobal("fetch", fetchMock);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-06T12:34:56.000Z"));
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  it("formats Bókun transaction dates without timezone suffix", () => {
+    expect(formatBokunTransactionDate(new Date("2026-07-06T12:34:56.000Z"))).toBe(
+      "2026-07-06 12:34:56",
+    );
+  });
+
+  it("builds confirm-reserved body with transaction details", () => {
+    expect(
+      buildConfirmReservedBody({
+        amount: 496,
+        currency: "EUR",
+        transactionId: "pi_test_123",
+        sendNotificationToMainContact: true,
+      }),
+    ).toEqual({
+      amount: 496,
+      currency: "EUR",
+      sendNotificationToMainContact: true,
+      transactionDetails: {
+        transactionDate: "2026-07-06 12:34:56",
+        transactionId: "pi_test_123",
+      },
+    });
+  });
+
+  it("extracts booking id and product confirmation code from confirm response", () => {
+    expect(
+      extractBokunFulfilmentDetails({
+        booking: {
+          id: 987654,
+          activityBookings: [{ productConfirmationCode: "LOC-P456" }],
+        },
+      }),
+    ).toEqual({
+      bokunBookingId: "987654",
+      productConfirmationCode: "LOC-P456",
+    });
+  });
+
+  it("posts confirm-reserved for the confirmation code", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        booking: {
+          id: 987654,
+          activityBookings: [{ productConfirmationCode: "LOC-P456" }],
+        },
+      }),
+    });
+
+    await expect(
+      confirmReservedBokunCheckout({
+        confirmationCode: "LOC-T123",
+        amount: 496,
+        currency: "EUR",
+        transactionId: "pi_test_123",
+      }),
+    ).resolves.toEqual({
+      success: true,
+      data: {
+        bokunBookingId: "987654",
+        productConfirmationCode: "LOC-P456",
+      },
+    });
+
+    const url = String(fetchMock.mock.calls[0]?.[0]);
+    expect(url).toContain("/checkout.json/confirm-reserved/LOC-T123");
+    expect(url).toContain("currency=EUR");
+    expect(fetchMock.mock.calls[0]?.[1]).toEqual(
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify(
+          buildConfirmReservedBody({
+            amount: 496,
+            currency: "EUR",
+            transactionId: "pi_test_123",
+            sendNotificationToMainContact: true,
+          }),
+        ),
+      }),
+    );
+  });
+
+  it("returns confirm_failed when confirm request is not ok", async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 409 });
+
+    await expect(
+      confirmReservedBokunCheckout({
+        confirmationCode: "LOC-T123",
+        amount: 496,
+        currency: "EUR",
+        transactionId: "pi_test_123",
+      }),
+    ).resolves.toEqual({
+      success: false,
+      error: "confirm_failed",
+    });
+  });
+
+  it("returns invalid_response when confirm succeeds without product code", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ booking: { id: 987654, activityBookings: [{}] } }),
+    });
+
+    await expect(
+      confirmReservedBokunCheckout({
+        confirmationCode: "LOC-T123",
+        amount: 496,
+        currency: "EUR",
+        transactionId: "pi_test_123",
+      }),
+    ).resolves.toEqual({
+      success: false,
+      error: "invalid_response",
     });
   });
 });

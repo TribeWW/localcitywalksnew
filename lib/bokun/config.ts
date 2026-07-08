@@ -35,4 +35,7 @@ export const BOKUN_ENDPOINTS = {
   /** `POST` — abort a reserved booking after external payment failure */
   ABORT_RESERVED: (confirmationCode: string) =>
     `/booking.json/${confirmationCode}/abort-reserved`,
+  /** `POST` with `currency` query — confirm a reserved booking after Stripe payment */
+  CONFIRM_RESERVED: (confirmationCode: string) =>
+    `/checkout.json/confirm-reserved/${confirmationCode}`,
 } as const;

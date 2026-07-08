@@ -3,7 +3,7 @@
  *
  * Called on Pay click before Stripe session creation. Holds inventory via
  * `RESERVE_FOR_EXTERNAL_PAYMENT`; `confirmationCode` is stored on the pending
- * checkout KV row for webhook confirm (Phase 4).
+ * checkout KV row for webhook confirm (LOC-1166).
  *
  * Flow mirrors `scripts/spike-bokun-checkout.mjs`:
  * 1. `POST /checkout.json/options/booking-request`
@@ -87,6 +87,58 @@ export interface BokunCheckoutBookingSummary {
 export interface BokunCheckoutSubmitResponse {
   booking?: BokunCheckoutBookingSummary;
 }
+
+/** Activity booking row nested in confirm-reserved responses. */
+export interface BokunActivityBookingFulfilment {
+  productConfirmationCode?: string;
+}
+
+/** Response from `POST /checkout.json/confirm-reserved/{code}`. */
+export interface BokunConfirmReservedResponse {
+  booking?: BokunCheckoutBookingSummary & {
+    activityBookings?: BokunActivityBookingFulfilment[];
+  };
+}
+
+/** External payment metadata sent to Bókun on confirm-reserved. */
+export interface BokunConfirmTransactionDetails {
+  transactionDate: string;
+  transactionId: string;
+  cardBrand?: string;
+  last4?: string;
+}
+
+/** Body for `POST /checkout.json/confirm-reserved/{code}`. */
+export interface BokunConfirmReservedRequest {
+  amount: number;
+  currency: string;
+  sendNotificationToMainContact: boolean;
+  transactionDetails: BokunConfirmTransactionDetails;
+}
+
+/** Inputs for `confirmReservedBokunCheckout` after Stripe payment. */
+export interface ConfirmReservedBokunCheckoutInput {
+  confirmationCode: string;
+  amount: number;
+  currency: string;
+  transactionId: string;
+  sendNotificationToMainContact?: boolean;
+  cardBrand?: string;
+  last4?: string;
+}
+
+export type ConfirmReservedBokunCheckoutResult =
+  | {
+      success: true;
+      data: {
+        bokunBookingId: string;
+        productConfirmationCode: string;
+      };
+    }
+  | {
+      success: false;
+      error: "confirm_failed" | "invalid_response";
+    };
 
 /** Submit body for reserve-for-external-payment checkout. */
 export interface BokunReserveSubmitRequest {
@@ -522,6 +574,135 @@ export async function abortReservedBokunCheckout(
       `[bokun-checkout] abort reserved error for ${trimmedCode}: ${message}`,
     );
     return { success: false };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+/**
+ * Formats a UTC timestamp for Bókun `transactionDetails.transactionDate`.
+ *
+ * @param date - Payment completion time
+ */
+export function formatBokunTransactionDate(date: Date): string {
+  return date.toISOString().replace("T", " ").slice(0, 19);
+}
+
+/**
+ * Builds the confirm-reserved request body for external Stripe payment.
+ *
+ * @param input - Amount, currency, and Stripe payment reference
+ */
+export function buildConfirmReservedBody(
+  input: Pick<
+    ConfirmReservedBokunCheckoutInput,
+    | "amount"
+    | "currency"
+    | "transactionId"
+    | "sendNotificationToMainContact"
+    | "cardBrand"
+    | "last4"
+  >,
+): BokunConfirmReservedRequest {
+  const transactionDetails: BokunConfirmTransactionDetails = {
+    transactionDate: formatBokunTransactionDate(new Date()),
+    transactionId: input.transactionId.trim(),
+  };
+
+  const cardBrand = input.cardBrand?.trim();
+  if (cardBrand) {
+    transactionDetails.cardBrand = cardBrand;
+  }
+
+  const last4 = input.last4?.trim();
+  if (last4) {
+    transactionDetails.last4 = last4;
+  }
+
+  return {
+    amount: input.amount,
+    currency: input.currency,
+    sendNotificationToMainContact: input.sendNotificationToMainContact ?? true,
+    transactionDetails,
+  };
+}
+
+/**
+ * Reads booking id and product confirmation code from confirm-reserved response.
+ */
+export function extractBokunFulfilmentDetails(
+  response: BokunConfirmReservedResponse,
+): { bokunBookingId: string; productConfirmationCode: string } | null {
+  const productConfirmationCode =
+    response.booking?.activityBookings?.[0]?.productConfirmationCode?.trim();
+  const bookingId = response.booking?.id;
+
+  if (!productConfirmationCode || bookingId === undefined || bookingId === null) {
+    return null;
+  }
+
+  return {
+    bokunBookingId: String(bookingId),
+    productConfirmationCode,
+  };
+}
+
+/**
+ * POSTs confirm-reserved for a held Bókun booking after Stripe payment.
+ *
+ * @param input - Reserve confirmation code, quote amount, and payment reference
+ */
+export async function confirmReservedBokunCheckout(
+  input: ConfirmReservedBokunCheckoutInput,
+): Promise<ConfirmReservedBokunCheckoutResult> {
+  const trimmedCode = input.confirmationCode.trim();
+  if (!trimmedCode) {
+    return { success: false, error: "invalid_response" };
+  }
+
+  const currency = input.currency.trim() || BOKUN_CHECKOUT_DEFAULT_CURRENCY;
+  const path = buildCheckoutPathWithCurrency(
+    BOKUN_ENDPOINTS.CONFIRM_RESERVED(trimmedCode),
+    currency,
+  );
+  const url = createBokunUrl(path);
+  const headers = generateBokunHeaders("POST", path);
+  const body = buildConfirmReservedBody(input);
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      console.error(
+        `[bokun-checkout] confirm reserved failed (${response.status}) for ${trimmedCode}`,
+      );
+      return { success: false, error: "confirm_failed" };
+    }
+
+    const data = (await response.json()) as BokunConfirmReservedResponse;
+    const fulfilment = extractBokunFulfilmentDetails(data);
+    if (!fulfilment) {
+      console.error(
+        `[bokun-checkout] confirm reserved missing fulfilment fields for ${trimmedCode}`,
+      );
+      return { success: false, error: "invalid_response" };
+    }
+
+    return { success: true, data: fulfilment };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(
+      `[bokun-checkout] confirm reserved error for ${trimmedCode}: ${message}`,
+    );
+    return { success: false, error: "confirm_failed" };
   } finally {
     clearTimeout(timeoutId);
   }
