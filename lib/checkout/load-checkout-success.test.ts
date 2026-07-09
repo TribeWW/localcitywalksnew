@@ -20,10 +20,17 @@ vi.mock("@/lib/stripe/retrieve-paid-checkout-session", () => ({
     retrievePaidStripeCheckoutSessionMock(...args),
 }));
 
-vi.mock("@/lib/checkout/pending-checkout-store", () => ({
-  getPendingCheckoutByStripeSessionId: (...args: unknown[]) =>
-    getPendingCheckoutByStripeSessionIdMock(...args),
-}));
+vi.mock("@/lib/checkout/pending-checkout-store", async (importOriginal) => {
+  const actual = await importOriginal<
+    typeof import("@/lib/checkout/pending-checkout-store")
+  >();
+
+  return {
+    ...actual,
+    getPendingCheckoutByStripeSessionId: (...args: unknown[]) =>
+      getPendingCheckoutByStripeSessionIdMock(...args),
+  };
+});
 
 vi.mock("@/lib/actions/tour-detail.actions", () => ({
   getTourDetailById: (...args: unknown[]) => getTourDetailByIdMock(...args),
@@ -161,6 +168,21 @@ describe("loadCheckoutSuccess", () => {
 
     expect(result.order.title).toBe("Hello Biarritz");
     expect(result.order.totalAmount).toBe(448);
+  });
+
+  it("returns confirming when fulfilment failed transiently and retries remain", async () => {
+    getPendingCheckoutByStripeSessionIdMock.mockResolvedValue({
+      ...pendingRecord,
+      status: "paid",
+      productConfirmationCode: undefined,
+      fulfilmentAttemptCount: 2,
+      fulfilmentLastError: "confirm_failed",
+      fulfilmentLastErrorAt: "2026-07-06T12:34:56.000Z",
+    });
+
+    const result = await loadCheckoutSuccess(SESSION_ID);
+
+    expect(result.status).toBe("confirming");
   });
 
   it("returns needs_support when fulfilment failed after retries", async () => {

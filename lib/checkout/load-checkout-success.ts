@@ -9,7 +9,10 @@
 import { resolveStartTimeLabel } from "@/lib/actions/booking-widget-submit";
 import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
 import { buildCheckoutOrderFromPending } from "@/lib/checkout/build-checkout-order-from-pending";
-import { getPendingCheckoutByStripeSessionId } from "@/lib/checkout/pending-checkout-store";
+import {
+  getPendingCheckoutByStripeSessionId,
+  PENDING_CHECKOUT_FULFILMENT_MAX_ATTEMPTS,
+} from "@/lib/checkout/pending-checkout-store";
 import { resolveCheckoutRecoveryTourPageHref } from "@/lib/checkout/resolve-checkout-recovery-href";
 import { pickBokunCardImageUrl } from "@/lib/bokun/pick-bokun-card-image-url";
 import { retrievePaidStripeCheckoutSession } from "@/lib/stripe/retrieve-paid-checkout-session";
@@ -91,7 +94,8 @@ export async function loadCheckoutSuccess(
     };
   }
 
-  const stripeResult = await retrievePaidStripeCheckoutSession(trimmedSessionId);
+  const stripeResult =
+    await retrievePaidStripeCheckoutSession(trimmedSessionId);
   if (!stripeResult.success) {
     if (stripeResult.error === "unavailable") {
       return {
@@ -128,7 +132,7 @@ export async function loadCheckoutSuccess(
     : "Tour";
   const imageUrl = detail.success
     ? pickBokunCardImageUrl(detail.data.keyPhoto)
-    : "";
+    : "/placeholder-city.jpg";
   const startTimeLabel = detail.success
     ? resolveStartTimeLabel(detail.data.startTimes, pending.startTimeId)
     : `Start time ${pending.startTimeId}`;
@@ -149,7 +153,10 @@ export async function loadCheckoutSuccess(
     };
   }
 
-  if (pending.status === "failed" || pending.fulfilmentLastError) {
+  if (
+    (pending.fulfilmentAttemptCount ?? 0) >=
+    PENDING_CHECKOUT_FULFILMENT_MAX_ATTEMPTS
+  ) {
     const tourPageHref = await resolveCheckoutRecoveryTourPageHref(
       pending.productId,
       detail.success ? detail.data.title : undefined,
