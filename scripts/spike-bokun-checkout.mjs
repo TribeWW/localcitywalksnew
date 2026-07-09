@@ -215,10 +215,13 @@ function logOptionsQuestions(label, optionsBody) {
   );
 
   for (const row of extracted.perOption) {
-    const questionCount = Array.isArray(row.questions) ? row.questions.length : 0;
+    const questionCount = Array.isArray(row.questions)
+      ? row.questions.length
+      : 0;
     const activityQuestionCount = row.activityBookings.reduce(
       (sum, activity) =>
-        sum + (Array.isArray(activity.questions) ? activity.questions.length : 0),
+        sum +
+        (Array.isArray(activity.questions) ? activity.questions.length : 0),
       0,
     );
     console.log(
@@ -310,7 +313,12 @@ function findNoteInPayload(payload, needle) {
 
     if (typeof value === "object") {
       for (const [key, nested] of Object.entries(value)) {
-        if (key === "note" || key === "notes" || key === "body") {
+        if (
+          (key === "note" || key === "notes" || key === "body") &&
+          typeof nested === "string" &&
+          needle &&
+          nested.includes(needle)
+        ) {
           hits.push({ path: [...pathParts, key].join("."), value: nested });
         }
         walk(nested, [...pathParts, key]);
@@ -498,10 +506,15 @@ if (!optionsRes.ok) {
   process.exit(1);
 }
 
-const initialQuestions = logOptionsQuestions("initial (no contact answers)", optionsRes.json);
+const initialQuestions = logOptionsQuestions(
+  "initial (no contact answers)",
+  optionsRes.json,
+);
 writeFixture("04b-checkout-options-questions-initial", initialQuestions);
 
-bookingRequest.mainContactDetails = buildMainContactDetails({ includePhone: true });
+bookingRequest.mainContactDetails = buildMainContactDetails({
+  includePhone: true,
+});
 writeFixture("03-checkout-options-request", bookingRequest);
 
 const {
@@ -544,6 +557,8 @@ writeFixture("09b-missing-phone-options-questions", missingPhoneQuestions);
 
 let missingPhoneSubmitRes = null;
 let missingPhoneSubmitBody = null;
+let missingPhoneConfirmationCode = null;
+let missingPhoneAbortRes = null;
 
 if (hasReserve && isTestEnv && missingPhoneOptionsRes.ok) {
   const missingPhoneOption = resolveCheckoutOption(missingPhoneOptionsRes.json);
@@ -554,6 +569,18 @@ if (hasReserve && isTestEnv && missingPhoneOptionsRes.ok) {
         missingPhoneRequest,
         missingPhoneOption.checkoutOption,
       ));
+
+    if (missingPhoneSubmitRes?.ok) {
+      missingPhoneConfirmationCode =
+        missingPhoneSubmitRes.json?.booking?.confirmationCode?.trim() || null;
+
+      if (missingPhoneConfirmationCode) {
+        missingPhoneAbortRes = await abortReservedBooking(
+          activeBase,
+          missingPhoneConfirmationCode,
+        );
+      }
+    }
   }
 }
 
@@ -564,6 +591,14 @@ writeFixture("09d-missing-phone-submit-response", {
   body: missingPhoneSubmitRes?.json ?? null,
   expectedFailure: phoneRequiredFromProduct,
   observedFailure: missingPhoneSubmitRes ? !missingPhoneSubmitRes.ok : null,
+  unexpectedSuccessConfirmationCode: missingPhoneConfirmationCode,
+  unexpectedSuccessAborted: missingPhoneAbortRes?.ok ?? null,
+});
+writeFixture("09e-missing-phone-abort-response", {
+  status: missingPhoneAbortRes?.status ?? null,
+  ok: missingPhoneAbortRes?.ok ?? null,
+  body: missingPhoneAbortRes?.json ?? null,
+  confirmationCode: missingPhoneConfirmationCode,
 });
 
 console.log("\n--- Missing phone reserve test ---");
@@ -576,6 +611,13 @@ console.log(
       : `FAILED (${missingPhoneSubmitRes.status})`
     : "skipped",
 );
+if (missingPhoneConfirmationCode) {
+  console.log(
+    "Unexpected reserve aborted:",
+    missingPhoneAbortRes?.ok ? "yes" : "no",
+    missingPhoneConfirmationCode,
+  );
+}
 
 // --- 6. Activity booking `note` field test ---
 const NOTE_TEST_TEXT =
@@ -679,9 +721,15 @@ console.log(
       : `FAILED (${noteTestSubmitRes.status})`
     : "skipped",
 );
-console.log("Note visible on activity booking GET:", noteVerification.noteVisibleAfterReserve);
+console.log(
+  "Note visible on activity booking GET:",
+  noteVerification.noteVisibleAfterReserve,
+);
 if (noteVerification.noteHits.length > 0) {
-  console.log("Note hit paths:", noteVerification.noteHits.map((hit) => hit.path));
+  console.log(
+    "Note hit paths:",
+    noteVerification.noteHits.map((hit) => hit.path),
+  );
 }
 
 // --- 7. Happy-path reserve + confirm (original spike) ---
@@ -691,7 +739,10 @@ if (hasReserve && isTestEnv) {
     externalRef: createSpikeExternalRef("happy-path"),
   });
 
-  const happyOptionsRes = await fetchCheckoutOptions(activeBase, happyPathRequest);
+  const happyOptionsRes = await fetchCheckoutOptions(
+    activeBase,
+    happyPathRequest,
+  );
   const happyOption = resolveCheckoutOption(happyOptionsRes.json);
 
   if (happyOptionsRes.ok && happyOption.checkoutOption) {
@@ -766,7 +817,9 @@ if (hasReserve && isTestEnv) {
     }
   }
 } else {
-  console.log("Skipping happy-path reserve step (no RESERVE method or not test domain)");
+  console.log(
+    "Skipping happy-path reserve step (no RESERVE method or not test domain)",
+  );
 }
 
 console.log("\nSpike complete.");
