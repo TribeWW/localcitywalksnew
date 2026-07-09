@@ -166,6 +166,41 @@ describe("buildBokunBookingRequest", () => {
       },
     ]);
   });
+
+  it("maps checkout comments to activityBookings[].note", () => {
+    const request = buildBokunBookingRequest({
+      ...reserveInput,
+      contact: {
+        ...reserveInput.contact,
+        comments: "Please accommodate gluten-free tasting.",
+      },
+    });
+
+    expect(request.activityBookings[0]?.note).toBe(
+      "Please accommodate gluten-free tasting.",
+    );
+  });
+
+  it("omits activityBookings[].note when comments are blank", () => {
+    const request = buildBokunBookingRequest({
+      ...reserveInput,
+      contact: {
+        ...reserveInput.contact,
+        comments: "   ",
+      },
+    });
+
+    expect(request.activityBookings[0]).not.toHaveProperty("note");
+  });
+
+  it("includes phoneNumber in mainContactDetails when phone is provided", () => {
+    const request = buildBokunBookingRequest(reserveInput);
+
+    expect(request.mainContactDetails).toContainEqual({
+      questionId: "phoneNumber",
+      values: ["+34600000000"],
+    });
+  });
 });
 
 describe("findReserveCheckoutOption", () => {
@@ -312,6 +347,49 @@ describe("reserveBokunCheckout", () => {
       String(fetchMock.mock.calls[1]?.[1]?.body),
     ) as { paymentMethod: string };
     expect(submitBody.paymentMethod).toBe("RESERVE_FOR_EXTERNAL_PAYMENT");
+  });
+
+  it("posts comments as activityBookings[].note in options and submit bodies", async () => {
+    const note = "LCW spike special request: gluten-free tasting.";
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => optionsResponse,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => submitResponse,
+      });
+
+    await reserveBokunCheckout({
+      ...reserveInput,
+      contact: {
+        ...reserveInput.contact,
+        comments: note,
+      },
+    });
+
+    const optionsBody = JSON.parse(
+      String(fetchMock.mock.calls[0]?.[1]?.body),
+    ) as {
+      activityBookings: Array<{ note?: string }>;
+      mainContactDetails: Array<{ questionId: string }>;
+    };
+    const submitBody = JSON.parse(
+      String(fetchMock.mock.calls[1]?.[1]?.body),
+    ) as {
+      directBooking: {
+        activityBookings: Array<{ note?: string }>;
+        mainContactDetails: Array<{ questionId: string; values: string[] }>;
+      };
+    };
+
+    expect(optionsBody.activityBookings[0]?.note).toBe(note);
+    expect(submitBody.directBooking.activityBookings[0]?.note).toBe(note);
+    expect(submitBody.directBooking.mainContactDetails).toContainEqual({
+      questionId: "phoneNumber",
+      values: ["+34600000000"],
+    });
   });
 
   it("returns options_failed when checkout options request is not ok", async () => {

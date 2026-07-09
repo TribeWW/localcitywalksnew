@@ -76,4 +76,32 @@ describe("buildInitiateCheckoutPaymentInput", () => {
       }),
     ).toThrow("Terms must be accepted");
   });
+
+  it("preserves trimmed comments for the Bókun activity booking note", () => {
+    expect(
+      buildInitiateCheckoutPaymentInput({
+        handoffToken: "signed.handoff.token",
+        contact: {
+          ...contact,
+          comments: "  Gluten-free tasting please  ",
+        },
+        termsAccepted: true,
+        clientQuote: { totalAmount: 496, currency: "EUR" },
+      }).contact.comments,
+    ).toBe("Gluten-free tasting please");
+  });
+
+  it("preserves trimmed phone when product requires it", () => {
+    expect(
+      buildInitiateCheckoutPaymentInput({
+        handoffToken: "signed.handoff.token",
+        contact: {
+          ...contact,
+          phone: "  +34600000000  ",
+        },
+        termsAccepted: true,
+        clientQuote: { totalAmount: 496, currency: "EUR" },
+      }).contact.phone,
+    ).toBe("+34600000000");
+  });
 });

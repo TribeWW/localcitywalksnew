@@ -62,6 +62,7 @@ export default async function CheckoutPage({
         priceUpdate={result.priceUpdate}
         tourPageHref={result.tourPageHref}
         handoffToken={result.handoffToken}
+        contactRequirements={result.contactRequirements}
         paymentCancelled={cancelReturn.isPaymentCancelled}
       />
     );
