@@ -24,8 +24,10 @@ import {
 import { resolveCheckoutRecoveryTourPageHref } from "@/lib/checkout/resolve-checkout-recovery-href";
 import { resolveCheckoutTourPageHref } from "@/lib/checkout/resolve-checkout-tour-page-href";
 import { detectCheckoutPriceUpdate } from "@/lib/checkout/checkout-price-update";
+import { resolveMainContactRequirements } from "@/lib/bokun/resolve-main-contact-requirements";
 import type { CheckoutOrderFixture } from "@/components/checkout/checkout-mock-fixture";
 import type { CheckoutPriceUpdate } from "@/lib/checkout/checkout-price-update";
+import type { CheckoutContactRequirements } from "@/types/bokun";
 
 export type { CheckoutHandoffErrorReason, CheckoutQuoteUnavailableReason };
 
@@ -38,6 +40,8 @@ export interface CheckoutSummaryReady {
   handoffToken: string;
   /** Non-null when server re-quote differs from handoff `clientQuote`. */
   priceUpdate: CheckoutPriceUpdate | null;
+  /** Per-field required flags from Bókun product main-contact metadata. */
+  contactRequirements: CheckoutContactRequirements;
 }
 
 /** Invalid or expired handoff token. */
@@ -196,6 +200,8 @@ export async function loadCheckoutSummary(
     quoteResult.data,
   );
 
+  const contactRequirements = resolveMainContactRequirements(detail.data);
+
   return {
     status: "ready",
     order,
@@ -203,5 +209,6 @@ export async function loadCheckoutSummary(
     tourPageHref,
     handoffToken: trimmedToken,
     priceUpdate,
+    contactRequirements,
   };
 }

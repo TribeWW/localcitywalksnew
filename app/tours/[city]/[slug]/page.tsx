@@ -325,7 +325,7 @@ export default async function TourPage({
               ) : null}
 
               <h1 className="mb-4 text-[32px] font-bold leading-[1.3] text-[#0F172A]">
-                {cityDisplayName}: Private City Walk with a Local Guide
+                {productTitle}
               </h1>
               {excerpt ? (
                 <p className="mb-6 text-lg font-normal leading-[1.6] text-[#1A1A1A]">

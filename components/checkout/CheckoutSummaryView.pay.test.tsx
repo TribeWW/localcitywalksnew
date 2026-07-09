@@ -166,8 +166,11 @@ describe("CheckoutSummaryView — Pay CTA", () => {
     });
 
     await waitFor(() => {
-      expect(payButton).not.toHaveAttribute("aria-busy", "true");
+      expect(locationAssignMock).toHaveBeenCalledWith(
+        "https://checkout.stripe.com/c/pay/cs_test_123",
+      );
     });
+    expect(payButton).toHaveAttribute("aria-busy", "true");
   });
 
   it("surfaces sold-out reserve errors via toast", async () => {
@@ -208,5 +211,109 @@ describe("CheckoutSummaryView — Pay CTA", () => {
     fireEvent.click(screen.getByRole("button", { name: /Pay €496/ }));
     expect(onPayClick).toHaveBeenCalledTimes(1);
     expect(runCheckoutPayClickMock).not.toHaveBeenCalled();
+  });
+});
+
+const phoneRequiredContactRequirements = {
+  firstName: true,
+  lastName: true,
+  email: true,
+  phone: true,
+};
+
+describe("CheckoutSummaryView — product contact requirements", () => {
+  beforeEach(() => {
+    runCheckoutPayClickMock.mockReset();
+    toastErrorMock.mockReset();
+  });
+
+  it("shows a required marker on phone when contactRequirements.phone is true", () => {
+    render(
+      <CheckoutSummaryView
+        order={HELLO_PALMA_CHECKOUT_FIXTURE}
+        handoffToken={HANDOFF_TOKEN}
+        tourPageHref="/tours/palma/hello-palma-123"
+        contactRequirements={phoneRequiredContactRequirements}
+      />,
+    );
+
+    expect(screen.getByLabelText(/phone number/i)).toBeRequired();
+    expect(screen.getByLabelText(/phone number/i)).toHaveAttribute(
+      "placeholder",
+      "Phone number",
+    );
+  });
+
+  it("includes comments in the pay payload when provided", async () => {
+    runCheckoutPayClickMock.mockResolvedValue({
+      type: "redirect",
+      redirectUrl: "https://checkout.stripe.com/c/pay/cs_test_123",
+    });
+
+    render(
+      <CheckoutSummaryView
+        order={HELLO_PALMA_CHECKOUT_FIXTURE}
+        handoffToken={HANDOFF_TOKEN}
+        tourPageHref="/tours/palma/hello-palma-123"
+        contactRequirements={phoneRequiredContactRequirements}
+      />,
+    );
+
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/first name/i), {
+        target: { value: "Ada" },
+      });
+      fireEvent.change(screen.getByLabelText(/last name/i), {
+        target: { value: "Lovelace" },
+      });
+      fireEvent.change(screen.getByLabelText(/email address/i), {
+        target: { value: "ada@example.com" },
+      });
+      fireEvent.change(screen.getByLabelText(/phone number/i), {
+        target: { value: "+34600000000" },
+      });
+      fireEvent.change(screen.getByLabelText(/comments/i), {
+        target: { value: "Near the cathedral entrance" },
+      });
+    });
+
+    await acceptTermsAndPay();
+
+    await waitFor(() => {
+      expect(runCheckoutPayClickMock).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.objectContaining({
+          contact: expect.objectContaining({
+            phone: "+34600000000",
+            comments: "Near the cathedral entrance",
+          }),
+        }),
+      );
+    });
+  });
+
+  it("surfaces missing-phone server validation via toast", async () => {
+    runCheckoutPayClickMock.mockResolvedValue({
+      type: "error",
+      error: "Please enter your phone number",
+    });
+
+    render(
+      <CheckoutSummaryView
+        order={HELLO_PALMA_CHECKOUT_FIXTURE}
+        handoffToken={HANDOFF_TOKEN}
+        tourPageHref="/tours/palma/hello-palma-123"
+        contactRequirements={phoneRequiredContactRequirements}
+      />,
+    );
+
+    await fillContactFields();
+    await acceptTermsAndPay();
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledWith(
+        "Please enter your phone number",
+      );
+    });
   });
 });

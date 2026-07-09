@@ -42,6 +42,8 @@ export interface BokunActivityBookingRequest {
   passengers: BokunCheckoutPassenger[];
   extras: [];
   guidedLanguage?: string;
+  /** Customer special requests — maps from checkout `comments`. */
+  note?: string;
 }
 
 /** Main-contact answer row for Bókun checkout questions. */
@@ -179,6 +181,8 @@ export interface BokunCheckoutContact {
   lastName: string;
   email: string;
   phone?: string;
+  /** Optional special requests from checkout summary `comments`. */
+  comments?: string;
 }
 
 /** Inputs for `reserveBokunCheckout` on Pay click. */
@@ -282,6 +286,11 @@ export function buildBokunBookingRequest(
   const guidedLanguage = input.language?.trim();
   if (guidedLanguage) {
     activityBooking.guidedLanguage = guidedLanguage;
+  }
+
+  const note = input.contact.comments?.trim();
+  if (note) {
+    activityBooking.note = note;
   }
 
   return {

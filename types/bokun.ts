@@ -135,6 +135,42 @@ export interface BokunActivityRate {
 }
 
 /**
+ * Standard main-contact field configured on a Bókun activity product.
+ *
+ * Returned on `GET /activity.json/{id}` as `mainContactFields[]`. Each row
+ * states whether the supplier requires that contact answer at checkout.
+ */
+export interface BokunMainContactField {
+  /** Bókun enum, e.g. `FIRST_NAME`, `PHONE_NUMBER`. */
+  field: string;
+  /** Whether the answer is required when creating a booking. */
+  required: boolean;
+  /** Whether the answer must be collected before departure if omitted at booking. */
+  requiredBeforeDeparture?: boolean;
+}
+
+/**
+ * Checkout contact field keys used on the summary page and payment pipeline.
+ *
+ * Maps to Bókun `mainContactDetails` question ids (`firstName`, `phoneNumber`, …).
+ */
+export type CheckoutContactFieldKey =
+  | "firstName"
+  | "lastName"
+  | "email"
+  | "phone";
+
+/**
+ * Per-field required flags for checkout contact validation and UI markers.
+ */
+export interface CheckoutContactRequirements {
+  firstName: boolean;
+  lastName: boolean;
+  email: boolean;
+  phone: boolean;
+}
+
+/**
  * Product detail from GET /activity.json/{id} (single-product endpoint).
  * Used for the tour page; shape aligned with search item + full description/photos.
  *
@@ -165,6 +201,17 @@ export interface BokunProductDetail {
   pricingCategories?: BokunPricingCategory[];
   startTimes?: BokunStartTime[];
   rates?: BokunActivityRate[];
+  /**
+   * Supplier-configured main-contact questions for this product.
+   *
+   * @see `resolveMainContactRequirements` in `lib/bokun/resolve-main-contact-requirements.ts`
+   */
+  mainContactFields?: BokunMainContactField[];
+  /**
+   * Required main-contact question ids in Bókun checkout format
+   * (e.g. `firstName`, `phoneNumber`).
+   */
+  requiredCustomerFields?: string[];
 }
 
 /** Guided-language row from Bókun activity detail `guidanceTypes`. */

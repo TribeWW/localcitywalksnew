@@ -28,11 +28,13 @@ import {
   createPendingCheckout,
   updatePendingCheckout,
 } from "@/lib/checkout/pending-checkout-store";
+import { resolveMainContactRequirements } from "@/lib/bokun/resolve-main-contact-requirements";
 import { createStripeCheckoutSession } from "@/lib/stripe/create-checkout-session";
 import {
   parseInitiateCheckoutPaymentInput,
   type InitiateCheckoutPaymentInput,
 } from "@/lib/validation/checkout-payment";
+import { validateCheckoutContactForProduct } from "@/lib/validation/validate-checkout-contact-for-product";
 import type { InitiateCheckoutPaymentResult } from "@/types/bokun";
 
 /** User-facing error when payment infrastructure is misconfigured. */
@@ -168,6 +170,15 @@ export async function executeInitiateCheckoutPayment(
     return { success: false, error: CHECKOUT_PAYMENT_UNAVAILABLE_ERROR };
   }
 
+  const contactRequirements = resolveMainContactRequirements(tourDetail.data);
+  const contactValidation = validateCheckoutContactForProduct(
+    input.contact,
+    contactRequirements,
+  );
+  if (!contactValidation.success) {
+    return { success: false, error: contactValidation.error };
+  }
+
   const checkoutId = randomUUID();
   const productTitle =
     payload.productTitle?.trim() || tourDetail.data.title.trim() || "Tour booking";
@@ -184,6 +195,9 @@ export async function executeInitiateCheckoutPayment(
       lastName: input.contact.lastName,
       email: input.contact.email,
       phone: input.contact.phone,
+      ...(input.contact.comments?.trim()
+        ? { comments: input.contact.comments.trim() }
+        : {}),
     },
     externalBookingReference: checkoutId,
   });

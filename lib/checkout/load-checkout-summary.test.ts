@@ -208,6 +208,12 @@ describe("loadCheckoutSummary", () => {
       timeLabel: "11:00",
       imageUrl: expect.stringContaining("bokun"),
     });
+    expect(result.contactRequirements).toEqual({
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: false,
+    });
     expect(computeTourBookingQuoteMock).toHaveBeenCalledWith(
       expect.objectContaining({
         productId: "1079932",
@@ -216,6 +222,53 @@ describe("loadCheckoutSummary", () => {
       }),
     );
     expect(result.priceUpdate).toBeNull();
+  });
+
+  it("returns contactRequirements derived from product main-contact metadata", async () => {
+    verifyCheckoutHandoffTokenMock.mockReturnValue({
+      success: true,
+      payload: handoffPayload,
+    });
+    computeTourBookingQuoteMock.mockResolvedValue({
+      success: true,
+      data: serverQuote,
+    });
+    getTourDetailByIdMock.mockResolvedValue({
+      success: true,
+      data: {
+        ...tourDetail,
+        mainContactFields: [
+          {
+            field: "FIRST_NAME",
+            required: true,
+            requiredBeforeDeparture: false,
+          },
+          {
+            field: "LAST_NAME",
+            required: true,
+            requiredBeforeDeparture: false,
+          },
+          {
+            field: "PHONE_NUMBER",
+            required: true,
+            requiredBeforeDeparture: false,
+          },
+        ],
+        requiredCustomerFields: ["firstName", "lastName", "phoneNumber"],
+      },
+    });
+
+    const result = await loadCheckoutSummary("valid.token");
+
+    expect(result.status).toBe("ready");
+    if (result.status !== "ready") return;
+
+    expect(result.contactRequirements).toEqual({
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+    });
   });
 
   it("returns priceUpdate when server re-quote differs from handoff clientQuote", async () => {

@@ -147,6 +147,99 @@ describe("runInitiateCheckoutPayment — validation gates", () => {
     expect(result.success).toBe(false);
     expect(reserveBokunCheckoutMock).not.toHaveBeenCalled();
   });
+
+  it("rejects missing phone before reserve when product requires it", async () => {
+    const token = signCheckoutHandoffToken(handoffInput);
+    getTourDetailByIdMock.mockResolvedValue({
+      success: true,
+      data: {
+        id: "1079932",
+        title: "Hello Biarritz",
+        defaultRateId: 2199582,
+        keyPhoto: { derived: [] },
+        mainContactFields: [
+          {
+            field: "PHONE_NUMBER",
+            required: true,
+            requiredBeforeDeparture: false,
+          },
+        ],
+        requiredCustomerFields: ["phoneNumber"],
+      },
+    });
+    computeTourBookingQuoteMock.mockResolvedValue({
+      success: true,
+      data: sampleQuote,
+    });
+
+    const result = await runInitiateCheckoutPayment({
+      ...buildPaymentInput(token),
+      contact: { ...paymentContact, phone: "" },
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: "Please enter your phone number",
+    });
+    expect(reserveBokunCheckoutMock).not.toHaveBeenCalled();
+  });
+
+  it("passes trimmed comments through runInitiateCheckoutPayment to reserve", async () => {
+    const token = signCheckoutHandoffToken(handoffInput);
+    getTourDetailByIdMock.mockResolvedValue({
+      success: true,
+      data: {
+        id: "1079932",
+        title: "Hello Biarritz",
+        defaultRateId: 2199582,
+        keyPhoto: { derived: [] },
+      },
+    });
+    computeTourBookingQuoteMock.mockResolvedValue({
+      success: true,
+      data: sampleQuote,
+    });
+    reserveBokunCheckoutMock.mockResolvedValue({
+      success: true,
+      data: {
+        confirmationCode: "LOC-T123",
+        checkoutAmount: 448,
+        currency: "EUR",
+        externalBookingReference: CHECKOUT_ID,
+      },
+    });
+    createPendingCheckoutMock.mockResolvedValue({
+      success: true,
+      data: { id: CHECKOUT_ID },
+    });
+    updatePendingCheckoutMock.mockResolvedValue({
+      success: true,
+      data: { id: CHECKOUT_ID, stripeSessionId: "cs_test_123" },
+    });
+    createStripeCheckoutSessionMock.mockResolvedValue({
+      success: true,
+      data: {
+        sessionId: "cs_test_123",
+        url: "https://checkout.stripe.test/cs_test_123",
+      },
+    });
+
+    await runInitiateCheckoutPayment({
+      ...buildPaymentInput(token),
+      contact: {
+        ...paymentContact,
+        comments: "  Wheelchair access please  ",
+      },
+    });
+
+    expect(reserveBokunCheckoutMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contact: expect.objectContaining({
+          comments: "Wheelchair access please",
+        }),
+      }),
+    );
+  });
 });
 
 describe("executeInitiateCheckoutPayment — pipeline invariants", () => {
@@ -253,6 +346,37 @@ describe("executeInitiateCheckoutPayment — pipeline invariants", () => {
     expect(reserveBokunCheckoutMock).not.toHaveBeenCalled();
   });
 
+  it("rejects missing phone before reserve when product requires it", async () => {
+    getTourDetailByIdMock.mockResolvedValue({
+      success: true,
+      data: {
+        id: "1079932",
+        title: "Hello Biarritz",
+        defaultRateId: 2199582,
+        keyPhoto: { derived: [] },
+        mainContactFields: [
+          {
+            field: "PHONE_NUMBER",
+            required: true,
+            requiredBeforeDeparture: false,
+          },
+        ],
+        requiredCustomerFields: ["phoneNumber"],
+      },
+    });
+
+    const result = await executeInitiateCheckoutPayment({
+      ...paymentInput,
+      contact: { ...paymentContact, phone: "" },
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: "Please enter your phone number",
+    });
+    expect(reserveBokunCheckoutMock).not.toHaveBeenCalled();
+  });
+
   it("maps Bókun reserve_failed to sold-out copy", () => {
     expect(resolveBokunReserveFailureMessage("reserve_failed")).toContain(
       "no longer available",
@@ -323,7 +447,13 @@ describe("executeInitiateCheckoutPayment — pipeline invariants", () => {
   });
 
   it("happy path: reserve → KV → Stripe session → redirect URL", async () => {
-    const result = await executeInitiateCheckoutPayment(paymentInput);
+    const result = await executeInitiateCheckoutPayment({
+      ...paymentInput,
+      contact: {
+        ...paymentContact,
+        comments: "Near the cathedral entrance",
+      },
+    });
 
     expect(result).toEqual({
       success: true,
@@ -337,6 +467,7 @@ describe("executeInitiateCheckoutPayment — pipeline invariants", () => {
         externalBookingReference: expect.any(String),
         contact: expect.objectContaining({
           email: "ada@example.com",
+          comments: "Near the cathedral entrance",
         }),
       }),
     );

@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { initiateCheckoutPayment } from "@/lib/actions/checkout-payment.actions";
 import { buildInitiateCheckoutPaymentInput } from "@/lib/checkout/build-initiate-checkout-payment-input";
 import { runCheckoutPayClick } from "@/lib/checkout/run-checkout-pay-click";
+import { DEFAULT_CHECKOUT_CONTACT_REQUIREMENTS } from "@/lib/bokun/resolve-main-contact-requirements";
 import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
 
 import { CheckoutContactFields } from "./CheckoutContactFields";
@@ -24,6 +25,7 @@ import { CheckoutPaymentCancelledBanner } from "./CheckoutPaymentCancelledBanner
 import { CheckoutPaymentSection } from "./CheckoutPaymentSection";
 import { CheckoutPriceUpdatedBanner } from "./CheckoutPriceUpdatedBanner";
 import type { CheckoutPriceUpdate } from "@/lib/checkout/checkout-price-update";
+import type { CheckoutContactRequirements } from "@/types/bokun";
 import type { CheckoutOrderFixture } from "./checkout-mock-fixture";
 import { OrderSummaryCard } from "./OrderSummaryCard";
 import { OrderSummaryLineItem } from "./OrderSummaryLineItem";
@@ -44,6 +46,8 @@ export interface CheckoutSummaryViewProps {
   tourPageHref?: string;
   /** Signed handoff token from `/checkout?h=…`; enables live Pay wiring. */
   handoffToken?: string;
+  /** Product-driven required flags for contact fields (from `loadCheckoutSummary`). */
+  contactRequirements?: CheckoutContactRequirements;
   /** When true, show banner after Stripe Checkout cancel return (LOC-1163). */
   paymentCancelled?: boolean;
   /** Pay CTA handler for mock preview when `handoffToken` is omitted. */
@@ -58,6 +62,7 @@ export function CheckoutSummaryView({
   priceUpdate = null,
   tourPageHref = "/explore",
   handoffToken,
+  contactRequirements = DEFAULT_CHECKOUT_CONTACT_REQUIREMENTS,
   paymentCancelled = false,
   onPayClick,
 }: CheckoutSummaryViewProps) {
@@ -150,6 +155,7 @@ export function CheckoutSummaryView({
           <CheckoutContactFields
             values={contact}
             onFieldChange={handleFieldChange}
+            contactRequirements={contactRequirements}
           />
           <Separator />
           <CheckoutPaymentSection
