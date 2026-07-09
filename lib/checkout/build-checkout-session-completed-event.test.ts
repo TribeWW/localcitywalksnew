@@ -12,7 +12,7 @@ const PAID_SESSION = {
   object: "checkout.session",
   payment_status: "paid",
   metadata: { checkoutId: "checkout-uuid" },
-} as Stripe.Checkout.Session;
+} as unknown as Stripe.Checkout.Session;
 
 describe("buildCheckoutSessionCompletedEvent", () => {
   it("wraps a paid session in a checkout.session.completed event", () => {

@@ -21,6 +21,9 @@ export function buildCheckoutSessionCompletedEvent(
 ): Stripe.Event {
   const id = eventId?.trim() || `evt_integration_${randomUUID()}`;
 
+  // Stripe's SDK event types are strict unions (e.g. CheckoutSessionCompletedEvent)
+  // that don't accept `previous_attributes: null`. For integration tests we only
+  // need a correctly-shaped payload for our handler, so we cast via `unknown`.
   return {
     id,
     object: "event",
@@ -28,11 +31,11 @@ export function buildCheckoutSessionCompletedEvent(
     created: Math.floor(Date.now() / 1000),
     data: {
       object: session,
-      previous_attributes: null,
+      previous_attributes: undefined,
     },
     livemode: false,
     pending_webhooks: 0,
     request: { id: null, idempotency_key: null },
     type: "checkout.session.completed",
-  } as Stripe.Event;
+  } as unknown as Stripe.Event;
 }

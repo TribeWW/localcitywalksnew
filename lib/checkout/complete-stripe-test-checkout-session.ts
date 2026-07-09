@@ -71,12 +71,10 @@ export async function confirmStripeTestPaymentIntent(
       `[stripe-test-checkout] pm_card_visa confirm failed for ${paymentIntentId}: ${message}`,
     );
   }
-
+  // If pm_card_visa fails (unexpected in test mode), rethrow by attempting the
+  // same confirm without swallowing errors so the integration run fails loudly.
   await stripe.paymentIntents.confirm(paymentIntentId, {
-    payment_method_data: {
-      type: "card",
-      card: { token: "tok_visa" },
-    },
+    payment_method: "pm_card_visa",
     return_url: "https://example.com/checkout/success",
   });
 }
