@@ -80,7 +80,10 @@ export interface BokunCheckoutOptionsResponse {
 /** Booking summary nested in checkout submit responses. */
 export interface BokunCheckoutBookingSummary {
   confirmationCode?: string;
+  /** Parent booking id (legacy field on some Bókun payloads). */
   id?: number;
+  /** Parent booking id (documented on Checkout Response Schema). */
+  bookingId?: number;
 }
 
 /** Response from `POST /checkout.json/submit`. */
@@ -93,11 +96,23 @@ export interface BokunActivityBookingFulfilment {
   productConfirmationCode?: string;
 }
 
+/** Ticket reference nested in checkout travel documents. */
+export interface BokunActivityTicketReference {
+  bookingId?: number;
+  productConfirmationCode?: string;
+}
+
+/** Travel documents on a checkout confirm response. */
+export interface BokunCheckoutTravelDocuments {
+  activityTickets?: BokunActivityTicketReference[];
+}
+
 /** Response from `POST /checkout.json/confirm-reserved/{code}`. */
 export interface BokunConfirmReservedResponse {
   booking?: BokunCheckoutBookingSummary & {
     activityBookings?: BokunActivityBookingFulfilment[];
   };
+  travelDocuments?: BokunCheckoutTravelDocuments;
 }
 
 /** External payment metadata sent to Bókun on confirm-reserved. */
@@ -124,6 +139,12 @@ export interface ConfirmReservedBokunCheckoutInput {
   transactionId: string;
   /** Payment completion time; defaults to now when omitted. */
   transactionDate?: Date;
+  /**
+   * Whether Bókun should email the main contact after confirmation.
+   *
+   * In the checkout flow, this is how we trigger the customer confirmation email
+   * on the Bókun side (LOC-1170). Defaults to `true`.
+   */
   sendNotificationToMainContact?: boolean;
   cardBrand?: string;
   last4?: string;
@@ -636,13 +657,23 @@ export function buildConfirmReservedBody(
 }
 /**
  * Reads booking id and product confirmation code from confirm-reserved response.
+ *
+ * Bókun payloads vary: ids may appear as `booking.id` or `booking.bookingId`,
+ * and the product reference may be on `activityBookings[]` or
+ * `travelDocuments.activityTickets[]`.
  */
 export function extractBokunFulfilmentDetails(
   response: BokunConfirmReservedResponse,
 ): { bokunBookingId: string; productConfirmationCode: string } | null {
+  const activityTicket = response.travelDocuments?.activityTickets?.[0];
   const productConfirmationCode =
-    response.booking?.activityBookings?.[0]?.productConfirmationCode?.trim();
-  const bookingId = response.booking?.id;
+    response.booking?.activityBookings?.[0]?.productConfirmationCode?.trim() ||
+    activityTicket?.productConfirmationCode?.trim();
+
+  const bookingId =
+    response.booking?.id ??
+    response.booking?.bookingId ??
+    activityTicket?.bookingId;
 
   if (
     !productConfirmationCode ||
@@ -703,6 +734,12 @@ export async function confirmReservedBokunCheckout(
     if (!fulfilment) {
       console.error(
         `[bokun-checkout] confirm reserved missing fulfilment fields for ${trimmedCode}`,
+        {
+          bookingKeys: data.booking ? Object.keys(data.booking) : [],
+          activityBookingCount: data.booking?.activityBookings?.length ?? 0,
+          activityTicketCount:
+            data.travelDocuments?.activityTickets?.length ?? 0,
+        },
       );
       return { success: false, error: "invalid_response" };
     }

@@ -151,6 +151,11 @@ export async function createStripeCheckoutSession(
         metadata: {
           checkoutId: input.checkoutId,
         },
+        payment_intent_data: {
+          metadata: {
+            checkoutId: input.checkoutId,
+          },
+        },
       },
       {
         idempotencyKey: buildStripeCheckoutSessionIdempotencyKey(

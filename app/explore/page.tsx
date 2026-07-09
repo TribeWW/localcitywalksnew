@@ -32,7 +32,7 @@ export default function ExplorePage() {
               className="h-10 w-auto"
             />
             <span className="text-sm font-medium text-[#6A6A6A]">
-              70+ cities to discover across Europe
+              100+ cities to discover across Europe
             </span>
           </div>
         </div>

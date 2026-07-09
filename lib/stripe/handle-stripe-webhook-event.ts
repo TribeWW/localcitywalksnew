@@ -10,6 +10,7 @@ import type Stripe from "stripe";
 
 import { fulfilPaidCheckout } from "@/lib/checkout/fulfil-paid-checkout";
 import { handleCheckoutSessionCompleted } from "@/lib/checkout/handle-checkout-session-completed";
+import { recordPaidFulfilmentFailure } from "@/lib/checkout/pending-checkout-store";
 import {
   claimStripeWebhookEvent,
   releaseStripeWebhookEventClaim,
@@ -33,6 +34,7 @@ export type HandleStripeWebhookEventResult =
         | "not_paid"
         | "missing_reservation"
         | "confirm_failed"
+        | "paid_unfulfilled"
         | "invalid_response";
     };
 
@@ -85,6 +87,24 @@ export async function handleStripeWebhookEvent(
     paymentResult.claimToken,
   );
   if (!fulfilmentResult.success) {
+    if (fulfilmentResult.error === "confirm_failed") {
+      const recorded = await recordPaidFulfilmentFailure(
+        paymentResult.checkoutId,
+        fulfilmentResult.error,
+      );
+
+      if (recorded.success && recorded.exhausted) {
+        console.error("[stripe-webhook] paid-but-unfulfilled — ops escalation:", {
+          checkoutId: paymentResult.checkoutId,
+          attemptCount: recorded.attemptCount,
+        });
+        // Do not release the Stripe event claim: we are intentionally
+        // acknowledging and stopping retries after exhausting attempts.
+        return { success: false, error: "paid_unfulfilled" };
+      }
+    }
+
+    // Release the claim so Stripe's retry can re-attempt this event.
     await releaseStripeWebhookEventClaim(event.id);
     return fulfilmentResult;
   }

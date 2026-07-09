@@ -1,5 +1,5 @@
 /**
- * Environment gate for checkout Pay initiation integration tests (LOC-1164).
+ * Environment gate for checkout integration tests (LOC-1164, LOC-1169).
  *
  * Live tests call Bókun test (`15686`), Upstash KV, and Stripe test keys. They
  * are opt-in via `RUN_CHECKOUT_INTEGRATION_TESTS=true` so CI stays fast.
