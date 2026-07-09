@@ -167,6 +167,22 @@ describe("processStripeWebhookRequest", () => {
     );
   });
 
+  it("acknowledges paid-but-unfulfilled after retries so Stripe stops replaying", async () => {
+    constructStripeWebhookEventMock.mockReturnValue({
+      success: true,
+      event: { id: "evt_paid_unfulfilled", type: "checkout.session.completed" },
+    });
+    handleStripeWebhookEventMock.mockResolvedValue({
+      success: false,
+      error: "paid_unfulfilled",
+    });
+
+    await expect(processStripeWebhookRequest("payload", "sig")).resolves.toEqual({
+      status: 200,
+      body: { received: true },
+    });
+  });
+
   it("returns 200 for duplicate and ignored events", async () => {
     constructStripeWebhookEventMock.mockReturnValue({
       success: true,

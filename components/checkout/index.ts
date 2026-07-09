@@ -11,6 +11,8 @@ export { CheckoutSummaryView } from "./CheckoutSummaryView";
 export type { CheckoutSummaryViewProps } from "./CheckoutSummaryView";
 export { CheckoutSuccessView } from "./CheckoutSuccessView";
 export type { CheckoutSuccessViewProps } from "./CheckoutSuccessView";
+export { CheckoutSuccessConfirmingView } from "./CheckoutSuccessConfirmingView";
+export type { CheckoutSuccessConfirmingViewProps } from "./CheckoutSuccessConfirmingView";
 export {
   CHECKOUT_SUCCESS_ILLUSTRATION_URL,
   HELLO_PALMA_CHECKOUT_FIXTURE,

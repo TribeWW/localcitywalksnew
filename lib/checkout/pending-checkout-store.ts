@@ -38,6 +38,14 @@ export const PENDING_CHECKOUT_PAID_CLAIM_PREFIX = "checkout:paid-claim:";
  */
 export const PENDING_CHECKOUT_PAID_CLAIM_TTL_SECONDS = 120;
 
+/**
+ * Maximum webhook fulfilment attempts before escalating to ops.
+ *
+ * Used to prevent indefinite Stripe retries when Bókun confirmation repeatedly
+ * fails after payment (paid-but-unfulfilled; LOC-1168).
+ */
+export const PENDING_CHECKOUT_FULFILMENT_MAX_ATTEMPTS = 5;
+
 /** Lifecycle status for a pending checkout row. */
 export type PendingCheckoutStatus = "pending" | "paid" | "failed" | "expired";
 
@@ -69,6 +77,17 @@ export interface PendingCheckoutRecord {
   stripeSessionId?: string;
   bokunBookingId?: string;
   productConfirmationCode?: string;
+  /**
+   * Number of failed fulfilment attempts after Stripe marked the checkout paid.
+   *
+   * Used to bound webhook retries and escalate "paid-but-unfulfilled" cases to
+   * ops after repeated confirmation failures (LOC-1168).
+   */
+  fulfilmentAttemptCount?: number;
+  /** Most recent fulfilment error code for ops triage (e.g. "confirm_failed"). */
+  fulfilmentLastError?: string;
+  /** ISO timestamp when the most recent fulfilment error was recorded. */
+  fulfilmentLastErrorAt?: string;
   createdAt: string;
   expiresAt: string;
 }
@@ -99,6 +118,9 @@ export type UpdatePendingCheckoutInput = Partial<
     | "stripeSessionId"
     | "bokunBookingId"
     | "productConfirmationCode"
+    | "fulfilmentAttemptCount"
+    | "fulfilmentLastError"
+    | "fulfilmentLastErrorAt"
     | "expiresAt"
   >
 >;
@@ -157,6 +179,9 @@ const pendingCheckoutRecordSchema = z.object({
   stripeSessionId: z.string().trim().min(1).optional(),
   bokunBookingId: z.string().trim().min(1).optional(),
   productConfirmationCode: z.string().trim().min(1).optional(),
+  fulfilmentAttemptCount: z.number().int().nonnegative().optional(),
+  fulfilmentLastError: z.string().trim().min(1).optional(),
+  fulfilmentLastErrorAt: z.string().datetime().optional(),
   createdAt: z.string().datetime(),
   expiresAt: z.string().datetime(),
 });
@@ -287,6 +312,46 @@ export async function releasePendingCheckoutPaidFulfilment(
       error,
     );
   }
+}
+
+export type RecordPaidFulfilmentFailureResult =
+  | { success: true; attemptCount: number; exhausted: boolean }
+  | { success: false; error: "unavailable" | "not_found" | "conflict" };
+
+/**
+ * Records a fulfilment failure after Stripe marked a checkout paid.
+ *
+ * Increments the attempt count and, once max attempts are reached, marks the
+ * row as `failed` so the success page can show support guidance and Stripe
+ * retries can stop.
+ *
+ * @param checkoutId - Internal pending checkout uuid
+ * @param error - Failure code (e.g. "confirm_failed") for ops triage
+ */
+export async function recordPaidFulfilmentFailure(
+  checkoutId: string,
+  error: string,
+): Promise<RecordPaidFulfilmentFailureResult> {
+  const existing = await getPendingCheckoutById(checkoutId);
+  if (!existing) {
+    return { success: false, error: "not_found" };
+  }
+
+  const nextAttempt = (existing.fulfilmentAttemptCount ?? 0) + 1;
+  const exhausted = nextAttempt >= PENDING_CHECKOUT_FULFILMENT_MAX_ATTEMPTS;
+
+  const updateResult = await updatePendingCheckout(checkoutId, {
+    fulfilmentAttemptCount: nextAttempt,
+    fulfilmentLastError: error,
+    fulfilmentLastErrorAt: new Date().toISOString(),
+    ...(exhausted ? { status: "failed" as const } : {}),
+  });
+
+  if (!updateResult.success) {
+    return { success: false, error: updateResult.error };
+  }
+
+  return { success: true, attemptCount: nextAttempt, exhausted };
 }
 /**
  * Computes KV TTL seconds from `expiresAt`, capped at handoff TTL.

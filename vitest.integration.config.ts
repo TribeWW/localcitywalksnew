@@ -3,7 +3,7 @@ import { configDefaults, defineConfig } from "vitest/config";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 /**
- * Vitest config for opt-in live integration tests (LOC-1164).
+ * Vitest config for opt-in live integration tests (LOC-1164, LOC-1169).
  *
  * Separate from the default config so `*.integration.test.ts` files are
  * included when running `npm run test:integration:checkout`.

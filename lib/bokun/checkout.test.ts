@@ -490,12 +490,30 @@ describe("confirmReservedBokunCheckout", () => {
         amount: 496,
         currency: "EUR",
         transactionId: "pi_test_123",
-        sendNotificationToMainContact: true,
       }),
     ).toEqual({
       amount: 496,
       currency: "EUR",
       sendNotificationToMainContact: true,
+      transactionDetails: {
+        transactionDate: "2026-07-06 12:34:56",
+        transactionId: "pi_test_123",
+      },
+    });
+  });
+
+  it("allows opting out of Bókun main contact notifications", () => {
+    expect(
+      buildConfirmReservedBody({
+        amount: 496,
+        currency: "EUR",
+        transactionId: "pi_test_123",
+        sendNotificationToMainContact: false,
+      }),
+    ).toEqual({
+      amount: 496,
+      currency: "EUR",
+      sendNotificationToMainContact: false,
       transactionDetails: {
         transactionDate: "2026-07-06 12:34:56",
         transactionId: "pi_test_123",
@@ -514,6 +532,77 @@ describe("confirmReservedBokunCheckout", () => {
     ).toEqual({
       bokunBookingId: "987654",
       productConfirmationCode: "LOC-P456",
+    });
+  });
+
+  it("extracts fulfilment when booking id is bookingId instead of id", () => {
+    expect(
+      extractBokunFulfilmentDetails({
+        booking: {
+          bookingId: 240473,
+          activityBookings: [{ productConfirmationCode: "LOC-P789" }],
+        },
+      }),
+    ).toEqual({
+      bokunBookingId: "240473",
+      productConfirmationCode: "LOC-P789",
+    });
+  });
+
+  it("extracts fulfilment from travelDocuments when activityBookings omit product code", () => {
+    expect(
+      extractBokunFulfilmentDetails({
+        booking: {
+          bookingId: 240473,
+          activityBookings: [{}],
+        },
+        travelDocuments: {
+          activityTickets: [
+            {
+              bookingId: 240473,
+              productConfirmationCode: "LOC-P789",
+            },
+          ],
+        },
+      }),
+    ).toEqual({
+      bokunBookingId: "240473",
+      productConfirmationCode: "LOC-P789",
+    });
+  });
+
+  it("posts confirm-reserved for travelDocuments-shaped responses", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        booking: {
+          bookingId: 240473,
+          activityBookings: [{}],
+        },
+        travelDocuments: {
+          activityTickets: [
+            {
+              bookingId: 240473,
+              productConfirmationCode: "LOC-P789",
+            },
+          ],
+        },
+      }),
+    });
+
+    await expect(
+      confirmReservedBokunCheckout({
+        confirmationCode: "LOC-T123",
+        amount: 496,
+        currency: "EUR",
+        transactionId: "pi_test_123",
+      }),
+    ).resolves.toEqual({
+      success: true,
+      data: {
+        bokunBookingId: "240473",
+        productConfirmationCode: "LOC-P789",
+      },
     });
   });
 

@@ -47,6 +47,14 @@ export async function processStripeWebhookRequest(
       return { status: 200, body: { received: true } };
     }
 
+    if (handled.error === "paid_unfulfilled") {
+      console.error("[stripe-webhook] paid-but-unfulfilled — manual recovery needed:", {
+        eventId: verification.event.id,
+        type: verification.event.type,
+      });
+      return { status: 200, body: { received: true } };
+    }
+
     // Stripe retries on non-2xx responses. Only return 500 for errors that are
     // likely transient (infra / concurrency / upstream). For terminal errors,
     // log and acknowledge so Stripe does not replay indefinitely.

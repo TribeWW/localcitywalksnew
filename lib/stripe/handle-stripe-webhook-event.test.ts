@@ -14,6 +14,7 @@ const claimStripeWebhookEventMock = vi.fn();
 const releaseStripeWebhookEventClaimMock = vi.fn();
 const handleCheckoutSessionCompletedMock = vi.fn();
 const fulfilPaidCheckoutMock = vi.fn();
+const recordPaidFulfilmentFailureMock = vi.fn();
 
 vi.mock("@/lib/stripe/stripe-webhook-idempotency", () => ({
   claimStripeWebhookEvent: (...args: unknown[]) =>
@@ -29,6 +30,11 @@ vi.mock("@/lib/checkout/handle-checkout-session-completed", () => ({
 
 vi.mock("@/lib/checkout/fulfil-paid-checkout", () => ({
   fulfilPaidCheckout: (...args: unknown[]) => fulfilPaidCheckoutMock(...args),
+}));
+
+vi.mock("@/lib/checkout/pending-checkout-store", () => ({
+  recordPaidFulfilmentFailure: (...args: unknown[]) =>
+    recordPaidFulfilmentFailureMock(...args),
 }));
 
 import { handleStripeWebhookEvent } from "@/lib/stripe/handle-stripe-webhook-event";
@@ -62,6 +68,7 @@ describe("handleStripeWebhookEvent", () => {
     releaseStripeWebhookEventClaimMock.mockReset();
     handleCheckoutSessionCompletedMock.mockReset();
     fulfilPaidCheckoutMock.mockReset();
+    recordPaidFulfilmentFailureMock.mockReset();
 
     claimStripeWebhookEventMock.mockResolvedValue({
       success: true,
@@ -80,6 +87,11 @@ describe("handleStripeWebhookEvent", () => {
       checkoutId: CHECKOUT_ID,
       alreadyFulfilled: false,
       productConfirmationCode: "LOC-P456",
+    });
+    recordPaidFulfilmentFailureMock.mockResolvedValue({
+      success: true,
+      attemptCount: 1,
+      exhausted: false,
     });
   });
 
@@ -185,6 +197,29 @@ describe("handleStripeWebhookEvent", () => {
     });
 
     expect(releaseStripeWebhookEventClaimMock).toHaveBeenCalledWith(EVENT_ID);
+  });
+
+  it("escalates paid-but-unfulfilled after retries and acknowledges without releasing the event claim", async () => {
+    fulfilPaidCheckoutMock.mockResolvedValue({
+      success: false,
+      error: "confirm_failed",
+    });
+    recordPaidFulfilmentFailureMock.mockResolvedValue({
+      success: true,
+      attemptCount: 5,
+      exhausted: true,
+    });
+
+    await expect(handleStripeWebhookEvent(buildEvent())).resolves.toEqual({
+      success: false,
+      error: "paid_unfulfilled",
+    });
+
+    expect(recordPaidFulfilmentFailureMock).toHaveBeenCalledWith(
+      CHECKOUT_ID,
+      "confirm_failed",
+    );
+    expect(releaseStripeWebhookEventClaimMock).not.toHaveBeenCalled();
   });
 
   it("acknowledges the loser without fulfilling when it did not win the claim", async () => {

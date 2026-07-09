@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:integration:checkout": "cross-env RUN_CHECKOUT_INTEGRATION_TESTS=true vitest run --config vitest.integration.config.ts",
-    "integration:checkout:pay": "cross-env RUN_CHECKOUT_INTEGRATION_TESTS=true tsx scripts/run-checkout-pay-integration.ts"
+    "integration:checkout:pay": "cross-env RUN_CHECKOUT_INTEGRATION_TESTS=true tsx scripts/run-checkout-pay-integration.ts",
+    "integration:checkout:fulfilment": "cross-env RUN_CHECKOUT_INTEGRATION_TESTS=true tsx scripts/run-checkout-fulfilment-integration.ts"
   },
   "dependencies": {
     "@flags-sdk/vercel": "^1.3.0",
