@@ -154,7 +154,9 @@ const DatePicker = ({
         >
           <div
             className={cn(
-              variant === "widget" ? "w-full p-2" : "flex justify-center p-3",
+              variant === "widget"
+                ? "w-full rounded-md bg-popover p-2"
+                : "flex justify-center p-3",
             )}
           >
             <Calendar
