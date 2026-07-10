@@ -14,6 +14,8 @@ export interface CheckoutOrderFixture {
   participantsLabel: string;
   totalAmount: number;
   currency: string;
+  /** Booking language label, e.g. "English". */
+  languageLabel?: string;
 }
 
 /** Hello Palma de Mallorca — design brief §3.6 (first cart item only). */
@@ -26,6 +28,7 @@ export const HELLO_PALMA_CHECKOUT_FIXTURE: CheckoutOrderFixture = {
   dateLabel: "Wed, 21 Mar 2026",
   timeLabel: "11:00 AM",
   participantsLabel: "4 adults, 2 children, 1 infant",
+  languageLabel: "English",
   totalAmount: 496,
   currency: "EUR",
 };

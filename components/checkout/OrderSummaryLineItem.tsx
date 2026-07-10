@@ -24,6 +24,8 @@ export interface OrderSummaryLineItemProps {
   priceAmount: number;
   /** ISO currency code, e.g. "EUR". */
   currency: string;
+  /** Booking language label, e.g. "English". */
+  languageLabel?: string;
   /** Optional classes on the root element. */
   className?: string;
 }
@@ -40,6 +42,7 @@ export function OrderSummaryLineItem({
   participantsLabel,
   priceAmount,
   currency,
+  languageLabel,
   className,
 }: OrderSummaryLineItemProps) {
   const formattedPrice = formatCataloguePriceAmount(priceAmount, currency);
@@ -58,10 +61,12 @@ export function OrderSummaryLineItem({
       </div>
       <div className="min-w-0 flex-1 space-y-1">
         <h3 className="text-sm font-medium leading-snug text-nightsky">{title}</h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs text-muted-foreground m-0 leading-relaxed">
           {dateLabel} · {timeLabel}
+          {languageLabel && <> · {languageLabel}</>}
+          <br />
+          {participantsLabel}
         </p>
-        <p className="text-sm text-muted-foreground">{participantsLabel}</p>
         {formattedPrice ? (
           <p className="text-sm font-semibold text-nightsky">{formattedPrice}</p>
         ) : null}

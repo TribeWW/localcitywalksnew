@@ -3,6 +3,7 @@
  */
 
 import { formatParticipantSummary } from "@/lib/booking/format-participant-summary";
+import { formatBokunLanguage } from "@/lib/utils/format-bokun-language";
 import { formatCheckoutDateLabel } from "@/lib/checkout/build-checkout-order-from-handoff";
 import type { PendingCheckoutRecord } from "@/lib/checkout/pending-checkout-store";
 import type { CheckoutOrderFixture } from "@/components/checkout/checkout-mock-fixture";
@@ -32,6 +33,7 @@ export function buildCheckoutOrderFromPending(
     dateLabel: formatCheckoutDateLabel(pending.date),
     timeLabel: startTimeLabel,
     participantsLabel: formatParticipantSummary(pending.participants),
+    languageLabel: pending.language ? formatBokunLanguage(pending.language) : undefined,
     totalAmount: pending.quoteSnapshot.totalAmount,
     currency: pending.quoteSnapshot.currency,
   };

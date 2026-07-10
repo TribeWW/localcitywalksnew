@@ -139,8 +139,7 @@ export default function BookingGuestsPicker({
           viewBox="0 0 14 14"
           fill="none"
           className={cn(
-            "transition-transform",
-            disabled ? "text-current" : "text-muted-foreground",
+            "transition-transform text-muted-foreground opacity-50",
             open && "rotate-180",
           )}
           aria-hidden
