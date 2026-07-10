@@ -144,6 +144,8 @@ function buildOpenSlot(
     pricesByRate: [],
     guidedLanguages: [],
     soldOut: false,
+    defaultRateId: 2116654,
+    rates: [{ id: 2116654, minPerBooking: 1, maxPerBooking: 15 }],
     ...overrides,
   };
 }
@@ -276,18 +278,13 @@ describe("BookingWidget — structure invariants", () => {
 
     const guestsTrigger = screen.getByRole("button", { name: /1 participant/i });
     expect(guestsTrigger).toBeDisabled();
-    expect(
-      screen.getByText("Select a language to choose participants"),
-    ).toBeInTheDocument();
+    expect(guestsTrigger).toHaveAttribute("aria-disabled", "true");
 
     await selectLanguage("en");
 
     await waitFor(() => {
       expect(guestsTrigger).toBeEnabled();
     });
-    expect(
-      screen.queryByText("Select a language to choose participants"),
-    ).not.toBeInTheDocument();
   });
 
   it("does not show legacy duration copy in the widget", async () => {

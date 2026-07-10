@@ -22,6 +22,11 @@ import {
 } from "@/lib/actions/booking-widget.actions";
 import { startCheckoutHandoff } from "@/lib/actions/checkout-handoff.actions";
 import { buildStartCheckoutHandoffInput } from "@/lib/booking/build-start-checkout-handoff-input";
+import {
+  BOOKING_WIDGET_MAX_GROUP_SIZE_ERROR_CODE,
+  type BookingWidgetQuoteErrorState,
+} from "@/lib/booking-widget/max-group-size-message";
+import { resolveMaxGroupSize } from "@/lib/bokun/resolve-max-group-size";
 import { tourBookingParticipantsSchema } from "@/lib/validation/tour-booking";
 import {
   availabilitySlotToIsoDate,
@@ -148,6 +153,7 @@ export default function BookingWidget({
   cityName,
   startTimes,
   guidedLanguageOptions,
+  defaultRateId,
   fromPriceAmount,
   fromPriceCurrency,
 }: BookingWidgetBootstrap) {
@@ -157,7 +163,7 @@ export default function BookingWidget({
   const [availError, setAvailError] = useState<string | null>(null);
   const [quote, setQuote] = useState<BookingWidgetQuote | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
-  const [quoteError, setQuoteError] = useState<string | null>(null);
+  const [quoteError, setQuoteError] = useState<BookingWidgetQuoteErrorState>(null);
   /** True while `startCheckoutHandoff` is in flight; disables Continue to checkout. */
   const [isContinuingToCheckout, setIsContinuingToCheckout] = useState(false);
   const loadedMonthsRef = useRef<Set<string>>(new Set());
@@ -302,6 +308,11 @@ export default function BookingWidget({
     return slotsForSelectedDate.find((slot) => slot.startTimeId === id);
   }, [slotsForSelectedDate, startTimeIdValue]);
 
+  const maxGroupSize = useMemo(
+    () => resolveMaxGroupSize(selectedSlot, defaultRateId),
+    [defaultRateId, selectedSlot],
+  );
+
   const languageOptions = useMemo((): BookingWidgetLanguageOption[] => {
     if (selectedSlot?.guidedLanguages?.length) {
       return resolveLanguageOptionsForSlot(
@@ -336,6 +347,9 @@ export default function BookingWidget({
 
   const belowMinParticipants =
     selectedSlot != null && totalParticipants < minParticipantsRequired;
+
+  const exceedsMaxGroupSize =
+    maxGroupSize != null && totalParticipants > maxGroupSize;
 
   useEffect(() => {
     if (timeOptions.length === 1 && startTimeIdValue !== timeOptions[0].value) {
@@ -389,6 +403,16 @@ export default function BookingWidget({
       return;
     }
 
+    if (maxGroupSize != null && totalParticipants > maxGroupSize) {
+      setQuote(null);
+      setQuoteError({
+        code: BOOKING_WIDGET_MAX_GROUP_SIZE_ERROR_CODE,
+        maxGroupSize,
+      });
+      setQuoteLoading(false);
+      return;
+    }
+
     const date = toIsoDateString(preferredDate);
     let cancelled = false;
 
@@ -409,9 +433,19 @@ export default function BookingWidget({
 
         if (!result.success) {
           setQuote(null);
-          setQuoteError(
-            result.error ?? "Unable to calculate price. Please try again.",
-          );
+          if (
+            result.errorCode === BOOKING_WIDGET_MAX_GROUP_SIZE_ERROR_CODE &&
+            result.maxGroupSize != null
+          ) {
+            setQuoteError({
+              code: BOOKING_WIDGET_MAX_GROUP_SIZE_ERROR_CODE,
+              maxGroupSize: result.maxGroupSize,
+            });
+          } else {
+            setQuoteError(
+              result.error ?? "Unable to calculate price. Please try again.",
+            );
+          }
           return;
         }
 
@@ -433,11 +467,13 @@ export default function BookingWidget({
     };
   }, [
     isLanguageReady,
+    maxGroupSize,
     selectedLanguageCode,
     participants,
     preferredDate,
     productId,
     startTimeIdValue,
+    totalParticipants,
   ]);
 
   const isDateDisabled = useCallback(
@@ -457,6 +493,7 @@ export default function BookingWidget({
     !quoteError &&
     !availError &&
     !belowMinParticipants &&
+    !exceedsMaxGroupSize &&
     Boolean(startTimeIdValue) &&
     Boolean(preferredDate) &&
     isLanguageReady;
@@ -623,6 +660,7 @@ export default function BookingWidget({
                 onChange={handleParticipantChange}
                 quote={quote}
                 disabled={!isLanguageReady}
+                maxGroupSize={maxGroupSize}
               />
 
               <div className="pt-3">

@@ -103,6 +103,7 @@ function buildBiarritzSlot(
     date: Date.parse(`${SLOT_DATE}T12:00:00.000Z`),
     localizedDate: SLOT_DATE,
     defaultRateId: DEFAULT_RATE_ID,
+    rates: [{ id: DEFAULT_RATE_ID, minPerBooking: 1, maxPerBooking: 15 }],
     pricesByRate: [
       {
         activityRateId: DEFAULT_RATE_ID,

@@ -23,7 +23,16 @@ import {
 } from "@/lib/actions/booking-widget-submit";
 import { buildBookingWidgetEmailContent } from "@/lib/nodemailer/build-booking-widget-email-content";
 import { sendBookingWidgetRequestEmails } from "@/lib/nodemailer";
-import { calculateBookingQuote } from "@/lib/bokun/calculate-booking-quote";
+import {
+  calculateBookingQuote,
+  findAvailabilitySlot,
+} from "@/lib/bokun/calculate-booking-quote";
+import { resolveMaxGroupSize } from "@/lib/bokun/resolve-max-group-size";
+import {
+  BOOKING_WIDGET_MAX_GROUP_SIZE_ERROR_CODE,
+  formatMaxGroupSizeMessage,
+  sumBookingWidgetParticipants,
+} from "@/lib/booking-widget/max-group-size-message";
 import { fetchAvailabilities } from "@/lib/bokun/fetch-availabilities";
 import {
   parseTourBookingQuoteInput,
@@ -173,6 +182,24 @@ export async function computeTourBookingQuote(
     return {
       success: false,
       error: availabilities.error ?? "Unable to load availabilities",
+    };
+  }
+
+  const slot = findAvailabilitySlot(
+    availabilities.data,
+    date,
+    startTimeId,
+  );
+  const maxGroupSize = resolveMaxGroupSize(slot, defaultRateId);
+  if (
+    maxGroupSize != null &&
+    sumBookingWidgetParticipants(participants) > maxGroupSize
+  ) {
+    return {
+      success: false,
+      error: formatMaxGroupSizeMessage(maxGroupSize),
+      errorCode: BOOKING_WIDGET_MAX_GROUP_SIZE_ERROR_CODE,
+      maxGroupSize,
     };
   }
 

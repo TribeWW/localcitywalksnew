@@ -10,7 +10,13 @@
  * State precedence: error → loading → success (quote) → empty prompt.
  */
 
+import Link from "next/link";
 import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
+import {
+  BOOKING_WIDGET_CONTACT_HREF,
+  type BookingWidgetQuoteErrorState,
+  isMaxGroupSizeQuoteError,
+} from "@/lib/booking-widget/max-group-size-message";
 import type { BookingWidgetQuote } from "@/types/bokun";
 
 /** Props for `BookingWidgetBreakdown`. */
@@ -20,7 +26,7 @@ interface BookingWidgetBreakdownProps {
   /** True while `getTourBookingQuote` is in flight. */
   loading: boolean;
   /** User-facing quote error; takes precedence over loading/empty states. */
-  error: string | null;
+  error: BookingWidgetQuoteErrorState;
   /**
    * When false, omit the empty-state prompt.
    * Step 2 recap passes `false` so structure stays minimal when quote is absent.
@@ -49,9 +55,22 @@ export default function BookingWidgetBreakdown({
   return (
     <div className="space-y-2" aria-live="polite" aria-atomic="true">
       {error ? (
-        <p className="text-sm text-destructive" role="alert">
-          {error}
-        </p>
+        isMaxGroupSizeQuoteError(error) ? (
+          <p className="text-sm text-destructive" role="alert">
+            Max group size is {error.maxGroupSize}. For larger groups, please{" "}
+            <Link
+              href={BOOKING_WIDGET_CONTACT_HREF}
+              className="font-medium underline underline-offset-2"
+            >
+              request a custom quote
+            </Link>
+            .
+          </p>
+        ) : (
+          <p className="text-sm text-destructive" role="alert">
+            {error}
+          </p>
+        )
       ) : loading ? (
         <div className="space-y-2" aria-busy="true">
           <div className="h-4 w-full animate-pulse rounded bg-muted" />

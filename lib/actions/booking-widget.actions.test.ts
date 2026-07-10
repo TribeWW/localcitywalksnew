@@ -22,10 +22,15 @@ vi.mock("@/lib/actions/tour-detail.actions", () => ({
   getTourDetailById: (...args: unknown[]) => getTourDetailByIdMock(...args),
 }));
 
-vi.mock("@/lib/bokun/calculate-booking-quote", () => ({
-  calculateBookingQuote: (...args: unknown[]) =>
-    calculateBookingQuoteMock(...args),
-}));
+vi.mock("@/lib/bokun/calculate-booking-quote", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/bokun/calculate-booking-quote")>();
+  return {
+    ...actual,
+    calculateBookingQuote: (...args: unknown[]) =>
+      calculateBookingQuoteMock(...args),
+  };
+});
 
 const sendBookingWidgetRequestEmailsMock = vi.fn();
 
@@ -42,6 +47,10 @@ import {
   submitTourBookingRequest,
 } from "@/lib/actions/booking-widget.actions";
 import { BOOKING_WIDGET_PRICE_MISMATCH_ERROR } from "@/lib/actions/booking-widget-submit";
+import {
+  BOOKING_WIDGET_MAX_GROUP_SIZE_ERROR_CODE,
+  formatMaxGroupSizeMessage,
+} from "@/lib/booking-widget/max-group-size-message";
 
 function futureIsoDate(daysAhead = 7): string {
   const date = new Date();
@@ -60,6 +69,9 @@ const sampleAvailability: BokunAvailability = {
   activityId: 1079932,
   startTimeId: 4252139,
   date: Date.parse(`${futureIsoDate()}T12:00:00.000Z`),
+  localizedDate: futureIsoDate(),
+  defaultRateId: 2199582,
+  rates: [{ id: 2199582, minPerBooking: 1, maxPerBooking: 15 }],
   pricesByRate: [],
   guidedLanguages: [],
   soldOut: false,
@@ -370,6 +382,31 @@ describe("computeTourBookingQuote — pipeline invariants", () => {
       success: false,
       error: "Unable to calculate quote for this selection",
     });
+  });
+
+  it("returns max group size error when total participants exceed maxPerBooking", async () => {
+    const result = await computeTourBookingQuote({
+      ...validQuoteInput,
+      participants: { adults: 6, youth: 5, children: 5, infants: 0 },
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: formatMaxGroupSizeMessage(15),
+      errorCode: BOOKING_WIDGET_MAX_GROUP_SIZE_ERROR_CODE,
+      maxGroupSize: 15,
+    });
+    expect(calculateBookingQuoteMock).not.toHaveBeenCalled();
+  });
+
+  it("quotes when total participants equal maxPerBooking", async () => {
+    const result = await computeTourBookingQuote({
+      ...validQuoteInput,
+      participants: { adults: 5, youth: 5, children: 5, infants: 0 },
+    });
+
+    expect(result).toEqual({ success: true, data: sampleQuote });
+    expect(calculateBookingQuoteMock).toHaveBeenCalled();
   });
 });
 
