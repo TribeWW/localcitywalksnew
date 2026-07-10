@@ -246,6 +246,13 @@ export interface BokunAvailabilityPriceByRate {
   pricePerCategoryUnit: BokunPricePerCategoryUnit[];
 }
 
+/** Rate row on an availability slot (`rates[]`) with booking size limits. */
+export interface BokunAvailabilityRate {
+  id: number;
+  minPerBooking?: number;
+  maxPerBooking?: number;
+}
+
 /**
  * Single availability slot from `GET /activity.json/{id}/availabilities`.
  * Shape aligned with `payloads/ExamplePayloadAvailabilities.json`.
@@ -264,6 +271,8 @@ export interface BokunAvailability {
   minParticipants?: number;
   minParticipantsToBookNow?: number;
   defaultRateId?: number;
+  /** Per-rate booking limits from Bókun availabilities (`maxPerBooking` = total group cap). */
+  rates?: BokunAvailabilityRate[];
   pricesByRate: BokunAvailabilityPriceByRate[];
   /** Slot-specific guided languages; empty → use product `guidanceTypes` (GUIDED). */
   guidedLanguages: string[];
@@ -408,10 +417,18 @@ export type GetTourAvailabilitiesResult =
   | { success: true; data: BokunAvailability[] }
   | { success: false; error: string };
 
+/** Error code when participant total exceeds Bókun `maxPerBooking`. */
+export type BookingWidgetMaxGroupSizeErrorCode = "max_group_size_exceeded";
+
 /** Server action response for `getTourBookingQuote`. */
 export type GetTourBookingQuoteResult =
   | { success: true; data: BookingWidgetQuote }
-  | { success: false; error: string };
+  | {
+      success: false;
+      error: string;
+      errorCode?: BookingWidgetMaxGroupSizeErrorCode;
+      maxGroupSize?: number;
+    };
 
 /** Server action response for `submitTourBookingRequest` (LOC-1056). */
 export type SubmitTourBookingRequestResult =

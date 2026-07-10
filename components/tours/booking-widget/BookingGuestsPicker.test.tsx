@@ -140,6 +140,28 @@ describe("BookingGuestsPicker", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it("max group size invariant: disables increase at total cap", () => {
+    const onChange = vi.fn();
+    render(
+      <BookingGuestsPicker
+        participants={{ adults: 5, youth: 5, children: 5, infants: 0 }}
+        onChange={onChange}
+        quote={null}
+        maxGroupSize={15}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /15 participants/i }));
+
+    expect(
+      screen.getByRole("button", { name: "Increase Adults" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Increase Youth" }),
+    ).toBeDisabled();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   it("disabled invariant: prevents accordion expand and stepper interaction", () => {
     const onChange = vi.fn();
     render(

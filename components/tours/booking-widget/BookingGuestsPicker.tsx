@@ -10,6 +10,7 @@
 import { useEffect, useState } from "react";
 import { Minus, Plus, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { sumBookingWidgetParticipants } from "@/lib/booking-widget/max-group-size-message";
 import {
   GUEST_CATEGORIES,
   formatGuestUnitHint,
@@ -34,6 +35,29 @@ interface BookingGuestsPickerProps {
   quote: BookingWidgetQuote | null;
   /** When true, the accordion trigger and steppers are not interactive. */
   disabled?: boolean;
+  /** Bókun `maxPerBooking` for the selected slot; caps total group size when set. */
+  maxGroupSize?: number | null;
+}
+
+/**
+ * Max count allowed for one category given total group cap and other selections.
+ */
+function resolveCategoryStepperMax(
+  key: GuestCategoryKey,
+  participants: BookingWidgetParticipants,
+  categoryMin: number,
+  categoryMax: number,
+  maxGroupSize: number | null | undefined,
+): number {
+  if (maxGroupSize == null) {
+    return categoryMax;
+  }
+
+  const othersTotal =
+    sumBookingWidgetParticipants(participants) - participants[key];
+  const remaining = maxGroupSize - othersTotal;
+
+  return Math.max(categoryMin, Math.min(categoryMax, remaining));
 }
 
 /**
@@ -51,6 +75,7 @@ export default function BookingGuestsPicker({
   onChange,
   quote,
   disabled = false,
+  maxGroupSize = null,
 }: BookingGuestsPickerProps) {
   const [open, setOpen] = useState(false);
 
@@ -60,11 +85,7 @@ export default function BookingGuestsPicker({
     }
   }, [disabled]);
 
-  const totalGuests =
-    participants.adults +
-    participants.youth +
-    participants.children +
-    participants.infants;
+  const totalGuests = sumBookingWidgetParticipants(participants);
 
   /** Applies a delta to one category, clamped to configured min/max. */
   const updateCount = (key: GuestCategoryKey, delta: number) => {
@@ -72,7 +93,14 @@ export default function BookingGuestsPicker({
 
     const config = GUEST_CATEGORIES.find((c) => c.key === key)!;
     const current = participants[key];
-    const next = Math.max(config.min, Math.min(config.max, current + delta));
+    const stepperMax = resolveCategoryStepperMax(
+      key,
+      participants,
+      config.min,
+      config.max,
+      maxGroupSize,
+    );
+    const next = Math.max(config.min, Math.min(stepperMax, current + delta));
     onChange(key, next);
   };
 
@@ -132,6 +160,13 @@ export default function BookingGuestsPicker({
           {GUEST_CATEGORIES.map((category, index) => {
             const count = participants[category.key];
             const unitHint = formatGuestUnitHint(category.label, quote);
+            const stepperMax = resolveCategoryStepperMax(
+              category.key,
+              participants,
+              category.min,
+              category.max,
+              maxGroupSize,
+            );
 
             return (
               <div
@@ -170,11 +205,11 @@ export default function BookingGuestsPicker({
                   <button
                     type="button"
                     aria-label={`Increase ${category.label}`}
-                    disabled={disabled || count >= category.max}
+                    disabled={disabled || count >= stepperMax}
                     onClick={() => updateCount(category.key, 1)}
                     className={cn(
                       "flex h-7 w-7 items-center justify-center rounded-full border-[1.5px] border-border bg-white",
-                      disabled || count >= category.max
+                      disabled || count >= stepperMax
                         ? "cursor-not-allowed opacity-40"
                         : "cursor-pointer",
                     )}

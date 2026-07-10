@@ -100,6 +100,23 @@ describe("BookingWidgetBreakdown — display invariants", () => {
     );
   });
 
+  it("max group size invariant: renders linked custom quote message", () => {
+    render(
+      <BookingWidgetBreakdown
+        quote={null}
+        loading={false}
+        error={{ code: "max_group_size_exceeded", maxGroupSize: 15 }}
+      />,
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Max group size is 15",
+    );
+    expect(
+      screen.getByRole("link", { name: "request a custom quote" }),
+    ).toHaveAttribute("href", "/#contact");
+  });
+
   it("empty invariant: shows prompt when showEmptyPrompt is true", () => {
     render(
       <BookingWidgetBreakdown quote={null} loading={false} error={null} />,
