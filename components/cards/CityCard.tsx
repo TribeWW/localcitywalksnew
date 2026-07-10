@@ -75,14 +75,14 @@ function MinimalCityCardItem({
   href,
   image,
   imageAlt,
-  title,
+  cityName,
   priceAmount,
   ratingLine,
 }: {
   href: string;
   image: string;
   imageAlt: string;
-  title: string;
+  cityName: string;
   priceAmount: string | null;
   ratingLine: string | null;
 }) {
@@ -111,19 +111,22 @@ function MinimalCityCardItem({
           </div>
         ) : null}
         <div className="absolute inset-0 z-10 flex flex-col justify-end p-5">
-          <h3 className="mb-2 line-clamp-2 text-lg font-semibold leading-tight text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.3)]">
-            {title}
+          <span className="mb-0.5 text-sm font-medium text-white/90 [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
+            Hello
+          </span>
+          <h3 className="m-0 mb-2 text-xl font-semibold leading-tight text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.3)]">
+            {cityName}
           </h3>
           {priceAmount ? (
-            <p className="text-sm text-white/90 [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
+            <div className="text-sm text-white/80 [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
               From{" "}
               <span className="text-base font-bold text-white">
                 {priceAmount}
               </span>{" "}
               / adult
-            </p>
+            </div>
           ) : (
-            <p className="text-sm text-white/90 [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
+            <p className="text-sm text-white/80 [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
               Private tour
             </p>
           )}
@@ -150,7 +153,7 @@ const CityCard = ({
         const slugSegment = city.slug ?? city.id;
         const href = `/tours/${citySlug}/${slugSegment}`;
         const imageAlt = getCityCardImageAlt(city.cityName ?? city.title);
-        const { title, ratingLine, subtitle, priceAmount } =
+        const { title, cityName, ratingLine, subtitle, priceAmount } =
           getCityCardDisplayContent(city, cardsWidgetUpdate);
 
         if (cardsWidgetUpdate) {
@@ -160,7 +163,7 @@ const CityCard = ({
               href={href}
               image={normalizeCardImageUrl(city.image)}
               imageAlt={imageAlt}
-              title={title}
+              cityName={cityName}
               priceAmount={priceAmount}
               ratingLine={ratingLine}
             />

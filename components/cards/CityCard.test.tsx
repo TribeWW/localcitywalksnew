@@ -74,9 +74,11 @@ describe("CityCard", () => {
       />,
     );
 
+    expect(screen.getByText("Hello")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: "Toledo" })).toBeInTheDocument();
     expect(
-      screen.getByText("Hello Toledo: Private 2-Hour Intro City Walk with Local Guide"),
-    ).toBeInTheDocument();
+      screen.queryByText("Hello Toledo: Private 2-Hour Intro City Walk with Local Guide"),
+    ).not.toBeInTheDocument();
     expect(screen.getByText(/From/i)).toBeInTheDocument();
     expect(screen.getByText("€124")).toBeInTheDocument();
     expect(screen.getByText(/\/ adult/i)).toBeInTheDocument();
@@ -85,6 +87,8 @@ describe("CityCard", () => {
   it("falls back to Private tour when flag is on but price enrichment is missing", () => {
     render(<CityCard cities={[baseCity]} cardsWidgetUpdate />);
 
+    expect(screen.getByText("Hello")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: "Toledo" })).toBeInTheDocument();
     expect(screen.getByText("Private tour")).toBeInTheDocument();
     expect(screen.queryByText(/From/i)).not.toBeInTheDocument();
   });
