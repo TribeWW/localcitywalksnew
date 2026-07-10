@@ -8,7 +8,10 @@
 
 "use server";
 
+import { headers } from "next/headers";
+
 import { runInitiateCheckoutPayment } from "@/lib/checkout/initiate-checkout-payment";
+import { resolveCheckoutOrigin } from "@/lib/stripe/checkout-origin";
 import type { InitiateCheckoutPaymentResult } from "@/types/bokun";
 
 /**
@@ -20,5 +23,8 @@ import type { InitiateCheckoutPaymentResult } from "@/types/bokun";
 export async function initiateCheckoutPayment(
   input: unknown,
 ): Promise<InitiateCheckoutPaymentResult> {
-  return runInitiateCheckoutPayment(input);
+  const requestHeaders = await headers();
+  const checkoutOrigin = resolveCheckoutOrigin({ headers: requestHeaders });
+
+  return runInitiateCheckoutPayment(input, { checkoutOrigin });
 }

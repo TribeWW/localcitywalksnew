@@ -66,6 +66,21 @@ describe("buildStripeCheckoutRedirectUrls", () => {
     );
     expect(urls.cancelUrl).toContain("cancelled=1");
   });
+
+  it("uses the provided checkout origin for success and cancel URLs", () => {
+    const urls = buildStripeCheckoutRedirectUrls(
+      "signed.token.value",
+      "550e8400-e29b-41d4-a716-446655440000",
+      "https://staging.localcitywalks.com",
+    );
+
+    expect(urls.successUrl).toBe(
+      "https://staging.localcitywalks.com/checkout/success?session_id={CHECKOUT_SESSION_ID}",
+    );
+    expect(urls.cancelUrl).toBe(
+      "https://staging.localcitywalks.com/checkout?h=signed.token.value&checkoutId=550e8400-e29b-41d4-a716-446655440000&cancelled=1",
+    );
+  });
 });
 
 describe("createStripeCheckoutSession", () => {

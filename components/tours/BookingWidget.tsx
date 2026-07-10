@@ -515,7 +515,10 @@ export default function BookingWidget({
   return (
     <BookingWidgetShell>
       <Form {...form}>
-        <form className="space-y-0" onSubmit={(event) => event.preventDefault()}>
+        <form
+          className="space-y-0"
+          onSubmit={(event) => event.preventDefault()}
+        >
           <BookingWidgetFromPrice
             amount={fromPriceAmount}
             currency={fromPriceCurrency}
@@ -621,12 +624,6 @@ export default function BookingWidget({
                 quote={quote}
                 disabled={!isLanguageReady}
               />
-
-              {hasLanguageOptions && !selectedLanguageCode ? (
-                <p className="text-sm text-muted-foreground">
-                  Select a language to choose participants
-                </p>
-              ) : null}
 
               <div className="pt-3">
                 <BookingWidgetBreakdown

@@ -14,6 +14,8 @@ export interface BuildStripeCheckoutCancelUrlParams {
   handoffToken: string;
   /** Internal pending checkout id — used to abort Bókun reserve on return. */
   checkoutId: string;
+  /** Public site origin for the cancel redirect; defaults via {@link resolveCheckoutOrigin}. */
+  origin?: string;
 }
 
 /**
@@ -24,13 +26,14 @@ export interface BuildStripeCheckoutCancelUrlParams {
 export function buildStripeCheckoutCancelUrl({
   handoffToken,
   checkoutId,
+  origin,
 }: BuildStripeCheckoutCancelUrlParams): string {
-  const origin = resolveCheckoutOrigin();
+  const resolvedOrigin = origin ?? resolveCheckoutOrigin();
   const params = new URLSearchParams({
     h: handoffToken,
     checkoutId,
     cancelled: "1",
   });
 
-  return `${origin}/checkout?${params.toString()}`;
+  return `${resolvedOrigin}/checkout?${params.toString()}`;
 }

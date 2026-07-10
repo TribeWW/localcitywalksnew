@@ -39,6 +39,8 @@ export interface CreateStripeCheckoutSessionInput {
   productTitle: string;
   /** Encoded handoff token for cancel redirect (`/checkout?h=…`). */
   handoffToken: string;
+  /** Public site origin for success/cancel URLs; defaults via {@link resolveCheckoutOrigin}. */
+  checkoutOrigin?: string;
 }
 
 export type CreateStripeCheckoutSessionResult =
@@ -78,19 +80,25 @@ export function resolveStripeCheckoutExpiresAt(): number {
  *
  * @param handoffToken - Raw handoff token for cancel return to summary
  * @param checkoutId - Internal checkout uuid for cancel cleanup
+ * @param origin - Public site origin; defaults via {@link resolveCheckoutOrigin}
  */
 export function buildStripeCheckoutRedirectUrls(
   handoffToken: string,
   checkoutId: string,
+  origin?: string,
 ): {
   successUrl: string;
   cancelUrl: string;
 } {
-  const origin = resolveCheckoutOrigin();
+  const resolvedOrigin = origin ?? resolveCheckoutOrigin();
 
   return {
-    successUrl: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancelUrl: buildStripeCheckoutCancelUrl({ handoffToken, checkoutId }),
+    successUrl: `${resolvedOrigin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancelUrl: buildStripeCheckoutCancelUrl({
+      handoffToken,
+      checkoutId,
+      origin: resolvedOrigin,
+    }),
   };
 }
 
@@ -122,6 +130,7 @@ export async function createStripeCheckoutSession(
   const { successUrl, cancelUrl } = buildStripeCheckoutRedirectUrls(
     input.handoffToken,
     input.checkoutId,
+    input.checkoutOrigin,
   );
   const currency = input.quote.currency.toLowerCase();
 
