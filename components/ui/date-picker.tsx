@@ -7,7 +7,7 @@
  * Supports `isDateDisabled` for Bókun sold-out / no-slot dates (LOC-1050).
  */
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -58,6 +58,31 @@ function resolveVisibleMonth(
 }
 
 /**
+ * Measures the painted height of calendar content inside the popover panel.
+ * iOS Safari can under-report flex/aspect-ratio layout height; descendant
+ * bounds reflect what users actually see.
+ */
+function measureWidgetPopoverPanelHeight(container: HTMLElement): number {
+  const containerTop = container.getBoundingClientRect().top;
+  let maxBottom = containerTop;
+
+  const calendar = container.querySelector("[data-slot='calendar']");
+  if (!calendar) {
+    return Math.ceil(container.getBoundingClientRect().height);
+  }
+
+  maxBottom = Math.max(maxBottom, calendar.getBoundingClientRect().bottom);
+
+  calendar.querySelectorAll("*").forEach((node) => {
+    if (node instanceof HTMLElement) {
+      maxBottom = Math.max(maxBottom, node.getBoundingClientRect().bottom);
+    }
+  });
+
+  return Math.ceil(maxBottom - containerTop);
+}
+
+/**
  * Button-triggered single-date calendar picker.
  *
  * @param props.isDateDisabled - Optional predicate; used by `BookingWidget` for unavailable days
@@ -76,8 +101,39 @@ const DatePicker = ({
 }: DatePickerProps) => {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(() => resolveVisibleMonth(value, minDate));
+  const widgetPanelRef = useRef<HTMLDivElement>(null);
+  const [widgetPanelHeight, setWidgetPanelHeight] = useState<number | undefined>();
 
   const useDropdownCaption = Boolean(minDate && maxDate);
+
+  useEffect(() => {
+    if (!open || variant !== "widget" || !widgetPanelRef.current) {
+      setWidgetPanelHeight(undefined);
+      return;
+    }
+
+    const panel = widgetPanelRef.current;
+
+    const syncPanelHeight = () => {
+      setWidgetPanelHeight(measureWidgetPopoverPanelHeight(panel));
+    };
+
+    syncPanelHeight();
+    const rafId = requestAnimationFrame(syncPanelHeight);
+
+    const observer = new ResizeObserver(syncPanelHeight);
+    observer.observe(panel);
+
+    const calendar = panel.querySelector("[data-slot='calendar']");
+    if (calendar) {
+      observer.observe(calendar);
+    }
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      observer.disconnect();
+    };
+  }, [open, variant, month]);
 
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen);
@@ -150,9 +206,19 @@ const DatePicker = ({
           side="bottom"
           sideOffset={4}
           collisionPadding={12}
-          className="w-[var(--radix-popover-trigger-width)] p-0"
+          className={cn(
+            "w-[var(--radix-popover-trigger-width)] p-0",
+            variant === "widget" &&
+              "h-auto overflow-y-auto bg-popover data-[state=closed]:animate-none data-[state=open]:animate-none max-h-[var(--radix-popover-content-available-height)]",
+          )}
         >
           <div
+            ref={variant === "widget" ? widgetPanelRef : undefined}
+            style={
+              variant === "widget" && widgetPanelHeight != null
+                ? { minHeight: widgetPanelHeight }
+                : undefined
+            }
             className={cn(
               variant === "widget"
                 ? "w-full rounded-md bg-popover p-2"
@@ -175,9 +241,7 @@ const DatePicker = ({
                 variant === "widget" &&
                   "w-full [--cell-size:max(2rem,calc((100%_-_0.25rem)_/_7))]",
               )}
-              classNames={
-                variant === "widget" ? { root: "w-full" } : undefined
-              }
+              classNames={variant === "widget" ? { root: "w-full" } : undefined}
             />
           </div>
         </PopoverContent>
