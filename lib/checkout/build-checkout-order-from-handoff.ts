@@ -5,6 +5,7 @@
 import { format, parseISO } from "date-fns";
 
 import { formatParticipantSummary } from "@/lib/booking/format-participant-summary";
+import { formatBokunLanguage } from "@/lib/utils/format-bokun-language";
 import type { CheckoutHandoffPayload } from "@/lib/checkout/handoff-token";
 import type { CheckoutOrderFixture } from "@/components/checkout/checkout-mock-fixture";
 import type { BookingWidgetQuote } from "@/types/bokun";
@@ -45,6 +46,7 @@ export function buildCheckoutOrderFromHandoff(
     dateLabel: formatCheckoutDateLabel(payload.date),
     timeLabel: startTimeLabel,
     participantsLabel: formatParticipantSummary(payload.participants),
+    languageLabel: payload.language ? formatBokunLanguage(payload.language) : undefined,
     totalAmount: quote.totalAmount,
     currency: quote.currency,
   };

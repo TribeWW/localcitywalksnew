@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  getCityCardCityName,
   getCityCardImageAlt,
   getCityCardPriceAmount,
   getCityCardRatingLine,
@@ -23,6 +24,31 @@ describe("getCityCardTitle", () => {
   it("returns the display title unchanged", () => {
     expect(getCityCardTitle("Hello Barcelona: Private Walk")).toBe(
       "Hello Barcelona: Private Walk",
+    );
+  });
+});
+
+describe("getCityCardCityName", () => {
+  it("prefers googlePlace cityName when present", () => {
+    expect(
+      getCityCardCityName({
+        cityName: "Toledo",
+        title: "Hello Toledo: Private Walk",
+      }),
+    ).toBe("Toledo");
+  });
+
+  it("parses city from Hello product title when cityName is missing", () => {
+    expect(
+      getCityCardCityName({
+        title: "Hello Biarritz: Private 2-Hour Intro City Walk",
+      }),
+    ).toBe("Biarritz");
+  });
+
+  it("falls back to full title when city cannot be resolved", () => {
+    expect(getCityCardCityName({ title: "Barcelona Walk" })).toBe(
+      "Barcelona Walk",
     );
   });
 });

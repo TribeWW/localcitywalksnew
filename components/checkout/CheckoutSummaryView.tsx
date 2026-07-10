@@ -181,6 +181,7 @@ export function CheckoutSummaryView({
             dateLabel={order.dateLabel}
             timeLabel={order.timeLabel}
             participantsLabel={order.participantsLabel}
+            languageLabel={order.languageLabel}
             priceAmount={order.totalAmount}
             currency={order.currency}
           />

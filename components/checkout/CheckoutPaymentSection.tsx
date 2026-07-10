@@ -7,7 +7,7 @@
  * matches design brief §3.3 visual structure.
  */
 
-import { ShieldCheck } from "lucide-react";
+import { BadgeCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -60,22 +60,21 @@ export function CheckoutPaymentSection({
           className={CHECKOUT_CHECKBOX_CLASS}
           aria-required
         />
-        <div className="text-sm font-normal leading-relaxed text-nightsky">
-          <Label
-            htmlFor="checkout-terms"
-            className="inline font-normal text-inherit"
-          >
-            I accept the terms &amp; conditions.
-          </Label>{" "}
+        <Label
+          htmlFor="checkout-terms"
+          className="text-sm font-normal leading-relaxed text-nightsky"
+        >
+          I accept the{" "}
           <a
             href={termsHref}
             target="_blank"
             rel="noopener noreferrer"
             className="text-watermelon underline underline-offset-[3px] hover:text-tangerine"
           >
-            Read terms
+            terms &amp; conditions
           </a>
-        </div>{" "}
+          .
+        </Label>
       </div>
 
       <Button
@@ -90,8 +89,8 @@ export function CheckoutPaymentSection({
       </Button>
 
       <div className="mt-6 flex items-start gap-2 text-sm text-muted-foreground">
-        <ShieldCheck
-          className="mt-0.5 h-4 w-4 shrink-0 text-nightsky"
+        <BadgeCheck
+          className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-600"
           aria-hidden
         />
         <p>

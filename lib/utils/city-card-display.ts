@@ -3,12 +3,33 @@ import type { CityCardData } from "@/types/bokun";
 
 type CityCardDisplayFields = Pick<
   CityCardData,
-  "title" | "displayPricePerPerson" | "displayPriceCurrency" | "showRating" | "ratingLabel"
+  | "title"
+  | "cityName"
+  | "displayPricePerPerson"
+  | "displayPriceCurrency"
+  | "showRating"
+  | "ratingLabel"
 >;
 
 /** Returns the listing card headline (Bókun product title). */
 export function getCityCardTitle(displayTitle: string): string {
   return displayTitle;
+}
+
+/** City name for the minimal card headline (`Hello` + city). */
+export function getCityCardCityName(
+  city: Pick<CityCardData, "cityName" | "title">,
+): string {
+  if (city.cityName?.trim()) {
+    return city.cityName.trim();
+  }
+
+  const match = /^Hello\s+([^:]+)/i.exec(city.title?.trim() ?? "");
+  if (match?.[1]) {
+    return match[1].trim();
+  }
+
+  return city.title?.trim() || "Tour";
 }
 
 /** Descriptive alt text for listing card photos (not the greeting headline). */
@@ -67,6 +88,7 @@ export function getCityCardDisplayContent(
 ) {
   return {
     title: getCityCardTitle(city.title),
+    cityName: getCityCardCityName(city),
     priceAmount: getCityCardPriceAmount(city, cardsWidgetUpdate),
     ratingLine: getCityCardRatingLine(city, cardsWidgetUpdate),
     subtitle: getCityCardSubtitle(cardsWidgetUpdate),
