@@ -478,12 +478,47 @@ describe("BookingWidget — slot-driven invariants", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("language invariant: blocks quote until a language valid for the slot is selected", async () => {
+    getTourAvailabilitiesMock.mockResolvedValue({
+      success: true,
+      data: [
+        buildOpenSlot({
+          guidedLanguages: ["FR", "es"],
+        }),
+      ],
+    });
+
+    render(<BookingWidget {...defaultBootstrap} />);
+    await flushAvailabilitiesLoad();
+    await openConfiguringStep();
+    await selectAvailableDate();
+
+    const guestsTrigger = screen.getByRole("button", { name: /1 participant/i });
+    expect(guestsTrigger).toBeDisabled();
+
+    getTourBookingQuoteMock.mockClear();
+    await selectLanguage("FR");
+
+    await waitFor(() => {
+      expect(guestsTrigger).toBeEnabled();
+    });
+
+    await waitFor(
+      () => {
+        expect(getTourBookingQuoteMock).toHaveBeenCalledWith(
+          expect.objectContaining({ language: "FR" }),
+        );
+      },
+      { timeout: 800 },
+    );
+  });
+
   it("minParticipants invariant: blocks Continue to checkout when below minParticipantsToBookNow", async () => {
     render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
     await openConfiguringStep();
     await selectAvailableDate();
-    await selectLanguage("fr");
+    await selectLanguage("FR");
 
     await waitFor(() => {
       expect(

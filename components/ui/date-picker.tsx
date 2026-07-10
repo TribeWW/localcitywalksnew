@@ -171,7 +171,7 @@ const DatePicker = ({
               initialFocus
               className={cn(
                 variant === "widget" &&
-                  "w-full [--cell-size:max(2rem,calc((100%-0.25rem)/7))]",
+                  "w-full [--cell-size:max(2rem,calc((100% - 0.25rem) / 7))]",
               )}
               classNames={
                 variant === "widget" ? { root: "w-full" } : undefined

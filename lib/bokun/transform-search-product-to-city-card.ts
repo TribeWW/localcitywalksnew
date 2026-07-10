@@ -38,8 +38,8 @@ export function transformSearchProductToCityCard(
   const cityName = productData.googlePlace?.city?.trim();
   const productTitle = productData.title?.trim();
   const displayTitle = productTitle || cityName || "Tour";
-  const citySlug = slugifyForUrl(cityName ?? displayTitle);
-  const titleSlug = slugifyForUrl(productData.title);
+  const citySlug = slugifyForUrl(cityName || displayTitle);
+  const titleSlug = slugifyForUrl(productTitle ?? "");
   const slug =
     titleSlug === "unknown" ? productId : `${titleSlug}-${productId}`;
   return {

@@ -317,9 +317,13 @@ export default function BookingWidget({
     [languageOptions],
   );
 
+  const trimmedLanguage = language?.trim() ?? "";
+  const selectedLanguageCode = languageCodes.includes(trimmedLanguage)
+    ? trimmedLanguage
+    : undefined;
+
   const hasLanguageOptions = languageOptions.length > 0;
-  const isLanguageSelected = Boolean(language?.trim());
-  const isLanguageReady = !hasLanguageOptions || isLanguageSelected;
+  const isLanguageReady = !hasLanguageOptions || selectedLanguageCode != null;
 
   const totalParticipants = adults + youth + children + infants;
 
@@ -347,7 +351,10 @@ export default function BookingWidget({
       return;
     }
 
-    if (language && languageCodes.includes(language)) {
+    if (trimmedLanguage && languageCodes.includes(trimmedLanguage)) {
+      if (trimmedLanguage !== language) {
+        form.setValue("language", trimmedLanguage);
+      }
       return;
     }
 
@@ -355,7 +362,7 @@ export default function BookingWidget({
       "language",
       languageOptions.length === 1 ? languageOptions[0]!.code : undefined,
     );
-  }, [form, language, languageCodes, languageOptions]);
+  }, [form, language, languageCodes, languageOptions, trimmedLanguage]);
 
   useEffect(() => {
     const startTimeId = startTimeIdValue ? Number(startTimeIdValue) : NaN;
@@ -394,7 +401,7 @@ export default function BookingWidget({
           date,
           startTimeId,
           participants: participantCheck.data,
-          language: language?.trim() || undefined,
+          language: selectedLanguageCode,
           currency: "EUR",
         });
 
@@ -426,7 +433,7 @@ export default function BookingWidget({
     };
   }, [
     isLanguageReady,
-    language,
+    selectedLanguageCode,
     participants,
     preferredDate,
     productId,
@@ -476,7 +483,7 @@ export default function BookingWidget({
         values: {
           preferredDate,
           startTimeId: startTimeIdValue,
-          language,
+          language: selectedLanguageCode,
           adults,
           youth,
           children,
@@ -615,7 +622,7 @@ export default function BookingWidget({
                 disabled={!isLanguageReady}
               />
 
-              {hasLanguageOptions && !isLanguageSelected ? (
+              {hasLanguageOptions && !selectedLanguageCode ? (
                 <p className="text-sm text-muted-foreground">
                   Select a language to choose participants
                 </p>
