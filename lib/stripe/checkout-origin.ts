@@ -51,15 +51,26 @@ export function isAllowedPreviewCheckoutHost(host: string): boolean {
 export function resolveCheckoutOriginFromHeaders(
   requestHeaders: Headers,
 ): string | null {
-  const forwardedHost = requestHeaders.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const forwardedHost = requestHeaders
+    .get("x-forwarded-host")
+    ?.split(",")[0]
+    ?.trim();
   const host = forwardedHost || requestHeaders.get("host")?.trim();
   if (!host || !isAllowedPreviewCheckoutHost(host)) {
     return null;
   }
 
-  const forwardedProto =
-    requestHeaders.get("x-forwarded-proto")?.split(",")[0]?.trim() || "https";
-  const protocol = forwardedProto === "http" ? "http" : "https";
+  const forwardedProto = requestHeaders
+    .get("x-forwarded-proto")
+    ?.split(",")[0]
+    ?.trim();
+  const isLocalHost = /^(localhost|127\.0\.0\.1)(:\d+)?$/i.test(host);
+  const protocol =
+    forwardedProto === "http" || forwardedProto === "https"
+      ? forwardedProto
+      : isLocalHost
+        ? "http"
+        : "https";
 
   return `${protocol}://${host.replace(/\/$/, "")}`;
 }
