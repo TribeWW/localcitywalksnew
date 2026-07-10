@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { WIDGET_FIELD_TRIGGER_CLASS } from "@/components/tours/booking-widget/widget-field-styles";
+import { WIDGET_DROPDOWN_TRIGGER_LAYOUT_CLASS, WIDGET_FIELD_TRIGGER_CLASS } from "@/components/tours/booking-widget/widget-field-styles";
 
 /** Props for `LanguageSelector`. */
 interface LanguageSelectorProps {
@@ -61,7 +61,9 @@ const LanguageSelector = ({
     >
       <SelectTrigger
         className={cn(
-          variant === "widget" ? WIDGET_FIELD_TRIGGER_CLASS : "w-full",
+          variant === "widget"
+            ? cn(WIDGET_FIELD_TRIGGER_CLASS, WIDGET_DROPDOWN_TRIGGER_LAYOUT_CLASS)
+            : "w-full",
           className,
         )}
       >

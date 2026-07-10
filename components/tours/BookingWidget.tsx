@@ -317,6 +317,10 @@ export default function BookingWidget({
     [languageOptions],
   );
 
+  const hasLanguageOptions = languageOptions.length > 0;
+  const isLanguageSelected = Boolean(language?.trim());
+  const isLanguageReady = !hasLanguageOptions || isLanguageSelected;
+
   const totalParticipants = adults + youth + children + infants;
 
   const minParticipantsRequired = useMemo(() => {
@@ -356,6 +360,13 @@ export default function BookingWidget({
   useEffect(() => {
     const startTimeId = startTimeIdValue ? Number(startTimeIdValue) : NaN;
     if (!preferredDate || !Number.isFinite(startTimeId) || startTimeId <= 0) {
+      setQuote(null);
+      setQuoteError(null);
+      setQuoteLoading(false);
+      return;
+    }
+
+    if (!isLanguageReady) {
       setQuote(null);
       setQuoteError(null);
       setQuoteLoading(false);
@@ -413,7 +424,14 @@ export default function BookingWidget({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [language, participants, preferredDate, productId, startTimeIdValue]);
+  }, [
+    isLanguageReady,
+    language,
+    participants,
+    preferredDate,
+    productId,
+    startTimeIdValue,
+  ]);
 
   const isDateDisabled = useCallback(
     (date: Date) => {
@@ -433,7 +451,8 @@ export default function BookingWidget({
     !availError &&
     !belowMinParticipants &&
     Boolean(startTimeIdValue) &&
-    Boolean(preferredDate);
+    Boolean(preferredDate) &&
+    isLanguageReady;
 
   const handleParticipantChange = (key: GuestCategoryKey, value: number) => {
     form.setValue(key, value, { shouldDirty: true, shouldValidate: true });
@@ -577,7 +596,7 @@ export default function BookingWidget({
                             value={field.value}
                             onChange={field.onChange}
                             options={languageOptions}
-                            placeholder="Select language"
+                            placeholder="Select a language"
                             disabled={!startTimeIdValue}
                             variant="widget"
                           />
@@ -593,7 +612,14 @@ export default function BookingWidget({
                 participants={participants}
                 onChange={handleParticipantChange}
                 quote={quote}
+                disabled={!isLanguageReady}
               />
+
+              {hasLanguageOptions && !isLanguageSelected ? (
+                <p className="text-sm text-muted-foreground">
+                  Select a language to choose participants
+                </p>
+              ) : null}
 
               <div className="pt-3">
                 <BookingWidgetBreakdown

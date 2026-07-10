@@ -17,7 +17,7 @@ interface CityCardProps {
   cities: CityCardData[];
   /** When true, grid has no horizontal padding (py-6 only); use when parent provides px-6 for alignment with a sibling (e.g. filter button) */
   noHorizontalPadding?: boolean;
-  /** Vercel Flag `cards-widget-update` — gates enriched card UI (price, ratings, Hello {city}). */
+  /** Vercel Flag `cards-widget-update` — gates enriched card UI (price, ratings). */
   cardsWidgetUpdate?: boolean;
 }
 
@@ -48,7 +48,9 @@ function LegacyCityCardItem({
           />
         </div>
         <div className="flex flex-col gap-2 p-6 text-center">
-          <h3 className="text-base font-semibold text-nightsky">{title}</h3>
+          <h3 className="line-clamp-2 text-base font-semibold text-nightsky">
+            {title}
+          </h3>
           {subtitle ? <p className="text-sm">{subtitle}</p> : null}
         </div>
       </Link>
@@ -109,7 +111,7 @@ function MinimalCityCardItem({
           </div>
         ) : null}
         <div className="absolute inset-0 z-10 flex flex-col justify-end p-5">
-          <h3 className="mb-2 text-lg font-semibold leading-tight text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.3)]">
+          <h3 className="mb-2 line-clamp-2 text-lg font-semibold leading-tight text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.3)]">
             {title}
           </h3>
           {priceAmount ? (
@@ -147,7 +149,7 @@ const CityCard = ({
         const citySlug = city.citySlug ?? slugifyForUrl(city.title);
         const slugSegment = city.slug ?? city.id;
         const href = `/tours/${citySlug}/${slugSegment}`;
-        const imageAlt = getCityCardImageAlt(city.title);
+        const imageAlt = getCityCardImageAlt(city.cityName ?? city.title);
         const { title, ratingLine, subtitle, priceAmount } =
           getCityCardDisplayContent(city, cardsWidgetUpdate);
 

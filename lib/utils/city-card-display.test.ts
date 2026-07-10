@@ -20,12 +20,10 @@ const enrichedCard: Pick<
 };
 
 describe("getCityCardTitle", () => {
-  it("prefixes Hello when the cards widget flag is on", () => {
-    expect(getCityCardTitle("Barcelona", true)).toBe("Hello Barcelona");
-  });
-
-  it("keeps the plain city title when the flag is off", () => {
-    expect(getCityCardTitle("Barcelona", false)).toBe("Barcelona");
+  it("returns the display title unchanged", () => {
+    expect(getCityCardTitle("Hello Barcelona: Private Walk")).toBe(
+      "Hello Barcelona: Private Walk",
+    );
   });
 });
 

@@ -28,6 +28,8 @@ interface BookingGuestsPickerProps {
   onChange: (key: GuestCategoryKey, value: number) => void;
   /** Latest quote for per-category unit hints; `null` before first quote. */
   quote: BookingWidgetQuote | null;
+  /** When true, the accordion trigger and steppers are not interactive. */
+  disabled?: boolean;
 }
 
 /**
@@ -44,6 +46,7 @@ export default function BookingGuestsPicker({
   participants,
   onChange,
   quote,
+  disabled = false,
 }: BookingGuestsPickerProps) {
   const [open, setOpen] = useState(false);
   const totalGuests =
@@ -64,11 +67,19 @@ export default function BookingGuestsPicker({
     <div>
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        disabled={disabled}
+        aria-disabled={disabled}
+        onClick={() => {
+          if (disabled) return;
+          setOpen((value) => !value);
+        }}
         aria-expanded={open}
         className={cn(
-          "flex w-full cursor-pointer items-center justify-between border-[1.5px] border-border bg-white px-3.5 py-2.5 text-base text-foreground transition-[border-radius]",
+          "flex w-full items-center justify-between border-[1.5px] border-border bg-white px-3.5 py-2.5 text-base text-foreground transition-[border-radius]",
           open ? "rounded-t-lg rounded-b-none" : "rounded-lg",
+          disabled
+            ? "cursor-not-allowed opacity-60"
+            : "cursor-pointer",
         )}
       >
         <span className="flex items-center gap-2">

@@ -139,4 +139,26 @@ describe("BookingGuestsPicker", () => {
 
     expect(onChange).not.toHaveBeenCalled();
   });
+
+  it("disabled invariant: prevents accordion expand and stepper interaction", () => {
+    const onChange = vi.fn();
+    render(
+      <BookingGuestsPicker
+        participants={defaultParticipants}
+        onChange={onChange}
+        quote={null}
+        disabled
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: /1 participant/i });
+    expect(trigger).toBeDisabled();
+    expect(trigger).toHaveAttribute("aria-disabled", "true");
+
+    fireEvent.click(trigger);
+
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByText("Adults")).not.toBeInTheDocument();
+    expect(onChange).not.toHaveBeenCalled();
+  });
 });

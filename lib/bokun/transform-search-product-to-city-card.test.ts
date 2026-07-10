@@ -21,7 +21,9 @@ describe("transformSearchProductToCityCard", () => {
 
     expect(card.id).toBe("1077682");
     expect(card.slug).toBe("hello-toledo-private-walk-1077682");
-    expect(card.title).toBe("Toledo");
+    expect(card.title).toBe("Hello Toledo Private Walk");
+    expect(card.cityName).toBe("Toledo");
+    expect(card.citySlug).toBe("toledo");
     expect(card.displayPricePerPerson).toBeUndefined();
     expect(card.showRating).toBeUndefined();
   });

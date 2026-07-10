@@ -40,7 +40,7 @@ export default function BookingWidgetFromPrice({
     <div className="mb-0">
       <p className="text-sm text-muted-foreground mb-1">From</p>
       <div className="flex items-baseline gap-1">
-        <span className="text-2xl font-bold text-nightsky">{formatted}</span>
+        <span className="text-[32px] font-bold text-nightsky">{formatted}</span>
         <span className="text-sm text-muted-foreground">per adult</span>
       </div>
     </div>
