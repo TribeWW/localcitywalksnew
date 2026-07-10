@@ -15,6 +15,10 @@ import {
   formatGuestUnitHint,
   type GuestCategoryKey,
 } from "@/components/tours/booking-widget/guest-categories";
+import {
+  WIDGET_FIELD_DISABLED_CLASS,
+  WIDGET_GUESTS_TRIGGER_CLASS,
+} from "@/components/tours/booking-widget/widget-field-styles";
 import type { BookingWidgetParticipants, BookingWidgetQuote } from "@/types/bokun";
 
 /** Props for `BookingGuestsPicker`. */
@@ -84,15 +88,19 @@ export default function BookingGuestsPicker({
         }}
         aria-expanded={open}
         className={cn(
-          "flex w-full items-center justify-between border-[1.5px] border-border bg-white px-3.5 py-2.5 text-base text-foreground transition-[border-radius]",
+          WIDGET_GUESTS_TRIGGER_CLASS,
           open ? "rounded-t-lg rounded-b-none" : "rounded-lg",
-          disabled
-            ? "cursor-not-allowed opacity-60"
-            : "cursor-pointer",
+          disabled ? WIDGET_FIELD_DISABLED_CLASS : "cursor-pointer",
         )}
       >
         <span className="flex items-center gap-2">
-          <Users className="h-[18px] w-[18px] text-muted-foreground" aria-hidden />
+          <Users
+            className={cn(
+              "h-[18px] w-[18px]",
+              disabled ? "text-current" : "text-muted-foreground",
+            )}
+            aria-hidden
+          />
           <span>
             {totalGuests} {totalGuests === 1 ? "participant" : "participants"}
           </span>
@@ -102,7 +110,11 @@ export default function BookingGuestsPicker({
           height="14"
           viewBox="0 0 14 14"
           fill="none"
-          className={cn("transition-transform", open && "rotate-180")}
+          className={cn(
+            "transition-transform",
+            disabled ? "text-current" : "text-muted-foreground",
+            open && "rotate-180",
+          )}
           aria-hidden
         >
           <path
@@ -111,7 +123,6 @@ export default function BookingGuestsPicker({
             strokeWidth="1.8"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-muted-foreground"
           />
         </svg>
       </button>

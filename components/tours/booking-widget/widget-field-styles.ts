@@ -19,3 +19,14 @@ export const WIDGET_DROPDOWN_TRIGGER_LAYOUT_CLASS =
 /** Full-width tangerine primary button used for Check availability, Book now, and Send request. */
 export const WIDGET_PRIMARY_BUTTON_CLASS =
   "w-full rounded-lg bg-tangerine py-2.5 px-5 text-base font-medium text-white hover:bg-tangerine/90 disabled:opacity-50 disabled:pointer-events-none";
+
+/**
+ * Disabled state for widget fields — matches Radix `SelectTrigger` with placeholder:
+ * `disabled:opacity-50` plus muted label colour (same as `data-[placeholder]:text-muted-foreground`).
+ */
+export const WIDGET_FIELD_DISABLED_CLASS =
+  "cursor-not-allowed opacity-50 pointer-events-none text-muted-foreground";
+
+/** Collapsed guests picker trigger — matches widget select/date field chrome. */
+export const WIDGET_GUESTS_TRIGGER_CLASS =
+  "flex w-full items-center justify-between border-[1.5px] border-border bg-white px-3.5 py-2.5 text-base font-normal text-foreground min-h-[44px] shadow-none transition-[border-radius]";
