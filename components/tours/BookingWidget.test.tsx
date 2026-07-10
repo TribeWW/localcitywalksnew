@@ -487,6 +487,7 @@ describe("BookingWidget — slot-driven invariants", () => {
         }),
       ],
     });
+    getTourBookingQuoteMock.mockClear();
 
     render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
@@ -495,8 +496,8 @@ describe("BookingWidget — slot-driven invariants", () => {
 
     const guestsTrigger = screen.getByRole("button", { name: /1 participant/i });
     expect(guestsTrigger).toBeDisabled();
+    expect(getTourBookingQuoteMock).not.toHaveBeenCalled();
 
-    getTourBookingQuoteMock.mockClear();
     await selectLanguage("FR");
 
     await waitFor(() => {
