@@ -214,6 +214,7 @@ export type ReserveBokunCheckoutResult =
         | "options_failed"
         | "reserve_unavailable"
         | "reserve_failed"
+        | "invalid_contact"
         | "invalid_response";
     };
 
@@ -432,7 +433,8 @@ export async function submitBokunCheckoutReserve(
   submitBody: BokunReserveSubmitRequest,
   currency: string = BOKUN_CHECKOUT_DEFAULT_CURRENCY,
 ): Promise<
-  { success: true; data: BokunCheckoutSubmitResponse } | { success: false }
+  | { success: true; data: BokunCheckoutSubmitResponse }
+  | { success: false; status?: number }
 > {
   const path = buildCheckoutPathWithCurrency(
     BOKUN_ENDPOINTS.CHECKOUT_SUBMIT,
@@ -457,7 +459,7 @@ export async function submitBokunCheckoutReserve(
       console.error(
         `[bokun-checkout] reserve submit failed (${response.status}) for ref ${submitBody.externalBookingReference}: ${errorBody.slice(0, 1000)}`,
       );
-      return { success: false };
+      return { success: false, status: response.status };
     }
 
     const data = (await response.json()) as BokunCheckoutSubmitResponse;
@@ -540,6 +542,9 @@ export async function reserveBokunCheckout(
   const submitBody = buildReserveSubmitBody(reserveOption.type, bookingRequest);
   const submitResult = await submitBokunCheckoutReserve(submitBody, currency);
   if (!submitResult.success) {
+    if (submitResult.status === 400) {
+      return { success: false, error: "invalid_contact" };
+    }
     return { success: false, error: "reserve_failed" };
   }
 

@@ -59,10 +59,15 @@ export function resolveBokunReserveFailureMessage(
     | "options_failed"
     | "reserve_unavailable"
     | "reserve_failed"
+    | "invalid_contact"
     | "invalid_response",
 ): string {
   if (error === "reserve_failed") {
     return resolveCheckoutQuoteUnavailableMessage("sold_out");
+  }
+
+  if (error === "invalid_contact") {
+    return "Please check your phone number is in international format (e.g. +1 234 567 8900).";
   }
 
   return CHECKOUT_PAYMENT_UNAVAILABLE_ERROR;
