@@ -3,12 +3,12 @@
 /**
  * Calendar date picker used by tour request and booking widget forms.
  *
- * Default / desktop widget: popover anchored to the trigger.
- * Mobile widget: centered dialog with scroll lock (iOS popover height bugs).
+ * Default / desktop widget: popover anchored to the trigger (`modal` on widget for Safari).
+ * Touch / narrow widget: centered dialog with scroll lock.
  * Supports `isDateDisabled` for Bókun sold-out / no-slot dates (LOC-1050).
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useSyncExternalStore, useState } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -49,20 +49,41 @@ interface DatePickerProps {
   hideLeadingIcon?: boolean;
 }
 
-const MOBILE_MEDIA_QUERY = "(max-width: 767px)";
+const NARROW_WIDGET_MEDIA = "(max-width: 1023px)";
+const COARSE_POINTER_MEDIA = "(pointer: coarse)";
 
-function useIsMobile(): boolean {
-  const [isMobile, setIsMobile] = useState(false);
+function subscribeToWidgetDialogPreference(onStoreChange: () => void) {
+  const narrow = window.matchMedia(NARROW_WIDGET_MEDIA);
+  const coarse = window.matchMedia(COARSE_POINTER_MEDIA);
+  const sync = () => onStoreChange();
 
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(MOBILE_MEDIA_QUERY);
-    const sync = () => setIsMobile(mediaQuery.matches);
-    sync();
-    mediaQuery.addEventListener("change", sync);
-    return () => mediaQuery.removeEventListener("change", sync);
-  }, []);
+  narrow.addEventListener("change", sync);
+  coarse.addEventListener("change", sync);
 
-  return isMobile;
+  return () => {
+    narrow.removeEventListener("change", sync);
+    coarse.removeEventListener("change", sync);
+  };
+}
+
+function getWidgetDialogPreferenceSnapshot(): boolean {
+  return (
+    window.matchMedia(NARROW_WIDGET_MEDIA).matches ||
+    window.matchMedia(COARSE_POINTER_MEDIA).matches
+  );
+}
+
+function getWidgetDialogPreferenceServerSnapshot(): boolean {
+  return true;
+}
+
+/** Touch or narrow viewports use a centered dialog instead of a popover. */
+function usePreferWidgetDialog(): boolean {
+  return useSyncExternalStore(
+    subscribeToWidgetDialogPreference,
+    getWidgetDialogPreferenceSnapshot,
+    getWidgetDialogPreferenceServerSnapshot,
+  );
 }
 
 function startOfDay(date: Date): Date {
@@ -99,8 +120,8 @@ const DatePicker = ({
 }: DatePickerProps) => {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(() => resolveVisibleMonth(value, minDate));
-  const isMobile = useIsMobile();
-  const useMobileWidgetDialog = variant === "widget" && isMobile;
+  const preferWidgetDialog = usePreferWidgetDialog();
+  const useWidgetDialog = variant === "widget" && preferWidgetDialog;
 
   const useDropdownCaption = Boolean(minDate && maxDate);
 
@@ -184,21 +205,20 @@ const DatePicker = ({
         variant === "widget" &&
           "w-full [--cell-size:max(2rem,calc((100%_-_0.25rem)_/_7))]",
       )}
-      classNames={variant === "widget" ? { root: "w-full" } : undefined}
     />
   );
 
-  if (useMobileWidgetDialog) {
+  if (useWidgetDialog) {
     return (
       <div className="w-full">
         <Dialog open={open} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>{triggerButton}</DialogTrigger>
           <DialogContent
             showCloseButton={false}
-            className="w-[calc(100%-2rem)] max-w-sm gap-0 border-border bg-popover p-4 shadow-lg sm:max-w-sm"
+            className="w-[calc(100%-2rem)] max-w-sm gap-0 border-border bg-popover p-0 shadow-lg sm:max-w-sm"
           >
             <DialogTitle className="sr-only">Select a date</DialogTitle>
-            <div className="w-full">{calendar}</div>
+            <div className="w-full p-2">{calendar}</div>
           </DialogContent>
         </Dialog>
       </div>
@@ -207,19 +227,26 @@ const DatePicker = ({
 
   return (
     <div className="w-full">
-      <Popover open={open} onOpenChange={handleOpenChange}>
+      <Popover
+        open={open}
+        onOpenChange={handleOpenChange}
+        modal={variant === "widget"}
+      >
         <PopoverTrigger asChild>{triggerButton}</PopoverTrigger>
         <PopoverContent
           align="start"
           side="bottom"
           sideOffset={4}
           collisionPadding={12}
-          className="w-[var(--radix-popover-trigger-width)] p-0"
+          className={cn(
+            "w-[var(--radix-popover-trigger-width)] p-0",
+            variant === "widget" && "overflow-hidden",
+          )}
         >
           <div
             className={cn(
               variant === "widget"
-                ? "w-full rounded-md bg-popover p-2"
+                ? "w-full p-2"
                 : "flex justify-center p-3",
             )}
           >
