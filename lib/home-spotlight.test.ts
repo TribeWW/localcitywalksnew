@@ -56,7 +56,8 @@ describe("getHomeSpotlightCityCards", () => {
     expect(cards).toEqual([
       {
         id: "1077682",
-        title: "Toledo",
+        title: "Hello Toledo Private Walk",
+        cityName: "Toledo",
         image: "/preview.jpg",
         countryCode: "ES",
         country: "Spain",
@@ -92,7 +93,8 @@ describe("getHomeSpotlightCityCards", () => {
     expect(cards).toHaveLength(1);
     expect(cards[0]).toEqual({
       id: "1077682",
-      title: "Toledo",
+      title: "Hello Toledo Private Walk",
+      cityName: "Toledo",
       image: "/preview.jpg",
       countryCode: "ES",
       country: "Spain",

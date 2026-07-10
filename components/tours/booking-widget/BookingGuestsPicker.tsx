@@ -7,7 +7,7 @@
  * categories with age range, live unit-price hints from the quote, and −/+ controls.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Minus, Plus, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -15,6 +15,10 @@ import {
   formatGuestUnitHint,
   type GuestCategoryKey,
 } from "@/components/tours/booking-widget/guest-categories";
+import {
+  WIDGET_FIELD_DISABLED_CLASS,
+  WIDGET_GUESTS_TRIGGER_CLASS,
+} from "@/components/tours/booking-widget/widget-field-styles";
 import type { BookingWidgetParticipants, BookingWidgetQuote } from "@/types/bokun";
 
 /** Props for `BookingGuestsPicker`. */
@@ -28,6 +32,8 @@ interface BookingGuestsPickerProps {
   onChange: (key: GuestCategoryKey, value: number) => void;
   /** Latest quote for per-category unit hints; `null` before first quote. */
   quote: BookingWidgetQuote | null;
+  /** When true, the accordion trigger and steppers are not interactive. */
+  disabled?: boolean;
 }
 
 /**
@@ -44,8 +50,16 @@ export default function BookingGuestsPicker({
   participants,
   onChange,
   quote,
+  disabled = false,
 }: BookingGuestsPickerProps) {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (disabled) {
+      setOpen(false);
+    }
+  }, [disabled]);
+
   const totalGuests =
     participants.adults +
     participants.youth +
@@ -54,6 +68,8 @@ export default function BookingGuestsPicker({
 
   /** Applies a delta to one category, clamped to configured min/max. */
   const updateCount = (key: GuestCategoryKey, delta: number) => {
+    if (disabled) return;
+
     const config = GUEST_CATEGORIES.find((c) => c.key === key)!;
     const current = participants[key];
     const next = Math.max(config.min, Math.min(config.max, current + delta));
@@ -64,15 +80,27 @@ export default function BookingGuestsPicker({
     <div>
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        disabled={disabled}
+        aria-disabled={disabled}
+        onClick={() => {
+          if (disabled) return;
+          setOpen((value) => !value);
+        }}
         aria-expanded={open}
         className={cn(
-          "flex w-full cursor-pointer items-center justify-between border-[1.5px] border-border bg-white px-3.5 py-2.5 text-base text-foreground transition-[border-radius]",
+          WIDGET_GUESTS_TRIGGER_CLASS,
           open ? "rounded-t-lg rounded-b-none" : "rounded-lg",
+          disabled ? WIDGET_FIELD_DISABLED_CLASS : "cursor-pointer",
         )}
       >
         <span className="flex items-center gap-2">
-          <Users className="h-[18px] w-[18px] text-muted-foreground" aria-hidden />
+          <Users
+            className={cn(
+              "h-[18px] w-[18px]",
+              disabled ? "text-current" : "text-muted-foreground",
+            )}
+            aria-hidden
+          />
           <span>
             {totalGuests} {totalGuests === 1 ? "participant" : "participants"}
           </span>
@@ -82,7 +110,11 @@ export default function BookingGuestsPicker({
           height="14"
           viewBox="0 0 14 14"
           fill="none"
-          className={cn("transition-transform", open && "rotate-180")}
+          className={cn(
+            "transition-transform",
+            disabled ? "text-current" : "text-muted-foreground",
+            open && "rotate-180",
+          )}
           aria-hidden
         >
           <path
@@ -91,12 +123,11 @@ export default function BookingGuestsPicker({
             strokeWidth="1.8"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-muted-foreground"
           />
         </svg>
       </button>
 
-      {open ? (
+      {open && !disabled ? (
         <div className="overflow-hidden rounded-b-lg border border-t-0 border-border">
           {GUEST_CATEGORIES.map((category, index) => {
             const count = participants[category.key];
@@ -122,11 +153,11 @@ export default function BookingGuestsPicker({
                   <button
                     type="button"
                     aria-label={`Decrease ${category.label}`}
-                    disabled={count <= category.min}
+                    disabled={disabled || count <= category.min}
                     onClick={() => updateCount(category.key, -1)}
                     className={cn(
                       "flex h-7 w-7 items-center justify-center rounded-full border-[1.5px] border-border bg-white",
-                      count <= category.min
+                      disabled || count <= category.min
                         ? "cursor-not-allowed opacity-40"
                         : "cursor-pointer",
                     )}
@@ -139,11 +170,11 @@ export default function BookingGuestsPicker({
                   <button
                     type="button"
                     aria-label={`Increase ${category.label}`}
-                    disabled={count >= category.max}
+                    disabled={disabled || count >= category.max}
                     onClick={() => updateCount(category.key, 1)}
                     className={cn(
                       "flex h-7 w-7 items-center justify-center rounded-full border-[1.5px] border-border bg-white",
-                      count >= category.max
+                      disabled || count >= category.max
                         ? "cursor-not-allowed opacity-40"
                         : "cursor-pointer",
                     )}

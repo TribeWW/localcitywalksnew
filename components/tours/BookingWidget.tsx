@@ -317,6 +317,14 @@ export default function BookingWidget({
     [languageOptions],
   );
 
+  const trimmedLanguage = language?.trim() ?? "";
+  const selectedLanguageCode = languageCodes.includes(trimmedLanguage)
+    ? trimmedLanguage
+    : undefined;
+
+  const hasLanguageOptions = languageOptions.length > 0;
+  const isLanguageReady = !hasLanguageOptions || selectedLanguageCode != null;
+
   const totalParticipants = adults + youth + children + infants;
 
   const minParticipantsRequired = useMemo(() => {
@@ -343,7 +351,10 @@ export default function BookingWidget({
       return;
     }
 
-    if (language && languageCodes.includes(language)) {
+    if (trimmedLanguage && languageCodes.includes(trimmedLanguage)) {
+      if (trimmedLanguage !== language) {
+        form.setValue("language", trimmedLanguage);
+      }
       return;
     }
 
@@ -351,11 +362,18 @@ export default function BookingWidget({
       "language",
       languageOptions.length === 1 ? languageOptions[0]!.code : undefined,
     );
-  }, [form, language, languageCodes, languageOptions]);
+  }, [form, language, languageCodes, languageOptions, trimmedLanguage]);
 
   useEffect(() => {
     const startTimeId = startTimeIdValue ? Number(startTimeIdValue) : NaN;
     if (!preferredDate || !Number.isFinite(startTimeId) || startTimeId <= 0) {
+      setQuote(null);
+      setQuoteError(null);
+      setQuoteLoading(false);
+      return;
+    }
+
+    if (!isLanguageReady) {
       setQuote(null);
       setQuoteError(null);
       setQuoteLoading(false);
@@ -383,7 +401,7 @@ export default function BookingWidget({
           date,
           startTimeId,
           participants: participantCheck.data,
-          language: language?.trim() || undefined,
+          language: selectedLanguageCode,
           currency: "EUR",
         });
 
@@ -413,7 +431,14 @@ export default function BookingWidget({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [language, participants, preferredDate, productId, startTimeIdValue]);
+  }, [
+    isLanguageReady,
+    selectedLanguageCode,
+    participants,
+    preferredDate,
+    productId,
+    startTimeIdValue,
+  ]);
 
   const isDateDisabled = useCallback(
     (date: Date) => {
@@ -433,7 +458,8 @@ export default function BookingWidget({
     !availError &&
     !belowMinParticipants &&
     Boolean(startTimeIdValue) &&
-    Boolean(preferredDate);
+    Boolean(preferredDate) &&
+    isLanguageReady;
 
   const handleParticipantChange = (key: GuestCategoryKey, value: number) => {
     form.setValue(key, value, { shouldDirty: true, shouldValidate: true });
@@ -457,7 +483,7 @@ export default function BookingWidget({
         values: {
           preferredDate,
           startTimeId: startTimeIdValue,
-          language,
+          language: selectedLanguageCode,
           adults,
           youth,
           children,
@@ -489,7 +515,10 @@ export default function BookingWidget({
   return (
     <BookingWidgetShell>
       <Form {...form}>
-        <form className="space-y-0" onSubmit={(event) => event.preventDefault()}>
+        <form
+          className="space-y-0"
+          onSubmit={(event) => event.preventDefault()}
+        >
           <BookingWidgetFromPrice
             amount={fromPriceAmount}
             currency={fromPriceCurrency}
@@ -577,7 +606,7 @@ export default function BookingWidget({
                             value={field.value}
                             onChange={field.onChange}
                             options={languageOptions}
-                            placeholder="Select language"
+                            placeholder="Select a language"
                             disabled={!startTimeIdValue}
                             variant="widget"
                           />
@@ -593,6 +622,7 @@ export default function BookingWidget({
                 participants={participants}
                 onChange={handleParticipantChange}
                 quote={quote}
+                disabled={!isLanguageReady}
               />
 
               <div className="pt-3">

@@ -59,10 +59,13 @@ export interface BokunPhoto {
  */
 export interface CityCardData {
   id: string;
+  /** Bókun product title for card headline; falls back to city name when missing. */
   title: string;
   image: string;
   countryCode?: string;
   country?: string;
+  /** Human-readable city from `googlePlace.city` — used for image alt text. */
+  cityName?: string;
   /** Slugified googlePlace.city for /tours/{city}/{slug} (e.g. "toledo", "aix-en-provence") */
   citySlug?: string;
   /** Generated slug for URL segment: slugify(title) + "-" + id (e.g. "hello-toledo-private-walk-1077682") */

@@ -6,15 +6,9 @@ type CityCardDisplayFields = Pick<
   "title" | "displayPricePerPerson" | "displayPriceCurrency" | "showRating" | "ratingLabel"
 >;
 
-export function getCityCardTitle(
-  cityTitle: string,
-  cardsWidgetUpdate: boolean,
-): string {
-  if (cardsWidgetUpdate) {
-    return `Hello ${cityTitle}`;
-  }
-
-  return cityTitle;
+/** Returns the listing card headline (Bókun product title). */
+export function getCityCardTitle(displayTitle: string): string {
+  return displayTitle;
 }
 
 /** Descriptive alt text for listing card photos (not the greeting headline). */
@@ -72,7 +66,7 @@ export function getCityCardDisplayContent(
   cardsWidgetUpdate: boolean,
 ) {
   return {
-    title: getCityCardTitle(city.title, cardsWidgetUpdate),
+    title: getCityCardTitle(city.title),
     priceAmount: getCityCardPriceAmount(city, cardsWidgetUpdate),
     ratingLine: getCityCardRatingLine(city, cardsWidgetUpdate),
     subtitle: getCityCardSubtitle(cardsWidgetUpdate),

@@ -31,7 +31,8 @@ vi.mock("next/link", () => ({
 
 const baseCity: CityCardData = {
   id: "1079932",
-  title: "Toledo",
+  title: "Hello Toledo: Private 2-Hour Intro City Walk with Local Guide",
+  cityName: "Toledo",
   image: "/placeholder-city.jpg",
   slug: "hello-toledo-1079932",
   citySlug: "toledo",
@@ -52,7 +53,9 @@ describe("CityCard", () => {
       />,
     );
 
-    expect(screen.getByText("Toledo")).toBeInTheDocument();
+    expect(
+      screen.getByText("Hello Toledo: Private 2-Hour Intro City Walk with Local Guide"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Private tour")).toBeInTheDocument();
     expect(screen.queryByText(/From/i)).not.toBeInTheDocument();
   });
@@ -71,7 +74,9 @@ describe("CityCard", () => {
       />,
     );
 
-    expect(screen.getByText("Hello Toledo")).toBeInTheDocument();
+    expect(
+      screen.getByText("Hello Toledo: Private 2-Hour Intro City Walk with Local Guide"),
+    ).toBeInTheDocument();
     expect(screen.getByText(/From/i)).toBeInTheDocument();
     expect(screen.getByText("€124")).toBeInTheDocument();
     expect(screen.getByText(/\/ adult/i)).toBeInTheDocument();

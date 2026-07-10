@@ -12,10 +12,8 @@ import { ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 
 import {
-  CHECKOUT_CARD_CLASS,
   CHECKOUT_CHECKBOX_CLASS,
   CHECKOUT_PRIMARY_BUTTON_CLASS,
 } from "./checkout-field-styles";
@@ -53,18 +51,6 @@ export function CheckoutPaymentSection({
         title="Payment"
         lead="Secure checkout powered by Stripe."
       />
-
-      <div
-        className={cn(
-          CHECKOUT_CARD_CLASS,
-          "mb-6 flex min-h-[120px] items-center justify-center bg-pearl-gray p-4 sm:mb-8",
-        )}
-        aria-hidden
-      >
-        <span className="text-sm text-muted-foreground">
-          Card details (Stripe Payment Element)
-        </span>
-      </div>
 
       <div className="mb-6 flex items-start gap-3 sm:mb-8">
         <Checkbox

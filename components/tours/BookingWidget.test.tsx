@@ -200,6 +200,14 @@ async function selectAvailableDate() {
   });
 }
 
+async function selectLanguage(code: string) {
+  await act(async () => {
+    fireEvent.change(screen.getByLabelText("Tour language"), {
+      target: { value: code },
+    });
+  });
+}
+
 async function waitForQuoteTotal() {
   await waitFor(() => {
     expect(screen.getByText("Total")).toBeInTheDocument();
@@ -210,6 +218,7 @@ async function waitForQuoteTotal() {
 async function completeStep1WithQuote() {
   await openConfiguringStep();
   await selectAvailableDate();
+  await selectLanguage("en");
   await waitForQuoteTotal();
 }
 
@@ -246,6 +255,8 @@ describe("BookingWidget — structure invariants", () => {
     render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
     await openConfiguringStep();
+    await selectAvailableDate();
+    await selectLanguage("en");
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /1 participant/i }));
@@ -255,6 +266,28 @@ describe("BookingWidget — structure invariants", () => {
     expect(screen.getByText("Youth")).toBeInTheDocument();
     expect(screen.getByText("Children")).toBeInTheDocument();
     expect(screen.getByText("Infants")).toBeInTheDocument();
+  });
+
+  it("language invariant: disables guests picker until a language is selected", async () => {
+    render(<BookingWidget {...defaultBootstrap} />);
+    await flushAvailabilitiesLoad();
+    await openConfiguringStep();
+    await selectAvailableDate();
+
+    const guestsTrigger = screen.getByRole("button", { name: /1 participant/i });
+    expect(guestsTrigger).toBeDisabled();
+    expect(
+      screen.getByText("Select a language to choose participants"),
+    ).toBeInTheDocument();
+
+    await selectLanguage("en");
+
+    await waitFor(() => {
+      expect(guestsTrigger).toBeEnabled();
+    });
+    expect(
+      screen.queryByText("Select a language to choose participants"),
+    ).not.toBeInTheDocument();
   });
 
   it("does not show legacy duration copy in the widget", async () => {
@@ -294,7 +327,7 @@ describe("BookingWidget — availability and quote invariants", () => {
     );
   });
 
-  it("debounce invariant: delays quote fetch until ~400ms after slot selection", async () => {
+  it("debounce invariant: delays quote fetch until ~400ms after language selection", async () => {
     render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
     await openConfiguringStep();
@@ -307,6 +340,8 @@ describe("BookingWidget — availability and quote invariants", () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(getTourBookingQuoteMock).not.toHaveBeenCalled();
 
+    await selectLanguage("en");
+
     await waitFor(
       () => {
         expect(getTourBookingQuoteMock).toHaveBeenCalledWith(
@@ -314,6 +349,7 @@ describe("BookingWidget — availability and quote invariants", () => {
             productId: "1079932",
             date: SLOT_DATE_ISO,
             startTimeId: START_TIME_ID,
+            language: "en",
             participants: { adults: 1, youth: 0, children: 0, infants: 0 },
             currency: "EUR",
           }),
@@ -334,6 +370,7 @@ describe("BookingWidget — availability and quote invariants", () => {
     });
     expect(checkoutButton).toBeDisabled();
 
+    await selectLanguage("en");
     await waitForQuoteTotal();
     expect(checkoutButton).toBeEnabled();
   });
@@ -441,11 +478,48 @@ describe("BookingWidget — slot-driven invariants", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("language invariant: blocks quote until a language valid for the slot is selected", async () => {
+    getTourAvailabilitiesMock.mockResolvedValue({
+      success: true,
+      data: [
+        buildOpenSlot({
+          guidedLanguages: ["FR", "es"],
+        }),
+      ],
+    });
+    getTourBookingQuoteMock.mockClear();
+
+    render(<BookingWidget {...defaultBootstrap} />);
+    await flushAvailabilitiesLoad();
+    await openConfiguringStep();
+    await selectAvailableDate();
+
+    const guestsTrigger = screen.getByRole("button", { name: /1 participant/i });
+    expect(guestsTrigger).toBeDisabled();
+    expect(getTourBookingQuoteMock).not.toHaveBeenCalled();
+
+    await selectLanguage("FR");
+
+    await waitFor(() => {
+      expect(guestsTrigger).toBeEnabled();
+    });
+
+    await waitFor(
+      () => {
+        expect(getTourBookingQuoteMock).toHaveBeenCalledWith(
+          expect.objectContaining({ language: "FR" }),
+        );
+      },
+      { timeout: 800 },
+    );
+  });
+
   it("minParticipants invariant: blocks Continue to checkout when below minParticipantsToBookNow", async () => {
     render(<BookingWidget {...defaultBootstrap} />);
     await flushAvailabilitiesLoad();
     await openConfiguringStep();
     await selectAvailableDate();
+    await selectLanguage("FR");
 
     await waitFor(() => {
       expect(

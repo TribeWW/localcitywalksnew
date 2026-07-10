@@ -115,12 +115,22 @@ export async function releaseBokunReservationAfterPaymentFailure(
 }
 
 /**
+ * Options for the Pay-click pipeline when invoked from a server action.
+ */
+export interface ExecuteInitiateCheckoutPaymentOptions {
+  /** Resolved public origin for Stripe success/cancel redirects. */
+  checkoutOrigin?: string;
+}
+
+/**
  * Core Pay-click pipeline — re-quote, reserve, KV, Stripe redirect.
  *
  * @param input - Pre-validated `InitiateCheckoutPaymentInput`
+ * @param options - Optional checkout redirect origin from the incoming request
  */
 export async function executeInitiateCheckoutPayment(
   input: InitiateCheckoutPaymentInput,
+  options?: ExecuteInitiateCheckoutPaymentOptions,
 ): Promise<InitiateCheckoutPaymentResult> {
   const verified = verifyCheckoutHandoffToken(input.handoffToken);
   if (!verified.success) {
@@ -252,6 +262,7 @@ export async function executeInitiateCheckoutPayment(
       customerEmail: input.contact.email,
       productTitle,
       handoffToken: input.handoffToken,
+      checkoutOrigin: options?.checkoutOrigin,
     });
 
     if (!stripeResult.success) {
@@ -298,14 +309,16 @@ export async function executeInitiateCheckoutPayment(
  * Validates, re-quotes, reserves, persists, and redirects to Stripe Checkout.
  *
  * @param input - Untrusted Pay-click payload from checkout summary
+ * @param options - Optional checkout redirect origin from the incoming request
  */
 export async function runInitiateCheckoutPayment(
   input: unknown,
+  options?: ExecuteInitiateCheckoutPaymentOptions,
 ): Promise<InitiateCheckoutPaymentResult> {
   const parsed = parseInitiateCheckoutPaymentInput(input);
   if (!parsed.success) {
     return { success: false, error: parsed.error };
   }
 
-  return executeInitiateCheckoutPayment(parsed.data);
+  return executeInitiateCheckoutPayment(parsed.data, options);
 }
