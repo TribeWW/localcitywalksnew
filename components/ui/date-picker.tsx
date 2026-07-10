@@ -209,7 +209,7 @@ const DatePicker = ({
           className={cn(
             "w-[var(--radix-popover-trigger-width)] p-0",
             variant === "widget" &&
-              "h-auto overflow-y-auto bg-popover data-[state=closed]:animate-none data-[state=open]:animate-none max-h-[var(--radix-popover-content-available-height)]",
+              "h-auto overflow-visible bg-popover data-[state=closed]:animate-none data-[state=open]:animate-none",
           )}
         >
           <div
