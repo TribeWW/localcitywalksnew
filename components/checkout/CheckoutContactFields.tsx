@@ -100,7 +100,7 @@ function CheckoutContactTextField({
  * @param phoneRequired - Whether Bókun marks phone as required for this product
  */
 function resolvePhonePlaceholder(phoneRequired: boolean): string {
-  return phoneRequired ? "Phone number" : "Phone number (optional)";
+  return phoneRequired ? "+1 234 567 8900" : "+1 234 567 8900 (optional)";
 }
 
 /**

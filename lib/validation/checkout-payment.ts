@@ -21,12 +21,12 @@ const checkoutPaymentPhoneSchema = z
         return true;
       }
 
-      const phoneRegex = /^\+?[1-9]\d{6,14}$/;
+      const phoneRegex = /^\+[1-9]\d{6,14}$/;
       return phoneRegex.test(value.replace(/\s/g, ""));
     },
     {
       message:
-        "Please enter a valid phone number with country code (e.g., +1 234 567 8900)",
+        "Please enter your number in international format (e.g. +1 234 567 8900)",
     },
   );
 
