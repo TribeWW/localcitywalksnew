@@ -1,12 +1,13 @@
 import { Suspense } from "react";
 import Image from "next/image";
 import ExploreCatalog from "@/components/explore/ExploreCatalog";
+import ExploreCatalogSkeleton from "@/components/explore/ExploreCatalogSkeleton";
 import { ExploreJsonLdSection } from "@/components/seo/ExploreJsonLdSection";
 import { buildExplorePageMetadata } from "@/lib/explore-page-metadata";
 
 export const metadata = buildExplorePageMetadata();
 
-/** Render the Explore page catalog; JSON-LD loads in a separate Suspense boundary. */
+/** Render the Explore page; hero streams while catalog and JSON-LD resolve in Suspense. */
 export default function ExplorePage() {
   return (
     <main className="bg-white">
@@ -39,7 +40,9 @@ export default function ExplorePage() {
       </div>
 
       <div className="w-full">
-        <ExploreCatalog />
+        <Suspense fallback={<ExploreCatalogSkeleton />}>
+          <ExploreCatalog />
+        </Suspense>
       </div>
     </main>
   );
