@@ -25,30 +25,36 @@ describe("fetchAllBokunSearchProducts", () => {
   });
 
   it("pages until totalHits is reached and returns all products", async () => {
-    const pageOne = Array.from({ length: 20 }, (_, i) => product(String(i + 1)));
+    const pageOne = Array.from({ length: 100 }, (_, i) =>
+      product(String(i + 1)),
+    );
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           items: pageOne,
-          totalHits: 21,
+          totalHits: 101,
         }),
       })
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          items: [product("21")],
-          totalHits: 21,
+          items: [product("101")],
+          totalHits: 101,
         }),
       });
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(fetchAllBokunSearchProducts()).resolves.toEqual({
       ok: true,
-      products: [...pageOne, product("21")],
+      products: [...pageOne, product("101")],
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
+    const firstBody = JSON.parse(
+      (fetchMock.mock.calls[0][1] as RequestInit).body as string,
+    );
+    expect(firstBody.pageSize).toBe(100);
   });
 });
