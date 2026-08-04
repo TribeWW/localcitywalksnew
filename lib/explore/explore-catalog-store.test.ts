@@ -77,6 +77,7 @@ describe("explore-catalog-store", () => {
       expect(mockSet).toHaveBeenCalledWith(
         EXPLORE_CATALOG_SNAPSHOT_KEY,
         listingOnlyCards,
+        { ex: 48 * 60 * 60 },
       );
     });
 

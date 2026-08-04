@@ -12,8 +12,8 @@ vi.mock("@/lib/bokun", () => ({
   generateBokunHeaders: vi.fn(() => ({ "Content-Type": "application/json" })),
 }));
 
-vi.mock("@/lib/bokun/transform-search-product-to-city-card", () => ({
-  transformSearchProductToCityCard: vi.fn(
+vi.mock("@/lib/bokun/transform-search-product-to-city-card", () => {
+  const transformSearchProductToCityCard = vi.fn(
     (product: {
       id: string;
       title: string;
@@ -25,8 +25,25 @@ vi.mock("@/lib/bokun/transform-search-product-to-city-card", () => ({
       countryCode: product.googlePlace?.countryCode ?? "PT",
       country: product.googlePlace?.country ?? "Portugal",
     }),
-  ),
-}));
+  );
+
+  return {
+    transformSearchProductToCityCard,
+    mapSearchProductsToCityCards: (
+      products: unknown[],
+      _logContext?: string,
+    ) =>
+      products.map((product) =>
+        transformSearchProductToCityCard(
+          product as {
+            id: string;
+            title: string;
+            googlePlace?: { countryCode?: string; country?: string };
+          },
+        ),
+      ),
+  };
+});
 
 const mockReadSnapshot = vi.fn();
 const mockWriteSnapshot = vi.fn();
@@ -78,6 +95,7 @@ describe("getExploreCatalogPage", () => {
   afterEach(() => {
     resetExploreCatalogCacheForTests();
     vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 
   it("serves from Redis snapshot without calling Bokun", async () => {
@@ -159,6 +177,57 @@ describe("getExploreCatalogPage", () => {
     expect(mockWriteSnapshot.mock.calls[0][0]).toEqual([
       expect.objectContaining({ id: "1", title: "Porto Walk" }),
     ]);
+  });
+
+  it("caches Bokun rebuild failures briefly and retries after cooldown", async () => {
+    vi.useFakeTimers();
+    mockReadSnapshot.mockResolvedValue(null);
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+      json: async () => ({}),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const first = await getExploreCatalogPage(1, null, true);
+    const second = await getExploreCatalogPage(1, null, true);
+
+    expect(first.success).toBe(false);
+    expect(second.success).toBe(false);
+    if (first.success || second.success) return;
+    expect(first.error).toBe(second.error);
+    // Cooldown should suppress a second crawl
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(30_000);
+
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: "1",
+            title: "Porto Walk",
+            keyPhoto: { derived: [{ name: "preview", url: "/porto.jpg" }] },
+            googlePlace: {
+              country: "Portugal",
+              countryCode: "PT",
+              city: "Porto",
+              cityCode: "porto",
+            },
+          },
+        ],
+        totalHits: 1,
+      }),
+    });
+
+    const third = await getExploreCatalogPage(1, null, true);
+
+    expect(third.success).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    vi.useRealTimers();
   });
 
   it("reuses L1 cache for same country set regardless of order", async () => {

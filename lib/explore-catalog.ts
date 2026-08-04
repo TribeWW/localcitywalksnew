@@ -1,5 +1,5 @@
 import { fetchAllBokunSearchProducts } from "@/lib/bokun/fetch-all-search-products";
-import { transformSearchProductToCityCard } from "@/lib/bokun/transform-search-product-to-city-card";
+import { mapSearchProductsToCityCards } from "@/lib/bokun/transform-search-product-to-city-card";
 import {
   readExploreCatalogSnapshot,
   writeExploreCatalogSnapshot,
@@ -10,6 +10,8 @@ import { CityCardData, GetProductsPageResult } from "@/types/bokun";
 const EXPLORE_PAGE_SIZE = 20;
 
 const CACHE_TTL = 15 * 60 * 1000;
+/** Cooldown after a failed Bokun rebuild so cold misses do not stampede. */
+const FAILURE_CACHE_TTL = 30_000;
 
 type ExploreSnapshotBuildResult =
   | { ok: true; cards: CityCardData[] }
@@ -23,6 +25,12 @@ type ExploreSortedBuildResult =
 let exploreSnapshotCache: { cards: CityCardData[]; timestamp: number } | null =
   null;
 
+/** Short-lived negative cache after a failed Bokun rebuild. */
+let exploreSnapshotFailureCache: {
+  error: string;
+  expiresAt: number;
+} | null = null;
+
 /** One shared Promise while a cold snapshot build runs (dedupes concurrent misses). */
 let inFlightSnapshotBuild: Promise<ExploreSnapshotBuildResult> | null = null;
 
@@ -31,6 +39,7 @@ let inFlightSnapshotBuild: Promise<ExploreSnapshotBuildResult> | null = null;
  */
 export function resetExploreCatalogCacheForTests(): void {
   exploreSnapshotCache = null;
+  exploreSnapshotFailureCache = null;
   inFlightSnapshotBuild = null;
 }
 
@@ -115,18 +124,35 @@ async function getOrBuildExploreCatalogSnapshot(): Promise<ExploreSnapshotBuildR
     try {
       const snapshot = await readExploreCatalogSnapshot();
       if (snapshot && snapshot.length > 0) {
+        exploreSnapshotFailureCache = null;
         const cards = sortByTitleAsc(snapshot);
         exploreSnapshotCache = { cards, timestamp: Date.now() };
         return { ok: true, cards };
       }
 
+      if (
+        exploreSnapshotFailureCache &&
+        Date.now() < exploreSnapshotFailureCache.expiresAt
+      ) {
+        return { ok: false, error: exploreSnapshotFailureCache.error };
+      }
+
       const catalog = await fetchAllBokunSearchProducts();
       if (!catalog.ok) {
+        exploreSnapshotFailureCache = {
+          error: catalog.error,
+          expiresAt: Date.now() + FAILURE_CACHE_TTL,
+        };
         return { ok: false, error: catalog.error };
       }
 
+      exploreSnapshotFailureCache = null;
+
       const cards = sortByTitleAsc(
-        catalog.products.map(transformSearchProductToCityCard),
+        mapSearchProductsToCityCards(
+          catalog.products,
+          "explore-catalog",
+        ),
       );
 
       await writeExploreCatalogSnapshot(cards);

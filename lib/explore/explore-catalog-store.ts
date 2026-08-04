@@ -14,6 +14,15 @@ import type { CityCardData } from "@/types/bokun";
 /** KV key for the full explore listing snapshot. */
 export const EXPLORE_CATALOG_SNAPSHOT_KEY = "explore:catalog:v1";
 
+/** Per-request timeout so explore reads/writes cannot hang on a stuck Upstash call. */
+const EXPLORE_CATALOG_REDIS_TIMEOUT_MS = 3_000;
+
+/** Cap Upstash's default 5 retries so a cold Redis miss fails fast into Bokun fallback. */
+const EXPLORE_CATALOG_REDIS_RETRIES = 1;
+
+/** Snapshot TTL (> daily cron) so a stalled sync cannot leave an immortal stale key. */
+const EXPLORE_CATALOG_SNAPSHOT_TTL_SECONDS = 48 * 60 * 60;
+
 const exploreCatalogCardSchema = z.object({
   id: z.string().min(1),
   title: z.string(),
@@ -53,6 +62,9 @@ function resolveExploreCatalogRedisCredentials(): {
 
 /**
  * Returns a singleton Upstash Redis client, or null when credentials are missing.
+ *
+ * Uses a fresh AbortSignal.timeout per request and bounded retries so
+ * `redis.get` / `redis.set` cannot wait indefinitely.
  */
 export function getExploreCatalogRedis(): Redis | null {
   if (redisClient !== undefined) {
@@ -68,6 +80,12 @@ export function getExploreCatalogRedis(): Redis | null {
   redisClient = new Redis({
     url: credentials.url,
     token: credentials.token,
+    // Factory: each command needs its own timeout window (a static signal expires once).
+    signal: () => AbortSignal.timeout(EXPLORE_CATALOG_REDIS_TIMEOUT_MS),
+    retry: {
+      retries: EXPLORE_CATALOG_REDIS_RETRIES,
+      backoff: (retryCount) => Math.min(100 * 2 ** retryCount, 500),
+    },
   });
   return redisClient;
 }
@@ -166,7 +184,9 @@ export async function writeExploreCatalogSnapshot(
   const snapshot = cards.map(toSnapshotCard);
 
   try {
-    await redis.set(EXPLORE_CATALOG_SNAPSHOT_KEY, snapshot);
+    await redis.set(EXPLORE_CATALOG_SNAPSHOT_KEY, snapshot, {
+      ex: EXPLORE_CATALOG_SNAPSHOT_TTL_SECONDS,
+    });
     return true;
   } catch (error) {
     console.error("[explore-catalog-store] failed to write snapshot", error);

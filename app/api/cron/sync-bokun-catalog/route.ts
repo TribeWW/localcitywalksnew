@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { syncCitiesFromProducts } from "@/lib/actions/city.actions";
 import { fetchAllBokunSearchProducts } from "@/lib/bokun/fetch-all-search-products";
-import { transformSearchProductToCityCard } from "@/lib/bokun/transform-search-product-to-city-card";
+import { mapSearchProductsToCityCards } from "@/lib/bokun/transform-search-product-to-city-card";
 import {
   cronUnauthorizedResponse,
   isCronRequestAuthorized,
@@ -41,7 +41,10 @@ export async function GET(request: Request) {
       );
     }
 
-    const cards = catalog.products.map(transformSearchProductToCityCard);
+    const cards = mapSearchProductsToCityCards(
+      catalog.products,
+      "cron/sync-bokun-catalog",
+    );
     const exploreCatalogSnapshotWritten =
       await writeExploreCatalogSnapshot(cards);
 
