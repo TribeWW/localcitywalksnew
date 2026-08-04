@@ -1,24 +1,47 @@
+import { fetchAllBokunSearchProducts } from "@/lib/bokun/fetch-all-search-products";
+import { mapSearchProductsToCityCards } from "@/lib/bokun/transform-search-product-to-city-card";
 import {
-  BOKUN_SEARCH_PAGE_SIZE,
-  fetchBokunSearchPageRaw,
-} from "@/lib/bokun/fetch-all-search-products";
-import { transformSearchProductToCityCard } from "@/lib/bokun/transform-search-product-to-city-card";
+  readExploreCatalogSnapshot,
+  writeExploreCatalogSnapshot,
+} from "@/lib/explore/explore-catalog-store";
 import { CityCardData, GetProductsPageResult } from "@/types/bokun";
 
-const exploreSortedCache = new Map<
-  string,
-  { sorted: CityCardData[]; timestamp: number }
->();
-
-type ExploreSortedBuildResult =
-  | { ok: true; sorted: CityCardData[] }
-  | { ok: false; error: string };
-
-/** One shared Promise per cacheKey while a cold build runs (dedupes concurrent misses). */
-const inFlightBuilds = new Map<string, Promise<ExploreSortedBuildResult>>();
+/** Client-facing explore listing page size (unchanged UX). */
+const EXPLORE_PAGE_SIZE = 20;
 
 const CACHE_TTL = 15 * 60 * 1000;
-const PAGE_SIZE = BOKUN_SEARCH_PAGE_SIZE;
+/** Cooldown after a failed Bokun rebuild so cold misses do not stampede. */
+const FAILURE_CACHE_TTL = 30_000;
+
+type ExploreSnapshotBuildResult =
+  | { ok: true; cards: CityCardData[] }
+  | { ok: false; error: string };
+
+type ExploreSortedBuildResult =
+  | { ok: true; sorted: CityCardData[]; all: CityCardData[] }
+  | { ok: false; error: string };
+
+/** Process-local L1 cache of the full catalog snapshot (sorted A→Z). */
+let exploreSnapshotCache: { cards: CityCardData[]; timestamp: number } | null =
+  null;
+
+/** Short-lived negative cache after a failed Bokun rebuild. */
+let exploreSnapshotFailureCache: {
+  error: string;
+  expiresAt: number;
+} | null = null;
+
+/** One shared Promise while a cold snapshot build runs (dedupes concurrent misses). */
+let inFlightSnapshotBuild: Promise<ExploreSnapshotBuildResult> | null = null;
+
+/**
+ * Clears the L1 snapshot cache — used by unit tests.
+ */
+export function resetExploreCatalogCacheForTests(): void {
+  exploreSnapshotCache = null;
+  exploreSnapshotFailureCache = null;
+  inFlightSnapshotBuild = null;
+}
 
 function buildCompleteCountryList(items: CityCardData[]) {
   const byCode = new Map<string, string>();
@@ -40,111 +63,148 @@ function buildCompleteCountryList(items: CityCardData[]) {
     .sort((a, b) => a.country.localeCompare(b.country));
 }
 
+function sortByTitleAsc(cards: CityCardData[]): CityCardData[] {
+  return [...cards].sort((a, b) =>
+    a.title.localeCompare(b.title, undefined, { sensitivity: "base" }),
+  );
+}
+
+function normalizeCountryCodes(
+  countryCodes: string[] | null | undefined,
+): string[] {
+  return (countryCodes ?? [])
+    .map((code) => code.trim())
+    .filter(Boolean)
+    .sort();
+}
+
 /**
- * Provide a deduplicated, alphabetically sorted array of CityCardData for the given country and sort direction, using an in-memory cache and deduplicating concurrent builds.
+ * Filters a full A→Z snapshot by country and optionally reverses for Z→A.
  *
- * @param countryCode - Optional ISO country code to filter results; pass `null` or `undefined` to include all countries.
- * @param sortAscending - When `true`, sort titles in ascending (A→Z) order; when `false`, sort in descending (Z→A) order.
- * @returns `{ ok: true, sorted }` with the resulting `CityCardData[]` on success, or `{ ok: false, error }` with an error message on failure.
+ * Filtering an already-sorted list preserves alphabetical order.
+ */
+function filterAndApplySortDirection(
+  cards: CityCardData[],
+  countryCodes: string[] | null | undefined,
+  sortAscending: boolean,
+): CityCardData[] {
+  const normalizedCountryCodes = normalizeCountryCodes(countryCodes);
+  let filtered = cards;
+
+  if (normalizedCountryCodes.length > 0) {
+    const allowed = new Set(normalizedCountryCodes);
+    filtered = cards.filter((card) => {
+      const code = card.countryCode?.trim();
+      return Boolean(code && allowed.has(code));
+    });
+  }
+
+  return sortAscending ? filtered : [...filtered].reverse();
+}
+
+/**
+ * Loads the full explore catalog snapshot: L1 → Redis → Bokun rebuild on miss.
+ *
+ * On a Bokun rebuild, best-effort writes Redis so subsequent cold instances hit
+ * the durable snapshot. Cards are stored sorted A→Z.
+ */
+async function getOrBuildExploreCatalogSnapshot(): Promise<ExploreSnapshotBuildResult> {
+  if (
+    exploreSnapshotCache &&
+    Date.now() - exploreSnapshotCache.timestamp < CACHE_TTL
+  ) {
+    return { ok: true, cards: exploreSnapshotCache.cards };
+  }
+
+  if (inFlightSnapshotBuild) {
+    return inFlightSnapshotBuild;
+  }
+
+  const buildPromise = (async (): Promise<ExploreSnapshotBuildResult> => {
+    try {
+      const snapshot = await readExploreCatalogSnapshot();
+      if (snapshot && snapshot.length > 0) {
+        exploreSnapshotFailureCache = null;
+        const cards = sortByTitleAsc(snapshot);
+        exploreSnapshotCache = { cards, timestamp: Date.now() };
+        return { ok: true, cards };
+      }
+
+      if (
+        exploreSnapshotFailureCache &&
+        Date.now() < exploreSnapshotFailureCache.expiresAt
+      ) {
+        return { ok: false, error: exploreSnapshotFailureCache.error };
+      }
+
+      const catalog = await fetchAllBokunSearchProducts();
+      if (!catalog.ok) {
+        exploreSnapshotFailureCache = {
+          error: catalog.error,
+          expiresAt: Date.now() + FAILURE_CACHE_TTL,
+        };
+        return { ok: false, error: catalog.error };
+      }
+
+      exploreSnapshotFailureCache = null;
+
+      const cards = sortByTitleAsc(
+        mapSearchProductsToCityCards(
+          catalog.products,
+          "explore-catalog",
+        ),
+      );
+
+      await writeExploreCatalogSnapshot(cards);
+
+      exploreSnapshotCache = { cards, timestamp: Date.now() };
+      return { ok: true, cards };
+    } finally {
+      inFlightSnapshotBuild = null;
+    }
+  })();
+
+  inFlightSnapshotBuild = buildPromise;
+  return buildPromise;
+}
+
+/**
+ * Provide a deduplicated, alphabetically sorted array of CityCardData for the
+ * given country filter and sort direction, using the durable snapshot (L1 /
+ * Redis) and rebuilding from Bokun only on miss.
+ *
+ * @param countryCodes - Optional ISO country codes to filter; empty/null = all
+ * @param sortAscending - `true` for A→Z, `false` for Z→A
  */
 async function getOrBuildExploreSortedList(
   countryCodes: string[] | null | undefined,
   sortAscending: boolean,
 ): Promise<ExploreSortedBuildResult> {
-  const normalizedCountryCodes = (countryCodes ?? [])
-    .map((code) => code.trim())
-    .filter(Boolean)
-    .sort();
-  const countryCacheKey =
-    normalizedCountryCodes.length > 0
-      ? normalizedCountryCodes.join(",")
-      : "all";
-  const cacheKey = `bokun-explore-sorted-v1-${countryCacheKey}-${sortAscending ? "alphaAsc" : "alphaDesc"}`;
-  const cached = exploreSortedCache.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return { ok: true, sorted: cached.sorted };
+  const built = await getOrBuildExploreCatalogSnapshot();
+  if (!built.ok) {
+    return built;
   }
 
-  const inflight = inFlightBuilds.get(cacheKey);
-  if (inflight) {
-    return inflight;
-  }
-
-  const buildPromise = (async (): Promise<ExploreSortedBuildResult> => {
-    try {
-      const byId = new Map<string, CityCardData>();
-      const countryScopes =
-        normalizedCountryCodes.length > 0 ? normalizedCountryCodes : [undefined];
-
-      for (const countryCode of countryScopes) {
-        let totalHits: number | undefined;
-        let page = 1;
-        let first = true;
-
-        while (true) {
-          const res = await fetchBokunSearchPageRaw(page, PAGE_SIZE, countryCode);
-          if (!res.ok) {
-            return { ok: false, error: res.error };
-          }
-          if (first) {
-            totalHits = res.totalHits;
-            first = false;
-          }
-          for (const p of res.items) {
-            const card = transformSearchProductToCityCard(p);
-            byId.set(card.id, card);
-          }
-          if (
-            res.items.length === 0 ||
-            (typeof totalHits === "number" && page * PAGE_SIZE >= totalHits)
-          ) {
-            break;
-          }
-          if (res.items.length < PAGE_SIZE) {
-            break;
-          }
-          page += 1;
-          if (page > 500) {
-            console.warn(
-              "[Explore catalog] Stopped fetch after 500 pages safety cap",
-            );
-            break;
-          }
-        }
-      }
-
-      const sorted = Array.from(byId.values()).sort((a, b) => {
-        const cmp = a.title.localeCompare(b.title, undefined, {
-          sensitivity: "base",
-        });
-        return sortAscending ? cmp : -cmp;
-      });
-
-      exploreSortedCache.set(cacheKey, {
-        sorted: [...sorted],
-        timestamp: Date.now(),
-      });
-
-      return { ok: true, sorted };
-    } finally {
-      inFlightBuilds.delete(cacheKey);
-    }
-  })();
-
-  inFlightBuilds.set(cacheKey, buildPromise);
-  return buildPromise;
+  return {
+    ok: true,
+    all: built.cards,
+    sorted: filterAndApplySortDirection(
+      built.cards,
+      countryCodes,
+      sortAscending,
+    ),
+  };
 }
 
 /**
  * Produce a paginated slice of the explore catalog filtered by country and sort direction.
  *
- * Retrieves the fully built, de-duplicated, alphabetically sorted catalog (cached when available),
- * then returns the requested page of results.
+ * Serves from the Redis/L1 snapshot when available; country filter and sort are
+ * applied in memory. `completeCountryList` is derived from the full snapshot.
  *
  * @param page - 1-based page number (values less than 1 are normalized to 1)
- * @param countryCode - ISO country code to filter results; pass `null`/`undefined` or falsy to include all countries
+ * @param countryCodes - ISO country codes to filter; empty/null = all countries
  * @param sortAscending - `true` to sort titles ascending, `false` for descending
- * @returns An object with `success: true`, `data` as the page of `CityCardData[]`, and `totalHits` as the full catalog length; or `success: false` with an `error` message on failure.
  */
 export async function getExploreCatalogPage(
   page: number,
@@ -157,15 +217,15 @@ export async function getExploreCatalogPage(
     if (!built.ok) {
       return { success: false, error: built.error };
     }
-    const { sorted } = built;
+    const { sorted, all } = built;
     const totalHits = sorted.length;
-    const start = (pageNum - 1) * PAGE_SIZE;
-    const data = sorted.slice(start, start + PAGE_SIZE);
+    const start = (pageNum - 1) * EXPLORE_PAGE_SIZE;
+    const data = sorted.slice(start, start + EXPLORE_PAGE_SIZE);
     return {
       success: true,
       data,
       totalHits,
-      completeCountryList: buildCompleteCountryList(sorted),
+      completeCountryList: buildCompleteCountryList(all),
     };
   } catch (error) {
     console.error("Error building explore catalog page:", error);

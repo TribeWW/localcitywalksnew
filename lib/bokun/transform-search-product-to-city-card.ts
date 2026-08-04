@@ -56,3 +56,26 @@ export function transformSearchProductToCityCard(
       : {}),
   };
 }
+
+/**
+ * Maps Bokun search products to city cards, skipping any that fail to transform.
+ *
+ * One malformed product must not abort a catalog rebuild or cron snapshot write.
+ */
+export function mapSearchProductsToCityCards(
+  products: readonly unknown[],
+  logContext = "transform",
+): CityCardData[] {
+  const cards: CityCardData[] = [];
+  for (const product of products) {
+    try {
+      cards.push(transformSearchProductToCityCard(product));
+    } catch (error) {
+      console.error(
+        `[${logContext}] Skipping malformed product:`,
+        error instanceof Error ? error.message : error,
+      );
+    }
+  }
+  return cards;
+}

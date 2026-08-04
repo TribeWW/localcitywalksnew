@@ -7,7 +7,8 @@
 import { createBokunUrl, generateBokunHeaders } from "@/lib/bokun";
 import type { BokunProduct, BokunSearchResponse } from "@/types/bokun";
 
-export const BOKUN_SEARCH_PAGE_SIZE = 20;
+/** Page size for full-catalog Bokun crawls (cron + explore cold rebuild). */
+export const BOKUN_SEARCH_PAGE_SIZE = 100;
 export const BOKUN_SEARCH_MAX_PAGES = 500;
 const BOKUN_SEARCH_TIMEOUT_MS = 12_000;
 
