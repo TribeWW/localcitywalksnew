@@ -9,6 +9,7 @@ import {
   pickBokunDerivedPhotoUrl,
   pickBokunHeroPhotoUrl,
   pickBokunOgImageUrl,
+  resizeBokunOgImageUrl,
 } from "./pick-bokun-photo-url";
 
 const sampleKeyPhoto = {
@@ -113,11 +114,48 @@ describe("pickBokunHeroPhotoUrl", () => {
   });
 });
 
+describe("resizeBokunOgImageUrl", () => {
+  it("rewrites Bokun CDN w/h to 1200x800", () => {
+    expect(
+      resizeBokunOgImageUrl(
+        "https://imgcdn.bokun.tools/example.jpg?w=660&h=660",
+      ),
+    ).toBe("https://imgcdn.bokun.tools/example.jpg?w=1200&h=800");
+  });
+
+  it("fixes malformed Bokun heights such as h=6", () => {
+    expect(
+      resizeBokunOgImageUrl(
+        "https://imgcdn.bokun.tools/example.jpg?w=660&h=6",
+      ),
+    ).toBe("https://imgcdn.bokun.tools/example.jpg?w=1200&h=800");
+  });
+
+  it("leaves non-Bokun URLs unchanged", () => {
+    expect(
+      resizeBokunOgImageUrl("https://cdn.example.com/photo.jpg?w=660&h=6"),
+    ).toBe("https://cdn.example.com/photo.jpg?w=660&h=6");
+  });
+});
+
 describe("pickBokunOgImageUrl", () => {
-  it("returns the large derived URL for Open Graph metadata", () => {
+  it("returns the large derived URL resized to 1200x800 for Open Graph metadata", () => {
     expect(pickBokunOgImageUrl(sampleKeyPhoto)).toBe(
-      "https://imgcdn.bokun.tools/example.jpg?w=660&h=660",
+      "https://imgcdn.bokun.tools/example.jpg?w=1200&h=800",
     );
+  });
+
+  it("rewrites malformed large derived heights such as h=6", () => {
+    expect(
+      pickBokunOgImageUrl({
+        derived: [
+          {
+            name: "large",
+            url: "https://imgcdn.bokun.tools/example.jpg?w=660&h=6",
+          },
+        ],
+      }),
+    ).toBe("https://imgcdn.bokun.tools/example.jpg?w=1200&h=800");
   });
 
   it("does not use originalUrl (OG uses CDN derived sizes only)", () => {
