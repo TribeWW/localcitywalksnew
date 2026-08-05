@@ -1,11 +1,12 @@
 /**
- * sync-bokun-catalog cron — unit tests for explore snapshot write after Bokun fetch.
+ * sync-bokun-catalog cron — unit tests for price warm + explore snapshot write.
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockFetchAll = vi.fn();
 const mockMapToCards = vi.fn();
+const mockWarmListingPrices = vi.fn();
 const mockWriteSnapshot = vi.fn();
 const mockSyncCities = vi.fn();
 const mockIsAuthorized = vi.fn();
@@ -19,6 +20,11 @@ vi.mock("@/lib/bokun/fetch-all-search-products", () => ({
 
 vi.mock("@/lib/bokun/transform-search-product-to-city-card", () => ({
   mapSearchProductsToCityCards: (...args: unknown[]) => mockMapToCards(...args),
+}));
+
+vi.mock("@/lib/city-cards/warm-listing-prices-for-cards", () => ({
+  warmListingPricesForCards: (...args: unknown[]) =>
+    mockWarmListingPrices(...args),
 }));
 
 vi.mock("@/lib/explore/explore-catalog-store", () => ({
@@ -55,6 +61,15 @@ const sampleCards = [
   },
 ];
 
+const pricedCards = [
+  {
+    ...sampleCards[0],
+    defaultRateId: 2199582,
+    displayPricePerPerson: 62,
+    displayPriceCurrency: "EUR",
+  },
+];
+
 function authorizedRequest() {
   return new Request("http://localhost/api/cron/sync-bokun-catalog", {
     headers: { authorization: "Bearer cron-secret" },
@@ -67,6 +82,7 @@ describe("GET /api/cron/sync-bokun-catalog", () => {
     mockIsAuthorized.mockReturnValue(true);
     mockFetchAll.mockResolvedValue({ ok: true, products: sampleProducts });
     mockMapToCards.mockReturnValue(sampleCards);
+    mockWarmListingPrices.mockResolvedValue(pricedCards);
     mockWriteSnapshot.mockResolvedValue(true);
     mockSyncCities.mockResolvedValue({
       countries: { created: [], updated: [] },
@@ -83,10 +99,11 @@ describe("GET /api/cron/sync-bokun-catalog", () => {
 
     expect(res.status).toBe(401);
     expect(mockFetchAll).not.toHaveBeenCalled();
+    expect(mockWarmListingPrices).not.toHaveBeenCalled();
     expect(mockWriteSnapshot).not.toHaveBeenCalled();
   });
 
-  it("writes the explore catalog snapshot after a successful Bokun fetch", async () => {
+  it("warms listing prices then writes the explore catalog snapshot", async () => {
     const res = await GET(authorizedRequest());
     const body = await res.json();
 
@@ -95,8 +112,10 @@ describe("GET /api/cron/sync-bokun-catalog", () => {
       sampleProducts,
       "cron/sync-bokun-catalog",
     );
+    expect(mockWarmListingPrices).toHaveBeenCalledTimes(1);
+    expect(mockWarmListingPrices).toHaveBeenCalledWith(sampleCards);
     expect(mockWriteSnapshot).toHaveBeenCalledTimes(1);
-    expect(mockWriteSnapshot).toHaveBeenCalledWith(sampleCards);
+    expect(mockWriteSnapshot).toHaveBeenCalledWith(pricedCards);
     expect(body).toMatchObject({
       success: true,
       bokunProductsFetched: 1,
@@ -104,7 +123,7 @@ describe("GET /api/cron/sync-bokun-catalog", () => {
     });
   });
 
-  it("skips the snapshot write when Bokun catalog fetch fails", async () => {
+  it("skips warm and snapshot write when Bokun catalog fetch fails", async () => {
     mockFetchAll.mockResolvedValue({
       ok: false,
       error: "Bokun unavailable",
@@ -114,6 +133,7 @@ describe("GET /api/cron/sync-bokun-catalog", () => {
     const body = await res.json();
 
     expect(res.status).toBe(502);
+    expect(mockWarmListingPrices).not.toHaveBeenCalled();
     expect(mockWriteSnapshot).not.toHaveBeenCalled();
     expect(mockSyncCities).not.toHaveBeenCalled();
     expect(body).toEqual({
@@ -129,7 +149,8 @@ describe("GET /api/cron/sync-bokun-catalog", () => {
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(mockWriteSnapshot).toHaveBeenCalledWith(sampleCards);
+    expect(mockWarmListingPrices).toHaveBeenCalledWith(sampleCards);
+    expect(mockWriteSnapshot).toHaveBeenCalledWith(pricedCards);
     expect(body.exploreCatalogSnapshotWritten).toBe(false);
     expect(mockSyncCities).toHaveBeenCalledWith(sampleProducts);
   });

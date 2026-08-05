@@ -1,5 +1,6 @@
 import { fetchAllBokunSearchProducts } from "@/lib/bokun/fetch-all-search-products";
 import { mapSearchProductsToCityCards } from "@/lib/bokun/transform-search-product-to-city-card";
+import { warmListingPricesForCards } from "@/lib/city-cards/warm-listing-prices-for-cards";
 import {
   readExploreCatalogSnapshot,
   writeExploreCatalogSnapshot,
@@ -105,8 +106,11 @@ function filterAndApplySortDirection(
 /**
  * Loads the full explore catalog snapshot: L1 → Redis → Bokun rebuild on miss.
  *
- * On a Bokun rebuild, best-effort writes Redis so subsequent cold instances hit
- * the durable snapshot. Cards are stored sorted A→Z.
+ * On a Bokun rebuild, warms listing prices then best-effort writes Redis so
+ * subsequent cold instances hit a priced durable snapshot. Cards are stored
+ * sorted A→Z.
+ *
+ * @returns Sorted catalog cards, or a Bokun rebuild error
  */
 async function getOrBuildExploreCatalogSnapshot(): Promise<ExploreSnapshotBuildResult> {
   if (
@@ -148,12 +152,12 @@ async function getOrBuildExploreCatalogSnapshot(): Promise<ExploreSnapshotBuildR
 
       exploreSnapshotFailureCache = null;
 
-      const cards = sortByTitleAsc(
-        mapSearchProductsToCityCards(
-          catalog.products,
-          "explore-catalog",
-        ),
+      const mapped = mapSearchProductsToCityCards(
+        catalog.products,
+        "explore-catalog",
       );
+      const pricedCards = await warmListingPricesForCards(mapped);
+      const cards = sortByTitleAsc(pricedCards);
 
       await writeExploreCatalogSnapshot(cards);
 
