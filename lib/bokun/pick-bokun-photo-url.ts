@@ -36,7 +36,7 @@ type BokunPhotoLike = {
 export function resizeBokunOgImageUrl(url: string): string {
   try {
     const parsed = new URL(url);
-    if (!parsed.hostname.includes("bokun")) {
+    if (parsed.hostname !== "imgcdn.bokun.tools") {
       return url;
     }
 
