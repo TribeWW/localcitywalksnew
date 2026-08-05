@@ -303,14 +303,14 @@ describe("resolveTourPageMetadata", () => {
       siteName: "LocalCityWalks",
       images: [
         {
-          url: "https://imgcdn.bokun.tools/example.jpg?w=660&h=660",
+          url: "https://imgcdn.bokun.tools/example.jpg?w=1200&h=800",
           alt: FALLBACKS.seoTitle,
         },
       ],
     });
     expect(metadata.twitter).toMatchObject({
       card: "summary_large_image",
-      images: ["https://imgcdn.bokun.tools/example.jpg?w=660&h=660"],
+      images: ["https://imgcdn.bokun.tools/example.jpg?w=1200&h=800"],
     });
   });
 

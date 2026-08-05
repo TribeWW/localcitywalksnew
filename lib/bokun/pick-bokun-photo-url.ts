@@ -16,10 +16,37 @@ export const BOKUN_DERIVED_HERO_PREFERENCE = [
   "thumbnail",
 ] as const;
 
+/** Target width for OG / JSON-LD images (Google rich-results recommendation). */
+export const BOKUN_OG_IMAGE_WIDTH = 1200;
+
+/** Target height for OG / JSON-LD images (3:2 aspect ratio). */
+export const BOKUN_OG_IMAGE_HEIGHT = 800;
+
 type BokunPhotoLike = {
   originalUrl?: string;
   derived?: Array<{ name?: string; url?: string }>;
 };
+
+/**
+ * Rewrites Bókun CDN URLs to a Google-valid OG size (`w=1200&h=800`).
+ *
+ * Bókun's `large` derived URLs sometimes preserve extreme aspect ratios
+ * (e.g. `h=6`), which fails rich-results image requirements.
+ */
+export function resizeBokunOgImageUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (!parsed.hostname.includes("bokun")) {
+      return url;
+    }
+
+    parsed.searchParams.set("w", String(BOKUN_OG_IMAGE_WIDTH));
+    parsed.searchParams.set("h", String(BOKUN_OG_IMAGE_HEIGHT));
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
 
 /**
  * Picks the first matching URL from a Bókun photo's `derived` array.
@@ -63,14 +90,16 @@ export function pickBokunHeroPhotoUrl(photo: unknown): string | null {
 }
 
 /**
- * Picks the best URL for Open Graph / Twitter card images.
+ * Picks the best URL for Open Graph / Twitter card images and JSON-LD.
  *
  * Uses CDN `derived` sizes only ({@link BOKUN_DERIVED_OG_PREFERENCE}) — not
- * `originalUrl` — so social crawlers receive a consistently sized image.
+ * `originalUrl` — then rewrites `w`/`h` to {@link BOKUN_OG_IMAGE_WIDTH}×
+ * {@link BOKUN_OG_IMAGE_HEIGHT} so crawlers receive a Google-valid 3:2 image.
  *
  * @param photo - Bókun `keyPhoto`.
  * @returns CDN URL string, or `null` when no derived image is available.
  */
 export function pickBokunOgImageUrl(photo: unknown): string | null {
-  return pickBokunDerivedPhotoUrl(photo, BOKUN_DERIVED_OG_PREFERENCE);
+  const url = pickBokunDerivedPhotoUrl(photo, BOKUN_DERIVED_OG_PREFERENCE);
+  return url ? resizeBokunOgImageUrl(url) : null;
 }
