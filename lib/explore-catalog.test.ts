@@ -3,6 +3,7 @@
  *
  * Catalog builds no longer trigger Sanity sync; provisioning runs via the daily cron job.
  * Reads prefer Redis snapshot + L1; Bokun is only used on miss.
+ * Cold rebuild warms listing prices before writing Redis.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -47,11 +48,17 @@ vi.mock("@/lib/bokun/transform-search-product-to-city-card", () => {
 
 const mockReadSnapshot = vi.fn();
 const mockWriteSnapshot = vi.fn();
+const mockWarmListingPrices = vi.fn();
 
 vi.mock("@/lib/explore/explore-catalog-store", () => ({
   readExploreCatalogSnapshot: (...args: unknown[]) => mockReadSnapshot(...args),
   writeExploreCatalogSnapshot: (...args: unknown[]) =>
     mockWriteSnapshot(...args),
+}));
+
+vi.mock("@/lib/city-cards/warm-listing-prices-for-cards", () => ({
+  warmListingPricesForCards: (...args: unknown[]) =>
+    mockWarmListingPrices(...args),
 }));
 
 import {
@@ -90,6 +97,14 @@ describe("getExploreCatalogPage", () => {
     resetExploreCatalogCacheForTests();
     mockReadSnapshot.mockResolvedValue(null);
     mockWriteSnapshot.mockResolvedValue(false);
+    mockWarmListingPrices.mockImplementation(
+      async (cards: CityCardData[]) =>
+        cards.map((card) => ({
+          ...card,
+          displayPricePerPerson: 50,
+          displayPriceCurrency: "EUR",
+        })),
+    );
   });
 
   afterEach(() => {
@@ -114,6 +129,7 @@ describe("getExploreCatalogPage", () => {
     ]);
     expect(result.totalHits).toBe(3);
     expect(fetchMock).not.toHaveBeenCalled();
+    expect(mockWarmListingPrices).not.toHaveBeenCalled();
     expect(mockWriteSnapshot).not.toHaveBeenCalled();
   });
 
@@ -142,7 +158,7 @@ describe("getExploreCatalogPage", () => {
     ]);
   });
 
-  it("rebuilds from Bokun and writes Redis on snapshot miss", async () => {
+  it("rebuilds from Bokun, warms prices, and writes Redis on snapshot miss", async () => {
     mockReadSnapshot.mockResolvedValue(null);
     mockWriteSnapshot.mockResolvedValue(true);
 
@@ -173,10 +189,20 @@ describe("getExploreCatalogPage", () => {
     if (!result.success) return;
     expect(result.data).toHaveLength(1);
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(mockWriteSnapshot).toHaveBeenCalledTimes(1);
-    expect(mockWriteSnapshot.mock.calls[0][0]).toEqual([
+    expect(mockWarmListingPrices).toHaveBeenCalledTimes(1);
+    expect(mockWarmListingPrices).toHaveBeenCalledWith([
       expect.objectContaining({ id: "1", title: "Porto Walk" }),
     ]);
+    expect(mockWriteSnapshot).toHaveBeenCalledTimes(1);
+    expect(mockWriteSnapshot.mock.calls[0][0]).toEqual([
+      expect.objectContaining({
+        id: "1",
+        title: "Porto Walk",
+        displayPricePerPerson: 50,
+        displayPriceCurrency: "EUR",
+      }),
+    ]);
+    expect(result.data[0]?.displayPricePerPerson).toBe(50);
   });
 
   it("caches Bokun rebuild failures briefly and retries after cooldown", async () => {
@@ -199,6 +225,7 @@ describe("getExploreCatalogPage", () => {
     expect(first.error).toBe(second.error);
     // Cooldown should suppress a second crawl
     expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(mockWarmListingPrices).not.toHaveBeenCalled();
 
     vi.advanceTimersByTime(30_000);
 
@@ -226,6 +253,7 @@ describe("getExploreCatalogPage", () => {
 
     expect(third.success).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(mockWarmListingPrices).toHaveBeenCalledTimes(1);
 
     vi.useRealTimers();
   });
@@ -275,5 +303,6 @@ describe("getExploreCatalogPage", () => {
     expect(callsAfterFirst).toBeGreaterThan(0);
     // second call with same set (different order) should hit L1 — no extra Bokun
     expect(fetchMock.mock.calls.length).toBe(callsAfterFirst);
+    expect(mockWarmListingPrices).toHaveBeenCalledTimes(1);
   });
 });

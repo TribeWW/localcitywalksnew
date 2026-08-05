@@ -11,8 +11,8 @@ import { z } from "zod";
 
 import type { CityCardData } from "@/types/bokun";
 
-/** KV key for the full explore listing snapshot. */
-export const EXPLORE_CATALOG_SNAPSHOT_KEY = "explore:catalog:v1";
+/** KV key for the full explore listing snapshot (v2 includes warm display prices). */
+export const EXPLORE_CATALOG_SNAPSHOT_KEY = "explore:catalog:v2";
 
 /** Per-request timeout so explore reads/writes cannot hang on a stuck Upstash call. */
 const EXPLORE_CATALOG_REDIS_TIMEOUT_MS = 3_000;
@@ -33,6 +33,8 @@ const exploreCatalogCardSchema = z.object({
   citySlug: z.string().optional(),
   slug: z.string().optional(),
   defaultRateId: z.number().optional(),
+  displayPricePerPerson: z.number().optional(),
+  displayPriceCurrency: z.string().optional(),
 });
 
 const exploreCatalogSnapshotSchema = z.array(exploreCatalogCardSchema);
@@ -109,7 +111,10 @@ export function setExploreCatalogRedisClientForTests(
 }
 
 /**
- * Keeps only listing fields so enrichment (price/rating) is not persisted.
+ * Keeps listing + warm price fields; strips live-only rating enrichment.
+ *
+ * @param card - City card that may include live rating fields
+ * @returns Snapshot-safe card with optional `displayPricePerPerson` / currency
  */
 function toSnapshotCard(card: CityCardData): CityCardData {
   return {
@@ -125,6 +130,12 @@ function toSnapshotCard(card: CityCardData): CityCardData {
     ...(card.slug !== undefined ? { slug: card.slug } : {}),
     ...(card.defaultRateId !== undefined
       ? { defaultRateId: card.defaultRateId }
+      : {}),
+    ...(card.displayPricePerPerson !== undefined
+      ? { displayPricePerPerson: card.displayPricePerPerson }
+      : {}),
+    ...(card.displayPriceCurrency !== undefined
+      ? { displayPriceCurrency: card.displayPriceCurrency }
       : {}),
   };
 }
@@ -167,7 +178,7 @@ export async function readExploreCatalogSnapshot(): Promise<
 /**
  * Writes the explore catalog snapshot to Redis.
  *
- * Strips enrichment-only fields so the snapshot stays listing-sized.
+ * Persists warm listing prices; strips live-only rating fields.
  * No-ops when Redis is unconfigured.
  *
  * @param cards - Transformed city cards to persist

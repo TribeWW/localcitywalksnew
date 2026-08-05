@@ -2,8 +2,9 @@
  * explore-catalog-store — Redis snapshot read/write helpers.
  *
  * Critical invariants:
- * - write stores listing fields only (strips price/rating enrichment)
- * - read round-trips a valid snapshot
+ * - write persists listing + warm price fields (strips live rating enrichment)
+ * - read round-trips a valid snapshot including display prices
+ * - key is explore:catalog:v2
  * - missing Redis / missing key / invalid payload → null or false (null-safe)
  */
 
@@ -36,7 +37,8 @@ const sampleCards: CityCardData[] = [
   },
 ];
 
-const listingOnlyCards: CityCardData[] = [
+/** Listing + warm price fields; live rating enrichment stripped. */
+const snapshotCards: CityCardData[] = [
   {
     id: "1077682",
     title: "Hello Toledo Private Walk",
@@ -47,6 +49,8 @@ const listingOnlyCards: CityCardData[] = [
     citySlug: "toledo",
     slug: "hello-toledo-private-walk-1077682",
     defaultRateId: 123,
+    displayPricePerPerson: 99,
+    displayPriceCurrency: "EUR",
   },
 ];
 
@@ -67,8 +71,12 @@ describe("explore-catalog-store", () => {
     resetExploreCatalogRedisClientForTests();
   });
 
+  it("uses the v2 catalog key", () => {
+    expect(EXPLORE_CATALOG_SNAPSHOT_KEY).toBe("explore:catalog:v2");
+  });
+
   describe("writeExploreCatalogSnapshot", () => {
-    it("stores listing fields only and returns true", async () => {
+    it("stores listing + price fields, strips ratings, and returns true", async () => {
       mockSet.mockResolvedValue("OK");
 
       const ok = await writeExploreCatalogSnapshot(sampleCards);
@@ -76,9 +84,11 @@ describe("explore-catalog-store", () => {
       expect(ok).toBe(true);
       expect(mockSet).toHaveBeenCalledWith(
         EXPLORE_CATALOG_SNAPSHOT_KEY,
-        listingOnlyCards,
+        snapshotCards,
         { ex: 48 * 60 * 60 },
       );
+      expect(mockSet.mock.calls[0][1][0]).not.toHaveProperty("ratingLabel");
+      expect(mockSet.mock.calls[0][1][0]).not.toHaveProperty("showRating");
     });
 
     it("returns false when Redis is not configured", async () => {
@@ -100,13 +110,15 @@ describe("explore-catalog-store", () => {
   });
 
   describe("readExploreCatalogSnapshot", () => {
-    it("returns the stored snapshot", async () => {
-      mockGet.mockResolvedValue(listingOnlyCards);
+    it("round-trips price fields from the stored snapshot", async () => {
+      mockGet.mockResolvedValue(snapshotCards);
 
       const result = await readExploreCatalogSnapshot();
 
       expect(mockGet).toHaveBeenCalledWith(EXPLORE_CATALOG_SNAPSHOT_KEY);
-      expect(result).toEqual(listingOnlyCards);
+      expect(result).toEqual(snapshotCards);
+      expect(result?.[0]?.displayPricePerPerson).toBe(99);
+      expect(result?.[0]?.displayPriceCurrency).toBe("EUR");
     });
 
     it("returns null when Redis is not configured", async () => {
@@ -128,6 +140,19 @@ describe("explore-catalog-store", () => {
 
     it("returns null when the payload is invalid", async () => {
       mockGet.mockResolvedValue([{ title: "missing id" }]);
+
+      const result = await readExploreCatalogSnapshot();
+
+      expect(result).toBeNull();
+    });
+
+    it("returns null when displayPricePerPerson has an invalid shape", async () => {
+      mockGet.mockResolvedValue([
+        {
+          ...snapshotCards[0],
+          displayPricePerPerson: "not-a-number",
+        },
+      ]);
 
       const result = await readExploreCatalogSnapshot();
 
