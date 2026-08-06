@@ -28,16 +28,7 @@ import { sendEmail } from "@/lib/nodemailer";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const NAME_EMAIL_FIELDS = ["fullName", "email"] as const;
-const OPTIONS = [
-  "General Inquiry",
-  "Booking Questions",
-  "Cancellations or Refunds",
-  "Business Partnerships",
-  "Collaborations",
-  "Legal Questions",
-  "Investor Relations",
-  "Feedback",
-];
+const OPTIONS = ["General Inquiry", "Booking Questions", "Collaborations"];
 
 const ContactForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,7 +56,7 @@ const ContactForm = () => {
       });
 
       toast(
-        "Success! Your message has been sent. Please check your spam or junk folder if you don't see our reply soon."
+        "Success! Your message has been sent. Please check your spam or junk folder if you don't see our reply soon.",
       );
 
       form.reset();
