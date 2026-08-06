@@ -142,6 +142,13 @@ export default async function TourPage({
   const aboutHtml =
     detail.data.description?.trim() || detail.data.summary?.trim() || "";
 
+  const guidedLanguageOptions = extractGuidedLanguagesFromGuidanceTypes(
+    detail.data.guidanceTypes,
+  );
+  const languageBadgeText = guidedLanguageOptions
+    .map((option) => option.label)
+    .join(", ");
+
   const sanitizedAboutHtml = aboutHtml
     ? sanitizeHtml(aboutHtml, {
         allowedTags: sanitizeHtml.defaults.allowedTags.concat([
@@ -342,10 +349,14 @@ export default async function TourPage({
                     icon: <Clock size={14} />,
                     text: "2 hours",
                   },
-                  {
-                    icon: <Globe size={14} />,
-                    text: "English, Spanish, French, German",
-                  },
+                  ...(languageBadgeText
+                    ? [
+                        {
+                          icon: <Globe size={14} />,
+                          text: languageBadgeText,
+                        },
+                      ]
+                    : []),
                   {
                     icon: <BadgeCheck size={14} className="text-[#16A34A]" />,
                     text: "Free cancellation",
@@ -468,9 +479,7 @@ export default async function TourPage({
                     productTitle: detail.data.title,
                     cityName: gpCity ?? detail.data.title,
                     startTimes: detail.data.startTimes ?? [],
-                    guidedLanguageOptions: extractGuidedLanguagesFromGuidanceTypes(
-                      detail.data.guidanceTypes,
-                    ),
+                    guidedLanguageOptions,
                     pricingCategories: detail.data.pricingCategories,
                     durationText: detail.data.durationText,
                     defaultRateId: detail.data.defaultRateId,
