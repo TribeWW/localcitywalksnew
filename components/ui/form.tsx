@@ -73,11 +73,18 @@ const FormItemContext = React.createContext<FormItemContextValue>(
   {} as FormItemContextValue
 );
 
-function FormItem({ className, ...props }: React.ComponentProps<"div">) {
-  const id = React.useId();
+function FormItem({
+  className,
+  id,
+  ...props
+}: React.ComponentProps<"div">) {
+  const generatedId = React.useId();
+  // Prefer an explicit id so label/control wiring stays stable across SSR
+  // hydration (React useId can diverge with streaming Suspense / Slot).
+  const itemId = id ?? generatedId;
 
   return (
-    <FormItemContext.Provider value={{ id }}>
+    <FormItemContext.Provider value={{ id: itemId }}>
       <div
         data-slot="form-item"
         className={cn("grid gap-1", className)}

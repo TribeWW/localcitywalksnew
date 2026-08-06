@@ -55,20 +55,22 @@ export default function CustomTourBanner() {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[min(90dvh,900px)] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Request a custom tour</DialogTitle>
-            <DialogDescription>
-              Share your preferred city, date, and group details.
-            </DialogDescription>
-          </DialogHeader>
+        {open ? (
+          <DialogContent className="max-h-[min(90dvh,900px)] overflow-y-auto sm:max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Request a custom tour</DialogTitle>
+              <DialogDescription>
+                Share your preferred city, date, and group details.
+              </DialogDescription>
+            </DialogHeader>
 
-          <TourRequestForm
-            lockCity={false}
-            initialCity=""
-            onClose={() => setOpen(false)}
-          />
-        </DialogContent>
+            <TourRequestForm
+              lockCity={false}
+              initialCity=""
+              onClose={() => setOpen(false)}
+            />
+          </DialogContent>
+        ) : null}
       </Dialog>
     </>
   );

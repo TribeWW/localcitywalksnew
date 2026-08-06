@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -30,8 +30,26 @@ import { Checkbox } from "@/components/ui/checkbox";
 const NAME_EMAIL_FIELDS = ["fullName", "email"] as const;
 const OPTIONS = ["General Inquiry", "Booking Questions", "Collaborations"];
 
+const FIELD_ITEM_IDS = {
+  fullName: "contact-full-name",
+  email: "contact-email",
+  subject: "contact-subject",
+  description: "contact-description",
+  consent: "contact-consent",
+} as const;
+
+const formShellClassName =
+  "w-full max-w-4xl mx-auto p-8 bg-white rounded-2xl shadow-lg";
+
 const ContactForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Radix Select/Checkbox use React.useId(); with Next 15.5 streaming those IDs
+  // can diverge on hydrate. Mount the interactive form only on the client.
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   const form = useForm<z.infer<typeof ContactSchema>>({
     resolver: zodResolver(ContactSchema),
@@ -69,28 +87,36 @@ const ContactForm = () => {
     }
   }
 
+  if (!hasMounted) {
+    return (
+      <div
+        className={`${formShellClassName} min-h-[480px]`}
+        aria-busy="true"
+        aria-label="Loading contact form"
+      />
+    );
+  }
+
   return (
-    <div className="w-full max-w-4xl mx-auto p-8 bg-white rounded-2xl shadow-lg">
+    <div className={formShellClassName}>
       <div className="max-w-4xl mx-auto">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-            {NAME_EMAIL_FIELDS.map((field) => (
+            {NAME_EMAIL_FIELDS.map((name) => (
               <FormField
-                key={field}
+                key={name}
                 control={form.control}
-                name={field}
+                name={name}
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem id={FIELD_ITEM_IDS[name]}>
                     <FormLabel className="text-sm">
-                      {FIELD_NAMES[field.name]}
+                      {FIELD_NAMES[name]}
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={`Enter your ${FIELD_NAMES[
-                          field.name
-                        ].toLowerCase()}`}
+                        placeholder={`Enter your ${FIELD_NAMES[name].toLowerCase()}`}
                         className="h-10 text-[#000] placeholder-[#6A6A6A] rounded-[4px] bg-white"
-                        type={FIELD_TYPES[field.name]}
+                        type={FIELD_TYPES[name]}
                         {...field}
                       />
                     </FormControl>
@@ -104,11 +130,11 @@ const ContactForm = () => {
               control={form.control}
               name="subject"
               render={({ field }) => (
-                <FormItem>
+                <FormItem id={FIELD_ITEM_IDS.subject}>
                   <FormLabel className="text-sm">Subject</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value || undefined}
                   >
                     <FormControl className="w-full rounded-[4px]">
                       <SelectTrigger className="py-[18px] text-[#000] placeholder-[#6A6A6A] bg-white">
@@ -132,7 +158,7 @@ const ContactForm = () => {
               control={form.control}
               name="description"
               render={({ field }) => (
-                <FormItem>
+                <FormItem id={FIELD_ITEM_IDS.description}>
                   <FormLabel className="text-sm">Message</FormLabel>
                   <FormControl>
                     <Textarea
@@ -150,7 +176,10 @@ const ContactForm = () => {
               control={form.control}
               name="consent"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormItem
+                  id={FIELD_ITEM_IDS.consent}
+                  className="flex flex-row items-start space-x-3 space-y-0"
+                >
                   <FormControl>
                     <Checkbox
                       checked={field.value}

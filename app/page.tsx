@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import AboutUs from "@/components/home/AboutUs";
 import ContactSection from "@/components/home/ContactSection";
 import HomeSpotlight from "@/components/home/HomeSpotlight";
@@ -117,8 +118,14 @@ export default async function Home() {
         </div>
       </main>
       <AboutUs />
-      <HomeSpotlight />
-      <Reviews />
+      {/* Suspense keeps streaming async sections from shifting useId for
+          client forms below (ContactForm / CustomTourBanner Dialog). */}
+      <Suspense fallback={null}>
+        <HomeSpotlight />
+      </Suspense>
+      <Suspense fallback={null}>
+        <Reviews />
+      </Suspense>
       <CustomTourBanner />
       <ContactSection />
     </>
