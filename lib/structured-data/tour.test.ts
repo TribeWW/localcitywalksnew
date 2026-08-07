@@ -115,6 +115,23 @@ describe("buildTourPageJsonLd", () => {
         priceCurrency: "EUR",
         availability: "https://schema.org/InStock",
         url: "https://www.localcitywalks.com/tours/arles/hello-arles-9751538",
+        hasMerchantReturnPolicy: {
+          "@type": "MerchantReturnPolicy",
+          applicableCountry: ["ES", "PT", "FR", "DE", "BE", "NL", "IT", "CH"],
+          returnPolicyCategory:
+            "https://schema.org/MerchantReturnFiniteReturnWindow",
+          merchantReturnDays: 1,
+          returnFees: "https://schema.org/FreeReturn",
+          url: "https://www.localcitywalks.com/docs/LocalCityWalks_TermsAndConditions_EN.pdf",
+        },
+        shippingDetails: {
+          "@type": "OfferShippingDetails",
+          doesNotShip: true,
+          shippingDestination: {
+            "@type": "DefinedRegion",
+            addressCountry: ["ES", "PT", "FR", "DE", "BE", "NL", "IT", "CH"],
+          },
+        },
       },
     });
   });
@@ -174,6 +191,10 @@ describe("buildTourPageJsonLd", () => {
       url: "https://www.localcitywalks.com/tours/ghent/hello-ghent-12345",
       image: "https://imgcdn.bokun.tools/ghent.jpg?w=660&h=660",
       description: "A great tour.",
+      brand: {
+        "@type": "Brand",
+        name: "LocalCityWalks",
+      },
       aggregateRating: {
         "@type": "AggregateRating",
         ratingValue: "4.7",
@@ -187,6 +208,23 @@ describe("buildTourPageJsonLd", () => {
         priceCurrency: "EUR",
         availability: "https://schema.org/InStock",
         url: "https://www.localcitywalks.com/tours/ghent/hello-ghent-12345",
+        hasMerchantReturnPolicy: {
+          "@type": "MerchantReturnPolicy",
+          applicableCountry: ["ES", "PT", "FR", "DE", "BE", "NL", "IT", "CH"],
+          returnPolicyCategory:
+            "https://schema.org/MerchantReturnFiniteReturnWindow",
+          merchantReturnDays: 1,
+          returnFees: "https://schema.org/FreeReturn",
+          url: "https://www.localcitywalks.com/docs/LocalCityWalks_TermsAndConditions_EN.pdf",
+        },
+        shippingDetails: {
+          "@type": "OfferShippingDetails",
+          doesNotShip: true,
+          shippingDestination: {
+            "@type": "DefinedRegion",
+            addressCountry: ["ES", "PT", "FR", "DE", "BE", "NL", "IT", "CH"],
+          },
+        },
       },
       review: [
         {

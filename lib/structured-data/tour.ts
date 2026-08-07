@@ -5,11 +5,29 @@
  * and `Product` for `aggregateRating` / `review` (Google rich results require Product).
  */
 
-import { SITE_URL, tourPageUrl } from "@/lib/site";
+import { absoluteUrl, SITE_URL, tourPageUrl } from "@/lib/site";
 import type { SanityReviewListItem } from "@/types/review";
 
 const SCHEMA_CONTEXT = "https://schema.org";
 const IN_STOCK = `${SCHEMA_CONTEXT}/InStock`;
+const FINITE_RETURN_WINDOW = `${SCHEMA_CONTEXT}/MerchantReturnFiniteReturnWindow`;
+const FREE_RETURN = `${SCHEMA_CONTEXT}/FreeReturn`;
+
+/** Markets covered by Offer-level merchant policy JSON-LD (returns + no shipping). */
+const OFFER_MARKET_COUNTRIES = [
+  "ES",
+  "PT",
+  "FR",
+  "DE",
+  "BE",
+  "NL",
+  "IT",
+  "CH",
+] as const;
+
+const TERMS_AND_CONDITIONS_URL = absoluteUrl(
+  "/docs/LocalCityWalks_TermsAndConditions_EN.pdf",
+);
 
 /** Hero review stats shown on the tour page (mirrors UI). */
 export type TourHeroReviewStats = {
@@ -150,7 +168,7 @@ export function buildReviewJsonLd(
 /** Builds an `Offer` node when price data is available. */
 function buildOfferJsonLd(
   fields: TourJsonLdSharedFields,
-): Record<string, string> | undefined {
+): Record<string, unknown> | undefined {
   if (fields.fromPriceAmount == null || !fields.fromPriceCurrency?.trim()) {
     return undefined;
   }
@@ -161,6 +179,24 @@ function buildOfferJsonLd(
     priceCurrency: fields.fromPriceCurrency.trim(),
     availability: IN_STOCK,
     url: fields.url,
+    hasMerchantReturnPolicy: {
+      "@type": "MerchantReturnPolicy",
+      applicableCountry: [...OFFER_MARKET_COUNTRIES],
+      returnPolicyCategory: FINITE_RETURN_WINDOW,
+      merchantReturnDays: 1,
+      returnFees: FREE_RETURN,
+      url: TERMS_AND_CONDITIONS_URL,
+    },
+    // Tours are experiences — no physical fulfillment. Schema.org `doesNotShip`
+    // marks shipping as unavailable for these markets (clears GSC missing-field noise).
+    shippingDetails: {
+      "@type": "OfferShippingDetails",
+      doesNotShip: true,
+      shippingDestination: {
+        "@type": "DefinedRegion",
+        addressCountry: [...OFFER_MARKET_COUNTRIES],
+      },
+    },
   };
 }
 
@@ -244,9 +280,8 @@ export function buildTourProductJsonLd(
     name: input.title,
     url: input.url,
     brand: {
-      "@type": "Organization",
+      "@type": "Brand",
       name: "LocalCityWalks",
-      url: SITE_URL,
     },
   };
 
