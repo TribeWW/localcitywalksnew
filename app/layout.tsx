@@ -82,6 +82,9 @@ export const metadata: Metadata = {
       sizes: "180x180",
     },
   },
+  appleWebApp: {
+    title: "LocalCityWalks",
+  },
 };
 
 export default function RootLayout({
@@ -101,9 +104,9 @@ export default function RootLayout({
         {loadThirdPartyScripts &&
           IUBENDA_SITE_ID &&
           IUBENDA_COOKIE_POLICY_ID && (
-          <>
-            <Script id="iubenda-cs-config" strategy="beforeInteractive">
-              {`
+            <>
+              <Script id="iubenda-cs-config" strategy="beforeInteractive">
+                {`
                 var _iub = _iub || [];
                 _iub.csConfiguration = _iub.csConfiguration || {};
                 _iub.csConfiguration = Object.assign(_iub.csConfiguration, {
@@ -113,13 +116,13 @@ export default function RootLayout({
                   floatingPreferencesButtonDisplay: false
                 });
               `}
-            </Script>
-            <Script
-              src="https://cdn.iubenda.com/cs/iubenda_cs.js"
-              strategy="beforeInteractive"
-            />
-          </>
-        )}
+              </Script>
+              <Script
+                src="https://cdn.iubenda.com/cs/iubenda_cs.js"
+                strategy="beforeInteractive"
+              />
+            </>
+          )}
         {/* Google Tag Manager */}
         {loadThirdPartyScripts && GTM_ID && (
           <Script id="google-tag-manager" strategy="beforeInteractive">
