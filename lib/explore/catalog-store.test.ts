@@ -16,7 +16,7 @@ import {
   resetExploreCatalogRedisClientForTests,
   setExploreCatalogRedisClientForTests,
   writeExploreCatalogSnapshot,
-} from "@/lib/explore/explore-catalog-store";
+} from "@/lib/explore/catalog-store";
 import type { CityCardData } from "@/types/bokun";
 
 const sampleCards: CityCardData[] = [

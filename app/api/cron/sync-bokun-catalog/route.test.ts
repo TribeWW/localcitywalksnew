@@ -27,7 +27,7 @@ vi.mock("@/lib/city-cards/warm-listing-prices-for-cards", () => ({
     mockWarmListingPrices(...args),
 }));
 
-vi.mock("@/lib/explore/explore-catalog-store", () => ({
+vi.mock("@/lib/explore/catalog-store", () => ({
   writeExploreCatalogSnapshot: (...args: unknown[]) =>
     mockWriteSnapshot(...args),
 }));

@@ -7,7 +7,7 @@ import {
   cronUnauthorizedResponse,
   isCronRequestAuthorized,
 } from "@/lib/cron/verify-cron-request";
-import { writeExploreCatalogSnapshot } from "@/lib/explore/explore-catalog-store";
+import { writeExploreCatalogSnapshot } from "@/lib/explore/catalog-store";
 
 /** Allow enough time for full-catalog Bokun fetch + price warm + Sanity writes. */
 export const maxDuration = 300;

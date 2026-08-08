@@ -1,4 +1,4 @@
-import { getProductsPage } from "@/lib/actions/tour.actions";
+import { getProductsPage } from "@/lib/explore/tour.actions";
 import { enrichCityCardsForListing } from "@/lib/city-cards/enrich-city-cards-for-listing";
 import { cardsWidgetUpdate } from "@/flags";
 import ToursSectionClient from "@/components/home/ToursSectionClient";

@@ -50,7 +50,7 @@ const mockReadSnapshot = vi.fn();
 const mockWriteSnapshot = vi.fn();
 const mockWarmListingPrices = vi.fn();
 
-vi.mock("@/lib/explore/explore-catalog-store", () => ({
+vi.mock("@/lib/explore/catalog-store", () => ({
   readExploreCatalogSnapshot: (...args: unknown[]) => mockReadSnapshot(...args),
   writeExploreCatalogSnapshot: (...args: unknown[]) =>
     mockWriteSnapshot(...args),
@@ -64,7 +64,7 @@ vi.mock("@/lib/city-cards/warm-listing-prices-for-cards", () => ({
 import {
   getExploreCatalogPage,
   resetExploreCatalogCacheForTests,
-} from "@/lib/explore-catalog";
+} from "@/lib/explore/catalog";
 import type { CityCardData } from "@/types/bokun";
 
 const snapshotCards: CityCardData[] = [

@@ -5,7 +5,7 @@
 import {
   EXPLORE_PAGE_DESCRIPTION,
   EXPLORE_PAGE_TITLE,
-} from "@/lib/explore-page-metadata";
+} from "@/lib/explore/page-metadata";
 import {
   buildExploreCollectionPageJsonLd,
   EXPLORE_PAGE_URL,

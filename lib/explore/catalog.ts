@@ -4,7 +4,7 @@ import { warmListingPricesForCards } from "@/lib/city-cards/warm-listing-prices-
 import {
   readExploreCatalogSnapshot,
   writeExploreCatalogSnapshot,
-} from "@/lib/explore/explore-catalog-store";
+} from "@/lib/explore/catalog-store";
 import { CityCardData, GetProductsPageResult } from "@/types/bokun";
 
 /** Client-facing explore listing page size (unchanged UX). */

@@ -6,7 +6,7 @@
  */
 
 import { ExploreJsonLd } from "@/components/seo/ExploreJsonLd";
-import { getExploreCatalogForStructuredData } from "@/lib/explore-catalog";
+import { getExploreCatalogForStructuredData } from "@/lib/explore/catalog";
 import { toExploreJsonLdItems } from "@/lib/structured-data/explore";
 
 /**

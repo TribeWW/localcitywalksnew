@@ -2,7 +2,7 @@
 
 import { createBokunUrl, generateBokunHeaders } from "@/lib/bokun";
 import { transformSearchProductToCityCard } from "@/lib/bokun/transform-search-product-to-city-card";
-import { getExploreCatalogPage as loadExploreCatalogPage } from "@/lib/explore-catalog";
+import { getExploreCatalogPage as loadExploreCatalogPage } from "@/lib/explore/catalog";
 import {
   BokunSearchResponse,
   CityCardData,

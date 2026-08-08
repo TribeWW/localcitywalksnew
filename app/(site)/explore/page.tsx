@@ -3,7 +3,7 @@ import Image from "next/image";
 import ExploreCatalog from "@/components/explore/ExploreCatalog";
 import ExploreCatalogSkeleton from "@/components/explore/ExploreCatalogSkeleton";
 import { ExploreJsonLdSection } from "@/components/seo/ExploreJsonLdSection";
-import { buildExplorePageMetadata } from "@/lib/explore-page-metadata";
+import { buildExplorePageMetadata } from "@/lib/explore/page-metadata";
 
 export const metadata = buildExplorePageMetadata();
 

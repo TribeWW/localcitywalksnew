@@ -7,7 +7,7 @@ import {
   EXPLORE_PAGE_DESCRIPTION,
   EXPLORE_PAGE_TITLE,
   buildExplorePageMetadata,
-} from "@/lib/explore-page-metadata";
+} from "@/lib/explore/page-metadata";
 
 describe("buildExplorePageMetadata", () => {
   it("returns title, description, canonical, openGraph, and twitter tags", () => {
