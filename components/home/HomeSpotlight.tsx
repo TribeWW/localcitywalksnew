@@ -1,7 +1,7 @@
 import Link from "next/link";
 import CityCard from "@/components/cards/CityCard";
 import { enrichCityCardsForListing } from "@/lib/city-cards/enrich-city-cards-for-listing";
-import { getHomeSpotlightCityCards } from "@/lib/home-spotlight";
+import { getHomeSpotlightCityCards } from "@/lib/home/spotlight";
 import { cardsWidgetUpdate } from "@/flags";
 
 /**

@@ -13,7 +13,7 @@ vi.mock("@/lib/actions/tour-detail.actions", () => ({
   getTourDetailById: (...args: unknown[]) => getTourDetailByIdMock(...args),
 }));
 
-import { getHomeSpotlightCityCards } from "@/lib/home-spotlight";
+import { getHomeSpotlightCityCards } from "@/lib/home/spotlight";
 
 const keyPhoto = {
   derived: [{ name: "preview", url: "/preview.jpg" }],

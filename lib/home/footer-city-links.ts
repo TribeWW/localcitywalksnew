@@ -2,7 +2,7 @@ import { client } from "@/sanity/lib/client";
 import {
   normalizeFooterCityLinkRows,
   type FooterCityLinkItem,
-} from "@/lib/footer-city-link-rows";
+} from "@/lib/home/footer-city-link-rows";
 import { stripAccents } from "@/lib/utils";
 
 export type { FooterCityLinkItem };
