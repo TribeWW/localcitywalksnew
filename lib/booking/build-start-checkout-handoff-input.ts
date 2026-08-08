@@ -53,7 +53,11 @@ export function buildStartCheckoutHandoffInput({
     ? Number(values.startTimeId)
     : Number.NaN;
 
-  if (!Number.isFinite(startTimeId) || startTimeId <= 0) {
+  if (
+    !Number.isFinite(startTimeId) ||
+    !Number.isInteger(startTimeId) ||
+    startTimeId <= 0
+  ) {
     throw new Error("Missing start time");
   }
 

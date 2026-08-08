@@ -22,7 +22,7 @@ export function normalizeBokunProductIds(
   productIds: readonly unknown[],
   maxIds: number,
 ): string[] {
-  if (maxIds <= 0) {
+  if (!Number.isInteger(maxIds) || maxIds <= 0) {
     return [];
   }
 

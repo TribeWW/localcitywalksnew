@@ -1,13 +1,16 @@
 "use server";
 
 import { enrichCityCardsForListing } from "@/lib/city-cards/enrich-city-cards-for-listing";
+import { parseCityCardListingInput } from "@/lib/validation/city-card-listing";
 import type { CityCardData } from "@/types/bokun";
 
 const MAX_LISTING_ENRICHMENT_CARDS = 100;
 
-function assertValidCityCardListingInput(
-  cards: unknown,
-): asserts cards is CityCardData[] {
+/**
+ * Validates listing cards from the client and returns clean {@link CityCardData}
+ * objects built from a complete runtime schema (unknown keys stripped).
+ */
+function parseCityCardListingCards(cards: unknown): CityCardData[] {
   if (!Array.isArray(cards)) {
     throw new Error("Invalid listing cards: expected an array");
   }
@@ -22,26 +25,7 @@ function assertValidCityCardListingInput(
     );
   }
 
-  for (let index = 0; index < cards.length; index++) {
-    const card = cards[index];
-    if (!card || typeof card !== "object") {
-      throw new Error(`Invalid listing card at index ${index}`);
-    }
-
-    const { id, title, image } = card as CityCardData;
-
-    if (typeof id !== "string" || !id.trim()) {
-      throw new Error(`Invalid listing card id at index ${index}`);
-    }
-
-    if (typeof title !== "string" || !title.trim()) {
-      throw new Error(`Invalid listing card title at index ${index}`);
-    }
-
-    if (typeof image !== "string" || !image.trim()) {
-      throw new Error(`Invalid listing card image at index ${index}`);
-    }
-  }
+  return cards.map((card, index) => parseCityCardListingInput(card, index));
 }
 
 /**
@@ -50,6 +34,6 @@ function assertValidCityCardListingInput(
 export async function enrichCityCardsForListingAction(
   cards: CityCardData[],
 ): Promise<CityCardData[]> {
-  assertValidCityCardListingInput(cards);
-  return enrichCityCardsForListing(cards);
+  const validatedCards = parseCityCardListingCards(cards);
+  return enrichCityCardsForListing(validatedCards);
 }

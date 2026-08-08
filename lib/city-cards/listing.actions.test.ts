@@ -72,6 +72,28 @@ describe("enrichCityCardsForListingAction", () => {
     expect(enrichMock).not.toHaveBeenCalled();
   });
 
+  it("rejects malformed optional display fields without calling the enricher", async () => {
+    await expect(
+      enrichCityCardsForListingAction([
+        {
+          ...baseCard,
+          displayPriceCurrency: 123,
+        } as unknown as CityCardData,
+      ]),
+    ).rejects.toThrow("displayPriceCurrency at index 0");
+    expect(enrichMock).not.toHaveBeenCalled();
+  });
+
+  it("strips unknown keys before calling the enricher", async () => {
+    enrichMock.mockResolvedValue([baseCard]);
+
+    await enrichCityCardsForListingAction([
+      { ...baseCard, evil: true } as CityCardData & { evil: boolean },
+    ]);
+
+    expect(enrichMock).toHaveBeenCalledWith([baseCard]);
+  });
+
   it("propagates enrichment errors", async () => {
     enrichMock.mockRejectedValue(new Error("Enrichment failed"));
 

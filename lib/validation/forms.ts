@@ -50,14 +50,17 @@ export const TourRequestSchema = z
       ),
     adults: z
       .number()
+      .int()
       .min(0, { message: "Adults cannot be negative" })
       .max(20, { message: "Maximum 20 adults per tour" }),
     youth: z
       .number()
+      .int()
       .min(0, { message: "Youth cannot be negative" })
       .max(20, { message: "Maximum 20 youth per tour" }),
     children: z
       .number()
+      .int()
       .min(0, { message: "Children cannot be negative" })
       .max(20, { message: "Maximum 20 children per tour" }),
     preferredDate: z

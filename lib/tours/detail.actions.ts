@@ -3,15 +3,13 @@
 import { cache } from "react";
 import { createBokunUrl, generateBokunHeaders } from "@/lib/bokun";
 import { BOKUN_ENDPOINTS } from "@/lib/bokun/config";
+import {
+  readDetailCache,
+  writeDetailCache,
+} from "@/lib/tours/detail-cache";
 // Single-product fetch uses PRODUCT_BY_ID only; URL slug is our format (slugify(title)-id), not Bokun's.
 import type { BokunProductDetail, GetTourDetailResult } from "@/types/bokun";
 
-/** In-memory cache for single-product responses; 15min TTL aligned with getProductsPage */
-const detailCache = new Map<
-  string,
-  { data: BokunProductDetail; timestamp: number }
->();
-const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 const REQUEST_TIMEOUT_MS = 5000;
 
 /** Disallow path/query/fragment in id to avoid injection */
@@ -29,9 +27,9 @@ async function loadTourDetailById(
   trimmedId: string,
 ): Promise<GetTourDetailResult> {
   const cacheKey = `bokun-tour-${trimmedId}`;
-  const cached = detailCache.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return { success: true, data: cached.data };
+  const cached = readDetailCache(cacheKey);
+  if (cached) {
+    return { success: true, data: cached };
   }
 
   const path = BOKUN_ENDPOINTS.PRODUCT_BY_ID(trimmedId);
@@ -70,7 +68,7 @@ async function loadTourDetailById(
       return { success: false, error: "Unable to load tour" };
     }
 
-    detailCache.set(cacheKey, { data, timestamp: Date.now() });
+    writeDetailCache(cacheKey, data);
     return { success: true, data };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

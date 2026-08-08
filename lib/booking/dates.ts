@@ -12,9 +12,9 @@ export function toIsoDateString(date: Date): string {
   return format(date, "yyyy-MM-dd");
 }
 
-/** Converts a Bókun availability slot epoch to `YYYY-MM-DD` (local calendar). */
+/** Converts a Bókun availability slot epoch to UTC `YYYY-MM-DD`. */
 export function availabilitySlotToIsoDate(slot: BokunAvailability): string {
-  return format(new Date(slot.date), "yyyy-MM-dd");
+  return new Date(slot.date).toISOString().slice(0, 10);
 }
 
 /**

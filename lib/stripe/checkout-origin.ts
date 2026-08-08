@@ -4,9 +4,8 @@
 
 import { SITE_URL } from "@/lib/site";
 
-/** Host patterns allowed for preview/dev request-derived checkout origins. */
+/** Non-Vercel hosts allowed for preview/dev request-derived checkout origins. */
 const PREVIEW_CHECKOUT_HOST_PATTERNS: readonly RegExp[] = [
-  /^[a-z0-9-]+\.vercel\.app$/i,
   /^localhost(:\d+)?$/i,
   /^127\.0\.0\.1(:\d+)?$/,
   /^([a-z0-9-]+\.)?localcitywalks\.com$/i,
@@ -29,6 +28,11 @@ export function resolveProductionCheckoutOrigin(): string {
 /**
  * Returns whether a host is safe to use for preview/dev checkout redirects.
  *
+ * Arbitrary `*.vercel.app` Host / X-Forwarded-Host values are rejected. A
+ * Vercel hostname is accepted only when it matches this deployment’s
+ * `VERCEL_URL` (platform-provided allowlist). Localhost and
+ * `*.localcitywalks.com` remain allowed.
+ *
  * @param host - Host header value (may include port)
  */
 export function isAllowedPreviewCheckoutHost(host: string): boolean {
@@ -37,9 +41,20 @@ export function isAllowedPreviewCheckoutHost(host: string): boolean {
     return false;
   }
 
-  return PREVIEW_CHECKOUT_HOST_PATTERNS.some((pattern) =>
-    pattern.test(normalized),
-  );
+  if (
+    PREVIEW_CHECKOUT_HOST_PATTERNS.some((pattern) => pattern.test(normalized))
+  ) {
+    return true;
+  }
+
+  const vercelUrl = process.env.VERCEL_URL?.trim()
+    .toLowerCase()
+    .replace(/\/$/, "");
+  if (vercelUrl && normalized === vercelUrl) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
