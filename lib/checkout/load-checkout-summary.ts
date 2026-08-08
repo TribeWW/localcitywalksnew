@@ -25,7 +25,7 @@ import { resolveCheckoutRecoveryTourPageHref } from "@/lib/checkout/resolve-chec
 import { resolveCheckoutTourPageHref } from "@/lib/checkout/resolve-checkout-tour-page-href";
 import { detectCheckoutPriceUpdate } from "@/lib/checkout/checkout-price-update";
 import { resolveMainContactRequirements } from "@/lib/bokun/resolve-main-contact-requirements";
-import type { CheckoutOrderFixture } from "@/components/checkout/checkout-mock-fixture";
+import type { CheckoutOrderFixture } from "@/lib/checkout/checkout-order";
 import type { CheckoutPriceUpdate } from "@/lib/checkout/checkout-price-update";
 import type { CheckoutContactRequirements } from "@/types/bokun";
 

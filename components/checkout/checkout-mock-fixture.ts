@@ -4,19 +4,9 @@
  * Single-tour data from design brief §3.6 — production v1 is one tour per checkout.
  */
 
-/** Order recap fields shared by summary and success views. */
-export interface CheckoutOrderFixture {
-  imageUrl: string;
-  imageAlt: string;
-  title: string;
-  dateLabel: string;
-  timeLabel: string;
-  participantsLabel: string;
-  totalAmount: number;
-  currency: string;
-  /** Booking language label, e.g. "English". */
-  languageLabel?: string;
-}
+import type { CheckoutOrderFixture } from "@/lib/checkout/checkout-order";
+
+export type { CheckoutOrderFixture } from "@/lib/checkout/checkout-order";
 
 /** Hello Palma de Mallorca — design brief §3.6 (first cart item only). */
 export const HELLO_PALMA_CHECKOUT_FIXTURE: CheckoutOrderFixture = {

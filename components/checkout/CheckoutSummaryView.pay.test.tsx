@@ -43,7 +43,7 @@ vi.mock("@/lib/checkout/run-checkout-pay-click", () => ({
   runCheckoutPayClick: (...args: unknown[]) => runCheckoutPayClickMock(...args),
 }));
 
-vi.mock("@/lib/actions/checkout-payment.actions", () => ({
+vi.mock("@/lib/checkout/payment.actions", () => ({
   initiateCheckoutPayment: vi.fn(),
 }));
 

@@ -20,7 +20,7 @@ import {
   getTourAvailabilities,
   getTourBookingQuote,
 } from "@/lib/booking/widget.actions";
-import { startCheckoutHandoff } from "@/lib/actions/checkout-handoff.actions";
+import { startCheckoutHandoff } from "@/lib/checkout/handoff.actions";
 import { buildStartCheckoutHandoffInput } from "@/lib/booking/build-start-checkout-handoff-input";
 import {
   BOOKING_WIDGET_MAX_GROUP_SIZE_ERROR_CODE,
