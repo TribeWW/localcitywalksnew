@@ -1,6 +1,6 @@
 import { getTourDetailById } from "@/lib/tours/detail.actions";
 import { transformSearchProductToCityCard } from "@/lib/bokun/transform-search-product-to-city-card";
-import { normalizeBokunProductIds } from "@/lib/utils/bokun-product-id";
+import { normalizeBokunProductIds } from "@/lib/bokun/bokun-product-id";
 import { client } from "@/sanity/lib/client";
 import type { CityCardData } from "@/types/bokun";
 

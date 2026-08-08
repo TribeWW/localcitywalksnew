@@ -11,7 +11,7 @@
  */
 
 import Link from "next/link";
-import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
+import { formatCataloguePriceAmount } from "@/lib/bokun/format-catalogue-price";
 import {
   BOOKING_WIDGET_CONTACT_HREF,
   type BookingWidgetQuoteErrorState,

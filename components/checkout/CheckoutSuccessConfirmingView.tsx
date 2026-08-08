@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
+import { formatCataloguePriceAmount } from "@/lib/bokun/format-catalogue-price";
 
 import {
   CHECKOUT_CARD_CLASS,

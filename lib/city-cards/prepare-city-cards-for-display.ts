@@ -1,7 +1,7 @@
 import type { CardListingReviewRatingsResult } from "@/lib/reviews/reviews.actions";
 import { mergePriceHeadlinesIntoCityCards } from "@/lib/bokun/merge-price-headlines-into-city-cards";
-import { toBokunProductIdDigits } from "@/lib/utils/bokun-product-id";
-import { resolveCityCardRatingDisplay } from "@/lib/utils/city-card-rating-display";
+import { toBokunProductIdDigits } from "@/lib/bokun/bokun-product-id";
+import { resolveCityCardRatingDisplay } from "@/lib/city-cards/rating-display";
 import type { CityCardData, ProductPriceHeadline } from "@/types/bokun";
 
 /**

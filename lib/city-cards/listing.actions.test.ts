@@ -6,7 +6,7 @@ vi.mock("@/lib/city-cards/enrich-city-cards-for-listing", () => ({
   enrichCityCardsForListing: (...args: unknown[]) => enrichMock(...args),
 }));
 
-import { enrichCityCardsForListingAction } from "@/lib/actions/city-card-listing.actions";
+import { enrichCityCardsForListingAction } from "@/lib/city-cards/listing.actions";
 import type { CityCardData } from "@/types/bokun";
 
 const baseCard = {

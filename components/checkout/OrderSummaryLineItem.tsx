@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
+import { formatCataloguePriceAmount } from "@/lib/bokun/format-catalogue-price";
 import { cn } from "@/lib/utils";
 
 /**

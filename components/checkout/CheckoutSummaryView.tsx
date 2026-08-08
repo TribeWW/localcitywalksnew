@@ -16,7 +16,7 @@ import { initiateCheckoutPayment } from "@/lib/actions/checkout-payment.actions"
 import { buildInitiateCheckoutPaymentInput } from "@/lib/checkout/build-initiate-checkout-payment-input";
 import { runCheckoutPayClick } from "@/lib/checkout/run-checkout-pay-click";
 import { DEFAULT_CHECKOUT_CONTACT_REQUIREMENTS } from "@/lib/bokun/resolve-main-contact-requirements";
-import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
+import { formatCataloguePriceAmount } from "@/lib/bokun/format-catalogue-price";
 
 import { CheckoutContactFields } from "./CheckoutContactFields";
 import type { CheckoutContactFieldsValues } from "./CheckoutContactFields";

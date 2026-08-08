@@ -2,7 +2,7 @@ import {
   reviewRatingSummaryFromAggregates,
   type ReviewRatingSummary,
 } from "@/lib/reviews/review-summary";
-import { normalizeBokunProductIds } from "@/lib/utils/bokun-product-id";
+import { normalizeBokunProductIds } from "@/lib/bokun/bokun-product-id";
 
 export const MAX_BULK_RATING_TOUR_IDS = 50;
 

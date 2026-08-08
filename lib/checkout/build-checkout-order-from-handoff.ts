@@ -5,7 +5,7 @@
 import { format, parseISO } from "date-fns";
 
 import { formatParticipantSummary } from "@/lib/booking/format-participant-summary";
-import { formatBokunLanguage } from "@/lib/utils/format-bokun-language";
+import { formatBokunLanguage } from "@/lib/bokun/format-bokun-language";
 import type { CheckoutHandoffPayload } from "@/lib/checkout/handoff-token";
 import type { CheckoutOrderFixture } from "@/components/checkout/checkout-mock-fixture";
 import type { BookingWidgetQuote } from "@/types/bokun";

@@ -6,7 +6,7 @@ import {
   getCityCardRatingLine,
   getCityCardSubtitle,
   getCityCardTitle,
-} from "@/lib/utils/city-card-display";
+} from "@/lib/city-cards/display";
 import type { CityCardData } from "@/types/bokun";
 
 const enrichedCard: Pick<

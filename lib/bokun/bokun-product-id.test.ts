@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   normalizeBokunProductIds,
   toBokunProductIdDigits,
-} from "@/lib/utils/bokun-product-id";
+} from "@/lib/bokun/bokun-product-id";
 
 describe("toBokunProductIdDigits", () => {
   it("coerces numeric ids to digit strings", () => {

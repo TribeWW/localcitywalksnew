@@ -4,7 +4,7 @@
  * Extracted for unit testing and reuse by `tour-seo-sync.actions.ts`.
  */
 
-import { toBokunProductIdDigits } from "@/lib/utils/bokun-product-id";
+import { toBokunProductIdDigits } from "@/lib/bokun/bokun-product-id";
 import type { BokunProduct } from "@/types/bokun";
 
 /**

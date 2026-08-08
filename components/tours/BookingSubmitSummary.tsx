@@ -9,8 +9,8 @@
 
 import { format } from "date-fns";
 import { formatParticipantSummary } from "@/lib/booking/format-participant-summary";
-import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
-import { formatBokunLanguage } from "@/lib/utils/format-bokun-language";
+import { formatCataloguePriceAmount } from "@/lib/bokun/format-catalogue-price";
+import { formatBokunLanguage } from "@/lib/bokun/format-bokun-language";
 import type {
   BookingWidgetParticipants,
   BookingWidgetQuote,

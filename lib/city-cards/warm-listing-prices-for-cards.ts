@@ -4,7 +4,7 @@ import {
   enrichProductPricesFromPriceList,
 } from "@/lib/bokun/enrich-product-prices-from-price-list";
 import { mergePriceHeadlinesIntoCityCards } from "@/lib/bokun/merge-price-headlines-into-city-cards";
-import { toBokunProductIdDigits } from "@/lib/utils/bokun-product-id";
+import { toBokunProductIdDigits } from "@/lib/bokun/bokun-product-id";
 import type { CityCardData, ProductPriceHeadline } from "@/types/bokun";
 
 /** Matches price-list enrichment concurrency. */

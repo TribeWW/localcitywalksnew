@@ -8,8 +8,8 @@
  * Totals must come from the server-verified quote (LOC-1056), not `clientQuote`.
  */
 
-import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
-import { formatBokunLanguage } from "@/lib/utils/format-bokun-language";
+import { formatCataloguePriceAmount } from "@/lib/bokun/format-catalogue-price";
+import { formatBokunLanguage } from "@/lib/bokun/format-bokun-language";
 
 /** One priced line in the optional email breakdown section. */
 export interface BookingWidgetEmailBreakdownLine {

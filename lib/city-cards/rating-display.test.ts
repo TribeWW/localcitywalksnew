@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveCityCardRatingDisplay } from "@/lib/utils/city-card-rating-display";
+import { resolveCityCardRatingDisplay } from "@/lib/city-cards/rating-display";
 import type { ReviewRatingSummary } from "@/lib/reviews/review-summary";
 
 const summary = (

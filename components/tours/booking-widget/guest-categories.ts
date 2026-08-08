@@ -7,7 +7,7 @@
  */
 
 import type { BookingWidgetParticipants, BookingWidgetQuote } from "@/types/bokun";
-import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
+import { formatCataloguePriceAmount } from "@/lib/bokun/format-catalogue-price";
 
 /** Participant counter key on `BookingWidgetParticipants`. */
 export type GuestCategoryKey = keyof BookingWidgetParticipants;

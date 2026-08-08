@@ -1,4 +1,4 @@
-import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
+import { formatCataloguePriceAmount } from "@/lib/bokun/format-catalogue-price";
 import type { CityCardData } from "@/types/bokun";
 
 type CityCardDisplayFields = Pick<

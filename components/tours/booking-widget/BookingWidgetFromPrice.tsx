@@ -7,7 +7,7 @@
  * `fromPriceAmount` / `fromPriceCurrency` are available from the price list.
  */
 
-import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
+import { formatCataloguePriceAmount } from "@/lib/bokun/format-catalogue-price";
 
 /** Props for `BookingWidgetFromPrice`. */
 interface BookingWidgetFromPriceProps {

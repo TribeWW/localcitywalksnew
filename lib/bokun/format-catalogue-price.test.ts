@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
+import { formatCataloguePriceAmount } from "@/lib/bokun/format-catalogue-price";
 
 describe("formatCataloguePriceAmount", () => {
   it("formats a positive EUR amount for display", () => {

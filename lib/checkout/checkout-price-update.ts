@@ -5,7 +5,7 @@
  */
 
 import { clientQuoteMatchesServer } from "@/lib/actions/booking-widget-submit";
-import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
+import { formatCataloguePriceAmount } from "@/lib/bokun/format-catalogue-price";
 import type { TourBookingClientQuote } from "@/lib/validation/tour-booking";
 import type { BookingWidgetQuote } from "@/types/bokun";
 

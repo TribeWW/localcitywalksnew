@@ -1,4 +1,4 @@
-import { toBokunProductIdDigits } from "@/lib/utils/bokun-product-id";
+import { toBokunProductIdDigits } from "@/lib/bokun/bokun-product-id";
 import type { CityCardData, ProductPriceHeadline } from "@/types/bokun";
 
 /**

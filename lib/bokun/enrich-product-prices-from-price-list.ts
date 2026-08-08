@@ -5,7 +5,7 @@ import { extractHeadlineFromPriceList } from "@/lib/bokun/extract-price-list-hea
 import {
   normalizeBokunProductIds,
   toBokunProductIdDigits,
-} from "@/lib/utils/bokun-product-id";
+} from "@/lib/bokun/bokun-product-id";
 import type {
   BokunPriceListResponse,
   CityCardData,

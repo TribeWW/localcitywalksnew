@@ -5,7 +5,7 @@
  * Guided options come from `guidanceTypes` where `guidanceType === "GUIDED"`.
  */
 
-import { formatBokunLanguage } from "@/lib/utils/format-bokun-language";
+import { formatBokunLanguage } from "@/lib/bokun/format-bokun-language";
 import type {
   BokunGuidanceType,
   BookingWidgetLanguageOption,
