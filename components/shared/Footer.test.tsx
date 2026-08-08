@@ -35,4 +35,26 @@ describe("Footer", () => {
       ),
     ).toBeInTheDocument();
   });
+
+  it("renders only copyright and legal links in the minimal variant", () => {
+    render(<Footer variant="minimal" />);
+
+    expect(
+      screen.queryByText(
+        /LocalCityWalks connects you with trusted local guides/,
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("footer-city-links-slot"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("footer-logo")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        new RegExp(`© ${new Date().getFullYear()} LocalCityWalks`),
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Terms and Conditions" }),
+    ).toBeInTheDocument();
+  });
 });

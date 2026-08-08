@@ -34,4 +34,24 @@ describe("Navbar", () => {
       expect(link).toHaveAttribute("href", "/explore");
     }
   });
+
+  it("hides browse and utility links in the minimal variant", () => {
+    render(<Navbar variant="minimal" />);
+
+    expect(
+      screen.queryByRole("link", { name: "Browse tours" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Open menu" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "About us" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Contact us" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "LocalCityWalks" }),
+    ).toHaveAttribute("href", "/");
+  });
 });
