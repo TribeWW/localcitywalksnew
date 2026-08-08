@@ -1,4 +1,4 @@
-import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
+import { getTourDetailById } from "@/lib/tours/detail.actions";
 import { createBokunUrl, generateBokunHeaders } from "@/lib/bokun";
 import { BOKUN_ENDPOINTS } from "@/lib/bokun/config";
 import { extractHeadlineFromPriceList } from "@/lib/bokun/extract-price-list-headline";

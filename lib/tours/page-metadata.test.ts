@@ -7,11 +7,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const getTourSeoMetadataMock = vi.fn();
 const getTourDetailByIdMock = vi.fn();
 
-vi.mock("@/lib/tour-seo", () => ({
+vi.mock("@/lib/tours/seo", () => ({
   getTourSeoMetadata: (...args: unknown[]) => getTourSeoMetadataMock(...args),
 }));
 
-vi.mock("@/lib/actions/tour-detail.actions", () => ({
+vi.mock("@/lib/tours/detail.actions", () => ({
   getTourDetailById: (...args: unknown[]) => getTourDetailByIdMock(...args),
 }));
 
@@ -20,7 +20,7 @@ import {
   extractTourIdFromSlug,
   mergeTourSeoFields,
   resolveTourPageMetadata,
-} from "@/lib/tour-page-metadata";
+} from "@/lib/tours/page-metadata";
 
 const FALLBACKS = {
   seoTitle: "Toledo Private Walking Tour | LocalCityWalks",

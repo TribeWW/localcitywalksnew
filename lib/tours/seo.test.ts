@@ -12,7 +12,7 @@ vi.mock("@/sanity/lib/client", () => ({
   },
 }));
 
-import { TOUR_SEO_QUERY, getTourSeoMetadata } from "@/lib/tour-seo";
+import { TOUR_SEO_QUERY, getTourSeoMetadata } from "@/lib/tours/seo";
 
 describe("getTourSeoMetadata", () => {
   beforeEach(() => {

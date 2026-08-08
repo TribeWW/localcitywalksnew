@@ -2,7 +2,7 @@
  * Resolves tour page links for checkout error recovery (LOC-1155).
  */
 
-import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
+import { getTourDetailById } from "@/lib/tours/detail.actions";
 import { resolveCheckoutTourPageHref } from "@/lib/checkout/resolve-checkout-tour-page-href";
 
 /**

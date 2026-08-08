@@ -12,7 +12,7 @@ import {
   extractTourSeoSyncCandidates,
   partitionTourSeoCandidates,
   tourSeoMetadataDocumentId,
-} from "@/lib/tour-seo-sync.helpers";
+} from "@/lib/tours/seo-sync.helpers";
 import type { BokunProduct } from "@/types/bokun";
 import type { TourSeoSyncResult } from "@/types/tour-seo-sync";
 

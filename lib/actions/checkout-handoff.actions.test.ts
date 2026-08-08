@@ -19,7 +19,7 @@ vi.mock("@/lib/actions/booking-widget.actions", () => ({
     computeTourBookingQuoteMock(...args),
 }));
 
-vi.mock("@/lib/actions/tour-detail.actions", () => ({
+vi.mock("@/lib/tours/detail.actions", () => ({
   getTourDetailById: (...args: unknown[]) => getTourDetailByIdMock(...args),
 }));
 

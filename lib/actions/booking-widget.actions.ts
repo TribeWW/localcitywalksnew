@@ -14,7 +14,7 @@
 
 "use server";
 
-import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
+import { getTourDetailById } from "@/lib/tours/detail.actions";
 import {
   BOOKING_WIDGET_PRICE_MISMATCH_ERROR,
   clientQuoteMatchesServer,

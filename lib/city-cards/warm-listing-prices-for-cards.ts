@@ -1,4 +1,4 @@
-import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
+import { getTourDetailById } from "@/lib/tours/detail.actions";
 import {
   collectDefaultRateIdsFromCards,
   enrichProductPricesFromPriceList,

@@ -1,4 +1,4 @@
-import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
+import { getTourDetailById } from "@/lib/tours/detail.actions";
 import { transformSearchProductToCityCard } from "@/lib/bokun/transform-search-product-to-city-card";
 import { normalizeBokunProductIds } from "@/lib/utils/bokun-product-id";
 import { client } from "@/sanity/lib/client";

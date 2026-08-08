@@ -5,7 +5,7 @@ import { writeClient } from "@/sanity/lib/write-client";
 import { transformSearchProductToCityCard } from "@/lib/bokun/transform-search-product-to-city-card";
 import { slugifyForUrl, stripAccents } from "@/lib/utils";
 import { BokunProduct, CitySyncResult } from "@/types/bokun";
-import { syncTourSeoFromProducts } from "@/lib/actions/tour-seo-sync.actions";
+import { syncTourSeoFromProducts } from "@/lib/tours/seo-sync.actions";
 
 /**
  * City sync actions for Sanity

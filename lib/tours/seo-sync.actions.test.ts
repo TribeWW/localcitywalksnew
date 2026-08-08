@@ -15,7 +15,7 @@ vi.mock("@/sanity/lib/write-client", () => ({
   },
 }));
 
-import { syncTourSeoFromProducts } from "@/lib/actions/tour-seo-sync.actions";
+import { syncTourSeoFromProducts } from "@/lib/tours/seo-sync.actions";
 
 function product(id: string, title: string): BokunProduct {
   return {

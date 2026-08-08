@@ -9,7 +9,7 @@ vi.mock("@/sanity/lib/client", () => ({
   },
 }));
 
-vi.mock("@/lib/actions/tour-detail.actions", () => ({
+vi.mock("@/lib/tours/detail.actions", () => ({
   getTourDetailById: (...args: unknown[]) => getTourDetailByIdMock(...args),
 }));
 

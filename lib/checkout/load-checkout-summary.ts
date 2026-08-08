@@ -7,7 +7,7 @@
 
 import { computeTourBookingQuote } from "@/lib/actions/booking-widget.actions";
 import { resolveStartTimeLabel } from "@/lib/actions/booking-widget-submit";
-import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
+import { getTourDetailById } from "@/lib/tours/detail.actions";
 import { buildCheckoutOrderFromHandoff } from "@/lib/checkout/build-checkout-order-from-handoff";
 import {
   classifyCheckoutQuoteUnavailableReason,

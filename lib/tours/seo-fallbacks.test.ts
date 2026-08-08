@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { buildTourSeoFallbacks } from "@/lib/tour-seo-fallbacks";
+import { buildTourSeoFallbacks } from "@/lib/tours/seo-fallbacks";
 
 describe("buildTourSeoFallbacks", () => {
   it("interpolates city name into title, description, and lowercase keyword", () => {

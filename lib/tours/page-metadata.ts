@@ -7,13 +7,13 @@
  */
 
 import type { Metadata } from "next";
-import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
+import { getTourDetailById } from "@/lib/tours/detail.actions";
 import { pickBokunOgImageUrl } from "@/lib/bokun/pick-bokun-photo-url";
 import {
   buildTourSeoFallbacks,
   type TourSeoFallbacks,
-} from "@/lib/tour-seo-fallbacks";
-import { getTourSeoMetadata } from "@/lib/tour-seo";
+} from "@/lib/tours/seo-fallbacks";
+import { getTourSeoMetadata } from "@/lib/tours/seo";
 import { tourPageUrl } from "@/lib/site";
 import { slugifyForUrl } from "@/lib/utils";
 import type { TourSeoMetadata } from "@/types/tour-seo";

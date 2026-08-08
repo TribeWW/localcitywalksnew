@@ -8,7 +8,7 @@ import {
   extractTourSeoSyncCandidates,
   partitionTourSeoCandidates,
   tourSeoMetadataDocumentId,
-} from "@/lib/tour-seo-sync.helpers";
+} from "@/lib/tours/seo-sync.helpers";
 
 function product(
   id: string | number,
