@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { syncCitiesFromProducts } from "@/lib/actions/city.actions";
+import { syncCitiesFromProducts } from "@/lib/cities/city.actions";
 import { fetchAllBokunSearchProducts } from "@/lib/bokun/fetch-all-search-products";
 import { mapSearchProductsToCityCards } from "@/lib/bokun/transform-search-product-to-city-card";
 import { warmListingPricesForCards } from "@/lib/city-cards/warm-listing-prices-for-cards";

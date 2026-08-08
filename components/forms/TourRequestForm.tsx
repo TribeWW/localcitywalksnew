@@ -20,7 +20,7 @@ import ParticipantCounter from "@/components/ui/participant-counter";
 import DatePicker from "@/components/ui/date-picker";
 import TimeSelector from "@/components/ui/time-selector";
 import DurationSelector from "@/components/ui/duration-selector";
-import { TourRequestSchema } from "@/lib/validation";
+import { TourRequestSchema } from "@/lib/validation/forms";
 import { sendTourRequestEmail } from "@/lib/nodemailer";
 import { toast } from "sonner";
 

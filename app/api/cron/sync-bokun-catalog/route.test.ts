@@ -32,7 +32,7 @@ vi.mock("@/lib/explore/catalog-store", () => ({
     mockWriteSnapshot(...args),
 }));
 
-vi.mock("@/lib/actions/city.actions", () => ({
+vi.mock("@/lib/cities/city.actions", () => ({
   syncCitiesFromProducts: (...args: unknown[]) => mockSyncCities(...args),
 }));
 
