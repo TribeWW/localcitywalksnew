@@ -2,7 +2,7 @@
 
 /**
  * Client grid for listing cards. Stays a Client Component because
- * `ExploreCatalogClient` and `ToursSectionClient` import it inside client trees.
+ * `ExploreCatalogClient` imports it inside client trees.
  * Server parents enrich `CityCardData` before passing `cities` here.
  */
 import Image from "next/image";
