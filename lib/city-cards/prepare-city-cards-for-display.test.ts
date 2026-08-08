@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { prepareCityCardsForListingDisplay } from "@/lib/city-cards/prepare-city-cards-for-display";
 import type { CityCardData } from "@/types/bokun";
-import type { ReviewRatingSummary } from "@/lib/utils/review-summary";
+import type { ReviewRatingSummary } from "@/lib/reviews/review-summary";
 
 const baseCard: CityCardData = {
   id: "101",

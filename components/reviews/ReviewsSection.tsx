@@ -4,7 +4,7 @@ import {
   meanStarRating,
   starDistribution,
   type ReviewRatingSummary,
-} from "@/lib/utils/review-summary";
+} from "@/lib/reviews/review-summary";
 import { FallbackReviewsNotice } from "./FallbackReviewsNotice";
 import { HomeReviewsCarousel } from "./HomeReviewsCarousel";
 import { TourReviewsExpandableList } from "./TourReviewsExpandableList";

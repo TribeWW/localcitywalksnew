@@ -8,7 +8,7 @@ vi.mock("@/sanity/lib/client", () => ({
   },
 }));
 
-import { getReviewRatingSummariesForTourIds } from "@/lib/actions/reviews.actions";
+import { getReviewRatingSummariesForTourIds } from "@/lib/reviews/reviews.actions";
 
 describe("getReviewRatingSummariesForTourIds", () => {
   beforeEach(() => {

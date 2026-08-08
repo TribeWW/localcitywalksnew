@@ -11,9 +11,9 @@ import {
   getFallbackReviews,
   getReviewRatingsForTour,
   getTourReviews,
-} from "@/lib/actions/reviews.actions";
+} from "@/lib/reviews/reviews.actions";
 import { slugifyForUrl } from "@/lib/utils";
-import { meanStarRating } from "@/lib/utils/review-summary";
+import { meanStarRating } from "@/lib/reviews/review-summary";
 import { FallbackReviewInfoTooltip } from "@/components/reviews/FallbackReviewInfoTooltip";
 import { ReviewsSection } from "@/components/reviews/ReviewsSection";
 import {

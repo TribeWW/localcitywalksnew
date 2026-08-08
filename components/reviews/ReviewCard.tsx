@@ -1,8 +1,8 @@
 import { Star } from "lucide-react";
 import type { SanityReviewListItem } from "@/types/review";
 import { cn } from "@/lib/utils";
-import { formatPublicReviewAuthorName } from "@/lib/utils/review-author";
-import { formatExperienceDate } from "@/lib/utils/review-date";
+import { formatPublicReviewAuthorName } from "@/lib/reviews/review-author";
+import { formatExperienceDate } from "@/lib/reviews/review-date";
 import { ReviewBodyClamp } from "./ReviewBodyClamp";
 
 /**

@@ -8,12 +8,12 @@ import {
 import {
   reviewRatingSummaryFromAggregates,
   type ReviewRatingSummary,
-} from "@/lib/utils/review-summary";
+} from "@/lib/reviews/review-summary";
 import {
   buildReviewRatingSummariesByTourId,
   normalizeTourIdsForBulkRating,
   type ReviewStarProjectionRow,
-} from "@/lib/utils/review-rating-summaries-by-tour";
+} from "@/lib/reviews/review-rating-summaries-by-tour";
 
 const REVIEW_FIELDS = `_id, tourId, rating, experienceDate, authorName, body`;
 

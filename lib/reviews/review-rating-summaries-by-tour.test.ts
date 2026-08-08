@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildReviewRatingSummariesByTourId,
   normalizeTourIdsForBulkRating,
-} from "@/lib/utils/review-rating-summaries-by-tour";
+} from "@/lib/reviews/review-rating-summaries-by-tour";
 
 describe("normalizeTourIdsForBulkRating", () => {
   it("dedupes, keeps digits-only ids, and caps the list", () => {

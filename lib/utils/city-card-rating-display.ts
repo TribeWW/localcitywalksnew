@@ -1,4 +1,4 @@
-import type { ReviewRatingSummary } from "@/lib/utils/review-summary";
+import type { ReviewRatingSummary } from "@/lib/reviews/review-summary";
 
 export type CityCardRatingDisplay = {
   ratingLabel?: string;
