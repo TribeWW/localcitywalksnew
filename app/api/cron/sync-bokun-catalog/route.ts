@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { syncCitiesFromProducts } from "@/lib/actions/city.actions";
+import { syncCitiesFromProducts } from "@/lib/cities/city.actions";
 import { fetchAllBokunSearchProducts } from "@/lib/bokun/fetch-all-search-products";
 import { mapSearchProductsToCityCards } from "@/lib/bokun/transform-search-product-to-city-card";
 import { warmListingPricesForCards } from "@/lib/city-cards/warm-listing-prices-for-cards";
@@ -7,7 +7,7 @@ import {
   cronUnauthorizedResponse,
   isCronRequestAuthorized,
 } from "@/lib/cron/verify-cron-request";
-import { writeExploreCatalogSnapshot } from "@/lib/explore/explore-catalog-store";
+import { writeExploreCatalogSnapshot } from "@/lib/explore/catalog-store";
 
 /** Allow enough time for full-catalog Bokun fetch + price warm + Sanity writes. */
 export const maxDuration = 300;

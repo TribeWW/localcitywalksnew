@@ -1,7 +1,7 @@
 import {
   getAllReviewRatings,
   getRecentReviews,
-} from "@/lib/actions/reviews.actions";
+} from "@/lib/reviews/reviews.actions";
 import { ReviewsSection } from "@/components/reviews/ReviewsSection";
 
 const HOME_RECENT_REVIEW_LIMIT = 12;

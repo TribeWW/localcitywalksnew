@@ -1,5 +1,5 @@
 import { slugifyForUrl } from "@/lib/utils";
-import { toBokunProductIdDigits } from "@/lib/utils/bokun-product-id";
+import { toBokunProductIdDigits } from "@/lib/bokun/bokun-product-id";
 import { pickBokunCardImageUrl } from "@/lib/bokun/pick-bokun-card-image-url";
 import { CityCardData } from "@/types/bokun";
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Fragment } from "react";
-import type { FooterCityLinkItem } from "@/lib/footer-city-link-rows";
+import type { FooterCityLinkItem } from "@/lib/home/footer-city-link-rows";
 
 /**
  * Sync presentational strip — no Sanity import (safe for Vitest without env).

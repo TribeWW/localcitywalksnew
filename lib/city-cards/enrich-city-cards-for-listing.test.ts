@@ -24,7 +24,7 @@ vi.mock("@/lib/bokun/enrich-product-prices-from-price-list", () => ({
     enrichPricesMock(...args),
 }));
 
-vi.mock("@/lib/actions/reviews.actions", () => ({
+vi.mock("@/lib/reviews/reviews.actions", () => ({
   getReviewRatingSummariesForTourIds: (...args: unknown[]) =>
     ratingsMock(...args),
 }));

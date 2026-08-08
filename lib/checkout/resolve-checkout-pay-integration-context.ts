@@ -4,7 +4,7 @@
  * Imports Bókun/quote modules — use only from opt-in integration tests or scripts.
  */
 
-import { computeTourBookingQuote } from "@/lib/actions/booking-widget.actions";
+import { computeTourBookingQuote } from "@/lib/booking/widget.actions";
 import { fetchAvailabilities } from "@/lib/bokun/fetch-availabilities";
 import { buildInitiateCheckoutPaymentInput } from "@/lib/checkout/build-initiate-checkout-payment-input";
 import {

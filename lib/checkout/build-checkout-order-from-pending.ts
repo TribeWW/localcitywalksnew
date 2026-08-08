@@ -3,10 +3,10 @@
  */
 
 import { formatParticipantSummary } from "@/lib/booking/format-participant-summary";
-import { formatBokunLanguage } from "@/lib/utils/format-bokun-language";
+import { formatBokunLanguage } from "@/lib/bokun/format-bokun-language";
 import { formatCheckoutDateLabel } from "@/lib/checkout/build-checkout-order-from-handoff";
 import type { PendingCheckoutRecord } from "@/lib/checkout/pending-checkout-store";
-import type { CheckoutOrderFixture } from "@/components/checkout/checkout-mock-fixture";
+import type { CheckoutOrderFixture } from "@/lib/checkout/checkout-order";
 
 /** Inputs required to render success recap from a fulfilled pending checkout. */
 export interface BuildCheckoutOrderFromPendingInput {

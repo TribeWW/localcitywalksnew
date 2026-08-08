@@ -5,15 +5,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { BadgeCheck, Clock, Globe, Users, Star } from "lucide-react";
-import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
+import { getTourDetailById } from "@/lib/tours/detail.actions";
 import {
   getAllReviewRatings,
   getFallbackReviews,
   getReviewRatingsForTour,
   getTourReviews,
-} from "@/lib/actions/reviews.actions";
+} from "@/lib/reviews/reviews.actions";
 import { slugifyForUrl } from "@/lib/utils";
-import { meanStarRating } from "@/lib/utils/review-summary";
+import { meanStarRating } from "@/lib/reviews/review-summary";
 import { FallbackReviewInfoTooltip } from "@/components/reviews/FallbackReviewInfoTooltip";
 import { ReviewsSection } from "@/components/reviews/ReviewsSection";
 import {
@@ -36,7 +36,7 @@ import { tourPageUrl } from "@/lib/site";
 import {
   extractTourIdFromSlug,
   resolveTourPageMetadata,
-} from "@/lib/tour-page-metadata";
+} from "@/lib/tours/page-metadata";
 import { TourJsonLd } from "@/components/seo/TourJsonLd";
 import TourImageGallery from "@/components/tours/tour-image-gallery";
 import FaqAccordion from "@/components/tours/faq-accordion";

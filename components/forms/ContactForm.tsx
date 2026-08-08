@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { ContactSchema } from "@/lib/validation";
+import { ContactSchema } from "@/lib/validation/forms";
 import { FIELD_NAMES, FIELD_TYPES } from "@/constants";
 import { Textarea } from "../ui/textarea";
 import { toast } from "sonner";

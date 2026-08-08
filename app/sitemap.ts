@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import { getExploreCatalogForStructuredData } from "@/lib/explore-catalog";
+import { getExploreCatalogForStructuredData } from "@/lib/explore/catalog";
 import {
   buildFullSitemapEntries,
   buildStaticSitemapEntries,

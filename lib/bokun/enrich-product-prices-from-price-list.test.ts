@@ -4,7 +4,7 @@ import type { BokunPriceListResponse } from "@/types/bokun";
 const getTourDetailByIdMock = vi.fn();
 const fetchMock = vi.fn();
 
-vi.mock("@/lib/actions/tour-detail.actions", () => ({
+vi.mock("@/lib/tours/detail.actions", () => ({
   getTourDetailById: (...args: unknown[]) => getTourDetailByIdMock(...args),
 }));
 

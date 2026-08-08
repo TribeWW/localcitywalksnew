@@ -16,17 +16,12 @@ import { DEFAULT_CHECKOUT_CONTACT_REQUIREMENTS } from "@/lib/bokun/resolve-main-
 import { cn } from "@/lib/utils";
 import type { CheckoutContactRequirements } from "@/types/bokun";
 
+import type { CheckoutContactFieldsValues } from "@/lib/checkout/checkout-contact";
+
 import { CHECKOUT_FIELD_CLASS } from "./checkout-field-styles";
 import { CheckoutSectionHeading } from "./CheckoutSectionHeading";
 
-/** Field values for checkout contact form. */
-export interface CheckoutContactFieldsValues {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  comments: string;
-}
+export type { CheckoutContactFieldsValues } from "@/lib/checkout/checkout-contact";
 
 export interface CheckoutContactFieldsProps {
   values: CheckoutContactFieldsValues;

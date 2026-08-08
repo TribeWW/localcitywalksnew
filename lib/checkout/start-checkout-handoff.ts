@@ -7,12 +7,12 @@
 
 import { z } from "zod";
 
-import { computeTourBookingQuote } from "@/lib/actions/booking-widget.actions";
+import { computeTourBookingQuote } from "@/lib/booking/widget.actions";
 import {
   BOOKING_WIDGET_PRICE_MISMATCH_ERROR,
   clientQuoteMatchesServer,
-} from "@/lib/actions/booking-widget-submit";
-import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
+} from "@/lib/booking/widget-submit";
+import { getTourDetailById } from "@/lib/tours/detail.actions";
 import { signCheckoutHandoffToken } from "@/lib/checkout/handoff-token";
 import {
   tourBookingClientQuoteSchema,

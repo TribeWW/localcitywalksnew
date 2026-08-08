@@ -1,4 +1,4 @@
-import { getExploreCatalogPage } from "@/lib/explore-catalog";
+import { getExploreCatalogPage } from "@/lib/explore/catalog";
 import ExploreCatalogClient from "@/components/explore/ExploreCatalogClient";
 import { enrichCityCardsForListing } from "@/lib/city-cards/enrich-city-cards-for-listing";
 import { cardsWidgetUpdate } from "@/flags";

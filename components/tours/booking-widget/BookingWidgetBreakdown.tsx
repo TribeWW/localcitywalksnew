@@ -11,12 +11,12 @@
  */
 
 import Link from "next/link";
-import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
+import { formatCataloguePriceAmount } from "@/lib/bokun/format-catalogue-price";
 import {
   BOOKING_WIDGET_CONTACT_HREF,
   type BookingWidgetQuoteErrorState,
   isMaxGroupSizeQuoteError,
-} from "@/lib/booking-widget/max-group-size-message";
+} from "@/lib/booking/max-group-size-message";
 import type { BookingWidgetQuote } from "@/types/bokun";
 
 /** Props for `BookingWidgetBreakdown`. */

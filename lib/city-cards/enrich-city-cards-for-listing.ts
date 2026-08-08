@@ -1,4 +1,4 @@
-import { getReviewRatingSummariesForTourIds } from "@/lib/actions/reviews.actions";
+import { getReviewRatingSummariesForTourIds } from "@/lib/reviews/reviews.actions";
 import {
   collectDefaultRateIdsFromCards,
   enrichProductPricesFromPriceList,

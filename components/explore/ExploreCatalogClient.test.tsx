@@ -14,7 +14,7 @@ beforeEach(() => {
   );
 });
 
-vi.mock("@/lib/actions/tour.actions", () => ({
+vi.mock("@/lib/explore/tour.actions", () => ({
   getExploreCatalogPage: (...args: unknown[]) =>
     mockedGetExploreCatalogPage(...args),
 }));

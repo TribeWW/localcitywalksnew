@@ -18,10 +18,10 @@ Bokun API → Server Action → React Component → UI Display
 
 ### Key Components
 
-- **Server Actions**: `lib/actions/tour.actions.ts` — Bokun search/listing; `lib/actions/tour-detail.actions.ts` — single product by id (tour page)
+- **Server Actions**: `lib/explore/tour.actions.ts` — Bokun search/listing; `lib/tours/detail.actions.ts` — single product by id (tour page)
 - **URL helpers**: `slugifyForUrl` in `lib/utils.ts` (shared with the tour page for canonical city slugs)
 - **Type Definitions**: `types/bokun.ts` — `CityCardData`, `BokunProductDetail`, result types, etc.
-- **UI**: `components/cards/CityCard.tsx` (links to `/tours/{citySlug}/{slug}`), `components/home/Cities.tsx`, `components/home/ToursSectionClient.tsx` (filter + pagination)
+- **UI**: `components/cards/CityCard.tsx` (links to `/tours/{citySlug}/{slug}`), `components/explore/ExploreCatalogClient.tsx` (filter + pagination)
 
 ## Server Actions
 
@@ -35,7 +35,7 @@ Bokun API → Server Action → React Component → UI Display
 
 ### `getTourDetailById(id)` (tour page)
 
-**Location**: `lib/actions/tour-detail.actions.ts`  
+**Location**: `lib/tours/detail.actions.ts`  
 **Purpose**: **`GET /activity.json/{id}`** for the **`/tours/[city]/[slug]`** page (id parsed from slug).  
 **Caching**: 15-minute in-memory TTL per product id.  
 **Docs**: URL scheme, city validation, and image hosts are described in **`documentation/guides/BOKUN_CONFIGURATION.md`**.
@@ -44,7 +44,7 @@ Bokun API → Server Action → React Component → UI Display
 
 **Purpose**: Fetches all available tour products from Bokun API and transforms them into city card data.
 
-**Location**: `lib/actions/tour.actions.ts`
+**Location**: `lib/explore/tour.actions.ts`
 
 **Returns**: `Promise<GetAllProductsResult>`
 
@@ -119,17 +119,17 @@ Do not duplicate large interface blocks in this guide; update `types/bokun.ts` a
 
 ## Component Integration
 
-### Cities Component (`components/home/Cities.tsx`)
+### Explore catalog (`components/explore/ExploreCatalog.tsx`)
 
-**Purpose**: Server component that fetches the first page of tours and passes it to the client section for display, filter, and "Show more".
+**Purpose**: Server component that loads the first page of the explore catalog and passes it to the client catalog for display, filter, and pagination.
 
 **Key Features**:
 
-- ✅ **Async Server Component**: Calls `getProductsPage(1)` and passes `initialData` + `totalHits` to `ToursSectionClient`
-- ✅ **Fallback Mechanism**: Falls back to hardcoded cities if API fails
-- ✅ **Error Resilience**: Graceful handling of API failures
+- ✅ **Async Server Component**: Calls `getExploreCatalogPage(1, …)` and passes initial data to `ExploreCatalogClient`
+- ✅ **Snapshot-backed catalog**: Reads from Redis/L1 via `lib/explore/catalog.ts` (Bokun rebuild on miss)
+- ✅ **Error Resilience**: Graceful handling of API / snapshot failures
 
-The client wrapper `ToursSectionClient` owns the country filter (single-select modal), "Show more" pagination, and skeleton loading when the filter changes. Filtering by country is done server-side via `getProductsPage(1, countryCode)`.
+The client wrapper `ExploreCatalogClient` owns country filters, sort, pagination, and skeleton loading. Filtering by country is done server-side via `getExploreCatalogPage` / `lib/explore/tour.actions.ts`.
 
 ### CityCard Component (`components/cards/CityCard.tsx`)
 
@@ -249,7 +249,7 @@ BOKUN_DOMAIN=your_domain_here
 
 ```typescript
 // In a server component
-import { getAllProducts } from "@/lib/actions/tour.actions";
+import { getAllProducts } from "@/lib/explore/tour.actions";
 
 const MyComponent = async () => {
   const result = await getAllProducts();

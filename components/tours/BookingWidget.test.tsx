@@ -29,13 +29,13 @@ const toastErrorMock = vi.fn();
 const toastSuccessMock = vi.fn();
 const locationAssignMock = vi.fn();
 
-vi.mock("@/lib/actions/booking-widget.actions", () => ({
+vi.mock("@/lib/booking/widget.actions", () => ({
   getTourAvailabilities: (...args: unknown[]) =>
     getTourAvailabilitiesMock(...args),
   getTourBookingQuote: (...args: unknown[]) => getTourBookingQuoteMock(...args),
 }));
 
-vi.mock("@/lib/actions/checkout-handoff.actions", () => ({
+vi.mock("@/lib/checkout/handoff.actions", () => ({
   startCheckoutHandoff: (...args: unknown[]) =>
     startCheckoutHandoffMock(...args),
 }));

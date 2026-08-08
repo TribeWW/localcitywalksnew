@@ -7,7 +7,7 @@
  * Tax-inclusive copy per LOC-1041. Price updates use `aria-live="polite"` for screen readers.
  */
 
-import { formatCataloguePriceAmount } from "@/lib/utils/format-catalogue-price";
+import { formatCataloguePriceAmount } from "@/lib/bokun/format-catalogue-price";
 import type { BookingWidgetQuote } from "@/types/bokun";
 
 /** Props for `BookingPriceSummary`. */

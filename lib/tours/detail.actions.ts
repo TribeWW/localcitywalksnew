@@ -1,0 +1,101 @@
+"use server";
+
+import { cache } from "react";
+import { createBokunUrl, generateBokunHeaders } from "@/lib/bokun";
+import { BOKUN_ENDPOINTS } from "@/lib/bokun/config";
+import {
+  readDetailCache,
+  writeDetailCache,
+} from "@/lib/tours/detail-cache";
+// Single-product fetch uses PRODUCT_BY_ID only; URL slug is our format (slugify(title)-id), not Bokun's.
+import type { BokunProductDetail, GetTourDetailResult } from "@/types/bokun";
+
+const REQUEST_TIMEOUT_MS = 5000;
+
+/** Disallow path/query/fragment in id to avoid injection */
+const SAFE_ID_REGEX = /^[a-zA-Z0-9_-]+$/;
+
+/**
+ * Loads tour detail from the TTL cache or Bokun API for a validated product id.
+ *
+ * Wrapped by {@link getTourDetailByIdRequest} (`React.cache`) so `generateMetadata`
+ * and the tour page share one in-flight request per render pass.
+ *
+ * @param trimmedId - Validated, trimmed Bokun product id
+ */
+async function loadTourDetailById(
+  trimmedId: string,
+): Promise<GetTourDetailResult> {
+  const cacheKey = `bokun-tour-${trimmedId}`;
+  const cached = readDetailCache(cacheKey);
+  if (cached) {
+    return { success: true, data: cached };
+  }
+
+  const path = BOKUN_ENDPOINTS.PRODUCT_BY_ID(trimmedId);
+  const url = createBokunUrl(path);
+  const headers = generateBokunHeaders("GET", path);
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return { success: false, error: "Tour not found" };
+      }
+      console.error(
+        `Bokun tour detail failed: ${response.status} for id ${trimmedId}`,
+      );
+      return { success: false, error: "Unable to load tour" };
+    }
+
+    const raw = await response.json();
+    const data = raw as BokunProductDetail;
+    if (!data?.id || !data?.title) {
+      console.error(
+        "Bokun tour detail: invalid response shape for id",
+        trimmedId,
+      );
+      return { success: false, error: "Unable to load tour" };
+    }
+
+    writeDetailCache(cacheKey, data);
+    return { success: true, data };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("Bokun tour detail request failed:", message);
+    return { success: false, error: "Unable to load tour" };
+  }
+}
+
+/**
+ * Per-request memoized tour detail loader (dedupes parallel callers such as
+ * `generateMetadata` and the tour page component).
+ */
+const getTourDetailByIdRequest = cache(loadTourDetailById);
+
+/**
+ * Fetches full tour detail from Bokun by product id.
+ * Used by the tour page after parsing id from the URL slug (slug format: slugifiedTitle-id).
+ * @param id - Bokun product id (e.g. "1077682")
+ * @returns GetTourDetailResult with data on success or error message on failure
+ */
+export async function getTourDetailById(
+  id: string,
+): Promise<GetTourDetailResult> {
+  const trimmedId = id?.trim();
+  if (!trimmedId || !SAFE_ID_REGEX.test(trimmedId)) {
+    return { success: false, error: "Invalid product id" };
+  }
+
+  return getTourDetailByIdRequest(trimmedId);
+}

@@ -1,11 +1,11 @@
-import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
+import { getTourDetailById } from "@/lib/tours/detail.actions";
 import { createBokunUrl, generateBokunHeaders } from "@/lib/bokun";
 import { BOKUN_ENDPOINTS } from "@/lib/bokun/config";
 import { extractHeadlineFromPriceList } from "@/lib/bokun/extract-price-list-headline";
 import {
   normalizeBokunProductIds,
   toBokunProductIdDigits,
-} from "@/lib/utils/bokun-product-id";
+} from "@/lib/bokun/bokun-product-id";
 import type {
   BokunPriceListResponse,
   CityCardData,

@@ -5,9 +5,9 @@
 import { format, parseISO } from "date-fns";
 
 import { formatParticipantSummary } from "@/lib/booking/format-participant-summary";
-import { formatBokunLanguage } from "@/lib/utils/format-bokun-language";
+import { formatBokunLanguage } from "@/lib/bokun/format-bokun-language";
 import type { CheckoutHandoffPayload } from "@/lib/checkout/handoff-token";
-import type { CheckoutOrderFixture } from "@/components/checkout/checkout-mock-fixture";
+import type { CheckoutOrderFixture } from "@/lib/checkout/checkout-order";
 import type { BookingWidgetQuote } from "@/types/bokun";
 
 /** Inputs required to render `CheckoutSummaryView` from verified handoff data. */

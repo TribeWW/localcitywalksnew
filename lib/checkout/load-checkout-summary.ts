@@ -5,9 +5,9 @@
  * into `CheckoutOrderFixture` for `CheckoutSummaryView`.
  */
 
-import { computeTourBookingQuote } from "@/lib/actions/booking-widget.actions";
-import { resolveStartTimeLabel } from "@/lib/actions/booking-widget-submit";
-import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
+import { computeTourBookingQuote } from "@/lib/booking/widget.actions";
+import { resolveStartTimeLabel } from "@/lib/booking/widget-submit";
+import { getTourDetailById } from "@/lib/tours/detail.actions";
 import { buildCheckoutOrderFromHandoff } from "@/lib/checkout/build-checkout-order-from-handoff";
 import {
   classifyCheckoutQuoteUnavailableReason,
@@ -25,7 +25,7 @@ import { resolveCheckoutRecoveryTourPageHref } from "@/lib/checkout/resolve-chec
 import { resolveCheckoutTourPageHref } from "@/lib/checkout/resolve-checkout-tour-page-href";
 import { detectCheckoutPriceUpdate } from "@/lib/checkout/checkout-price-update";
 import { resolveMainContactRequirements } from "@/lib/bokun/resolve-main-contact-requirements";
-import type { CheckoutOrderFixture } from "@/components/checkout/checkout-mock-fixture";
+import type { CheckoutOrderFixture } from "@/lib/checkout/checkout-order";
 import type { CheckoutPriceUpdate } from "@/lib/checkout/checkout-price-update";
 import type { CheckoutContactRequirements } from "@/types/bokun";
 

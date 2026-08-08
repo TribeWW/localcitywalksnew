@@ -32,7 +32,7 @@ vi.mock("@/lib/checkout/pending-checkout-store", async (importOriginal) => {
   };
 });
 
-vi.mock("@/lib/actions/tour-detail.actions", () => ({
+vi.mock("@/lib/tours/detail.actions", () => ({
   getTourDetailById: (...args: unknown[]) => getTourDetailByIdMock(...args),
 }));
 

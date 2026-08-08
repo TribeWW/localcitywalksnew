@@ -2,7 +2,7 @@
 
 /**
  * Client grid for listing cards. Stays a Client Component because
- * `ExploreCatalogClient` and `ToursSectionClient` import it inside client trees.
+ * `ExploreCatalogClient` imports it inside client trees.
  * Server parents enrich `CityCardData` before passing `cities` here.
  */
 import Image from "next/image";
@@ -10,7 +10,7 @@ import Link from "next/link";
 import { Star } from "lucide-react";
 import { upsizeBokunCardImageUrl } from "@/lib/bokun/pick-bokun-card-image-url";
 import { slugifyForUrl } from "@/lib/utils";
-import { getCityCardDisplayContent, getCityCardImageAlt } from "@/lib/utils/city-card-display";
+import { getCityCardDisplayContent, getCityCardImageAlt } from "@/lib/city-cards/display";
 import { CityCardData } from "@/types/bokun";
 
 interface CityCardProps {

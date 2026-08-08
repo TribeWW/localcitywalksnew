@@ -19,10 +19,32 @@ function headersFrom(
 }
 
 describe("isAllowedPreviewCheckoutHost", () => {
-  it("allows Vercel preview hostnames", () => {
-    expect(isAllowedPreviewCheckoutHost("localcitywalks-git-feature-abc.vercel.app")).toBe(
-      true,
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("allows this deployment’s VERCEL_URL hostname only", () => {
+    vi.stubEnv("VERCEL_URL", "localcitywalks-git-feature-abc.vercel.app");
+    expect(
+      isAllowedPreviewCheckoutHost("localcitywalks-git-feature-abc.vercel.app"),
+    ).toBe(true);
+  });
+
+  it("rejects arbitrary *.vercel.app hosts not matching VERCEL_URL", () => {
+    vi.stubEnv("VERCEL_URL", "localcitywalks-git-feature-abc.vercel.app");
+    expect(isAllowedPreviewCheckoutHost("attacker-project.vercel.app")).toBe(
+      false,
     );
+    expect(
+      isAllowedPreviewCheckoutHost("localcitywalks-git-other.vercel.app"),
+    ).toBe(false);
+  });
+
+  it("rejects *.vercel.app when VERCEL_URL is unset", () => {
+    vi.stubEnv("VERCEL_URL", "");
+    expect(
+      isAllowedPreviewCheckoutHost("localcitywalks-git-feature-abc.vercel.app"),
+    ).toBe(false);
   });
 
   it("allows localcitywalks staging and subdomains", () => {
@@ -40,6 +62,10 @@ describe("isAllowedPreviewCheckoutHost", () => {
 });
 
 describe("resolveCheckoutOriginFromHeaders", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("uses x-forwarded-host and x-forwarded-proto", () => {
     const origin = resolveCheckoutOriginFromHeaders(
       headersFrom({
@@ -56,7 +82,7 @@ describe("resolveCheckoutOriginFromHeaders", () => {
       headersFrom({ host: "localhost:3000" }),
     );
 
-    expect(origin).toBe("https://localhost:3000");
+    expect(origin).toBe("http://localhost:3000");
   });
 
   it("returns null for disallowed hosts", () => {
@@ -65,6 +91,27 @@ describe("resolveCheckoutOriginFromHeaders", () => {
         headersFrom({ host: "attacker.example.com" }),
       ),
     ).toBeNull();
+  });
+
+  it("returns null for arbitrary *.vercel.app Host headers", () => {
+    vi.stubEnv("VERCEL_URL", "localcitywalks-git-feature.vercel.app");
+    expect(
+      resolveCheckoutOriginFromHeaders(
+        headersFrom({ host: "evil-app.vercel.app" }),
+      ),
+    ).toBeNull();
+  });
+
+  it("accepts Host when it matches this deployment’s VERCEL_URL", () => {
+    vi.stubEnv("VERCEL_URL", "localcitywalks-git-feature.vercel.app");
+    expect(
+      resolveCheckoutOriginFromHeaders(
+        headersFrom({
+          host: "localcitywalks-git-feature.vercel.app",
+          "x-forwarded-proto": "https",
+        }),
+      ),
+    ).toBe("https://localcitywalks-git-feature.vercel.app");
   });
 });
 

@@ -94,9 +94,9 @@ The search endpoint supports **pagination** (`page`, `pageSize`) and optional **
 
 ### Explore catalog (`/explore`) and paged search
 
-**Home catalog** (tours section on the home page) uses [`lib/actions/tour.actions.ts`](../../lib/actions/tour.actions.ts) **`getProductsPage`**: one `POST /activity.json/search` per **page** (`pageSize` 20), **`sortField: "BEST_SELLING_GLOBAL"`**, optional country **`facetFilters`**, and a **~15-minute** **`pageCache`** keyed by page + country. Ordering is Bokun’s per-page bestseller sort (no full-catalog title sort).
+**Home catalog** (tours section on the home page) uses [`lib/explore/tour.actions.ts`](../../lib/explore/tour.actions.ts) **`getProductsPage`**: one `POST /activity.json/search` per **page** (`pageSize` 20), **`sortField: "BEST_SELLING_GLOBAL"`**, optional country **`facetFilters`**, and a **~15-minute** **`pageCache`** keyed by page + country. Ordering is Bokun’s per-page bestseller sort (no full-catalog title sort).
 
-**Explore catalog** (`/explore`) uses **`getExploreCatalogPage`** (implementation in [`lib/explore-catalog.ts`](../../lib/explore-catalog.ts), server-action wrapper in [`lib/actions/tour.actions.ts`](../../lib/actions/tour.actions.ts)) to provide alphabetically sorted tour listings:
+**Explore catalog** (`/explore`) uses **`getExploreCatalogPage`** (implementation in [`lib/explore/catalog.ts`](../../lib/explore/catalog.ts), server-action wrapper in [`lib/explore/tour.actions.ts`](../../lib/explore/tour.actions.ts)) to provide alphabetically sorted tour listings:
 
 - **Per country filter and sort direction** (title A–Z vs Z–A):
   - Server loads **every page** from Bokun using the same search shape as `getProductsPage` (`BEST_SELLING_GLOBAL` + facets)
@@ -124,7 +124,7 @@ The **`{city}`** segment is **validated** against the product’s city from the 
 
 ### Single-product fetch (tour detail)
 
-The tour page fetches full detail via **`GET /activity.json/{id}`** (`BOKUN_ENDPOINTS.PRODUCT_BY_ID`). The app resolves the product **id** from the URL slug (trailing segment after the last `-`); we do not use Bokun’s slug endpoint for this flow. Implementation: `lib/actions/tour-detail.actions.ts` (`getTourDetailById`).
+The tour page fetches full detail via **`GET /activity.json/{id}`** (`BOKUN_ENDPOINTS.PRODUCT_BY_ID`). The app resolves the product **id** from the URL slug (trailing segment after the last `-`); we do not use Bokun’s slug endpoint for this flow. Implementation: `lib/tours/detail.actions.ts` (`getTourDetailById`).
 
 - **Caching**: Successful responses are cached in memory for **15 minutes** (same TTL order of magnitude as product search in `tour.actions.ts`).
 - **Timeouts / errors**: Non-404 failures are logged with `console.error` on the server; the tour route surfaces them via **`error.tsx`** (see below)—not as a “soft” 200 page.
@@ -137,7 +137,7 @@ Search results expose a numeric `price` that does **not** reliably match a **2-g
 
 When the **`cards-widget-update`** feature flag is on (`flags.ts`, Vercel key `cards-widget-update`), the tour page renders **`BookingWidget`** instead of the legacy request form. The widget calls **server actions only** — Bókun credentials never reach the client.
 
-**Server actions** ([`lib/actions/booking-widget.actions.ts`](../../lib/actions/booking-widget.actions.ts)):
+**Server actions** ([`lib/booking/widget.actions.ts`](../../lib/booking/widget.actions.ts)):
 
 | Action | Purpose |
 | ------ | ------- |

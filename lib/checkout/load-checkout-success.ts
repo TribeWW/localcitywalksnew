@@ -6,8 +6,8 @@
  * the webhook finishes Bókun fulfilment.
  */
 
-import { resolveStartTimeLabel } from "@/lib/actions/booking-widget-submit";
-import { getTourDetailById } from "@/lib/actions/tour-detail.actions";
+import { resolveStartTimeLabel } from "@/lib/booking/widget-submit";
+import { getTourDetailById } from "@/lib/tours/detail.actions";
 import { buildCheckoutOrderFromPending } from "@/lib/checkout/build-checkout-order-from-pending";
 import {
   getPendingCheckoutByStripeSessionId,
@@ -16,7 +16,7 @@ import {
 import { resolveCheckoutRecoveryTourPageHref } from "@/lib/checkout/resolve-checkout-recovery-href";
 import { pickBokunCardImageUrl } from "@/lib/bokun/pick-bokun-card-image-url";
 import { retrievePaidStripeCheckoutSession } from "@/lib/stripe/retrieve-paid-checkout-session";
-import type { CheckoutOrderFixture } from "@/components/checkout/checkout-mock-fixture";
+import type { CheckoutOrderFixture } from "@/lib/checkout/checkout-order";
 
 /** User-facing error when the success URL has no valid Stripe session. */
 export const CHECKOUT_SUCCESS_INVALID_SESSION_MESSAGE =

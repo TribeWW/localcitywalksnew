@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const enrichActionMock = vi.fn();
 
-vi.mock("@/lib/actions/city-card-listing.actions", () => ({
+vi.mock("@/lib/city-cards/listing.actions", () => ({
   enrichCityCardsForListingAction: (...args: unknown[]) =>
     enrichActionMock(...args),
 }));

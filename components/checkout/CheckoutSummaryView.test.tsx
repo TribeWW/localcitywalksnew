@@ -29,7 +29,7 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-vi.mock("@/lib/actions/checkout-payment.actions", () => ({
+vi.mock("@/lib/checkout/payment.actions", () => ({
   initiateCheckoutPayment: vi.fn(),
 }));
 

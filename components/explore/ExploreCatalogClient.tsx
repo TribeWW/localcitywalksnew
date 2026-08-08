@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getExploreCatalogPage } from "@/lib/actions/tour.actions";
+import { getExploreCatalogPage } from "@/lib/explore/tour.actions";
 import { enrichListingCardsIfFlagged } from "@/lib/city-cards/enrich-listing-cards-if-flagged";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CityCardData } from "@/types/bokun";

@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/footer-city-links", () => ({
+vi.mock("@/lib/home/footer-city-links", () => ({
   getFooterCityLinkItems: vi.fn(),
 }));
 
-import { getFooterCityLinkItems } from "@/lib/footer-city-links";
+import { getFooterCityLinkItems } from "@/lib/home/footer-city-links";
 import FooterCityLinks from "./FooterCityLinks";
 
 const mockedGetFooterCityLinkItems = vi.mocked(getFooterCityLinkItems);

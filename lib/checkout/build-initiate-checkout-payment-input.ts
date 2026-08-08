@@ -5,7 +5,7 @@
  * action. Trims contact fields and omits blank optional values.
  */
 
-import type { CheckoutContactFieldsValues } from "@/components/checkout/CheckoutContactFields";
+import type { CheckoutContactFieldsValues } from "@/lib/checkout/checkout-contact";
 import type { InitiateCheckoutPaymentInput } from "@/lib/validation/checkout-payment";
 import type { TourBookingClientQuote } from "@/lib/validation/tour-booking";
 

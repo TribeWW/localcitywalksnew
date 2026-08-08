@@ -53,4 +53,15 @@ describe("buildStartCheckoutHandoffInput", () => {
       }),
     ).toThrow("Missing tour date");
   });
+
+  it("throws Missing start time for fractional startTimeId", () => {
+    expect(() =>
+      buildStartCheckoutHandoffInput({
+        values: { ...baseValues, startTimeId: "1.5" },
+        productId: "1079932",
+        productTitle: "Hello Biarritz",
+        quote,
+      }),
+    ).toThrow("Missing start time");
+  });
 });

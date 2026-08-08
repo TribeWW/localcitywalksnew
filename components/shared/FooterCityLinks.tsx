@@ -1,4 +1,4 @@
-import { getFooterCityLinkItems } from "@/lib/footer-city-links";
+import { getFooterCityLinkItems } from "@/lib/home/footer-city-links";
 import { FooterCityLinksView } from "./FooterCityLinksView";
 
 export { FooterCityLinksView } from "./FooterCityLinksView";
