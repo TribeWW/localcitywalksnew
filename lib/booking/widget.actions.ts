@@ -20,7 +20,7 @@ import {
   clientQuoteMatchesServer,
   resolveStartTimeLabel,
   submitInputToQuoteInput,
-} from "@/lib/actions/booking-widget-submit";
+} from "@/lib/booking/widget-submit";
 import { buildBookingWidgetEmailContent } from "@/lib/nodemailer/build-booking-widget-email-content";
 import { sendBookingWidgetRequestEmails } from "@/lib/nodemailer";
 import {
@@ -32,7 +32,7 @@ import {
   BOOKING_WIDGET_MAX_GROUP_SIZE_ERROR_CODE,
   formatMaxGroupSizeMessage,
   sumBookingWidgetParticipants,
-} from "@/lib/booking-widget/max-group-size-message";
+} from "@/lib/booking/max-group-size-message";
 import { fetchAvailabilities } from "@/lib/bokun/fetch-availabilities";
 import {
   parseTourBookingQuoteInput,

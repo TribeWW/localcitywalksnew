@@ -45,12 +45,12 @@ import {
   getTourAvailabilities,
   getTourBookingQuote,
   submitTourBookingRequest,
-} from "@/lib/actions/booking-widget.actions";
-import { BOOKING_WIDGET_PRICE_MISMATCH_ERROR } from "@/lib/actions/booking-widget-submit";
+} from "@/lib/booking/widget.actions";
+import { BOOKING_WIDGET_PRICE_MISMATCH_ERROR } from "@/lib/booking/widget-submit";
 import {
   BOOKING_WIDGET_MAX_GROUP_SIZE_ERROR_CODE,
   formatMaxGroupSizeMessage,
-} from "@/lib/booking-widget/max-group-size-message";
+} from "@/lib/booking/max-group-size-message";
 
 function futureIsoDate(daysAhead = 7): string {
   const date = new Date();

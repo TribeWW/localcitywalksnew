@@ -10,7 +10,7 @@
 import { useEffect, useState } from "react";
 import { Minus, Plus, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { sumBookingWidgetParticipants } from "@/lib/booking-widget/max-group-size-message";
+import { sumBookingWidgetParticipants } from "@/lib/booking/max-group-size-message";
 import {
   GUEST_CATEGORIES,
   formatGuestUnitHint,

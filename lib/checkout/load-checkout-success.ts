@@ -6,7 +6,7 @@
  * the webhook finishes Bókun fulfilment.
  */
 
-import { resolveStartTimeLabel } from "@/lib/actions/booking-widget-submit";
+import { resolveStartTimeLabel } from "@/lib/booking/widget-submit";
 import { getTourDetailById } from "@/lib/tours/detail.actions";
 import { buildCheckoutOrderFromPending } from "@/lib/checkout/build-checkout-order-from-pending";
 import {

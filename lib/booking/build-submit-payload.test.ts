@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { buildTourBookingSubmitPayload } from "@/lib/actions/build-tour-booking-submit-payload";
+import { buildTourBookingSubmitPayload } from "@/lib/booking/build-submit-payload";
 import type { BookingWidgetQuote } from "@/types/bokun";
 
 const quote: BookingWidgetQuote = {

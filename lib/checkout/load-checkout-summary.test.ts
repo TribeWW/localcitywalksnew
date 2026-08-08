@@ -15,7 +15,7 @@ vi.mock("@/lib/checkout/handoff-token", () => ({
     verifyCheckoutHandoffTokenMock(...args),
 }));
 
-vi.mock("@/lib/actions/booking-widget.actions", () => ({
+vi.mock("@/lib/booking/widget.actions", () => ({
   computeTourBookingQuote: (...args: unknown[]) =>
     computeTourBookingQuoteMock(...args),
 }));

@@ -5,8 +5,8 @@
  * into `CheckoutOrderFixture` for `CheckoutSummaryView`.
  */
 
-import { computeTourBookingQuote } from "@/lib/actions/booking-widget.actions";
-import { resolveStartTimeLabel } from "@/lib/actions/booking-widget-submit";
+import { computeTourBookingQuote } from "@/lib/booking/widget.actions";
+import { resolveStartTimeLabel } from "@/lib/booking/widget-submit";
 import { getTourDetailById } from "@/lib/tours/detail.actions";
 import { buildCheckoutOrderFromHandoff } from "@/lib/checkout/build-checkout-order-from-handoff";
 import {

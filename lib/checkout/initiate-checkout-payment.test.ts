@@ -19,7 +19,7 @@ const createPendingCheckoutMock = vi.fn();
 const updatePendingCheckoutMock = vi.fn();
 const createStripeCheckoutSessionMock = vi.fn();
 
-vi.mock("@/lib/actions/booking-widget.actions", () => ({
+vi.mock("@/lib/booking/widget.actions", () => ({
   computeTourBookingQuote: (...args: unknown[]) =>
     computeTourBookingQuoteMock(...args),
 }));
@@ -47,7 +47,7 @@ vi.mock("@/lib/stripe/create-checkout-session", () => ({
     createStripeCheckoutSessionMock(...args),
 }));
 
-import { BOOKING_WIDGET_PRICE_MISMATCH_ERROR } from "@/lib/actions/booking-widget-submit";
+import { BOOKING_WIDGET_PRICE_MISMATCH_ERROR } from "@/lib/booking/widget-submit";
 import {
   CHECKOUT_HANDOFF_EXPIRED_ERROR,
   CHECKOUT_HANDOFF_INVALID_ERROR,

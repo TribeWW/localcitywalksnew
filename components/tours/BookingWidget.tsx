@@ -19,20 +19,20 @@ import { z } from "zod";
 import {
   getTourAvailabilities,
   getTourBookingQuote,
-} from "@/lib/actions/booking-widget.actions";
+} from "@/lib/booking/widget.actions";
 import { startCheckoutHandoff } from "@/lib/actions/checkout-handoff.actions";
 import { buildStartCheckoutHandoffInput } from "@/lib/booking/build-start-checkout-handoff-input";
 import {
   BOOKING_WIDGET_MAX_GROUP_SIZE_ERROR_CODE,
   type BookingWidgetQuoteErrorState,
-} from "@/lib/booking-widget/max-group-size-message";
+} from "@/lib/booking/max-group-size-message";
 import { resolveMaxGroupSize } from "@/lib/bokun/resolve-max-group-size";
 import { tourBookingParticipantsSchema } from "@/lib/validation/tour-booking";
 import {
   availabilitySlotToIsoDate,
   getMonthAvailabilityRange,
   toIsoDateString,
-} from "@/lib/utils/booking-widget-dates";
+} from "@/lib/booking/dates";
 import BookingWidgetShell from "@/components/tours/booking-widget/BookingWidgetShell";
 import BookingWidgetFromPrice from "@/components/tours/booking-widget/BookingWidgetFromPrice";
 import BookingWidgetField from "@/components/tours/booking-widget/BookingWidgetField";

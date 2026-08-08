@@ -9,7 +9,7 @@ import {
   formatBokunStartTimeLabel,
   resolveStartTimeLabel,
   submitInputToQuoteInput,
-} from "@/lib/actions/booking-widget-submit";
+} from "@/lib/booking/widget-submit";
 import type { TourBookingSubmitInput } from "@/lib/validation/tour-booking";
 import type { BookingWidgetQuote } from "@/types/bokun";
 

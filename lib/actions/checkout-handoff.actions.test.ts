@@ -14,7 +14,7 @@ import type { BookingWidgetQuote } from "@/types/bokun";
 const computeTourBookingQuoteMock = vi.fn();
 const getTourDetailByIdMock = vi.fn();
 
-vi.mock("@/lib/actions/booking-widget.actions", () => ({
+vi.mock("@/lib/booking/widget.actions", () => ({
   computeTourBookingQuote: (...args: unknown[]) =>
     computeTourBookingQuoteMock(...args),
 }));
@@ -27,7 +27,7 @@ import {
   executeStartCheckoutHandoff,
   runStartCheckoutHandoff,
 } from "@/lib/checkout/start-checkout-handoff";
-import { BOOKING_WIDGET_PRICE_MISMATCH_ERROR } from "@/lib/actions/booking-widget-submit";
+import { BOOKING_WIDGET_PRICE_MISMATCH_ERROR } from "@/lib/booking/widget-submit";
 import { verifyCheckoutHandoffToken } from "@/lib/checkout/handoff-token";
 
 const HANDOFF_SECRET = "test-handoff-secret-with-32-characters-min";

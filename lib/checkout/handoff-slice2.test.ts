@@ -13,7 +13,7 @@ import type { BookingWidgetQuote } from "@/types/bokun";
 const computeTourBookingQuoteMock = vi.fn();
 const getTourDetailByIdMock = vi.fn();
 
-vi.mock("@/lib/actions/booking-widget.actions", () => ({
+vi.mock("@/lib/booking/widget.actions", () => ({
   computeTourBookingQuote: (...args: unknown[]) =>
     computeTourBookingQuoteMock(...args),
 }));
@@ -22,7 +22,7 @@ vi.mock("@/lib/tours/detail.actions", () => ({
   getTourDetailById: (...args: unknown[]) => getTourDetailByIdMock(...args),
 }));
 
-import { BOOKING_WIDGET_PRICE_MISMATCH_ERROR } from "@/lib/actions/booking-widget-submit";
+import { BOOKING_WIDGET_PRICE_MISMATCH_ERROR } from "@/lib/booking/widget-submit";
 import {
   CHECKOUT_HANDOFF_TTL_SECONDS,
   verifyCheckoutHandoffToken,
