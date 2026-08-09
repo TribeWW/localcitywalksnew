@@ -54,7 +54,7 @@ export default function Navbar({ variant = "full" }: NavbarProps) {
           isScrolled && "shadow-[0px_4px_4px_rgba(0,0,0,0.05)]",
         )}
       >
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 md:px-0">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 md:px-8 xl:px-0">
           <div className="flex flex-shrink-0 items-center gap-4">
             {isFull && (
               <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>

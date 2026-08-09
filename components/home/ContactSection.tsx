@@ -4,7 +4,7 @@ import { Phone, MapPin, Clock } from "lucide-react";
 
 const ContactSection: React.FC = () => {
   return (
-    <section id="contact" className="py-16 px-4 bg-pearl-gray">
+    <section id="contact" className="py-16 px-6 bg-pearl-gray">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-semibold text-nightsky mb-4">

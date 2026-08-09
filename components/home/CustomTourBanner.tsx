@@ -17,7 +17,7 @@ export default function CustomTourBanner() {
   return (
     <>
       {/* Custom Tour Banner */}
-      <div className="w-full bg-white py-8 md:py-10">
+      <div className="w-full bg-white px-6 py-8 md:py-10">
         <section
           aria-labelledby="custom-tour-banner-heading"
           className="px-4 sm:px-0 max-w-[1140px] mx-auto"
