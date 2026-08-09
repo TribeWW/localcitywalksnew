@@ -33,7 +33,14 @@ export const faqItem = defineType({
       name: "question",
       title: "Question",
       type: "string",
-      validation: (rule) => rule.required(),
+      validation: (rule) =>
+        rule
+          .required()
+          .custom((value) =>
+            typeof value === "string" && value.trim() !== ""
+              ? true
+              : "Question cannot be blank",
+          ),
     }),
     defineField({
       name: "answer",
@@ -41,7 +48,15 @@ export const faqItem = defineType({
       type: "text",
       rows: 3,
       validation: (rule) =>
-        rule.required().max(250).error("Keep answers ≤250 characters"),
+        rule
+          .required()
+          .custom((value) =>
+            typeof value === "string" && value.trim() !== ""
+              ? true
+              : "Answer cannot be blank",
+          )
+          .max(250)
+          .error("Keep answers ≤250 characters"),
     }),
   ],
   preview: {
