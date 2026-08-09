@@ -5,7 +5,7 @@
  * and track keywords internally. One document per tour (`tour.bokunProductId`).
  */
 
-import { defineField, defineType } from "sanity";
+import { defineArrayMember, defineField, defineType } from "sanity";
 import { Search } from "lucide-react";
 import BokunSpotlightItemInput from "../components/BokunSpotlightItemInput";
 import {
@@ -96,6 +96,37 @@ export const tourSeoMetadata = defineType({
         layout: "tags",
       },
       description: "Additional keywords (for tracking only).",
+    }),
+    defineField({
+      name: "aiSummary",
+      title: "AI Summary",
+      type: "text",
+      rows: 4,
+      description:
+        "Plain-language factual summary for AI citation: tour type, city, duration, group size, what's included. No marketing language.",
+      validation: (rule) =>
+        rule.max(400).error("Keep the AI summary ≤400 characters"),
+    }),
+    defineField({
+      name: "faq",
+      title: "FAQ",
+      type: "array",
+      of: [defineArrayMember({ type: "faqItem" })],
+      description:
+        "Tour-specific Q&A (e.g. duration, meeting point). Do not copy the generic on-page FAQ block used across all tours.",
+      validation: (rule) =>
+        rule.min(2).error("Add at least 2 tour-specific FAQ items"),
+    }),
+    defineField({
+      name: "sameAsUrl",
+      title: "Same As URL",
+      type: "url",
+      description:
+        "Wikidata or Wikipedia link for the city/landmark this tour centers on. Used for entity disambiguation in structured data (schema.org sameAs). Tour-specific — not used on /explore.",
+      validation: (rule) =>
+        rule.uri({
+          scheme: ["http", "https"],
+        }),
     }),
   ],
   preview: {
