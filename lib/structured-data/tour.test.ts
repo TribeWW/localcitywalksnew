@@ -154,6 +154,8 @@ describe("buildTourPageJsonLd", () => {
     expect(trip).not.toHaveProperty("duration");
     expect(trip).not.toHaveProperty("aggregateRating");
     expect(trip).not.toHaveProperty("review");
+    expect(trip).not.toHaveProperty("sameAs");
+    expect(trip).not.toHaveProperty("abstract");
     expect(json).not.toHaveProperty("@graph");
   });
 
@@ -255,5 +257,41 @@ describe("buildTourPageJsonLd", () => {
     const product = getProductNode(json);
     const review = (product?.review as Record<string, unknown>[])?.[0];
     expect(review).not.toHaveProperty("reviewBody");
+  });
+
+  it("sets sameAs and abstract on TouristTrip without changing description", () => {
+    const json = buildTourPageJsonLd({
+      title: "Hello Arles: Private 2-Hour Intro City Walk",
+      excerpt: "Discover Arles with a local guide.",
+      url: "https://www.localcitywalks.com/tours/arles/hello-arles-9751538",
+      imageUrl: null,
+      cityName: "Arles",
+      aiSummary:
+        "Private 2-hour walking tour in Arles for small groups. Includes a local guide.",
+      sameAsUrl: "https://www.wikidata.org/wiki/Q48292",
+    });
+
+    const trip = getTouristTripNode(json);
+    expect(trip?.description).toBe("Discover Arles with a local guide.");
+    expect(trip?.abstract).toBe(
+      "Private 2-hour walking tour in Arles for small groups. Includes a local guide.",
+    );
+    expect(trip?.sameAs).toBe("https://www.wikidata.org/wiki/Q48292");
+  });
+
+  it("omits sameAs and abstract when GEO fields are blank", () => {
+    const json = buildTourPageJsonLd({
+      title: "Hello Dijon Walk",
+      excerpt: "A Dijon walk.",
+      url: "https://www.localcitywalks.com/tours/dijon/hello-dijon-1107331",
+      imageUrl: null,
+      aiSummary: "   ",
+      sameAsUrl: "",
+    });
+
+    const trip = getTouristTripNode(json);
+    expect(trip?.description).toBe("A Dijon walk.");
+    expect(trip).not.toHaveProperty("abstract");
+    expect(trip).not.toHaveProperty("sameAs");
   });
 });

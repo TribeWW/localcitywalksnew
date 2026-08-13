@@ -37,6 +37,7 @@ import {
   extractTourIdFromSlug,
   resolveTourPageMetadata,
 } from "@/lib/tours/page-metadata";
+import { getTourSeoMetadata } from "@/lib/tours/seo";
 import { TourJsonLd } from "@/components/seo/TourJsonLd";
 import TourImageGallery from "@/components/tours/tour-image-gallery";
 import FaqAccordion from "@/components/tours/faq-accordion";
@@ -82,7 +83,10 @@ export default async function TourPage({
   const id = extractTourIdFromSlug(slug);
   if (!id) notFound();
 
-  const detail = await getTourDetailById(id);
+  const [detail, tourSeo] = await Promise.all([
+    getTourDetailById(id),
+    getTourSeoMetadata(id),
+  ]);
   if (!detail.success) {
     if (detail.error === "Tour not found") {
       notFound();
@@ -270,6 +274,9 @@ export default async function TourPage({
         fromPriceCurrency={fromPriceCurrency}
         heroReviewStats={heroReviewStats}
         reviews={jsonLdReviews.length > 0 ? jsonLdReviews : undefined}
+        aiSummary={tourSeo?.aiSummary}
+        sameAsUrl={tourSeo?.sameAsUrl}
+        faq={tourSeo?.faq}
       />
       <div className="mx-auto w-full max-w-6xl px-4 md:px-8 xl:px-0 py-6">
         <div className="mb-6 flex items-center justify-between gap-4">

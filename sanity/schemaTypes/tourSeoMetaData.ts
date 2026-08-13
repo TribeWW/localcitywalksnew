@@ -105,7 +105,7 @@ export const tourSeoMetadata = defineType({
       description:
         "Plain-language factual summary for AI citation: tour type, city, duration, group size, what's included. No marketing language.",
       validation: (rule) =>
-        rule.max(400).error("Keep the AI summary ≤400 characters"),
+        rule.max(500).error("Keep the AI summary ≤500 characters"),
     }),
     defineField({
       name: "faq",

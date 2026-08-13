@@ -4,6 +4,7 @@
  * Plain module (not `"use server"`) safe for Server Components and `generateMetadata`.
  */
 
+import { cache } from "react";
 import { client } from "@/sanity/lib/client";
 import type { TourSeoMetadata } from "@/types/tour-seo";
 
@@ -17,7 +18,10 @@ const DRAFT_EXCLUDED = `!(_id in path("drafts.**"))`;
 export const TOUR_SEO_QUERY = `*[_type == "tourSeoMetadata" && ${DRAFT_EXCLUDED} && tour.bokunProductId == $tourId][0]{
   seoTitle,
   metaDescription,
-  focusKeyword
+  focusKeyword,
+  aiSummary,
+  sameAsUrl,
+  faq[]{ _key, question, answer }
 }`;
 
 const DIGITS_ONLY_TOUR_ID = /^\d+$/;
@@ -30,6 +34,31 @@ const DIGITS_ONLY_TOUR_ID = /^\d+$/;
 function isValidTourId(tourId: string): boolean {
   return DIGITS_ONLY_TOUR_ID.test(tourId);
 }
+
+/**
+ * Loads the published Tour SEO document for a validated Bokun product id.
+ *
+ * Wrapped by {@link loadPublishedTourSeoCached} (`React.cache`) so `generateMetadata`
+ * and the tour page share one in-flight request per render pass.
+ *
+ * @param tourId - Digits-only Bokun product id
+ */
+async function loadPublishedTourSeo(
+  tourId: string,
+): Promise<TourSeoMetadata | null> {
+  try {
+    const doc = await client.fetch<TourSeoMetadata | null>(TOUR_SEO_QUERY, {
+      tourId,
+    });
+    if (!doc) return null;
+    return doc;
+  } catch (e) {
+    console.error("[Tour SEO] Sanity fetch failed", e);
+    return null;
+  }
+}
+
+const loadPublishedTourSeoCached = cache(loadPublishedTourSeo);
 
 /**
  * Loads published Tour SEO overrides for a Bokun product.
@@ -48,14 +77,5 @@ export async function getTourSeoMetadata(
     return null;
   }
 
-  try {
-    const doc = await client.fetch<TourSeoMetadata | null>(TOUR_SEO_QUERY, {
-      tourId: id,
-    });
-    if (!doc) return null;
-    return doc;
-  } catch (e) {
-    console.error("[Tour SEO] Sanity fetch failed", e);
-    return null;
-  }
+  return loadPublishedTourSeoCached(id);
 }
