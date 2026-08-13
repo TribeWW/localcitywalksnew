@@ -101,4 +101,79 @@ describe("TourJsonLd", () => {
     expect(parsed).not.toHaveProperty("aggregateRating");
     expect(parsed).not.toHaveProperty("review");
   });
+
+  it("adds sameAs and abstract on TouristTrip and a separate FAQPage script", () => {
+    const { container } = render(
+      <TourJsonLd
+        title="Hello Arles Walk"
+        excerpt="Discover Arles with a local guide."
+        url="https://www.localcitywalks.com/tours/arles/hello-arles-9751538"
+        imageUrl={null}
+        aiSummary="Private walking tour in Arles, about 2 hours, small group, local guide included."
+        sameAsUrl="https://www.wikidata.org/wiki/Q48292"
+        faq={[
+          {
+            _key: "1",
+            question: "How long is the Hello Arles tour?",
+            answer: "About 2 hours.",
+          },
+          {
+            _key: "2",
+            question: "Where does it start?",
+            answer: "At the tourist office.",
+          },
+        ]}
+      />,
+    );
+
+    const scripts = container.querySelectorAll(
+      'script[type="application/ld+json"]',
+    );
+    expect(scripts).toHaveLength(2);
+
+    const trip = JSON.parse(scripts[0]?.textContent ?? "{}");
+    expect(trip["@type"]).toBe("TouristTrip");
+    expect(trip.description).toBe("Discover Arles with a local guide.");
+    expect(trip.abstract).toBe(
+      "Private walking tour in Arles, about 2 hours, small group, local guide included.",
+    );
+    expect(trip.sameAs).toBe("https://www.wikidata.org/wiki/Q48292");
+
+    const faqPage = JSON.parse(scripts[1]?.textContent ?? "{}");
+    expect(faqPage).toMatchObject({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: [
+        {
+          "@type": "Question",
+          name: "How long is the Hello Arles tour?",
+          acceptedAnswer: { "@type": "Answer", text: "About 2 hours." },
+        },
+        {
+          "@type": "Question",
+          name: "Where does it start?",
+          acceptedAnswer: { "@type": "Answer", text: "At the tourist office." },
+        },
+      ],
+    });
+  });
+
+  it("omits the FAQPage script when faq is empty or blank", () => {
+    const { container } = render(
+      <TourJsonLd
+        title="Hello Dijon Walk"
+        url="https://www.localcitywalks.com/tours/dijon/hello-dijon-1107331"
+        imageUrl={null}
+        faq={[{ _key: "1", question: "  ", answer: "  " }]}
+      />,
+    );
+
+    const scripts = container.querySelectorAll(
+      'script[type="application/ld+json"]',
+    );
+    expect(scripts).toHaveLength(1);
+    expect(JSON.parse(scripts[0]?.textContent ?? "{}")["@type"]).toBe(
+      "TouristTrip",
+    );
+  });
 });

@@ -48,6 +48,10 @@ export type BuildTourPageJsonLdInput = {
   fromPriceCurrency?: string;
   heroReviewStats?: TourHeroReviewStats | null;
   reviews?: SanityReviewListItem[];
+  /** Factual AI summary from Sanity; mapped to TouristTrip `abstract`. */
+  aiSummary?: string | null;
+  /** Wikidata/Wikipedia URL from Sanity; mapped to TouristTrip `sameAs`. */
+  sameAsUrl?: string | null;
 };
 
 type PlainTextInput = {
@@ -222,6 +226,17 @@ export function buildTouristTripJsonLd(
   if (description) {
     trip.description = description;
   }
+
+  const abstract = input.aiSummary?.trim();
+  if (abstract) {
+    trip.abstract = abstract;
+  }
+
+  const sameAs = input.sameAsUrl?.trim();
+  if (sameAs) {
+    trip.sameAs = sameAs;
+  }
+
   if (input.imageUrl) {
     trip.image = input.imageUrl;
   }
