@@ -156,20 +156,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "Organization",
-              name: "LocalCityWalks",
-              description:
-                "Discover cities like a local. Small group walking tours led by trusted local guides. Real stories, real connections, real cities.",
-              url: SITE_URL,
-              logo: absoluteUrl("/logo-icon.svg"),
-            }),
-          }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
               "@type": "WebSite",
               url: SITE_URL,
               name: "LocalCityWalks",

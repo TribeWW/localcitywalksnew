@@ -5,7 +5,8 @@
  * and `Product` for `aggregateRating` / `review` (Google rich results require Product).
  */
 
-import { absoluteUrl, SITE_URL, tourPageUrl } from "@/lib/site";
+import { absoluteUrl, tourPageUrl } from "@/lib/site";
+import { buildOrganizationProviderRef } from "@/lib/structured-data/organization";
 import type { SanityReviewListItem } from "@/types/review";
 
 const SCHEMA_CONTEXT = "https://schema.org";
@@ -216,11 +217,7 @@ export function buildTouristTripJsonLd(
     name: input.title,
     url: input.url,
     touristType: "Sightseeing",
-    provider: {
-      "@type": "Organization",
-      name: "LocalCityWalks",
-      url: SITE_URL,
-    },
+    provider: buildOrganizationProviderRef(),
   };
 
   if (description) {

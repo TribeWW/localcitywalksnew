@@ -102,6 +102,7 @@ describe("buildTourPageJsonLd", () => {
       duration: "PT2H",
       provider: {
         "@type": "Organization",
+        "@id": "https://www.localcitywalks.com/#organization",
         name: "LocalCityWalks",
         url: "https://www.localcitywalks.com",
       },
