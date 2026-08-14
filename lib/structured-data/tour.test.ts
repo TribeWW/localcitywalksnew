@@ -259,7 +259,7 @@ describe("buildTourPageJsonLd", () => {
     expect(review).not.toHaveProperty("reviewBody");
   });
 
-  it("sets sameAs and abstract on TouristTrip without changing description", () => {
+  it("uses aiSummary as description when present and does not emit abstract", () => {
     const json = buildTourPageJsonLd({
       title: "Hello Arles: Private 2-Hour Intro City Walk",
       excerpt: "Discover Arles with a local guide.",
@@ -272,14 +272,14 @@ describe("buildTourPageJsonLd", () => {
     });
 
     const trip = getTouristTripNode(json);
-    expect(trip?.description).toBe("Discover Arles with a local guide.");
-    expect(trip?.abstract).toBe(
+    expect(trip?.description).toBe(
       "Private 2-hour walking tour in Arles for small groups. Includes a local guide.",
     );
+    expect(trip).not.toHaveProperty("abstract");
     expect(trip?.sameAs).toBe("https://www.wikidata.org/wiki/Q48292");
   });
 
-  it("omits sameAs and abstract when GEO fields are blank", () => {
+  it("falls back to Bokun description and omits sameAs when GEO fields are blank", () => {
     const json = buildTourPageJsonLd({
       title: "Hello Dijon Walk",
       excerpt: "A Dijon walk.",

@@ -102,7 +102,7 @@ describe("TourJsonLd", () => {
     expect(parsed).not.toHaveProperty("review");
   });
 
-  it("adds sameAs and abstract on TouristTrip and a separate FAQPage script", () => {
+  it("adds sameAs, uses aiSummary as description, and emits a separate FAQPage script", () => {
     const { container } = render(
       <TourJsonLd
         title="Hello Arles Walk"
@@ -133,10 +133,10 @@ describe("TourJsonLd", () => {
 
     const trip = JSON.parse(scripts[0]?.textContent ?? "{}");
     expect(trip["@type"]).toBe("TouristTrip");
-    expect(trip.description).toBe("Discover Arles with a local guide.");
-    expect(trip.abstract).toBe(
+    expect(trip.description).toBe(
       "Private walking tour in Arles, about 2 hours, small group, local guide included.",
     );
+    expect(trip).not.toHaveProperty("abstract");
     expect(trip.sameAs).toBe("https://www.wikidata.org/wiki/Q48292");
 
     const faqPage = JSON.parse(scripts[1]?.textContent ?? "{}");

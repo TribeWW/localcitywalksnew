@@ -48,7 +48,7 @@ export type BuildTourPageJsonLdInput = {
   fromPriceCurrency?: string;
   heroReviewStats?: TourHeroReviewStats | null;
   reviews?: SanityReviewListItem[];
-  /** Factual AI summary from Sanity; mapped to TouristTrip `abstract`. */
+  /** Factual AI summary from Sanity; used as TouristTrip `description` when present. */
   aiSummary?: string | null;
   /** Wikidata/Wikipedia URL from Sanity; mapped to TouristTrip `sameAs`. */
   sameAsUrl?: string | null;
@@ -227,11 +227,6 @@ export function buildTouristTripJsonLd(
     trip.description = description;
   }
 
-  const abstract = input.aiSummary?.trim();
-  if (abstract) {
-    trip.abstract = abstract;
-  }
-
   const sameAs = input.sameAsUrl?.trim();
   if (sameAs) {
     trip.sameAs = sameAs;
@@ -346,10 +341,11 @@ function hasVisibleReviews(input: BuildTourPageJsonLdInput): boolean {
 export function buildTourPageJsonLd(
   input: BuildTourPageJsonLdInput,
 ): Record<string, unknown> {
-  const description = plainTextForSchema({
+  const bokunDescription = plainTextForSchema({
     excerpt: input.excerpt,
     htmlDescription: input.htmlDescription,
   });
+  const description = input.aiSummary?.trim() || bokunDescription;
 
   const touristTrip = buildTouristTripJsonLd(input, description);
 
