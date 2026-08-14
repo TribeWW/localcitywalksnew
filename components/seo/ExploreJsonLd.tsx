@@ -3,8 +3,8 @@
  */
 
 import {
+  EXPLORE_JSON_LD_NAME,
   EXPLORE_PAGE_DESCRIPTION,
-  EXPLORE_PAGE_TITLE,
 } from "@/lib/explore/page-metadata";
 import {
   buildExploreCollectionPageJsonLd,
@@ -25,7 +25,7 @@ export function ExploreJsonLd({ items }: ExploreJsonLdProps) {
   return (
     <JsonLd
       data={buildExploreCollectionPageJsonLd({
-        name: EXPLORE_PAGE_TITLE,
+        name: EXPLORE_JSON_LD_NAME,
         description: EXPLORE_PAGE_DESCRIPTION,
         url: EXPLORE_PAGE_URL,
         items,

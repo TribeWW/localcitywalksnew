@@ -25,6 +25,9 @@ describe("ExploreJsonLd", () => {
 
     expect(parsed).toMatchObject({
       "@type": "CollectionPage",
+      name: "Private Walking Tours in Europe",
+      description:
+        "Browse private walking tours with vetted local guides across 150+ European cities. Personal, insightful walks with authentic local stories.",
       url: "https://www.localcitywalks.com/explore",
       mainEntity: {
         "@type": "ItemList",
