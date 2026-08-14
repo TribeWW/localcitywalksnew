@@ -122,7 +122,11 @@ export default function RootLayout({
           )}
         {/* Google Tag Manager */}
         {loadThirdPartyScripts && GTM_ID && (
-          <Script id="google-tag-manager" strategy="beforeInteractive">
+          <Script
+            id="google-tag-manager"
+            strategy="beforeInteractive"
+            data-cmp-ab="2"
+          >
             {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
