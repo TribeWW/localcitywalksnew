@@ -70,7 +70,7 @@ export const metadata: Metadata = {
       },
       {
         url: "/favicon.ico",
-        sizes: "48x48",
+        sizes: "16x16 32x32 48x48",
       },
     ],
     apple: {
