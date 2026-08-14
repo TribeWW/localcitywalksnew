@@ -5,6 +5,7 @@ import HomeSpotlight from "@/components/home/HomeSpotlight";
 import CustomTourBanner from "@/components/home/CustomTourBanner";
 import Reviews from "@/components/home/Reviews";
 import StepsSection from "@/components/home/StepsSection";
+import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -12,12 +13,14 @@ import Link from "next/link";
  * Renders the landing page layout with the reviews section.
  *
  * The layout contains the hero section, AboutUs, HomeSpotlight, plus CustomTourBanner and ContactSection.
+ * Emits Organization JSON-LD (homepage only) so tour provider `@id` refs resolve to one entity.
  *
  * @returns The page's JSX layout with the `Reviews` section.
  */
 export default async function Home() {
   return (
     <>
+      <OrganizationJsonLd />
       <main className="relative items-left justify-center bg-gradient-to-r from-tangerine to-grapefruit">
         {/* Flex container for content and form */}
 
