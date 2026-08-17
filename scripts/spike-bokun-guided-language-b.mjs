@@ -212,7 +212,10 @@ if (!productRes?.ok || !activeBase) {
 }
 
 if (!activeBase.includes("bokuntest")) {
-  console.error("Refusing to run language spike outside bokuntest:", activeBase);
+  console.error(
+    "Refusing to run language spike outside bokuntest:",
+    activeBase,
+  );
   process.exit(1);
 }
 
@@ -247,7 +250,10 @@ const slots = Array.isArray(availRes.json)
 
 if (!availRes.ok || !slots[0]) {
   console.error("No available slots");
-  writeFixture("00-avail-failure", { status: availRes.status, body: availRes.json });
+  writeFixture("00-avail-failure", {
+    status: availRes.status,
+    body: availRes.json,
+  });
   process.exit(1);
 }
 
@@ -385,6 +391,7 @@ const guidedHits = [
 ];
 
 const activityGuided = activityBookingRes?.json?.guidedLanguages ?? null;
+const expectedLanguagePrefix = LANGUAGE_VALUE.toLowerCase().slice(0, 2);
 
 const verification = {
   shape: "B",
@@ -405,7 +412,7 @@ const verification = {
         typeof row === "object" &&
         String(row.language ?? "")
           .toLowerCase()
-          .startsWith(String(languageCode).toLowerCase().slice(0, 2)),
+          .startsWith(expectedLanguagePrefix),
     ),
 };
 
