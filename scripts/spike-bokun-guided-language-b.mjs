@@ -391,7 +391,7 @@ const guidedHits = [
 ];
 
 const activityGuided = activityBookingRes?.json?.guidedLanguages ?? null;
-const expectedLanguagePrefix = LANGUAGE_VALUE.toLowerCase().slice(0, 2);
+const expectedLanguagePrefix = languageCode.toLowerCase().slice(0, 2);
 
 const verification = {
   shape: "B",
