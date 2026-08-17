@@ -12,6 +12,7 @@
 
 import { createBokunUrl, generateBokunHeaders } from "@/lib/bokun";
 import { BOKUN_ENDPOINTS } from "@/lib/bokun/config";
+import { normalizeBokunLanguageCode } from "@/lib/bokun/extract-guided-languages";
 import type {
   BookingWidgetQuote,
   BookingWidgetQuoteLineItem,
@@ -42,7 +43,10 @@ export interface BokunActivityBookingRequest {
   passengers: BokunCheckoutPassenger[];
   extras: [];
   guidedLanguage?: string;
-  /** Customer special requests — maps from checkout `comments`. */
+  /**
+   * Guest comments plus optional guided-language sentinel
+   * (`[LCW_GUIDED_LANG:es]`) on the last line.
+   */
   note?: string;
 }
 
@@ -259,6 +263,78 @@ export function buildMainContactDetails(
   return details;
 }
 
+/** Last-line sentinel the other system parses for guided language. */
+export const LCW_GUIDED_LANGUAGE_NOTE_PREFIX = "LCW_GUIDED_LANG";
+
+/** Inputs for `buildActivityBookingNote`. */
+export interface BuildActivityBookingNoteInput {
+  comments?: string;
+  language?: string;
+}
+
+/**
+ * Returns a 2-letter lowercase ISO code, or undefined when the value cannot
+ * be used in `[LCW_GUIDED_LANG:xx]`.
+ *
+ * @param language - Widget / Bókun language code (e.g. `EN_GB`, `es`)
+ */
+export function resolveGuidedLanguageNoteIso(
+  language: string | undefined,
+): string | undefined {
+  if (!language?.trim()) {
+    return undefined;
+  }
+
+  const normalized = normalizeBokunLanguageCode(language);
+  if (!/^[a-z]{2}$/.test(normalized)) {
+    return undefined;
+  }
+
+  return normalized;
+}
+
+/**
+ * Formats the last-line guided-language sentinel.
+ *
+ * @param isoCode - 2-letter lowercase ISO code
+ */
+export function formatGuidedLanguageNoteSentinel(isoCode: string): string {
+  return `[${LCW_GUIDED_LANGUAGE_NOTE_PREFIX}:${isoCode}]`;
+}
+
+/**
+ * Builds `activityBookings[].note` from guest comments and widget language.
+ *
+ * Language is appended as `[LCW_GUIDED_LANG:es]` on its own last line so the
+ * other system can extract it only when the structure is valid. Guest text
+ * stays first. Returns undefined when both are empty.
+ *
+ * @param input - Checkout comments and optional widget language
+ */
+export function buildActivityBookingNote(
+  input: BuildActivityBookingNoteInput,
+): string | undefined {
+  const comments = input.comments?.trim() ?? "";
+  const isoCode = resolveGuidedLanguageNoteIso(input.language);
+  const sentinel = isoCode
+    ? formatGuidedLanguageNoteSentinel(isoCode)
+    : "";
+
+  if (comments && sentinel) {
+    return `${comments}\n${sentinel}`;
+  }
+
+  if (comments) {
+    return comments;
+  }
+
+  if (sentinel) {
+    return sentinel;
+  }
+
+  return undefined;
+}
+
 /**
  * Builds the Bókun `booking-request` payload from Pay-click checkout state.
  *
@@ -289,7 +365,10 @@ export function buildBokunBookingRequest(
     activityBooking.guidedLanguage = guidedLanguage;
   }
 
-  const note = input.contact.comments?.trim();
+  const note = buildActivityBookingNote({
+    comments: input.contact.comments,
+    language: input.language,
+  });
   if (note) {
     activityBooking.note = note;
   }

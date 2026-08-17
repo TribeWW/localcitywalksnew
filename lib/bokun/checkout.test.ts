@@ -39,6 +39,7 @@ vi.mock("@/lib/bokun/config", () => ({
 
 import { createBokunUrl, getBokunApiHost } from "@/lib/bokun";
 import {
+  buildActivityBookingNote,
   buildBokunBookingRequest,
   buildCheckoutPassengersFromQuote,
   buildMainContactDetails,
@@ -46,12 +47,14 @@ import {
   checkoutOptionMatchesQuote,
   extractBokunConfirmationCode,
   findReserveCheckoutOption,
+  formatGuidedLanguageNoteSentinel,
   reserveBokunCheckout,
   abortReservedBokunCheckout,
   confirmReservedBokunCheckout,
   buildConfirmReservedBody,
   extractBokunFulfilmentDetails,
   formatBokunTransactionDate,
+  resolveGuidedLanguageNoteIso,
   type ReserveBokunCheckoutInput,
 } from "@/lib/bokun/checkout";
 
@@ -163,11 +166,12 @@ describe("buildBokunBookingRequest", () => {
         ],
         extras: [],
         guidedLanguage: "en",
+        note: "[LCW_GUIDED_LANG:en]",
       },
     ]);
   });
 
-  it("maps checkout comments to activityBookings[].note", () => {
+  it("appends the language sentinel after checkout comments on note", () => {
     const request = buildBokunBookingRequest({
       ...reserveInput,
       contact: {
@@ -177,13 +181,14 @@ describe("buildBokunBookingRequest", () => {
     });
 
     expect(request.activityBookings[0]?.note).toBe(
-      "Please accommodate gluten-free tasting.",
+      "Please accommodate gluten-free tasting.\n[LCW_GUIDED_LANG:en]",
     );
   });
 
-  it("omits activityBookings[].note when comments are blank", () => {
+  it("omits activityBookings[].note when comments and language are blank", () => {
     const request = buildBokunBookingRequest({
       ...reserveInput,
+      language: undefined,
       contact: {
         ...reserveInput.contact,
         comments: "   ",
@@ -200,6 +205,55 @@ describe("buildBokunBookingRequest", () => {
       questionId: "phoneNumber",
       values: ["+34600000000"],
     });
+  });
+});
+
+describe("buildActivityBookingNote", () => {
+  it("returns the sentinel only when language is set and comments are empty", () => {
+    expect(buildActivityBookingNote({ language: "es" })).toBe(
+      "[LCW_GUIDED_LANG:es]",
+    );
+  });
+
+  it("returns comments only when language is absent", () => {
+    expect(
+      buildActivityBookingNote({ comments: "Near the cathedral" }),
+    ).toBe("Near the cathedral");
+  });
+
+  it("appends the sentinel on its own last line after comments", () => {
+    expect(
+      buildActivityBookingNote({
+        comments: "Near the cathedral",
+        language: "es",
+      }),
+    ).toBe("Near the cathedral\n[LCW_GUIDED_LANG:es]");
+  });
+
+  it("normalizes EN_GB to a 2-letter ISO sentinel", () => {
+    expect(buildActivityBookingNote({ language: "EN_GB" })).toBe(
+      "[LCW_GUIDED_LANG:en]",
+    );
+  });
+
+  it("treats unnormalizable language as absent", () => {
+    expect(
+      buildActivityBookingNote({
+        comments: "Near the cathedral",
+        language: "xyz",
+      }),
+    ).toBe("Near the cathedral");
+    expect(buildActivityBookingNote({ language: "   " })).toBeUndefined();
+    expect(buildActivityBookingNote({ comments: "  " })).toBeUndefined();
+  });
+});
+
+describe("resolveGuidedLanguageNoteIso", () => {
+  it("accepts 2-letter codes and rejects longer fragments", () => {
+    expect(resolveGuidedLanguageNoteIso("ES")).toBe("es");
+    expect(resolveGuidedLanguageNoteIso("EN_GB")).toBe("en");
+    expect(resolveGuidedLanguageNoteIso("nds")).toBeUndefined();
+    expect(formatGuidedLanguageNoteSentinel("es")).toBe("[LCW_GUIDED_LANG:es]");
   });
 });
 
@@ -384,8 +438,12 @@ describe("reserveBokunCheckout", () => {
       };
     };
 
-    expect(optionsBody.activityBookings[0]?.note).toBe(note);
-    expect(submitBody.directBooking.activityBookings[0]?.note).toBe(note);
+    expect(optionsBody.activityBookings[0]?.note).toBe(
+      `${note}\n[LCW_GUIDED_LANG:en]`,
+    );
+    expect(submitBody.directBooking.activityBookings[0]?.note).toBe(
+      `${note}\n[LCW_GUIDED_LANG:en]`,
+    );
     expect(submitBody.directBooking.mainContactDetails).toContainEqual({
       questionId: "phoneNumber",
       values: ["+34600000000"],
