@@ -104,7 +104,8 @@ function filterAndApplySortDirection(
 }
 
 /**
- * Loads the full explore catalog snapshot: L1 → Redis → Bokun rebuild on miss.
+ * Loads the full explore catalog snapshot: L1 → Redis (production only) →
+ * Bokun rebuild on miss. Preview/staging skip Redis so they crawl Bókun.
  *
  * On a Bokun rebuild, warms listing prices then best-effort writes Redis so
  * subsequent cold instances hit a priced durable snapshot. Cards are stored

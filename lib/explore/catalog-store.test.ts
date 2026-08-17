@@ -6,6 +6,7 @@
  * - read round-trips a valid snapshot including display prices
  * - key is explore:catalog:v2
  * - missing Redis / missing key / invalid payload → null or false (null-safe)
+ * - preview/staging skip Redis so they cannot read or overwrite the live snapshot
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -15,6 +16,7 @@ import {
   readExploreCatalogSnapshot,
   resetExploreCatalogRedisClientForTests,
   setExploreCatalogRedisClientForTests,
+  shouldUseExploreCatalogSnapshot,
   writeExploreCatalogSnapshot,
 } from "@/lib/explore/catalog-store";
 import type { CityCardData } from "@/types/bokun";
@@ -61,6 +63,8 @@ describe("explore-catalog-store", () => {
   beforeEach(() => {
     mockGet.mockReset();
     mockSet.mockReset();
+    // Default to production so Redis read/write is exercised; preview tests override.
+    vi.stubEnv("VERCEL_ENV", "production");
     setExploreCatalogRedisClientForTests({
       get: mockGet,
       set: mockSet,
@@ -69,10 +73,26 @@ describe("explore-catalog-store", () => {
 
   afterEach(() => {
     resetExploreCatalogRedisClientForTests();
+    vi.unstubAllEnvs();
   });
 
   it("uses the v2 catalog key", () => {
     expect(EXPLORE_CATALOG_SNAPSHOT_KEY).toBe("explore:catalog:v2");
+  });
+
+  describe("shouldUseExploreCatalogSnapshot", () => {
+    it("is true only on the production Vercel environment", () => {
+      expect(shouldUseExploreCatalogSnapshot()).toBe(true);
+
+      vi.stubEnv("VERCEL_ENV", "preview");
+      expect(shouldUseExploreCatalogSnapshot()).toBe(false);
+
+      vi.stubEnv("VERCEL_ENV", "development");
+      expect(shouldUseExploreCatalogSnapshot()).toBe(false);
+
+      vi.stubEnv("VERCEL_ENV", "");
+      expect(shouldUseExploreCatalogSnapshot()).toBe(false);
+    });
   });
 
   describe("writeExploreCatalogSnapshot", () => {
@@ -106,6 +126,15 @@ describe("explore-catalog-store", () => {
       const ok = await writeExploreCatalogSnapshot(sampleCards);
 
       expect(ok).toBe(false);
+    });
+
+    it("skips Redis outside production so staging cannot overwrite the live snapshot", async () => {
+      vi.stubEnv("VERCEL_ENV", "preview");
+
+      const ok = await writeExploreCatalogSnapshot(sampleCards);
+
+      expect(ok).toBe(false);
+      expect(mockSet).not.toHaveBeenCalled();
     });
   });
 
@@ -165,6 +194,16 @@ describe("explore-catalog-store", () => {
       const result = await readExploreCatalogSnapshot();
 
       expect(result).toBeNull();
+    });
+
+    it("skips Redis outside production so staging cannot read the live snapshot", async () => {
+      vi.stubEnv("VERCEL_ENV", "preview");
+      mockGet.mockResolvedValue(snapshotCards);
+
+      const result = await readExploreCatalogSnapshot();
+
+      expect(result).toBeNull();
+      expect(mockGet).not.toHaveBeenCalled();
     });
   });
 });
