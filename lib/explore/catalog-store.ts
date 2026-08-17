@@ -2,6 +2,8 @@
  * Durable explore catalog snapshot in Upstash Redis.
  *
  * Written by the daily Bokun sync cron; read by explore listing/filter/sort.
+ * Production-only: preview/staging/local skip Redis so they cannot read the
+ * live catalog (or overwrite it) and fall back to a Bókun crawl instead.
  * Returns null / no-ops when Redis is unconfigured so callers can fall back
  * to a live Bokun crawl.
  */
@@ -141,13 +143,26 @@ function toSnapshotCard(card: CityCardData): CityCardData {
 }
 
 /**
+ * Production-only Redis snapshot. Preview/staging share production KV and
+ * would otherwise serve (or overwrite) live Bókun product ids.
+ */
+export function shouldUseExploreCatalogSnapshot(): boolean {
+  return process.env.VERCEL_ENV === "production";
+}
+
+/**
  * Reads the durable explore catalog snapshot from Redis.
  *
- * @returns Snapshot cards, or null when Redis is unset, the key is missing, or the payload is invalid
+ * @returns Snapshot cards, or null when Redis is skipped (non-production),
+ *   unset, the key is missing, or the payload is invalid
  */
 export async function readExploreCatalogSnapshot(): Promise<
   CityCardData[] | null
 > {
+  if (!shouldUseExploreCatalogSnapshot()) {
+    return null;
+  }
+
   const redis = getExploreCatalogRedis();
   if (!redis) {
     return null;
@@ -179,14 +194,18 @@ export async function readExploreCatalogSnapshot(): Promise<
  * Writes the explore catalog snapshot to Redis.
  *
  * Persists warm listing prices; strips live-only rating fields.
- * No-ops when Redis is unconfigured.
+ * No-ops when Redis is skipped (non-production) or unconfigured.
  *
  * @param cards - Transformed city cards to persist
- * @returns `true` when the write succeeded; `false` when Redis is unset or the write failed
+ * @returns `true` when the write succeeded; `false` when Redis is skipped, unset, or the write failed
  */
 export async function writeExploreCatalogSnapshot(
   cards: readonly CityCardData[],
 ): Promise<boolean> {
+  if (!shouldUseExploreCatalogSnapshot()) {
+    return false;
+  }
+
   const redis = getExploreCatalogRedis();
   if (!redis) {
     return false;
