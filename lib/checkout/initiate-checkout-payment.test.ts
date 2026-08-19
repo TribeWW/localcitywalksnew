@@ -529,4 +529,45 @@ describe("executeInitiateCheckoutPayment — pipeline invariants", () => {
       }),
     );
   });
+
+  it("uses the reserve-derived discounted amount for pending checkout and Stripe when promoCode is applied", async () => {
+    reserveBokunCheckoutMock.mockResolvedValue({
+      success: true,
+      data: {
+        confirmationCode: "LOC-T123",
+        checkoutAmount: 400,
+        currency: "EUR",
+        externalBookingReference: CHECKOUT_ID,
+      },
+    });
+
+    const result = await executeInitiateCheckoutPayment({
+      ...paymentInput,
+      promoCode: "SUMMER20",
+    });
+
+    expect(result).toEqual({
+      success: true,
+      redirectUrl: "https://checkout.stripe.test/cs_test_123",
+    });
+
+    expect(createPendingCheckoutMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        promoCode: "SUMMER20",
+        quoteSnapshot: expect.objectContaining({
+          totalAmount: 400,
+          currency: "EUR",
+        }),
+      }),
+    );
+
+    expect(createStripeCheckoutSessionMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        quote: expect.objectContaining({
+          totalAmount: 400,
+          currency: "EUR",
+        }),
+      }),
+    );
+  });
 });

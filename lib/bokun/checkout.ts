@@ -574,8 +574,9 @@ export async function submitBokunCheckoutReserve(
 export function checkoutOptionMatchesQuote(
   option: Pick<BokunCheckoutOption, "amount" | "currency">,
   quote: BookingWidgetQuote,
+  options?: { allowAmountChange?: boolean },
 ): boolean {
-  if (option.amount !== quote.totalAmount) {
+  if (!options?.allowAmountChange && option.amount !== quote.totalAmount) {
     return false;
   }
 
@@ -622,7 +623,11 @@ export async function reserveBokunCheckout(
     return { success: false, error: "invalid_response" };
   }
 
-  if (!checkoutOptionMatchesQuote(reserveOption, input.quote)) {
+  if (
+    !checkoutOptionMatchesQuote(reserveOption, input.quote, {
+      allowAmountChange: Boolean(input.promoCode?.trim()),
+    })
+  ) {
     console.error(
       `[bokun-checkout] reserve option amount/currency mismatch for ref ${input.externalBookingReference}`,
     );

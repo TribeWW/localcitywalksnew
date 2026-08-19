@@ -352,6 +352,16 @@ describe("checkoutOptionMatchesQuote", () => {
     ).toBe(false);
   });
 
+  it("accepts when amount changes but promo pricing is allowed", () => {
+    expect(
+      checkoutOptionMatchesQuote(
+        { amount: 400, currency: "EUR" },
+        quote,
+        { allowAmountChange: true },
+      ),
+    ).toBe(true);
+  });
+
   it("rejects when checkout option currency differs from quote", () => {
     expect(
       checkoutOptionMatchesQuote(
@@ -529,6 +539,42 @@ describe("reserveBokunCheckout", () => {
       error: "invalid_response",
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("accepts discounted reserve option amounts when promoCode is provided", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          options: [
+            {
+              ...optionsResponse.options[0],
+              amount: 400,
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          booking: { confirmationCode: "LOC-T123" },
+        }),
+      });
+
+    await expect(
+      reserveBokunCheckout({
+        ...reserveInput,
+        promoCode: "SUMMER20",
+      }),
+    ).resolves.toEqual({
+      success: true,
+      data: {
+        confirmationCode: "LOC-T123",
+        checkoutAmount: 400,
+        currency: "EUR",
+        externalBookingReference: "550e8400-e29b-41d4-a716-446655440000",
+      },
+    });
   });
 
   it("returns invalid_response when checkout option currency mismatches quote", async () => {
