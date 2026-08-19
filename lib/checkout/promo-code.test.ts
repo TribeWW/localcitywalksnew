@@ -226,5 +226,63 @@ describe("runValidatePromoCode", () => {
     expect(fetchBokunCheckoutOptionsMock).not.toHaveBeenCalled();
     expect(verifyCheckoutHandoffTokenMock).not.toHaveBeenCalled();
   });
+
+  it("rejects negative promo-adjusted amounts from Bókun options", async () => {
+    fetchBokunCheckoutOptionsMock.mockResolvedValue({
+      success: true,
+      data: {
+        options: [
+          {
+            type: "CUSTOMER_FULL_PAYMENT",
+            amount: -1,
+            currency: "EUR",
+            paymentMethods: {
+              allowedMethods: ["RESERVE_FOR_EXTERNAL_PAYMENT", "CARD"],
+            },
+          },
+        ],
+      },
+    });
+
+    const result = await runValidatePromoCode({
+      handoffToken: "handoff-token",
+      promoCode: "SUMMER20",
+      contact,
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: "invalid_response",
+    });
+  });
+
+  it("rejects non-finite promo-adjusted amounts from Bókun options", async () => {
+    fetchBokunCheckoutOptionsMock.mockResolvedValue({
+      success: true,
+      data: {
+        options: [
+          {
+            type: "CUSTOMER_FULL_PAYMENT",
+            amount: Number.POSITIVE_INFINITY,
+            currency: "EUR",
+            paymentMethods: {
+              allowedMethods: ["RESERVE_FOR_EXTERNAL_PAYMENT", "CARD"],
+            },
+          },
+        ],
+      },
+    });
+
+    const result = await runValidatePromoCode({
+      handoffToken: "handoff-token",
+      promoCode: "SUMMER20",
+      contact,
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: "invalid_response",
+    });
+  });
 });
 

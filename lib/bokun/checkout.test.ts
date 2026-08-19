@@ -372,6 +372,26 @@ describe("checkoutOptionMatchesQuote", () => {
     ).toBe(false);
   });
 
+  it("rejects negative promo-adjusted amounts", () => {
+    expect(
+      checkoutOptionMatchesQuote(
+        { amount: -1, currency: "EUR" },
+        quote,
+        { allowAmountChange: true },
+      ),
+    ).toBe(false);
+  });
+
+  it("rejects non-finite promo-adjusted amounts", () => {
+    expect(
+      checkoutOptionMatchesQuote(
+        { amount: Number.POSITIVE_INFINITY, currency: "EUR" },
+        quote,
+        { allowAmountChange: true },
+      ),
+    ).toBe(false);
+  });
+
   it("rejects when checkout option currency differs from quote", () => {
     expect(
       checkoutOptionMatchesQuote(

@@ -186,6 +186,14 @@ export async function runValidatePromoCode(
   }
 
   const originalAmount = quoteResult.data.totalAmount;
+  if (
+    !Number.isFinite(discountedAmount) ||
+    discountedAmount < 0 ||
+    discountedAmount > originalAmount
+  ) {
+    return { success: false, error: "invalid_response" };
+  }
+
   const discountAmount = originalAmount - discountedAmount;
   const valid = discountedAmount < originalAmount;
 
