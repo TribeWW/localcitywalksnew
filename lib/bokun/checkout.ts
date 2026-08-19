@@ -61,6 +61,12 @@ export interface BokunBookingRequest {
   externalBookingReference: string;
   mainContactDetails: BokunMainContactDetail[];
   activityBookings: BokunActivityBookingRequest[];
+  /**
+   * Optional promo code applied to the booking (Bókun pricing/discounters).
+   *
+   * Forwarded from the checkout summary, validated and interpreted elsewhere.
+   */
+  promoCode?: string;
 }
 
 /** Payment methods block on a checkout option (spike response shape). */
@@ -200,6 +206,8 @@ export interface ReserveBokunCheckoutInput {
   contact: BokunCheckoutContact;
   /** Internal checkout id — used as Bókun `externalBookingReference`. */
   externalBookingReference: string;
+  /** Optional promo code; forwarded to Bókun booking request. */
+  promoCode?: string;
 }
 
 export type ReserveBokunCheckoutResult =
@@ -373,10 +381,13 @@ export function buildBokunBookingRequest(
     activityBooking.note = note;
   }
 
+  const promoCode = input.promoCode?.trim();
+
   return {
     externalBookingReference: input.externalBookingReference,
     mainContactDetails: buildMainContactDetails(input.contact),
     activityBookings: [activityBooking],
+    ...(promoCode ? { promoCode } : {}),
   };
 }
 
@@ -563,9 +574,23 @@ export async function submitBokunCheckoutReserve(
 export function checkoutOptionMatchesQuote(
   option: Pick<BokunCheckoutOption, "amount" | "currency">,
   quote: BookingWidgetQuote,
+  options?: { allowAmountChange?: boolean },
 ): boolean {
-  if (option.amount !== quote.totalAmount) {
-    return false;
+  const amount = option.amount;
+
+  if (!options?.allowAmountChange) {
+    if (amount !== quote.totalAmount) {
+      return false;
+    }
+  } else {
+    if (
+      typeof amount !== "number" ||
+      !Number.isFinite(amount) ||
+      amount < 0 ||
+      amount > quote.totalAmount
+    ) {
+      return false;
+    }
   }
 
   const expectedCurrency = quote.currency || BOKUN_CHECKOUT_DEFAULT_CURRENCY;
@@ -611,7 +636,11 @@ export async function reserveBokunCheckout(
     return { success: false, error: "invalid_response" };
   }
 
-  if (!checkoutOptionMatchesQuote(reserveOption, input.quote)) {
+  if (
+    !checkoutOptionMatchesQuote(reserveOption, input.quote, {
+      allowAmountChange: Boolean(input.promoCode?.trim()),
+    })
+  ) {
     console.error(
       `[bokun-checkout] reserve option amount/currency mismatch for ref ${input.externalBookingReference}`,
     );

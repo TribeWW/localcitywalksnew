@@ -21,3 +21,18 @@ export const cardsWidgetUpdate = flag<boolean>({
   origin: CARDS_WIDGET_FLAG_ORIGIN,
   adapter: vercelAdapter(),
 });
+
+/**
+ * Gates promo-code application in checkout (apply/validate/pay pipeline).
+ * Managed in Vercel Flags (`promo-code`).
+ */
+export const promoCode = flag<boolean>({
+  key: "promo-code",
+  description: "Enable promo codes at checkout",
+  defaultValue: false,
+  options: [
+    { value: false, label: "Off" },
+    { value: true, label: "On" },
+  ],
+  adapter: vercelAdapter(),
+});

@@ -30,6 +30,13 @@ const checkoutPaymentPhoneSchema = z
     },
   );
 
+/**
+ * Conservative validation for promo codes coming from the checkout summary.
+ * Keep this in sync with `runValidatePromoCode` so Pay-click never trusts
+ * untrusted formatting.
+ */
+const SAFE_PROMO_CODE_REGEX = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
+
 /** Contact fields submitted with Pay on the checkout summary page. */
 export const checkoutPaymentContactSchema = z.object({
   firstName: z
@@ -54,6 +61,15 @@ export const initiateCheckoutPaymentInputSchema = z.object({
     .trim()
     .min(1, { message: "Checkout session expired. Please return to the tour page." }),
   contact: checkoutPaymentContactSchema,
+  promoCode: z
+    .string()
+    .trim()
+    .min(1)
+    .max(64)
+    .regex(SAFE_PROMO_CODE_REGEX, {
+      message: "This code is invalid or has expired.",
+    })
+    .optional(),
   termsAccepted: z.literal(true, {
     errorMap: () => ({
       message: "You must agree to the terms to continue",

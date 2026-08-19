@@ -9,6 +9,7 @@
 import { randomUUID } from "crypto";
 
 import { computeTourBookingQuote } from "@/lib/booking/widget.actions";
+import { promoCode as promoCodeFlag } from "@/flags";
 import {
   BOOKING_WIDGET_PRICE_MISMATCH_ERROR,
   clientQuoteMatchesServer,
@@ -36,6 +37,7 @@ import {
 } from "@/lib/validation/checkout-payment";
 import { validateCheckoutContactForProduct } from "@/lib/validation/validate-checkout-contact-for-product";
 import type { InitiateCheckoutPaymentResult } from "@/types/bokun";
+import type { BookingWidgetQuote } from "@/types/bokun";
 
 /** User-facing error when payment infrastructure is misconfigured. */
 export const CHECKOUT_PAYMENT_UNAVAILABLE_ERROR =
@@ -94,6 +96,34 @@ export function buildPendingCheckoutContact(
       ? { comments: contact.comments.trim() }
       : {}),
     termsAcceptedAt,
+  };
+}
+
+/**
+ * Resolves the server-derived amount that should be charged/persisted after a
+ * successful Bókun reserve. When a promo code is active, the reserve response is
+ * the authoritative applied price for Stripe + pending checkout.
+ *
+ * @param quote - Fresh undiscounted server quote
+ * @param reserve - Successful Bókun reserve result payload
+ * @param promoCode - Promo code applied on the payment attempt
+ */
+export function resolveAppliedCheckoutQuote(
+  quote: BookingWidgetQuote,
+  reserve: {
+    checkoutAmount: number;
+    currency: string;
+  },
+  promoCode?: string,
+): BookingWidgetQuote {
+  if (!promoCode?.trim()) {
+    return quote;
+  }
+
+  return {
+    ...quote,
+    totalAmount: reserve.checkoutAmount,
+    currency: reserve.currency,
   };
 }
 
@@ -194,6 +224,9 @@ export async function executeInitiateCheckoutPayment(
     return { success: false, error: contactValidation.error };
   }
 
+  const promoCodeEnabled = await promoCodeFlag();
+  const promoCodeToApply = promoCodeEnabled ? input.promoCode : undefined;
+
   const checkoutId = randomUUID();
   const productTitle =
     payload.productTitle?.trim() || tourDetail.data.title.trim() || "Tour booking";
@@ -205,6 +238,7 @@ export async function executeInitiateCheckoutPayment(
     rateId,
     quote: quoteResult.data,
     language: payload.language,
+    promoCode: promoCodeToApply,
     contact: {
       firstName: input.contact.firstName,
       lastName: input.contact.lastName,
@@ -225,6 +259,14 @@ export async function executeInitiateCheckoutPayment(
   }
 
   const confirmationCode = reserveResult.data.confirmationCode;
+  const appliedQuote = resolveAppliedCheckoutQuote(
+    quoteResult.data,
+    {
+      checkoutAmount: reserveResult.data.checkoutAmount,
+      currency: reserveResult.data.currency,
+    },
+    promoCodeToApply,
+  );
   const handoffTokenDigest = hashCheckoutHandoffTokenForPendingCheckout(
     input.handoffToken,
   );
@@ -246,7 +288,8 @@ export async function executeInitiateCheckoutPayment(
       startTimeId: payload.startTimeId,
       participants: payload.participants,
       language: payload.language,
-      quoteSnapshot: quoteResult.data,
+      quoteSnapshot: appliedQuote,
+      promoCode: promoCodeToApply,
       contact: buildPendingCheckoutContact(input.contact, termsAcceptedAt),
       bokunConfirmationCode: confirmationCode,
       handoffTokenDigest,
@@ -263,7 +306,7 @@ export async function executeInitiateCheckoutPayment(
 
     const stripeResult = await createStripeCheckoutSession({
       checkoutId,
-      quote: quoteResult.data,
+      quote: appliedQuote,
       customerEmail: input.contact.email,
       productTitle,
       handoffToken: input.handoffToken,
