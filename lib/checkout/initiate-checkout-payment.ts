@@ -9,6 +9,7 @@
 import { randomUUID } from "crypto";
 
 import { computeTourBookingQuote } from "@/lib/booking/widget.actions";
+import { promoCode as promoCodeFlag } from "@/flags";
 import {
   BOOKING_WIDGET_PRICE_MISMATCH_ERROR,
   clientQuoteMatchesServer,
@@ -194,6 +195,9 @@ export async function executeInitiateCheckoutPayment(
     return { success: false, error: contactValidation.error };
   }
 
+  const promoCodeEnabled = await promoCodeFlag();
+  const promoCodeToApply = promoCodeEnabled ? input.promoCode : undefined;
+
   const checkoutId = randomUUID();
   const productTitle =
     payload.productTitle?.trim() || tourDetail.data.title.trim() || "Tour booking";
@@ -205,7 +209,7 @@ export async function executeInitiateCheckoutPayment(
     rateId,
     quote: quoteResult.data,
     language: payload.language,
-    promoCode: input.promoCode,
+    promoCode: promoCodeToApply,
     contact: {
       firstName: input.contact.firstName,
       lastName: input.contact.lastName,
@@ -248,7 +252,7 @@ export async function executeInitiateCheckoutPayment(
       participants: payload.participants,
       language: payload.language,
       quoteSnapshot: quoteResult.data,
-      promoCode: input.promoCode,
+      promoCode: promoCodeToApply,
       contact: buildPendingCheckoutContact(input.contact, termsAcceptedAt),
       bokunConfirmationCode: confirmationCode,
       handoffTokenDigest,

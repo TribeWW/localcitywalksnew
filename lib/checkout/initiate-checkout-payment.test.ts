@@ -47,6 +47,10 @@ vi.mock("@/lib/stripe/create-checkout-session", () => ({
     createStripeCheckoutSessionMock(...args),
 }));
 
+vi.mock("@/flags", () => ({
+  promoCode: vi.fn(async () => true),
+}));
+
 import { BOOKING_WIDGET_PRICE_MISMATCH_ERROR } from "@/lib/booking/widget-submit";
 import {
   CHECKOUT_HANDOFF_EXPIRED_ERROR,
