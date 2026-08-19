@@ -44,14 +44,9 @@ const SAFE_PROMO_CODE_REGEX = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
 
 const validatePromoCodeInputSchema = z.object({
   handoffToken: z.string().trim().min(1),
-  promoCode: z
-    .string()
-    .trim()
-    .min(1)
-    .max(64)
-    .regex(SAFE_PROMO_CODE_REGEX, {
-      message: "This code is invalid or has expired.",
-    }),
+  promoCode: z.string().trim().min(1).max(64).regex(SAFE_PROMO_CODE_REGEX, {
+    message: "This code is invalid or has expired.",
+  }),
   contact: checkoutPaymentContactSchema,
 });
 
@@ -85,9 +80,7 @@ export type ValidatePromoCodeInput = z.infer<
 
 function classifyQuoteFailureReason(
   message: string,
-): ReturnType<
-  typeof classifyCheckoutQuoteUnavailableReason
-> {
+): ReturnType<typeof classifyCheckoutQuoteUnavailableReason> {
   return classifyCheckoutQuoteUnavailableReason(message, "quote");
 }
 
@@ -173,15 +166,20 @@ export async function runValidatePromoCode(
     promoCode,
   });
 
-  const optionsResult = await fetchBokunCheckoutOptions(bookingRequest);
+  const currency = quoteResult.data.currency ?? "EUR";
+  const optionsResult = await fetchBokunCheckoutOptions(
+    bookingRequest,
+    currency,
+  );
   if (!optionsResult.success) {
     return { success: false, error: "unavailable" };
   }
 
   const reserveOption = findReserveCheckoutOption(optionsResult.data.options);
   const discountedAmount = reserveOption?.amount;
-  const currency =
-    reserveOption?.currency ?? quoteResult.data.currency ?? "EUR";
+  if (reserveOption?.currency && reserveOption.currency !== currency) {
+    return { success: false, error: "invalid_response" };
+  }
 
   if (typeof discountedAmount !== "number") {
     return { success: false, error: "invalid_response" };
@@ -189,7 +187,6 @@ export async function runValidatePromoCode(
 
   const originalAmount = quoteResult.data.totalAmount;
   const discountAmount = originalAmount - discountedAmount;
-
   const valid = discountedAmount < originalAmount;
 
   return {
@@ -203,4 +200,3 @@ export async function runValidatePromoCode(
     },
   };
 }
-

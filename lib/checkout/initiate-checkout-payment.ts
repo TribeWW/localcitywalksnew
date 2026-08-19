@@ -205,6 +205,7 @@ export async function executeInitiateCheckoutPayment(
     rateId,
     quote: quoteResult.data,
     language: payload.language,
+    promoCode: input.promoCode,
     contact: {
       firstName: input.contact.firstName,
       lastName: input.contact.lastName,
@@ -247,6 +248,7 @@ export async function executeInitiateCheckoutPayment(
       participants: payload.participants,
       language: payload.language,
       quoteSnapshot: quoteResult.data,
+      promoCode: input.promoCode,
       contact: buildPendingCheckoutContact(input.contact, termsAcceptedAt),
       bokunConfirmationCode: confirmationCode,
       handoffTokenDigest,

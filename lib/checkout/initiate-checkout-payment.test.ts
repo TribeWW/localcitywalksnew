@@ -497,4 +497,32 @@ describe("executeInitiateCheckoutPayment — pipeline invariants", () => {
     );
     expect(abortReservedBokunCheckoutMock).not.toHaveBeenCalled();
   });
+
+  it("forwards promoCode into reserveBokunCheckout and createPendingCheckout", async () => {
+    const result = await executeInitiateCheckoutPayment({
+      ...paymentInput,
+      promoCode: "SUMMER20",
+      contact: {
+        ...paymentContact,
+        comments: "Near the cathedral entrance",
+      },
+    });
+
+    expect(result).toEqual({
+      success: true,
+      redirectUrl: "https://checkout.stripe.test/cs_test_123",
+    });
+
+    expect(reserveBokunCheckoutMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        promoCode: "SUMMER20",
+      }),
+    );
+
+    expect(createPendingCheckoutMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        promoCode: "SUMMER20",
+      }),
+    );
+  });
 });
