@@ -362,6 +362,16 @@ describe("checkoutOptionMatchesQuote", () => {
     ).toBe(true);
   });
 
+  it("rejects when promo-adjusted amount exceeds quote total", () => {
+    expect(
+      checkoutOptionMatchesQuote(
+        { amount: 600, currency: "EUR" },
+        quote,
+        { allowAmountChange: true },
+      ),
+    ).toBe(false);
+  });
+
   it("rejects when checkout option currency differs from quote", () => {
     expect(
       checkoutOptionMatchesQuote(

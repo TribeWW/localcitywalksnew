@@ -576,8 +576,20 @@ export function checkoutOptionMatchesQuote(
   quote: BookingWidgetQuote,
   options?: { allowAmountChange?: boolean },
 ): boolean {
-  if (!options?.allowAmountChange && option.amount !== quote.totalAmount) {
+  if (typeof option.amount !== "number") {
     return false;
+  }
+
+  if (!options?.allowAmountChange) {
+    if (option.amount !== quote.totalAmount) {
+      return false;
+    }
+  } else {
+    // Promo codes may discount, but they must never increase the price
+    // above the server-verified undiscounted quote.
+    if (option.amount > quote.totalAmount) {
+      return false;
+    }
   }
 
   const expectedCurrency = quote.currency || BOKUN_CHECKOUT_DEFAULT_CURRENCY;
