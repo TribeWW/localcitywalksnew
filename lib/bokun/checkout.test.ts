@@ -171,6 +171,15 @@ describe("buildBokunBookingRequest", () => {
     ]);
   });
 
+  it("includes promoCode when provided", () => {
+    const request = buildBokunBookingRequest({
+      ...reserveInput,
+      promoCode: "SUMMER20",
+    });
+
+    expect(request.promoCode).toBe("SUMMER20");
+  });
+
   it("appends the language sentinel after checkout comments on note", () => {
     const request = buildBokunBookingRequest({
       ...reserveInput,

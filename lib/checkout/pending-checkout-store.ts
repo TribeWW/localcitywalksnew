@@ -69,6 +69,8 @@ export interface PendingCheckoutRecord {
   startTimeId: number;
   participants: BookingWidgetParticipants;
   language?: string;
+  /** Optional promo code applied during checkout (for audit/reporting). */
+  promoCode?: string;
   quoteSnapshot: BookingWidgetQuote;
   contact: PendingCheckoutContact;
   bokunConfirmationCode?: string;
@@ -101,6 +103,8 @@ export interface CreatePendingCheckoutInput {
   startTimeId: number;
   participants: BookingWidgetParticipants;
   language?: string;
+  /** Optional promo code applied during checkout (for audit/reporting). */
+  promoCode?: string;
   quoteSnapshot: BookingWidgetQuote;
   contact: PendingCheckoutContact;
   bokunConfirmationCode?: string;
@@ -172,6 +176,7 @@ const pendingCheckoutRecordSchema = z.object({
   startTimeId: tourBookingStartTimeIdSchema,
   participants: tourBookingParticipantsSchema,
   language: z.string().trim().min(2).max(16).optional(),
+  promoCode: z.string().trim().min(1).optional(),
   quoteSnapshot: bookingWidgetQuoteSchema,
   contact: pendingCheckoutContactSchema,
   bokunConfirmationCode: z.string().trim().min(1).optional(),
@@ -411,6 +416,7 @@ export async function createPendingCheckout(
     startTimeId: input.startTimeId,
     participants: input.participants,
     language: input.language,
+    ...(input.promoCode?.trim() ? { promoCode: input.promoCode.trim() } : {}),
     quoteSnapshot: input.quoteSnapshot,
     contact: input.contact,
     bokunConfirmationCode: input.bokunConfirmationCode,

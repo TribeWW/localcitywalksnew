@@ -108,6 +108,28 @@ describe("createPendingCheckout", () => {
       { ex: 1800 },
     );
   });
+
+  it("stores promoCode on the pending record when provided", async () => {
+    const result = await createPendingCheckout({
+      ...createInput,
+      promoCode: "SUMMER20",
+    });
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    expect(result.data.promoCode).toBe("SUMMER20");
+
+    expect(mockSet).toHaveBeenCalledWith(
+      `checkout:pending:${result.data.id}`,
+      expect.objectContaining({
+        id: result.data.id,
+        status: "pending",
+        promoCode: "SUMMER20",
+      }),
+      { ex: 1800 },
+    );
+  });
 });
 
 describe("getPendingCheckoutById", () => {

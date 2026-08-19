@@ -61,6 +61,12 @@ export interface BokunBookingRequest {
   externalBookingReference: string;
   mainContactDetails: BokunMainContactDetail[];
   activityBookings: BokunActivityBookingRequest[];
+  /**
+   * Optional promo code applied to the booking (Bókun pricing/discounters).
+   *
+   * Forwarded from the checkout summary, validated and interpreted elsewhere.
+   */
+  promoCode?: string;
 }
 
 /** Payment methods block on a checkout option (spike response shape). */
@@ -200,6 +206,8 @@ export interface ReserveBokunCheckoutInput {
   contact: BokunCheckoutContact;
   /** Internal checkout id — used as Bókun `externalBookingReference`. */
   externalBookingReference: string;
+  /** Optional promo code; forwarded to Bókun booking request. */
+  promoCode?: string;
 }
 
 export type ReserveBokunCheckoutResult =
@@ -373,10 +381,13 @@ export function buildBokunBookingRequest(
     activityBooking.note = note;
   }
 
+  const promoCode = input.promoCode?.trim();
+
   return {
     externalBookingReference: input.externalBookingReference,
     mainContactDetails: buildMainContactDetails(input.contact),
     activityBookings: [activityBooking],
+    ...(promoCode ? { promoCode } : {}),
   };
 }
 
