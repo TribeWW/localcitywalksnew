@@ -6,6 +6,8 @@
  * Composes Task 1.1 primitives. When `handoffToken` is set (live `/checkout`),
  * Pay calls `initiateCheckoutPayment` with loading/disabled state and reserve
  * error toasts (LOC-1162). Mock preview omits the token and uses `onPayClick`.
+ * When `promoCodeEnabled` is set, the order summary shows `PromoCodeInput`
+ * and updates the payable total / Pay label from validated discounts (LOC-1232).
  */
 
 import { useState } from "react";
@@ -15,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { initiateCheckoutPayment } from "@/lib/checkout/payment.actions";
 import { buildInitiateCheckoutPaymentInput } from "@/lib/checkout/build-initiate-checkout-payment-input";
 import { runCheckoutPayClick } from "@/lib/checkout/run-checkout-pay-click";
+import { validatePromoCode } from "@/lib/checkout/promo-code.actions";
 import { DEFAULT_CHECKOUT_CONTACT_REQUIREMENTS } from "@/lib/bokun/resolve-main-contact-requirements";
 import { formatCataloguePriceAmount } from "@/lib/bokun/format-catalogue-price";
 
@@ -29,6 +32,11 @@ import type { CheckoutContactRequirements } from "@/types/bokun";
 import type { CheckoutOrderFixture } from "./checkout-mock-fixture";
 import { OrderSummaryCard } from "./OrderSummaryCard";
 import { OrderSummaryLineItem } from "./OrderSummaryLineItem";
+import {
+  PromoCodeInput,
+  type AppliedPromoCode,
+  type PromoCodeValidateResult,
+} from "./PromoCodeInput";
 
 const EMPTY_CONTACT: CheckoutContactFieldsValues = {
   firstName: "",
@@ -50,6 +58,11 @@ export interface CheckoutSummaryViewProps {
   contactRequirements?: CheckoutContactRequirements;
   /** When true, show banner after Stripe Checkout cancel return (LOC-1163). */
   paymentCancelled?: boolean;
+  /**
+   * When true, shows the promo-code control in the order summary.
+   * Driven by the Vercel `promo-code` feature flag on the checkout page.
+   */
+  promoCodeEnabled?: boolean;
   /** Pay CTA handler for mock preview when `handoffToken` is omitted. */
   onPayClick?: () => void;
 }
@@ -64,6 +77,7 @@ export function CheckoutSummaryView({
   handoffToken,
   contactRequirements = DEFAULT_CHECKOUT_CONTACT_REQUIREMENTS,
   paymentCancelled = false,
+  promoCodeEnabled = false,
   onPayClick,
 }: CheckoutSummaryViewProps) {
   const [contact, setContact] =
@@ -71,12 +85,16 @@ export function CheckoutSummaryView({
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [priceAcknowledged, setPriceAcknowledged] = useState(false);
   const [isPayLoading, setIsPayLoading] = useState(false);
+  const [appliedPromo, setAppliedPromo] = useState<AppliedPromoCode | null>(
+    null,
+  );
 
   const requiresPriceAcknowledgement = priceUpdate != null;
   const isPriceGateOpen = !requiresPriceAcknowledgement || priceAcknowledged;
 
+  const payableAmount = appliedPromo?.discountedAmount ?? order.totalAmount;
   const formattedTotal = formatCataloguePriceAmount(
-    order.totalAmount,
+    payableAmount,
     order.currency,
   );
   const payLabel = formattedTotal ? `Pay ${formattedTotal}` : "Pay";
@@ -87,6 +105,49 @@ export function CheckoutSummaryView({
   ) => {
     setContact((current) => ({ ...current, [field]: value }));
   };
+
+  /**
+   * Validates a promo code via the server action (handoff only; no contact needed).
+   *
+   * Maps server failures to deterministic UI reasons (invalid vs unavailable)
+   * so timeouts / infra errors show retry copy instead of “invalid code”.
+   *
+   * @param code - Trimmed promo code from `PromoCodeInput`
+   */
+  async function handleValidatePromoCode(
+    code: string,
+  ): Promise<PromoCodeValidateResult> {
+    if (!handoffToken) {
+      return { valid: false, reason: "unavailable" };
+    }
+
+    const result = await validatePromoCode({
+      handoffToken,
+      promoCode: code,
+    });
+
+    if (!result.success) {
+      if (
+        result.error === "invalid_promo_code" ||
+        result.error === "invalid_response"
+      ) {
+        return { valid: false, reason: "invalid" };
+      }
+
+      return { valid: false, reason: "unavailable" };
+    }
+
+    if (!result.data.valid) {
+      return { valid: false, reason: "invalid" };
+    }
+
+    return {
+      valid: true,
+      code: code.trim().toUpperCase(),
+      discountAmount: result.data.discountAmount,
+      discountedAmount: result.data.discountedAmount,
+    };
+  }
 
   /**
    * Starts Bókun reserve + Stripe session creation after contact and terms gates.
@@ -112,6 +173,7 @@ export function CheckoutSummaryView({
             totalAmount: order.totalAmount,
             currency: order.currency,
           },
+          ...(appliedPromo?.code ? { promoCode: appliedPromo.code } : {}),
         });
         const outcome = await runCheckoutPayClick(
           initiateCheckoutPayment,
@@ -171,7 +233,7 @@ export function CheckoutSummaryView({
       rightColumn={
         <OrderSummaryCard
           itemCount={1}
-          totalAmount={order.totalAmount}
+          totalAmount={payableAmount}
           currency={order.currency}
         >
           <OrderSummaryLineItem
@@ -185,6 +247,13 @@ export function CheckoutSummaryView({
             priceAmount={order.totalAmount}
             currency={order.currency}
           />
+          {promoCodeEnabled ? (
+            <PromoCodeInput
+              currency={order.currency}
+              onValidate={handleValidatePromoCode}
+              onAppliedChange={setAppliedPromo}
+            />
+          ) : null}
         </OrderSummaryCard>
       }
     />

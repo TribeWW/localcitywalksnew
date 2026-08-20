@@ -7,6 +7,8 @@
  * 3) comparing the checkout option amount vs the undiscounted server quote
  *
  * No inventory is reserved here (options-only); actual reserve/charge happens later.
+ * Customer contact is not required for Apply — a placeholder contact is used only
+ * to satisfy Bókun's options request shape. Pay still uses the real form contact.
  */
 
 import { randomUUID } from "crypto";
@@ -16,8 +18,6 @@ import { computeTourBookingQuote } from "@/lib/booking/widget.actions";
 import { getTourDetailById } from "@/lib/tours/detail.actions";
 import { verifyCheckoutHandoffToken } from "@/lib/checkout/handoff-token";
 import { handoffPayloadToQuoteInput } from "@/lib/checkout/handoff-payload-to-quote-input";
-import { resolveMainContactRequirements } from "@/lib/bokun/resolve-main-contact-requirements";
-import { validateCheckoutContactForProduct } from "@/lib/validation/validate-checkout-contact-for-product";
 import {
   classifyCheckoutQuoteUnavailableReason,
   resolveCheckoutQuoteUnavailableMessage,
@@ -27,12 +27,8 @@ import {
   buildBokunBookingRequest,
   fetchBokunCheckoutOptions,
   findReserveCheckoutOption,
+  type BokunCheckoutContact,
 } from "@/lib/bokun/checkout";
-
-import {
-  checkoutPaymentContactSchema,
-  type CheckoutPaymentContact,
-} from "@/lib/validation/checkout-payment";
 
 /**
  * Conservative validation for promo codes.
@@ -42,19 +38,28 @@ import {
  */
 const SAFE_PROMO_CODE_REGEX = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
 
+/**
+ * Placeholder contact used only for Bókun checkout-options promo pricing.
+ *
+ * Never persisted on pending checkout and never used for Pay / reserve submit.
+ */
+export const PROMO_VALIDATION_PLACEHOLDER_CONTACT: BokunCheckoutContact = {
+  firstName: "Promo",
+  lastName: "Check",
+  email: "promo-check@localcitywalks.com",
+};
+
 const validatePromoCodeInputSchema = z.object({
   handoffToken: z.string().trim().min(1),
   promoCode: z.string().trim().min(1).max(64).regex(SAFE_PROMO_CODE_REGEX, {
     message: "This code is invalid or has expired.",
   }),
-  contact: checkoutPaymentContactSchema,
 });
 
 export type ValidatePromoCodeFailureError =
   | "invalid_handoff"
   | "quote_unavailable"
   | "tour_detail_unavailable"
-  | "invalid_contact"
   | "unavailable"
   | "invalid_promo_code"
   | "invalid_response";
@@ -91,6 +96,9 @@ function classifyTourDetailFailureReason(message: string) {
 /**
  * Executes promo validation (pure, non-`"use server"`).
  *
+ * Contact details are not required: Apply uses
+ * {@link PROMO_VALIDATION_PLACEHOLDER_CONTACT} for the options-only Bókun call.
+ *
  * @param input - Untrusted payload from `PromoCodeInput` client UI.
  */
 export async function runValidatePromoCode(
@@ -105,7 +113,7 @@ export async function runValidatePromoCode(
     };
   }
 
-  const { handoffToken, promoCode, contact } = parsed.data;
+  const { handoffToken, promoCode } = parsed.data;
 
   const verified = verifyCheckoutHandoffToken(handoffToken.trim());
   if (!verified.success) {
@@ -141,19 +149,6 @@ export async function runValidatePromoCode(
     return { success: false, error: "unavailable" };
   }
 
-  const contactRequirements = resolveMainContactRequirements(tourDetail.data);
-  const contactValidation = validateCheckoutContactForProduct(
-    contact as CheckoutPaymentContact,
-    contactRequirements,
-  );
-  if (!contactValidation.success) {
-    return {
-      success: false,
-      error: "invalid_contact",
-      message: contactValidation.error,
-    };
-  }
-
   const bookingRequest = buildBokunBookingRequest({
     productId: payload.productId,
     date: payload.date,
@@ -161,7 +156,7 @@ export async function runValidatePromoCode(
     rateId: defaultRateId,
     quote: quoteResult.data,
     language: payload.language,
-    contact,
+    contact: PROMO_VALIDATION_PLACEHOLDER_CONTACT,
     externalBookingReference: randomUUID(),
     promoCode,
   });

@@ -6,8 +6,6 @@ const {
   verifyCheckoutHandoffTokenMock,
   computeTourBookingQuoteMock,
   getTourDetailByIdMock,
-  resolveMainContactRequirementsMock,
-  validateCheckoutContactForProductMock,
   fetchBokunCheckoutOptionsMock,
   buildBokunBookingRequestMock,
   findReserveCheckoutOptionMock,
@@ -15,8 +13,6 @@ const {
   verifyCheckoutHandoffTokenMock: vi.fn(),
   computeTourBookingQuoteMock: vi.fn(),
   getTourDetailByIdMock: vi.fn(),
-  resolveMainContactRequirementsMock: vi.fn(),
-  validateCheckoutContactForProductMock: vi.fn(),
   fetchBokunCheckoutOptionsMock: vi.fn(),
   buildBokunBookingRequestMock: vi.fn((input) => ({
     ...input,
@@ -37,33 +33,16 @@ vi.mock("@/lib/tours/detail.actions", () => ({
   getTourDetailById: getTourDetailByIdMock,
 }));
 
-vi.mock("@/lib/bokun/resolve-main-contact-requirements", () => ({
-  resolveMainContactRequirements: resolveMainContactRequirementsMock,
-}));
-
-vi.mock(
-  "@/lib/validation/validate-checkout-contact-for-product",
-  () => ({
-    validateCheckoutContactForProduct:
-      validateCheckoutContactForProductMock,
-  }),
-);
-
 vi.mock("@/lib/bokun/checkout", () => ({
   buildBokunBookingRequest: buildBokunBookingRequestMock,
   fetchBokunCheckoutOptions: fetchBokunCheckoutOptionsMock,
   findReserveCheckoutOption: findReserveCheckoutOptionMock,
 }));
 
-import { runValidatePromoCode } from "@/lib/checkout/promo-code";
-
-const contact = {
-  firstName: "Ada",
-  lastName: "Lovelace",
-  email: "ada@example.com",
-  phone: "+12345678901",
-  comments: "",
-};
+import {
+  PROMO_VALIDATION_PLACEHOLDER_CONTACT,
+  runValidatePromoCode,
+} from "@/lib/checkout/promo-code";
 
 const quote = {
   totalAmount: 500,
@@ -100,9 +79,8 @@ beforeEach(() => {
   verifyCheckoutHandoffTokenMock.mockReset();
   computeTourBookingQuoteMock.mockReset();
   getTourDetailByIdMock.mockReset();
-  resolveMainContactRequirementsMock.mockReset();
-  validateCheckoutContactForProductMock.mockReset();
   fetchBokunCheckoutOptionsMock.mockReset();
+  buildBokunBookingRequestMock.mockClear();
 
   verifyCheckoutHandoffTokenMock.mockReturnValue({
     success: true,
@@ -120,18 +98,6 @@ beforeEach(() => {
       defaultRateId: 2199582,
       pricingCategories: [],
     },
-  });
-
-  resolveMainContactRequirementsMock.mockReturnValue({
-    firstName: true,
-    lastName: true,
-    email: true,
-    phone: true,
-    comments: false,
-  });
-
-  validateCheckoutContactForProductMock.mockReturnValue({
-    success: true,
   });
 });
 
@@ -165,7 +131,6 @@ describe("runValidatePromoCode", () => {
     const result = await runValidatePromoCode({
       handoffToken: "handoff-token",
       promoCode: "SUMMER20",
-      contact,
     });
 
     const success = asValidateResult(result);
@@ -174,10 +139,43 @@ describe("runValidatePromoCode", () => {
     expect(success.data.discountedAmount).toBe(400);
     expect(success.data.discountAmount).toBe(100);
 
+    expect(buildBokunBookingRequestMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        promoCode: "SUMMER20",
+        contact: PROMO_VALIDATION_PLACEHOLDER_CONTACT,
+      }),
+    );
     expect(fetchBokunCheckoutOptionsMock).toHaveBeenCalledTimes(1);
-    const bookingRequestArg =
-      fetchBokunCheckoutOptionsMock.mock.calls[0]?.[0];
-    expect(bookingRequestArg).toMatchObject({ promoCode: "SUMMER20" });
+  });
+
+  it("does not require customer contact details to validate a promo code", async () => {
+    fetchBokunCheckoutOptionsMock.mockResolvedValue({
+      success: true,
+      data: {
+        options: [
+          {
+            type: "CUSTOMER_FULL_PAYMENT",
+            amount: 400,
+            currency: "EUR",
+            paymentMethods: {
+              allowedMethods: ["RESERVE_FOR_EXTERNAL_PAYMENT", "CARD"],
+            },
+          },
+        ],
+      },
+    });
+
+    const result = await runValidatePromoCode({
+      handoffToken: "handoff-token",
+      promoCode: "SUMMER20",
+    });
+
+    expect(result.success).toBe(true);
+    expect(buildBokunBookingRequestMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contact: PROMO_VALIDATION_PLACEHOLDER_CONTACT,
+      }),
+    );
   });
 
   it("marks invalid when promo code does not change Bókun checkout option amount", async () => {
@@ -200,7 +198,6 @@ describe("runValidatePromoCode", () => {
     const result = await runValidatePromoCode({
       handoffToken: "handoff-token",
       promoCode: "FOOBAR",
-      contact,
     });
 
     const success = asValidateResult(result);
@@ -214,7 +211,6 @@ describe("runValidatePromoCode", () => {
     const result = await runValidatePromoCode({
       handoffToken: "handoff-token",
       promoCode: "SUMMER 20", // whitespace is not allowed
-      contact,
     });
 
     expect(result.success).toBe(false);
@@ -247,7 +243,6 @@ describe("runValidatePromoCode", () => {
     const result = await runValidatePromoCode({
       handoffToken: "handoff-token",
       promoCode: "SUMMER20",
-      contact,
     });
 
     expect(result).toEqual({
@@ -276,7 +271,6 @@ describe("runValidatePromoCode", () => {
     const result = await runValidatePromoCode({
       handoffToken: "handoff-token",
       promoCode: "SUMMER20",
-      contact,
     });
 
     expect(result).toEqual({
@@ -285,4 +279,3 @@ describe("runValidatePromoCode", () => {
     });
   });
 });
-

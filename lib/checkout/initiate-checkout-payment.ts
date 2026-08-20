@@ -104,6 +104,10 @@ export function buildPendingCheckoutContact(
  * successful Bókun reserve. When a promo code is active, the reserve response is
  * the authoritative applied price for Stripe + pending checkout.
  *
+ * Returns `null` when a promo-adjusted amount is missing or unsafe
+ * (non-finite, negative, or above the undiscounted server quote) so Pay can
+ * abort instead of charging a tampered/invalid total.
+ *
  * @param quote - Fresh undiscounted server quote
  * @param reserve - Successful Bókun reserve result payload
  * @param promoCode - Promo code applied on the payment attempt
@@ -115,15 +119,24 @@ export function resolveAppliedCheckoutQuote(
     currency: string;
   },
   promoCode?: string,
-): BookingWidgetQuote {
+): BookingWidgetQuote | null {
   if (!promoCode?.trim()) {
     return quote;
   }
 
+  const { checkoutAmount, currency } = reserve;
+  if (
+    !Number.isFinite(checkoutAmount) ||
+    checkoutAmount < 0 ||
+    checkoutAmount > quote.totalAmount
+  ) {
+    return null;
+  }
+
   return {
     ...quote,
-    totalAmount: reserve.checkoutAmount,
-    currency: reserve.currency,
+    totalAmount: checkoutAmount,
+    currency,
   };
 }
 
@@ -252,6 +265,13 @@ export async function executeInitiateCheckoutPayment(
   });
 
   if (!reserveResult.success) {
+    if (
+      promoCodeToApply &&
+      reserveResult.error === "invalid_response"
+    ) {
+      return { success: false, error: BOOKING_WIDGET_PRICE_MISMATCH_ERROR };
+    }
+
     return {
       success: false,
       error: resolveBokunReserveFailureMessage(reserveResult.error),
@@ -267,6 +287,14 @@ export async function executeInitiateCheckoutPayment(
     },
     promoCodeToApply,
   );
+  if (!appliedQuote) {
+    await releaseBokunReservationAfterPaymentFailure(
+      confirmationCode,
+      checkoutId,
+      "promo applied amount mismatch",
+    );
+    return { success: false, error: BOOKING_WIDGET_PRICE_MISMATCH_ERROR };
+  }
   const handoffTokenDigest = hashCheckoutHandoffTokenForPendingCheckout(
     input.handoffToken,
   );
