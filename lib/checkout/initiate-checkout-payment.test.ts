@@ -628,4 +628,31 @@ describe("executeInitiateCheckoutPayment — pipeline invariants", () => {
     expect(abortReservedBokunCheckoutMock).toHaveBeenCalledWith("LOC-T123");
     expect(createStripeCheckoutSessionMock).not.toHaveBeenCalled();
   });
+
+  it("still returns price mismatch when release rejects after promo applied-amount mismatch", async () => {
+    reserveBokunCheckoutMock.mockResolvedValue({
+      success: true,
+      data: {
+        confirmationCode: "LOC-T123",
+        checkoutAmount: 999,
+        currency: "EUR",
+        externalBookingReference: CHECKOUT_ID,
+      },
+    });
+    abortReservedBokunCheckoutMock.mockRejectedValue(
+      new Error("abort network failure"),
+    );
+
+    const result = await executeInitiateCheckoutPayment({
+      ...paymentInput,
+      promoCode: "SUMMER20",
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: BOOKING_WIDGET_PRICE_MISMATCH_ERROR,
+    });
+    expect(abortReservedBokunCheckoutMock).toHaveBeenCalledWith("LOC-T123");
+    expect(createStripeCheckoutSessionMock).not.toHaveBeenCalled();
+  });
 });

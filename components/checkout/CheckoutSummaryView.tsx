@@ -85,6 +85,7 @@ export function CheckoutSummaryView({
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [priceAcknowledged, setPriceAcknowledged] = useState(false);
   const [isPayLoading, setIsPayLoading] = useState(false);
+  const [isPromoValidating, setIsPromoValidating] = useState(false);
   const [appliedPromo, setAppliedPromo] = useState<AppliedPromoCode | null>(
     null,
   );
@@ -111,6 +112,7 @@ export function CheckoutSummaryView({
    *
    * Maps server failures to deterministic UI reasons (invalid vs unavailable)
    * so timeouts / infra errors show retry copy instead of “invalid code”.
+   * Tracks pending state so Pay cannot start mid-validation.
    *
    * @param code - Trimmed promo code from `PromoCodeInput`
    */
@@ -121,32 +123,37 @@ export function CheckoutSummaryView({
       return { valid: false, reason: "unavailable" };
     }
 
-    const result = await validatePromoCode({
-      handoffToken,
-      promoCode: code,
-    });
+    setIsPromoValidating(true);
+    try {
+      const result = await validatePromoCode({
+        handoffToken,
+        promoCode: code,
+      });
 
-    if (!result.success) {
-      if (
-        result.error === "invalid_promo_code" ||
-        result.error === "invalid_response"
-      ) {
+      if (!result.success) {
+        if (
+          result.error === "invalid_promo_code" ||
+          result.error === "invalid_response"
+        ) {
+          return { valid: false, reason: "invalid" };
+        }
+
+        return { valid: false, reason: "unavailable" };
+      }
+
+      if (!result.data.valid) {
         return { valid: false, reason: "invalid" };
       }
 
-      return { valid: false, reason: "unavailable" };
+      return {
+        valid: true,
+        code: code.trim().toUpperCase(),
+        discountAmount: result.data.discountAmount,
+        discountedAmount: result.data.discountedAmount,
+      };
+    } finally {
+      setIsPromoValidating(false);
     }
-
-    if (!result.data.valid) {
-      return { valid: false, reason: "invalid" };
-    }
-
-    return {
-      valid: true,
-      code: code.trim().toUpperCase(),
-      discountAmount: result.data.discountAmount,
-      discountedAmount: result.data.discountedAmount,
-    };
   }
 
   /**
@@ -156,7 +163,12 @@ export function CheckoutSummaryView({
    * failures via toast (sold-out copy per LOC-1103).
    */
   async function handlePayClick() {
-    if (!isPriceGateOpen || !termsAccepted || isPayLoading) {
+    if (
+      !isPriceGateOpen ||
+      !termsAccepted ||
+      isPayLoading ||
+      isPromoValidating
+    ) {
       return;
     }
 
@@ -225,7 +237,7 @@ export function CheckoutSummaryView({
             termsAccepted={termsAccepted}
             onTermsAcceptedChange={setTermsAccepted}
             onPayClick={handlePayClick}
-            payDisabled={!isPriceGateOpen}
+            payDisabled={!isPriceGateOpen || isPromoValidating}
             payLoading={isPayLoading}
           />
         </>
