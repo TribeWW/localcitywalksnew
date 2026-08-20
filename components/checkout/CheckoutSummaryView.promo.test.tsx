@@ -144,6 +144,61 @@ describe("CheckoutSummaryView — promo code UI", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows invalid/expired copy when Bókun options reject the promo", async () => {
+    validatePromoCodeMock.mockResolvedValue({
+      success: false,
+      error: "invalid_promo_code",
+    });
+
+    render(
+      <CheckoutSummaryView
+        order={HELLO_PALMA_CHECKOUT_FIXTURE}
+        handoffToken="signed.handoff.token"
+        promoCodeEnabled
+      />,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText(/promo or gift code/i), {
+      target: { value: "BADCODE" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /^apply$/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/this code is invalid or has expired/i),
+      ).toBeInTheDocument();
+    });
+    expect(
+      screen.queryByText(/unable to verify this code right now/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows retry copy only for clear infra validation failures", async () => {
+    validatePromoCodeMock.mockResolvedValue({
+      success: false,
+      error: "unavailable",
+    });
+
+    render(
+      <CheckoutSummaryView
+        order={HELLO_PALMA_CHECKOUT_FIXTURE}
+        handoffToken="signed.handoff.token"
+        promoCodeEnabled
+      />,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText(/promo or gift code/i), {
+      target: { value: "SUMMER20" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /^apply$/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/unable to verify this code right now/i),
+      ).toBeInTheDocument();
+    });
+  });
+
   it("does not invoke payment while promo validation is still pending", async () => {
     let resolveValidate: ((value: unknown) => void) | undefined;
     validatePromoCodeMock.mockImplementation(

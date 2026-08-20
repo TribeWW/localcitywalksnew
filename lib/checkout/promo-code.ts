@@ -167,7 +167,10 @@ export async function runValidatePromoCode(
     currency,
   );
   if (!optionsResult.success) {
-    return { success: false, error: "unavailable" };
+    // Bókun often rejects bad/expired/inapplicable promos with an options
+    // failure rather than returning the undiscounted amount. Prefer the
+    // invalid-code UX over "unable to verify" for that ambiguous case.
+    return { success: false, error: "invalid_promo_code" };
   }
 
   const reserveOption = findReserveCheckoutOption(optionsResult.data.options);

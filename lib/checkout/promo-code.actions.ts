@@ -5,7 +5,9 @@
  * can call it without crossing the server-action module boundary.
  *
  * Bókun checkout-options calls reuse the existing 5s abort timeout in
- * `fetchBokunCheckoutOptions`; slow responses surface as `unavailable`.
+ * `fetchBokunCheckoutOptions`. Options failures (including timeouts and
+ * promo rejections) map to `invalid_promo_code` for Apply UX; flag-off
+ * still returns `unavailable`.
  */
 
 "use server";

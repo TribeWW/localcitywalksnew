@@ -223,6 +223,20 @@ describe("runValidatePromoCode", () => {
     expect(verifyCheckoutHandoffTokenMock).not.toHaveBeenCalled();
   });
 
+  it("maps Bókun options failures to invalid_promo_code for Apply UX", async () => {
+    fetchBokunCheckoutOptionsMock.mockResolvedValue({ success: false });
+
+    const result = await runValidatePromoCode({
+      handoffToken: "handoff-token",
+      promoCode: "BADCODE",
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: "invalid_promo_code",
+    });
+  });
+
   it("rejects negative promo-adjusted amounts from Bókun options", async () => {
     fetchBokunCheckoutOptionsMock.mockResolvedValue({
       success: true,

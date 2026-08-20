@@ -12,6 +12,7 @@
 import { useState } from "react";
 import { Check, X } from "lucide-react";
 
+import { Input } from "@/components/ui/input";
 import { formatCataloguePriceAmount } from "@/lib/bokun/format-catalogue-price";
 import { cn } from "@/lib/utils";
 
@@ -165,8 +166,8 @@ export function PromoCodeInput({
 
   return (
     <div className={cn("flex flex-col gap-2", className)} aria-busy={isPending}>
-      <div className="flex gap-3">
-        <input
+      <div className="flex items-center gap-3">
+        <Input
           type="text"
           placeholder="Promo or gift code"
           value={code}
@@ -194,7 +195,8 @@ export function PromoCodeInput({
           onClick={() => void handleApply()}
           disabled={!hasInput || isPending}
           className={cn(
-            "whitespace-nowrap rounded-lg border-[1.5px] px-4 py-2 text-sm font-medium outline-none transition-colors duration-150",
+            // Match contact `CHECKOUT_FIELD_CLASS` height (incl. Input `md:text-sm`)
+            "h-auto min-h-[44px] shrink-0 whitespace-nowrap rounded-lg border-2 px-3.5 py-2.5 text-base font-medium md:text-sm outline-none transition-colors duration-150",
             hasInput && !isPending
               ? "cursor-pointer border-nightsky bg-nightsky text-white hover:bg-watermelon"
               : "cursor-not-allowed border-border bg-white text-muted-foreground opacity-40",
