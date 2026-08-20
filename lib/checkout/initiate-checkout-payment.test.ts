@@ -570,4 +570,62 @@ describe("executeInitiateCheckoutPayment — pipeline invariants", () => {
       }),
     );
   });
+
+  it("tamper invariant with promo: rejects mismatched clientQuote before reserve", async () => {
+    const result = await executeInitiateCheckoutPayment({
+      ...paymentInput,
+      promoCode: "SUMMER20",
+      clientQuote: { totalAmount: 400, currency: "EUR" },
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: BOOKING_WIDGET_PRICE_MISMATCH_ERROR,
+    });
+    expect(reserveBokunCheckoutMock).not.toHaveBeenCalled();
+    expect(createStripeCheckoutSessionMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks payment with price mismatch when promo reserve returns an invalid amount response", async () => {
+    reserveBokunCheckoutMock.mockResolvedValue({
+      success: false,
+      error: "invalid_response",
+    });
+
+    const result = await executeInitiateCheckoutPayment({
+      ...paymentInput,
+      promoCode: "SUMMER20",
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: BOOKING_WIDGET_PRICE_MISMATCH_ERROR,
+    });
+    expect(createPendingCheckoutMock).not.toHaveBeenCalled();
+    expect(createStripeCheckoutSessionMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks Stripe when promo-applied reserve amount exceeds the undiscounted quote", async () => {
+    reserveBokunCheckoutMock.mockResolvedValue({
+      success: true,
+      data: {
+        confirmationCode: "LOC-T123",
+        checkoutAmount: 999,
+        currency: "EUR",
+        externalBookingReference: CHECKOUT_ID,
+      },
+    });
+
+    const result = await executeInitiateCheckoutPayment({
+      ...paymentInput,
+      promoCode: "SUMMER20",
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: BOOKING_WIDGET_PRICE_MISMATCH_ERROR,
+    });
+    expect(abortReservedBokunCheckoutMock).toHaveBeenCalledWith("LOC-T123");
+    expect(createStripeCheckoutSessionMock).not.toHaveBeenCalled();
+  });
 });

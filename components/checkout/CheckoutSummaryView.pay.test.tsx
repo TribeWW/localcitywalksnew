@@ -47,6 +47,10 @@ vi.mock("@/lib/checkout/payment.actions", () => ({
   initiateCheckoutPayment: vi.fn(),
 }));
 
+vi.mock("@/lib/checkout/promo-code.actions", () => ({
+  validatePromoCode: vi.fn(),
+}));
+
 vi.mock("sonner", () => ({
   toast: {
     error: (...args: unknown[]) => toastErrorMock(...args),

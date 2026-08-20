@@ -34,6 +34,13 @@ export { OrderSummaryCard } from "./OrderSummaryCard";
 export type { OrderSummaryCardProps } from "./OrderSummaryCard";
 export { OrderSummaryLineItem } from "./OrderSummaryLineItem";
 export type { OrderSummaryLineItemProps } from "./OrderSummaryLineItem";
+export { PromoCodeInput } from "./PromoCodeInput";
+export type {
+  AppliedPromoCode,
+  PromoCodeInputProps,
+  PromoCodeStatus,
+  PromoCodeValidateResult,
+} from "./PromoCodeInput";
 export {
   CHECKOUT_CARD_CLASS,
   CHECKOUT_CARD_PADDING_CLASS,

@@ -33,6 +33,10 @@ vi.mock("@/lib/checkout/payment.actions", () => ({
   initiateCheckoutPayment: vi.fn(),
 }));
 
+vi.mock("@/lib/checkout/promo-code.actions", () => ({
+  validatePromoCode: vi.fn(),
+}));
+
 const priceUpdate = {
   previousTotalAmount: 448,
   previousCurrency: "EUR",

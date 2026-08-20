@@ -19,6 +19,8 @@ export interface BuildInitiateCheckoutPaymentInputParams {
   termsAccepted: boolean;
   /** Order total shown in the recap; anti-tamper checked server-side. */
   clientQuote: TourBookingClientQuote;
+  /** Optional applied promo code from the order summary. */
+  promoCode?: string;
 }
 
 /**
@@ -33,6 +35,7 @@ export function buildInitiateCheckoutPaymentInput({
   contact,
   termsAccepted,
   clientQuote,
+  promoCode,
 }: BuildInitiateCheckoutPaymentInputParams): InitiateCheckoutPaymentInput {
   if (!termsAccepted) {
     throw new Error("Terms must be accepted");
@@ -40,6 +43,7 @@ export function buildInitiateCheckoutPaymentInput({
 
   const phone = contact.phone.trim();
   const comments = contact.comments.trim();
+  const trimmedPromoCode = promoCode?.trim();
 
   return {
     handoffToken: handoffToken.trim(),
@@ -52,5 +56,6 @@ export function buildInitiateCheckoutPaymentInput({
     },
     termsAccepted: true,
     clientQuote,
+    ...(trimmedPromoCode ? { promoCode: trimmedPromoCode } : {}),
   };
 }

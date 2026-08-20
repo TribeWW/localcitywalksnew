@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { CheckoutHandoffErrorView } from "@/components/checkout/CheckoutHandoffErrorView";
 import { CheckoutSummaryView } from "@/components/checkout/CheckoutSummaryView";
+import { promoCode as promoCodeFlag } from "@/flags";
 import {
   resolveCheckoutHandoffErrorTitle,
   resolveCheckoutQuoteUnavailableTitle,
@@ -54,6 +55,7 @@ export default async function CheckoutPage({
   }
 
   const result = await loadCheckoutSummary(params.h);
+  const promoCodeEnabled = await promoCodeFlag();
 
   if (result.status === "ready") {
     return (
@@ -64,6 +66,7 @@ export default async function CheckoutPage({
         handoffToken={result.handoffToken}
         contactRequirements={result.contactRequirements}
         paymentCancelled={cancelReturn.isPaymentCancelled}
+        promoCodeEnabled={promoCodeEnabled}
       />
     );
   }
