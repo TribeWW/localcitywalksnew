@@ -155,7 +155,7 @@ export default function BookingGuestsPicker({
       </button>
 
       {open && !disabled ? (
-        <div className="overflow-hidden rounded-b-lg border border-t-0 border-border">
+        <div className="overflow-hidden rounded-b-lg border-2 border-t-0 border-[#1A1A1A]">
           {GUEST_CATEGORIES.map((category, index) => {
             const count = participants[category.key];
             const unitHint = formatGuestUnitHint(category.label, quote);

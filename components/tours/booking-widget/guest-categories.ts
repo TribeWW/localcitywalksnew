@@ -56,7 +56,7 @@ function categoryLabelsMatch(widgetLabel: string, breakdownLabel: string): boole
  *
  * @param categoryLabel - Widget label from `GUEST_CATEGORIES` (e.g. "Adults")
  * @param quote - Live quote from `getTourBookingQuote`; `null` before first quote
- * @returns Formatted price (e.g. "€124"), "Free" for zero unit amount, or "—" when unknown
+ * @returns Formatted price (e.g. "€124.00"), "Free" for zero unit amount, or "—" when unknown
  */
 export function formatGuestUnitHint(
   categoryLabel: string,

@@ -51,7 +51,7 @@ describe("BookingSubmitSummary", () => {
     expect(screen.getByText("11:00")).toBeInTheDocument();
     expect(screen.getByText("1 adult")).toBeInTheDocument();
     expect(screen.getByText("English")).toBeInTheDocument();
-    expect(screen.getByText("€448")).toBeInTheDocument();
+    expect(screen.getByText("€448.00")).toBeInTheDocument();
   });
 
   it("returns null when quote is missing", () => {

@@ -57,10 +57,9 @@ export function getCityCardPriceAmount(
 
   const currency = city.displayPriceCurrency?.trim() || "EUR";
 
-  return formatCataloguePriceAmount(
-    city.displayPricePerPerson,
-    currency,
-  );
+  return formatCataloguePriceAmount(city.displayPricePerPerson, currency, {
+    fractionDigits: 0,
+  });
 }
 
 export function getCityCardRatingLine(

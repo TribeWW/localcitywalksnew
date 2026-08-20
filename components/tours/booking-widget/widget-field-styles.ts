@@ -2,12 +2,21 @@
  * Shared Tailwind class strings for booking widget controls (LOC-1063).
  *
  * Keeps icon-in-field inputs, selects, and primary CTAs visually consistent
- * across step 1 (configuring) and step 2 (contact).
+ * across step 1 (configuring) and step 2 (contact). Active/focus borders match
+ * checkout contact fields (`border-2` + `#1A1A1A`, no focus ring).
  */
 
+import { cn } from "@/lib/utils";
+
+/** Focus/active/open border — aligned with checkout `CHECKOUT_FIELD_FOCUS_CLASS`. */
+const WIDGET_FIELD_FOCUS_CLASS =
+  "focus:border-2 focus-visible:border-2 active:border-2 focus:border-[#1A1A1A] focus-visible:border-[#1A1A1A] active:border-[#1A1A1A] focus:ring-0 focus-visible:ring-0 active:ring-0 focus-visible:ring-offset-0 data-[state=open]:border-2 data-[state=open]:border-[#1A1A1A] aria-expanded:border-[#1A1A1A]";
+
 /** Trigger/input chrome for icon-in-field controls (date, time, language, contact fields). */
-export const WIDGET_FIELD_TRIGGER_CLASS =
-  "h-auto min-h-[44px] w-full justify-start border-[1.5px] border-border rounded-lg bg-white pl-10 pr-3.5 py-2.5 text-base font-normal text-foreground shadow-none hover:bg-white focus-visible:ring-2 focus-visible:ring-tangerine/30";
+export const WIDGET_FIELD_TRIGGER_CLASS = cn(
+  "h-auto min-h-[44px] w-full justify-start border-2 border-border rounded-lg bg-white pl-10 pr-3.5 py-2.5 text-base font-normal text-foreground shadow-none hover:bg-white",
+  WIDGET_FIELD_FOCUS_CLASS,
+);
 
 /**
  * Layout overrides for widget dropdown triggers (date, time, language).
@@ -28,5 +37,7 @@ export const WIDGET_FIELD_DISABLED_CLASS =
   "cursor-not-allowed opacity-50 pointer-events-none text-muted-foreground";
 
 /** Collapsed guests picker trigger — matches widget select/date field chrome. */
-export const WIDGET_GUESTS_TRIGGER_CLASS =
-  "flex w-full items-center justify-between border-[1.5px] border-border bg-white px-3.5 py-2.5 text-base font-normal text-foreground min-h-[44px] shadow-none transition-[border-radius]";
+export const WIDGET_GUESTS_TRIGGER_CLASS = cn(
+  "flex w-full items-center justify-between border-2 border-border bg-white px-3.5 py-2.5 text-base font-normal text-foreground min-h-[44px] shadow-none transition-[border-radius]",
+  WIDGET_FIELD_FOCUS_CLASS,
+);

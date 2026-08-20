@@ -54,15 +54,15 @@ describe("formatGuestUnitHint", () => {
   });
 
   it("returns formatted price for matching Bókun breakdown label", () => {
-    expect(formatGuestUnitHint("Adult", sampleQuote)).toBe("€248");
+    expect(formatGuestUnitHint("Adult", sampleQuote)).toBe("€248.00");
   });
 
   it("matches widget plural labels to singular breakdown labels", () => {
-    expect(formatGuestUnitHint("Adults", sampleQuote)).toBe("€248");
+    expect(formatGuestUnitHint("Adults", sampleQuote)).toBe("€248.00");
     expect(formatGuestUnitHint("Infants", sampleQuote)).toBe("Free");
   });
 
   it("matches category labels case-insensitively", () => {
-    expect(formatGuestUnitHint("adult", sampleQuote)).toBe("€248");
+    expect(formatGuestUnitHint("adult", sampleQuote)).toBe("€248.00");
   });
 });

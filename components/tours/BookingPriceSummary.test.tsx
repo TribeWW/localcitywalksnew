@@ -90,7 +90,7 @@ describe("BookingPriceSummary — display invariants", () => {
     );
 
     expect(screen.getByText(/Total:/)).toBeInTheDocument();
-    expect(screen.getByText("€448")).toBeInTheDocument();
+    expect(screen.getByText("€448.00")).toBeInTheDocument();
     expect(
       screen.getByText("Includes all taxes and fees"),
     ).toBeInTheDocument();
@@ -119,8 +119,8 @@ describe("BookingPriceSummary — display invariants", () => {
 
     expect(screen.getByText(/1 × Adult/)).toBeInTheDocument();
     expect(screen.getByText(/5 × Youth/)).toBeInTheDocument();
-    expect(screen.getByText("€248")).toBeInTheDocument();
-    expect(screen.getByText("€200")).toBeInTheDocument();
+    expect(screen.getByText("€248.00")).toBeInTheDocument();
+    expect(screen.getByText("€200.00")).toBeInTheDocument();
   });
 
   it("precedence invariant: error wins over loading and quote", () => {

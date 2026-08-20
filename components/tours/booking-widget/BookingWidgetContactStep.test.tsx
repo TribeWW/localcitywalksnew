@@ -105,7 +105,7 @@ describe("BookingWidgetContactStep", () => {
     render(<ContactStepHarness quote={sampleQuote} />);
 
     expect(screen.getByText("Total")).toBeInTheDocument();
-    expect(screen.getAllByText("€248")).toHaveLength(2);
+    expect(screen.getAllByText("€248.00")).toHaveLength(2);
     expect(
       screen.queryByText(
         "Select participants, date, and time to see your total price.",
