@@ -71,7 +71,7 @@ describe("BookingWidgetBreakdown — display invariants", () => {
     expect(screen.getByText("Infant × 1")).toBeInTheDocument();
     expect(screen.getByText("Free")).toBeInTheDocument();
     expect(screen.getByText("Total")).toBeInTheDocument();
-    expect(screen.getByText("€448")).toBeInTheDocument();
+    expect(screen.getByText("€448.00")).toBeInTheDocument();
     expect(
       screen.getByText("Price includes taxes and fees"),
     ).toBeInTheDocument();

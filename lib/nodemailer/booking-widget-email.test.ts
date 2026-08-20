@@ -122,7 +122,7 @@ describe("buildBookingWidgetTeamSubject", () => {
 
     expect(subject).toContain("Hello Toledo Private Walk");
     expect(subject).toContain("Toledo");
-    expect(subject).toContain("€448");
+    expect(subject).toContain("€448.00");
   });
 });
 
@@ -141,7 +141,7 @@ describe("buildBookingWidgetTeamHtml — display invariants", () => {
   it("pricing invariant: shows total, tax copy, and breakdown lines", () => {
     const html = buildBookingWidgetTeamHtml(samplePayload);
 
-    expect(html).toContain("€448");
+    expect(html).toContain("€448.00");
     expect(html).toContain("Price includes all taxes and fees");
     expect(html).toContain("Adult × 2");
     expect(html).toContain("Free");
@@ -185,7 +185,7 @@ describe("buildBookingWidgetCustomerHtml — display invariants", () => {
     expect(html).toContain("Thanks for your tour request");
     expect(html).toContain("Jane Doe");
     expect(html).toContain("Hello Toledo Private Walk");
-    expect(html).toContain("€448");
+    expect(html).toContain("€448.00");
     expect(html).toContain("2 adults, 1 child, 1 infant");
     expect(html).toContain("English");
     expect(html).not.toContain("Bókun product id");

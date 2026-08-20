@@ -25,7 +25,7 @@ function PaymentSectionHarness({
 
   return (
     <CheckoutPaymentSection
-      payLabel="Pay €496"
+      payLabel="Pay €496.00"
       termsAccepted={termsAccepted}
       onTermsAcceptedChange={setTermsAccepted}
       onPayClick={onPayClick}
@@ -39,7 +39,7 @@ describe("CheckoutPaymentSection — terms required state", () => {
     const onPayClick = vi.fn();
     render(<PaymentSectionHarness onPayClick={onPayClick} />);
 
-    const payButton = screen.getByRole("button", { name: "Pay €496" });
+    const payButton = screen.getByRole("button", { name: "Pay €496.00" });
     expect(payButton).toBeDisabled();
 
     fireEvent.click(screen.getByRole("checkbox"));
@@ -49,7 +49,7 @@ describe("CheckoutPaymentSection — terms required state", () => {
   it("marks terms checkbox as required", () => {
     render(
       <CheckoutPaymentSection
-        payLabel="Pay €496"
+        payLabel="Pay €496.00"
         termsAccepted={false}
         onTermsAcceptedChange={() => {}}
         onPayClick={() => {}}
@@ -63,14 +63,14 @@ describe("CheckoutPaymentSection — terms required state", () => {
     const onPayClick = vi.fn();
     render(
       <CheckoutPaymentSection
-        payLabel="Pay €496"
+        payLabel="Pay €496.00"
         termsAccepted={false}
         onTermsAcceptedChange={() => {}}
         onPayClick={onPayClick}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Pay €496" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pay €496.00" }));
     expect(onPayClick).not.toHaveBeenCalled();
   });
 
@@ -78,7 +78,7 @@ describe("CheckoutPaymentSection — terms required state", () => {
     const onPayClick = vi.fn();
     render(<PaymentSectionHarness onPayClick={onPayClick} initialTermsAccepted />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Pay €496" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pay €496.00" }));
     expect(onPayClick).toHaveBeenCalledTimes(1);
   });
 
@@ -92,8 +92,8 @@ describe("CheckoutPaymentSection — terms required state", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Pay €496" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Pay €496" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Pay €496.00" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Pay €496.00" })).toHaveAttribute(
       "aria-busy",
       "true",
     );

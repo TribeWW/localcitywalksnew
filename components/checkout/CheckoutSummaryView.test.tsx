@@ -56,7 +56,7 @@ describe("CheckoutSummaryView — price updated banner", () => {
       />,
     );
 
-    const payButton = screen.getByRole("button", { name: /Pay €496/ });
+    const payButton = screen.getByRole("button", { name: /Pay €496.00/ });
     expect(payButton).toBeDisabled();
     expect(screen.getByRole("alert")).toBeInTheDocument();
 

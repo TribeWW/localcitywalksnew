@@ -40,8 +40,8 @@ describe("CheckoutPriceUpdatedBanner", () => {
     );
 
     expect(screen.getByRole("alert")).toBeInTheDocument();
-    expect(screen.getByText(/€448/)).toBeInTheDocument();
-    expect(screen.getByText(/€496/)).toBeInTheDocument();
+    expect(screen.getByText(/€448.00/)).toBeInTheDocument();
+    expect(screen.getByText(/€496.00/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /return to tour/i })).toHaveAttribute(
       "href",
       "/tours/biarritz/hello-biarritz-1079932",

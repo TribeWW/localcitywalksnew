@@ -59,7 +59,7 @@ describe("CheckoutSuccessView — reference display", () => {
       screen.getByText(HELLO_PALMA_CHECKOUT_FIXTURE.title),
     ).toBeInTheDocument();
     expect(screen.getByText("Total")).toBeInTheDocument();
-    expect(screen.getAllByText("€496")).toHaveLength(2);
+    expect(screen.getAllByText("€496.00")).toHaveLength(2);
     expect(screen.getByRole("link", { name: "Take me home" })).toHaveAttribute(
       "href",
       "/",

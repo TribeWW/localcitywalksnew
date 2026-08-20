@@ -50,8 +50,8 @@ describe("resolveCheckoutPriceUpdatedBannerMessage", () => {
       currentCurrency: "EUR",
     });
 
-    expect(message).toContain("€448");
-    expect(message).toContain("€496");
+    expect(message).toContain("€448.00");
+    expect(message).toContain("€496.00");
     expect(message).toMatch(/updated|changed/i);
   });
 });

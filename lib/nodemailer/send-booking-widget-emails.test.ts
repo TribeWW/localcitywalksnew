@@ -78,7 +78,7 @@ describe("sendBookingWidgetTeamEmail", () => {
     expect(options.replyTo).toBe("jane@example.com");
     expect(options.subject).toContain("Hello Toledo Private Walk");
     expect(options.html).toContain("1079932");
-    expect(options.html).toContain("€248");
+    expect(options.html).toContain("€248.00");
   });
 
   it("verification invariant: rejects when transporter verify fails", async () => {

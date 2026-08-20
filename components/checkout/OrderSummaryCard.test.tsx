@@ -22,7 +22,7 @@ describe("OrderSummaryCard — total row", () => {
     expect(screen.getByRole("heading", { name: "Order summary" })).toBeInTheDocument();
     expect(screen.getByText("1 item")).toBeInTheDocument();
     expect(screen.getByText("Total")).toBeInTheDocument();
-    expect(screen.getByText("€496")).toBeInTheDocument();
+    expect(screen.getByText("€496.00")).toBeInTheDocument();
     expect(
       screen.getByText("All taxes and fees included"),
     ).toBeInTheDocument();
@@ -36,6 +36,6 @@ describe("OrderSummaryCard — total row", () => {
     );
 
     expect(screen.getByText("2 items")).toBeInTheDocument();
-    expect(screen.getByText("€694")).toBeInTheDocument();
+    expect(screen.getByText("€694.00")).toBeInTheDocument();
   });
 });

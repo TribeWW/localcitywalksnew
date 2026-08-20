@@ -22,7 +22,7 @@ import { CheckoutSectionHeading } from "./CheckoutSectionHeading";
 const DEFAULT_TERMS_HREF = "/docs/LocalCityWalks_TermsAndConditions_EN.pdf";
 
 export interface CheckoutPaymentSectionProps {
-  /** CTA label, e.g. "Pay €496". */
+  /** CTA label, e.g. "Pay €496.00". */
   payLabel: string;
   termsAccepted: boolean;
   onTermsAcceptedChange: (accepted: boolean) => void;

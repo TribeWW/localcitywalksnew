@@ -67,7 +67,7 @@ describe("CheckoutSummaryView — promo code UI", () => {
     expect(
       screen.queryByPlaceholderText(/promo or gift code/i),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Pay €496/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Pay €496.00/ })).toBeInTheDocument();
   });
 
   it("updates the total and Pay label when a valid promo is applied", async () => {
@@ -103,8 +103,8 @@ describe("CheckoutSummaryView — promo code UI", () => {
       handoffToken: "signed.handoff.token",
       promoCode: "SUMMER20",
     });
-    expect(screen.getByRole("button", { name: /Pay €396/ })).toBeInTheDocument();
-    expect(screen.getByText("Total").parentElement).toHaveTextContent("€396");
+    expect(screen.getByRole("button", { name: /Pay €396.00/ })).toBeInTheDocument();
+    expect(screen.getByText("Total").parentElement).toHaveTextContent("€396.00");
   });
 
   it("restores the original total and Pay label when the promo is removed", async () => {
@@ -138,7 +138,7 @@ describe("CheckoutSummaryView — promo code UI", () => {
 
     fireEvent.click(screen.getByLabelText(/remove promo code/i));
 
-    expect(screen.getByRole("button", { name: /Pay €496/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Pay €496.00/ })).toBeInTheDocument();
     expect(
       screen.getByPlaceholderText(/promo or gift code/i),
     ).toBeInTheDocument();
@@ -238,7 +238,7 @@ describe("CheckoutSummaryView — promo code UI", () => {
       expect(screen.getByRole("button", { name: /applying/i })).toBeDisabled();
     });
 
-    const payButton = screen.getByRole("button", { name: /Pay €496/ });
+    const payButton = screen.getByRole("button", { name: /Pay €496.00/ });
     expect(payButton).toBeDisabled();
 
     fireEvent.click(payButton);

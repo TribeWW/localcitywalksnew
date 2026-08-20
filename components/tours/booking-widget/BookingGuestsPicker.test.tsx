@@ -86,7 +86,7 @@ describe("BookingGuestsPicker", () => {
     expect(screen.getByText("Youth")).toBeInTheDocument();
     expect(screen.getByText("Children")).toBeInTheDocument();
     expect(screen.getByText("Infants")).toBeInTheDocument();
-    expect(screen.getByText(/18\+ · €248/)).toBeInTheDocument();
+    expect(screen.getByText(/18\+ · €248.00/)).toBeInTheDocument();
   });
 
   it("stepper invariant: increase calls onChange with incremented adults", () => {

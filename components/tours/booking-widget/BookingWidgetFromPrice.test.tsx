@@ -11,7 +11,7 @@ describe("BookingWidgetFromPrice", () => {
     render(<BookingWidgetFromPrice amount={124} currency="EUR" />);
 
     expect(screen.getByText("From")).toBeInTheDocument();
-    expect(screen.getByText("€124")).toBeInTheDocument();
+    expect(screen.getByText("€124.00")).toBeInTheDocument();
     expect(screen.getByText("per adult")).toBeInTheDocument();
   });
 

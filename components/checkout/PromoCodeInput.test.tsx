@@ -142,7 +142,7 @@ describe("PromoCodeInput", () => {
     });
 
     expect(screen.getByLabelText(/remove promo code/i)).toBeInTheDocument();
-    expect(screen.getByText(/-€100/)).toBeInTheDocument();
+    expect(screen.getByText(/-€100.00/)).toBeInTheDocument();
     expect(onAppliedChange).toHaveBeenCalledWith({
       code: "SUMMER20",
       discountAmount: 100,

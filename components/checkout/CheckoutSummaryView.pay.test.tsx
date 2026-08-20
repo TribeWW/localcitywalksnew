@@ -78,7 +78,7 @@ async function acceptTermsAndPay() {
     fireEvent.click(screen.getByRole("checkbox", { name: /terms/i }));
   });
   await act(async () => {
-    fireEvent.click(screen.getByRole("button", { name: /Pay €496/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Pay €496.00/ }));
   });
 }
 
@@ -154,7 +154,7 @@ describe("CheckoutSummaryView — Pay CTA", () => {
     await fillContactFields();
     fireEvent.click(screen.getByRole("checkbox", { name: /terms/i }));
 
-    const payButton = screen.getByRole("button", { name: /Pay €496/ });
+    const payButton = screen.getByRole("button", { name: /Pay €496.00/ });
     await act(async () => {
       fireEvent.click(payButton);
     });
@@ -212,7 +212,7 @@ describe("CheckoutSummaryView — Pay CTA", () => {
     );
 
     fireEvent.click(screen.getByRole("checkbox", { name: /terms/i }));
-    fireEvent.click(screen.getByRole("button", { name: /Pay €496/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Pay €496.00/ }));
     expect(onPayClick).toHaveBeenCalledTimes(1);
     expect(runCheckoutPayClickMock).not.toHaveBeenCalled();
   });

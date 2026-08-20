@@ -213,7 +213,7 @@ async function selectLanguage(code: string) {
 async function waitForQuoteTotal() {
   await waitFor(() => {
     expect(screen.getByText("Total")).toBeInTheDocument();
-    expect(screen.getAllByText("€248").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("€248.00").length).toBeGreaterThan(0);
   });
 }
 
@@ -246,7 +246,7 @@ describe("BookingWidget — structure invariants", () => {
     await flushAvailabilitiesLoad();
 
     expect(screen.getByText("From")).toBeInTheDocument();
-    expect(screen.getByText("€124")).toBeInTheDocument();
+    expect(screen.getByText("€124.00")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Check availability" }),
     ).toBeInTheDocument();
@@ -434,7 +434,7 @@ describe("BookingWidget — availability and quote invariants", () => {
     await completeStep1WithQuote();
 
     expect(screen.getByText("Adult × 1")).toBeInTheDocument();
-    expect(screen.getAllByText("€248").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("€248.00").length).toBeGreaterThan(0);
     expect(
       screen.getByText("Price includes taxes and fees"),
     ).toBeInTheDocument();
