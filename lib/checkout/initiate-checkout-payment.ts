@@ -269,9 +269,21 @@ export async function executeInitiateCheckoutPayment(
       promoCodeToApply &&
       reserveResult.error === "invalid_response"
     ) {
+      console.info("[checkout-payment] reserve", {
+        checkoutId,
+        hasPromo: true,
+        outcome: "price_mismatch",
+        error: reserveResult.error,
+      });
       return { success: false, error: BOOKING_WIDGET_PRICE_MISMATCH_ERROR };
     }
 
+    console.info("[checkout-payment] reserve", {
+      checkoutId,
+      hasPromo: Boolean(promoCodeToApply),
+      outcome: "failed",
+      error: reserveResult.error,
+    });
     return {
       success: false,
       error: resolveBokunReserveFailureMessage(reserveResult.error),
@@ -288,6 +300,12 @@ export async function executeInitiateCheckoutPayment(
     promoCodeToApply,
   );
   if (!appliedQuote) {
+    console.info("[checkout-payment] reserve", {
+      checkoutId,
+      hasPromo: Boolean(promoCodeToApply),
+      outcome: "price_mismatch",
+      error: "applied_amount_mismatch",
+    });
     try {
       await releaseBokunReservationAfterPaymentFailure(
         confirmationCode,
@@ -369,6 +387,14 @@ export async function executeInitiateCheckoutPayment(
       );
       return { success: false, error: CHECKOUT_PAYMENT_UNAVAILABLE_ERROR };
     }
+
+    console.info("[checkout-payment] stripe session created", {
+      checkoutId,
+      stripeSessionId: stripeResult.data.sessionId,
+      hasPromo: Boolean(promoCodeToApply),
+      amount: appliedQuote.totalAmount,
+      currency: appliedQuote.currency,
+    });
 
     return {
       success: true,
