@@ -130,6 +130,11 @@ export async function fulfilPaidCheckout(
   }
 
   if (pending.productConfirmationCode) {
+    console.info("[fulfil-paid-checkout] already fulfilled", {
+      checkoutId: pending.id,
+      stripeSessionId: stripeSession.id,
+      hasPromo: Boolean(pending.promoCode),
+    });
     return {
       success: true,
       checkoutId: pending.id,
@@ -165,6 +170,12 @@ export async function fulfilPaidCheckout(
 
   if (!confirmResult.success) {
     // Bókun did not confirm — safe to release so a retry can re-attempt.
+    console.info("[fulfil-paid-checkout] confirm failed", {
+      checkoutId,
+      stripeSessionId: stripeSession.id,
+      hasPromo: Boolean(pending.promoCode),
+      error: confirmResult.error,
+    });
     await releasePendingCheckoutPaidFulfilment(checkoutId, claimToken);
     return { success: false, error: confirmResult.error };
   }
@@ -177,12 +188,23 @@ export async function fulfilPaidCheckout(
       "[fulfil-paid-checkout] Bókun confirmed but persistence failed; needs recovery",
       {
         checkoutId,
+        stripeSessionId: stripeSession.id,
+        hasPromo: Boolean(pending.promoCode),
         bokunBookingId: confirmResult.data.bokunBookingId,
         productConfirmationCode: confirmResult.data.productConfirmationCode,
       },
     );
     return { success: false, error: "unavailable" };
   }
+
+  console.info("[fulfil-paid-checkout] confirmed", {
+    checkoutId,
+    stripeSessionId: stripeSession.id,
+    hasPromo: Boolean(pending.promoCode),
+    amount: pending.quoteSnapshot.totalAmount,
+    currency: pending.quoteSnapshot.currency,
+    productConfirmationCode: confirmResult.data.productConfirmationCode,
+  });
 
   return {
     success: true,

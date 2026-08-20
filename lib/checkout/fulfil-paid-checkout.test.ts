@@ -308,3 +308,94 @@ describe("fulfilPaidCheckout", () => {
     expect(releasePendingCheckoutPaidFulfilmentMock).not.toHaveBeenCalled();
   });
 });
+
+describe("fulfilPaidCheckout — promo / discount (LOC-1237)", () => {
+  beforeEach(() => {
+    getPendingCheckoutByIdMock.mockReset();
+    updatePendingCheckoutMock.mockReset();
+    releasePendingCheckoutPaidFulfilmentMock.mockReset();
+    confirmReservedBokunCheckoutMock.mockReset();
+
+    releasePendingCheckoutPaidFulfilmentMock.mockResolvedValue(undefined);
+    confirmReservedBokunCheckoutMock.mockResolvedValue({
+      success: true,
+      data: {
+        bokunBookingId: "987654",
+        productConfirmationCode: "LOC-P456",
+      },
+    });
+    updatePendingCheckoutMock.mockResolvedValue({
+      success: true,
+      data: buildPendingRecord({
+        promoCode: "SUMMER20",
+        quoteSnapshot: {
+          totalAmount: 396,
+          currency: "EUR",
+          source: "bokun-availability",
+          breakdown: [],
+        },
+        bokunBookingId: "987654",
+        productConfirmationCode: "LOC-P456",
+      }),
+    });
+  });
+
+  it("confirms Bókun with the discounted quoteSnapshot amount when promoCode is present", async () => {
+    getPendingCheckoutByIdMock.mockResolvedValue(
+      buildPendingRecord({
+        promoCode: "SUMMER20",
+        quoteSnapshot: {
+          totalAmount: 396,
+          currency: "EUR",
+          source: "bokun-availability",
+          breakdown: [],
+        },
+      }),
+    );
+
+    await expect(
+      fulfilPaidCheckout(CHECKOUT_ID, buildSession(), CLAIM_TOKEN),
+    ).resolves.toEqual({
+      success: true,
+      checkoutId: CHECKOUT_ID,
+      alreadyFulfilled: false,
+      productConfirmationCode: "LOC-P456",
+    });
+
+    expect(confirmReservedBokunCheckoutMock).toHaveBeenCalledTimes(1);
+    expect(confirmReservedBokunCheckoutMock).toHaveBeenCalledWith({
+      confirmationCode: "LOC-T123",
+      amount: 396,
+      currency: "EUR",
+      transactionId: "pi_test_123",
+      sendNotificationToMainContact: true,
+    });
+  });
+
+  it("does not re-confirm when a discounted checkout is already fulfilled", async () => {
+    getPendingCheckoutByIdMock.mockResolvedValue(
+      buildPendingRecord({
+        promoCode: "SUMMER20",
+        quoteSnapshot: {
+          totalAmount: 396,
+          currency: "EUR",
+          source: "bokun-availability",
+          breakdown: [],
+        },
+        productConfirmationCode: "LOC-P456",
+        bokunBookingId: "987654",
+      }),
+    );
+
+    await expect(
+      fulfilPaidCheckout(CHECKOUT_ID, buildSession(), CLAIM_TOKEN),
+    ).resolves.toEqual({
+      success: true,
+      checkoutId: CHECKOUT_ID,
+      alreadyFulfilled: true,
+      productConfirmationCode: "LOC-P456",
+    });
+
+    expect(confirmReservedBokunCheckoutMock).not.toHaveBeenCalled();
+  });
+});
