@@ -288,11 +288,18 @@ export async function executeInitiateCheckoutPayment(
     promoCodeToApply,
   );
   if (!appliedQuote) {
-    await releaseBokunReservationAfterPaymentFailure(
-      confirmationCode,
-      checkoutId,
-      "promo applied amount mismatch",
-    );
+    try {
+      await releaseBokunReservationAfterPaymentFailure(
+        confirmationCode,
+        checkoutId,
+        "promo applied amount mismatch",
+      );
+    } catch (error) {
+      console.error(
+        `[checkout-payment] release after promo applied amount mismatch failed for checkout ${checkoutId}:`,
+        error instanceof Error ? error.message : String(error),
+      );
+    }
     return { success: false, error: BOOKING_WIDGET_PRICE_MISMATCH_ERROR };
   }
   const handoffTokenDigest = hashCheckoutHandoffTokenForPendingCheckout(
