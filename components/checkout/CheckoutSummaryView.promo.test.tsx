@@ -7,7 +7,7 @@
  * - Removing the promo restores the original total / Pay label
  */
 
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { CheckoutSummaryView } from "@/components/checkout/CheckoutSummaryView";
 import { HELLO_PALMA_CHECKOUT_FIXTURE } from "@/components/checkout/checkout-mock-fixture";
@@ -83,18 +83,6 @@ describe("CheckoutSummaryView — promo code UI", () => {
       />,
     );
 
-    await act(async () => {
-      fireEvent.change(screen.getByLabelText(/first name/i), {
-        target: { value: "Ada" },
-      });
-      fireEvent.change(screen.getByLabelText(/last name/i), {
-        target: { value: "Lovelace" },
-      });
-      fireEvent.change(screen.getByLabelText(/email address/i), {
-        target: { value: "ada@example.com" },
-      });
-    });
-
     fireEvent.change(screen.getByPlaceholderText(/promo or gift code/i), {
       target: { value: "SUMMER20" },
     });
@@ -104,6 +92,10 @@ describe("CheckoutSummaryView — promo code UI", () => {
       expect(screen.getByText("SUMMER20")).toBeInTheDocument();
     });
 
+    expect(validatePromoCodeMock).toHaveBeenCalledWith({
+      handoffToken: "signed.handoff.token",
+      promoCode: "SUMMER20",
+    });
     expect(screen.getByRole("button", { name: /Pay €396/ })).toBeInTheDocument();
     expect(screen.getByText("Total").parentElement).toHaveTextContent("€396");
   });
@@ -127,18 +119,6 @@ describe("CheckoutSummaryView — promo code UI", () => {
         promoCodeEnabled
       />,
     );
-
-    await act(async () => {
-      fireEvent.change(screen.getByLabelText(/first name/i), {
-        target: { value: "Ada" },
-      });
-      fireEvent.change(screen.getByLabelText(/last name/i), {
-        target: { value: "Lovelace" },
-      });
-      fireEvent.change(screen.getByLabelText(/email address/i), {
-        target: { value: "ada@example.com" },
-      });
-    });
 
     fireEvent.change(screen.getByPlaceholderText(/promo or gift code/i), {
       target: { value: "SUMMER20" },

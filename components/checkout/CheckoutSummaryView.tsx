@@ -107,7 +107,10 @@ export function CheckoutSummaryView({
   };
 
   /**
-   * Validates a promo code via the server action using current contact + handoff.
+   * Validates a promo code via the server action (handoff only; no contact needed).
+   *
+   * Maps server failures to deterministic UI reasons (invalid vs unavailable)
+   * so timeouts / infra errors show retry copy instead of “invalid code”.
    *
    * @param code - Trimmed promo code from `PromoCodeInput`
    */
@@ -115,25 +118,27 @@ export function CheckoutSummaryView({
     code: string,
   ): Promise<PromoCodeValidateResult> {
     if (!handoffToken) {
-      return { valid: false };
+      return { valid: false, reason: "unavailable" };
     }
 
     const result = await validatePromoCode({
       handoffToken,
       promoCode: code,
-      contact: {
-        firstName: contact.firstName,
-        lastName: contact.lastName,
-        email: contact.email,
-        ...(contact.phone.trim() ? { phone: contact.phone.trim() } : {}),
-        ...(contact.comments.trim()
-          ? { comments: contact.comments.trim() }
-          : {}),
-      },
     });
 
-    if (!result.success || !result.data.valid) {
-      return { valid: false };
+    if (!result.success) {
+      if (
+        result.error === "invalid_promo_code" ||
+        result.error === "invalid_response"
+      ) {
+        return { valid: false, reason: "invalid" };
+      }
+
+      return { valid: false, reason: "unavailable" };
+    }
+
+    if (!result.data.valid) {
+      return { valid: false, reason: "invalid" };
     }
 
     return {

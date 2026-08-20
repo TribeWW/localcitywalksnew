@@ -1,8 +1,11 @@
 /**
- * Promo code validation server action entry point (LOC-1230).
+ * Promo code validation server action entry point (LOC-1230 / LOC-1235).
  *
  * Thin `"use server"` wrapper around `runValidatePromoCode` so client components
  * can call it without crossing the server-action module boundary.
+ *
+ * Bókun checkout-options calls reuse the existing 5s abort timeout in
+ * `fetchBokunCheckoutOptions`; slow responses surface as `unavailable`.
  */
 
 "use server";
@@ -13,6 +16,8 @@ import { promoCode as promoCodeFlag } from "@/flags";
 
 /**
  * Validates a promo code via Bókun checkout options (options-only; no reserve).
+ *
+ * @param input - Untrusted Apply payload (`handoffToken` + `promoCode`)
  */
 export async function validatePromoCode(
   input: unknown,
@@ -24,4 +29,3 @@ export async function validatePromoCode(
 
   return runValidatePromoCode(input);
 }
-

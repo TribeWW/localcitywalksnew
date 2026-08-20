@@ -1,11 +1,12 @@
 "use client";
 
 /**
- * Promo code apply/remove control for checkout order summary (LOC-1232).
+ * Promo code apply/remove control for checkout order summary (LOC-1232 / LOC-1235).
  *
  * Visual states follow the discount-code mockup (idle / invalid / applied),
  * adapted to LocalCityWalks design tokens. Validation is delegated to the
- * parent via `onValidate` so the server action can supply contact + handoff.
+ * parent via `onValidate`. While pending, Apply and the input are disabled to
+ * prevent double submissions; unavailable/timeout failures show retry copy.
  */
 
 import { useState } from "react";
@@ -17,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { CHECKOUT_FIELD_CLASS } from "./checkout-field-styles";
 
 /** UI state machine for the promo input. */
-export type PromoCodeStatus = "idle" | "invalid" | "pending" | "applied";
+export type PromoCodeStatus = "idle" | "invalid" | "unavailable" | "pending" | "applied";
 
 /** Successful applied promo snapshot notified to the parent. */
 export interface AppliedPromoCode {
@@ -29,10 +30,21 @@ export interface AppliedPromoCode {
   discountedAmount: number;
 }
 
+/** Why Apply failed — drives deterministic inline error copy. */
+export type PromoCodeValidateFailureReason = "invalid" | "unavailable";
+
 /** Result returned by the parent validation callback. */
 export type PromoCodeValidateResult =
   | ({ valid: true } & AppliedPromoCode)
-  | { valid: false };
+  | { valid: false; reason?: PromoCodeValidateFailureReason };
+
+/** Inline copy when the code is rejected by Bókun / format checks. */
+export const PROMO_CODE_INVALID_MESSAGE =
+  "This code is invalid or has expired.";
+
+/** Inline copy when Bókun timing out or infra fails during Apply. */
+export const PROMO_CODE_UNAVAILABLE_MESSAGE =
+  "Unable to verify this code right now. Please try again.";
 
 export interface PromoCodeInputProps {
   /** ISO currency used to format the discount row. */
@@ -54,7 +66,7 @@ export interface PromoCodeInputProps {
 }
 
 /**
- * Renders the promo-code field, Apply CTA, invalid error, or applied chip.
+ * Renders the promo-code field, Apply CTA, error copy, or applied chip.
  */
 export function PromoCodeInput({
   currency,
@@ -69,9 +81,10 @@ export function PromoCodeInput({
   const trimmedCode = code.trim();
   const hasInput = trimmedCode.length > 0;
   const isPending = status === "pending";
+  const showError = status === "invalid" || status === "unavailable";
 
   /**
-   * Calls parent validation and transitions to applied or invalid.
+   * Calls parent validation and transitions to applied or an error state.
    */
   async function handleApply() {
     if (!hasInput || isPending) {
@@ -85,7 +98,7 @@ export function PromoCodeInput({
 
       if (!result.valid) {
         setApplied(null);
-        setStatus("invalid");
+        setStatus(result.reason === "unavailable" ? "unavailable" : "invalid");
         return;
       }
 
@@ -100,7 +113,7 @@ export function PromoCodeInput({
       onAppliedChange?.(nextApplied);
     } catch {
       setApplied(null);
-      setStatus("invalid");
+      setStatus("unavailable");
     }
   }
 
@@ -146,13 +159,12 @@ export function PromoCodeInput({
     );
   }
 
-  const borderClass =
-    status === "invalid"
-      ? "border-destructive focus:border-destructive focus-visible:border-destructive active:border-destructive"
-      : undefined;
+  const borderClass = showError
+    ? "border-destructive focus:border-destructive focus-visible:border-destructive active:border-destructive"
+    : undefined;
 
   return (
-    <div className={cn("flex flex-col gap-2", className)}>
+    <div className={cn("flex flex-col gap-2", className)} aria-busy={isPending}>
       <div className="flex gap-3">
         <input
           type="text"
@@ -163,7 +175,7 @@ export function PromoCodeInput({
           spellCheck={false}
           onChange={(event) => {
             setCode(event.target.value);
-            if (status === "invalid") {
+            if (showError) {
               setStatus("idle");
             }
           }}
@@ -174,10 +186,8 @@ export function PromoCodeInput({
             }
           }}
           className={cn(CHECKOUT_FIELD_CLASS, "flex-1", borderClass)}
-          aria-invalid={status === "invalid"}
-          aria-describedby={
-            status === "invalid" ? "promo-code-error" : undefined
-          }
+          aria-invalid={showError}
+          aria-describedby={showError ? "promo-code-error" : undefined}
         />
         <button
           type="button"
@@ -193,9 +203,11 @@ export function PromoCodeInput({
           {isPending ? "Applying…" : "Apply"}
         </button>
       </div>
-      {status === "invalid" ? (
+      {showError ? (
         <p id="promo-code-error" className="m-0 text-xs text-destructive">
-          This code is invalid or has expired.
+          {status === "unavailable"
+            ? PROMO_CODE_UNAVAILABLE_MESSAGE
+            : PROMO_CODE_INVALID_MESSAGE}
         </p>
       ) : null}
     </div>
