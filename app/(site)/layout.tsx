@@ -1,13 +1,11 @@
 import type { ReactNode } from "react";
-import Navbar from "@/components/shared/Navbar";
-import Footer from "@/components/shared/Footer";
 
+/**
+ * Pass-through layout for all `(site)` routes.
+ *
+ * Chrome (Navbar / Footer / PromoBanner) lives in nested route-group layouts:
+ * `(marketing)` for browse pages and `(checkout)` for quiet checkout chrome.
+ */
 export default function SiteLayout({ children }: { children: ReactNode }) {
-  return (
-    <>
-      <Navbar />
-      {children}
-      <Footer />
-    </>
-  );
+  return children;
 }
