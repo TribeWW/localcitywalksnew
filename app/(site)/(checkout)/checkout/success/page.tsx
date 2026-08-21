@@ -21,11 +21,13 @@ export const metadata: Metadata = {
 export default async function CheckoutSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ session_id?: string }>;
+  searchParams: Promise<{ session_id?: string | string[] }>;
 }) {
   const params = await searchParams;
-  const result = await loadCheckoutSuccess(params.session_id);
-
+  const sessionId = Array.isArray(params.session_id)
+    ? params.session_id[0]
+    : params.session_id;
+  const result = await loadCheckoutSuccess(sessionId);
   if (result.status === "ready") {
     return (
       <CheckoutSuccessView

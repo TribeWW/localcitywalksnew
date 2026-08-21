@@ -6,7 +6,6 @@ export { CheckoutHandoffErrorView } from "./CheckoutHandoffErrorView";
 export type { CheckoutHandoffErrorViewProps } from "./CheckoutHandoffErrorView";
 export { CheckoutPriceUpdatedBanner } from "./CheckoutPriceUpdatedBanner";
 export type { CheckoutPriceUpdatedBannerProps } from "./CheckoutPriceUpdatedBanner";
-export { CheckoutMockupPreview } from "./CheckoutMockupPreview";
 export { CheckoutSummaryView } from "./CheckoutSummaryView";
 export type { CheckoutSummaryViewProps } from "./CheckoutSummaryView";
 export { CheckoutSuccessView } from "./CheckoutSuccessView";
