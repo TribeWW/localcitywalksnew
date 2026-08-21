@@ -6,7 +6,10 @@ import ExploreCatalogSkeleton from "@/components/explore/ExploreCatalogSkeleton"
  */
 export default function Loading() {
   return (
-    <main className="bg-white">
+    <main className="bg-white" aria-busy="true">
+      <p className="sr-only" role="status">
+        Loading tours…
+      </p>
       <div className="bg-[#F7F7F7]">
         <div className="mx-auto w-full max-w-[1140px] px-6 pb-6 pt-8 lg:px-0">
           <Skeleton className="mb-2 h-10 w-56" />

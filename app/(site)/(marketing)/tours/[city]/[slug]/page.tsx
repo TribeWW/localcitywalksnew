@@ -169,7 +169,7 @@ export default async function TourPage({
     : "";
 
   let reviewsSection: ReactNode = null;
-  /** Reviews included in JSON-LD — mirrors visible ReviewsSection data. */
+  /** Tour-owned reviews for JSON-LD only — never site-wide fallback reviews. */
   let jsonLdReviews: SanityReviewListItem[] = [];
   /** Shown under the title when reviews exist (same basis as ReviewsSection). */
   let heroReviewStats: {
@@ -245,7 +245,6 @@ export default async function TourPage({
         reviewCount,
         usesFallbackReviews: true,
       };
-      jsonLdReviews = fallbackReviews;
       reviewsSection = (
         <ReviewsSection
           title="Traveller reviews"
@@ -352,10 +351,14 @@ export default async function TourPage({
                     icon: <Users size={14} />,
                     text: "Private Tour",
                   },
-                  {
-                    icon: <Clock size={14} />,
-                    text: "2 hours",
-                  },
+                  ...(detail.data.durationText?.trim()
+                    ? [
+                        {
+                          icon: <Clock size={14} />,
+                          text: detail.data.durationText.trim(),
+                        },
+                      ]
+                    : []),
                   ...(languageBadgeText
                     ? [
                         {
