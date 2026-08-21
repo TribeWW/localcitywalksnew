@@ -4,7 +4,8 @@
  * PromoBanner — sitewide offer bar for marketing chrome (design brief).
  *
  * Copy confirmation is inline only (no Sonner toast). Dismiss writes a session
- * cookie and unmounts the bar for this visit.
+ * cookie and unmounts the bar for this visit. Marketing layout keeps the bar
+ * pinned with the Navbar in a shared sticky chrome wrapper.
  */
 
 import { useEffect, useState } from "react";

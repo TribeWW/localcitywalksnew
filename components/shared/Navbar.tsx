@@ -28,9 +28,17 @@ const iconLinkClassName = cn(
 
 interface NavbarProps {
   variant?: "full" | "minimal";
+  /**
+   * When false, the bar does not stick on its own (parent chrome owns sticky).
+   * Defaults to true for checkout / 404 and other standalone uses.
+   */
+  sticky?: boolean;
 }
 
-export default function Navbar({ variant = "full" }: NavbarProps) {
+export default function Navbar({
+  variant = "full",
+  sticky = true,
+}: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isFull = variant === "full";
@@ -50,7 +58,8 @@ export default function Navbar({ variant = "full" }: NavbarProps) {
     <header className="relative z-40 w-full font-sans">
       <div
         className={cn(
-          "sticky top-0 w-full border-b border-border bg-white transition-all duration-300",
+          "w-full border-b border-border bg-white transition-all duration-300",
+          sticky && "sticky top-0",
           isScrolled && "shadow-[0px_4px_4px_rgba(0,0,0,0.05)]",
         )}
       >
