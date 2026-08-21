@@ -102,6 +102,9 @@ export function resolveActivePromoBanner(
   }
 
   const nowMs = now.getTime();
+  if (Number.isNaN(nowMs)) {
+    return null;
+  }
   // Inclusive start, exclusive end: startsAt <= now < endsAt
   if (nowMs < startMs || nowMs >= endMs) {
     return null;
