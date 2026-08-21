@@ -4,8 +4,8 @@
  * PromoBanner — sitewide offer bar for marketing chrome (design brief).
  *
  * Copy confirmation is inline only (no Sonner toast). Dismiss writes a session
- * cookie and unmounts the bar for this visit. Marketing layout keeps the bar
- * pinned with the Navbar in a shared sticky chrome wrapper.
+ * cookie and unmounts the bar for this visit. The bar scrolls away with the page
+ * (not sticky).
  */
 
 import { useEffect, useState } from "react";
@@ -30,6 +30,12 @@ export type PromoBannerProps = {
 };
 
 /**
+ * Max `setTimeout` delay browsers honor (~24.8 days). Larger values overflow and
+ * can fire immediately — chunk long waits and reschedule until `endsAt`.
+ */
+export const MAX_SET_TIMEOUT_MS = 2_147_483_647;
+
+/**
  * Returns whether the user prefers reduced motion (no 1s countdown tick).
  */
 function prefersReducedMotion(): boolean {
@@ -37,6 +43,42 @@ function prefersReducedMotion(): boolean {
     return false;
   }
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+/**
+ * Schedules `onReach` at `endMs`, chunking delays above {@link MAX_SET_TIMEOUT_MS}.
+ *
+ * @param endMs - Absolute epoch ms when the offer ends
+ * @param onReach - Invoked only once `Date.now() >= endMs`
+ * @returns Cleanup that clears the pending timeout
+ */
+function scheduleUntilEndMs(endMs: number, onReach: () => void): () => void {
+  let timeoutId: number | undefined;
+  let cancelled = false;
+
+  const schedule = () => {
+    if (cancelled) {
+      return;
+    }
+
+    const remainingMs = endMs - Date.now();
+    if (remainingMs <= 0) {
+      onReach();
+      return;
+    }
+
+    const delayMs = Math.min(remainingMs, MAX_SET_TIMEOUT_MS);
+    timeoutId = window.setTimeout(schedule, delayMs);
+  };
+
+  schedule();
+
+  return () => {
+    cancelled = true;
+    if (timeoutId !== undefined) {
+      window.clearTimeout(timeoutId);
+    }
+  };
 }
 
 /**
@@ -72,9 +114,7 @@ export function PromoBanner({
       if (Number.isNaN(endMs)) {
         return;
       }
-      const delayMs = Math.max(0, endMs - Date.now());
-      const id = window.setTimeout(syncNow, delayMs);
-      return () => window.clearTimeout(id);
+      return scheduleUntilEndMs(endMs, syncNow);
     }
 
     const id = window.setInterval(syncNow, 1000);

@@ -14,9 +14,8 @@ import { getActivePromoBanner } from "@/lib/promo-banner/get-active-promo-banner
  * Full browse chrome for marketing routes (home, explore, tours).
  *
  * Loads the active promo (flag + Sanity schedule) and renders {@link PromoBanner}
- * above the Navbar unless this session dismissed that campaign. While the promo
- * is shown, promo + nav share a sticky wrapper; after dismiss (or no offer),
- * Navbar uses its normal sticky behavior again.
+ * above the Navbar unless this session dismissed that campaign. Promo and nav
+ * scroll with the page (not sticky).
  */
 export default async function MarketingGroupLayout({
   children,
@@ -37,19 +36,15 @@ export default async function MarketingGroupLayout({
   return (
     <>
       {showPromo && activePromo ? (
-        <div className="sticky top-0 z-40">
-          <PromoBanner
-            headline={activePromo.headline}
-            promoCode={activePromo.promoCode}
-            endsAt={activePromo.endsAt}
-            campaignId={activePromo.campaignId}
-            initialNowIso={now.toISOString()}
-          />
-          <Navbar sticky={false} />
-        </div>
-      ) : (
-        <Navbar />
-      )}
+        <PromoBanner
+          headline={activePromo.headline}
+          promoCode={activePromo.promoCode}
+          endsAt={activePromo.endsAt}
+          campaignId={activePromo.campaignId}
+          initialNowIso={now.toISOString()}
+        />
+      ) : null}
+      <Navbar sticky={false} />
       {children}
       <Footer />
     </>
