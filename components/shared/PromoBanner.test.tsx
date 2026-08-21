@@ -118,6 +118,40 @@ describe("PromoBanner", () => {
     vi.unstubAllGlobals();
   });
 
+  it("shows Offer ended after endsAt under reduced motion", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-15T12:00:00.000Z"));
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn().mockImplementation((query: string) => ({
+        matches: query.includes("prefers-reduced-motion"),
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    );
+
+    render(<PromoBanner {...PROPS} />);
+
+    expect(screen.getByText(/Ends 31 Aug/i)).toBeInTheDocument();
+
+    act(() => {
+      vi.setSystemTime(new Date("2026-08-31T00:00:00.000Z"));
+      vi.advanceTimersByTime(
+        new Date("2026-08-31T00:00:00.000Z").getTime() -
+          new Date("2026-08-15T12:00:00.000Z").getTime(),
+      );
+    });
+
+    expect(screen.getByText("Offer ended")).toBeInTheDocument();
+    expect(screen.queryByText(/Ends 31 Aug/i)).not.toBeInTheDocument();
+
+    vi.unstubAllGlobals();
+  });
+
   it("clears the Copied! state after two seconds", async () => {
     vi.useFakeTimers();
     render(<PromoBanner {...PROPS} />);

@@ -40,7 +40,14 @@ export const PROMO_BANNER_QUERY = `*[_type == "promoBanner" && _id == "promoBann
 export async function getActivePromoBanner(
   now: Date = new Date(),
 ): Promise<ActivePromoBanner | null> {
-  const enabled = await promoCodeFlag();
+  let enabled: boolean;
+  try {
+    enabled = await promoCodeFlag();
+  } catch (error) {
+    console.error("[Promo banner] Feature flag evaluation failed", error);
+    return null;
+  }
+
   if (!enabled) {
     return null;
   }

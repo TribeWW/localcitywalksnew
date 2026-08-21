@@ -61,16 +61,25 @@ export function PromoBanner({
   useEffect(() => {
     const reduced = prefersReducedMotion();
     setReducedMotion(reduced);
+
+    const syncNow = () => {
+      setNowMs(Date.now());
+    };
+    syncNow();
+
     if (reduced) {
-      return;
+      const endMs = Date.parse(endsAt);
+      if (Number.isNaN(endMs)) {
+        return;
+      }
+      const delayMs = Math.max(0, endMs - Date.now());
+      const id = window.setTimeout(syncNow, delayMs);
+      return () => window.clearTimeout(id);
     }
 
-    setNowMs(Date.now());
-    const id = window.setInterval(() => {
-      setNowMs(Date.now());
-    }, 1000);
+    const id = window.setInterval(syncNow, 1000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [endsAt]);
 
   useEffect(() => {
     if (!copied) return;
@@ -144,7 +153,9 @@ export function PromoBanner({
             </span>
           </button>
           {copied ? (
-            <span className="text-xs font-medium text-white/60">Copied!</span>
+            <span role="status" className="text-xs font-medium text-white/60">
+              Copied!
+            </span>
           ) : null}
         </div>
 
@@ -170,16 +181,16 @@ function PromoBannerDeadline({
   endsAt: string;
   parts: PromoCountdownParts | null;
 }) {
+  if (!parts) {
+    return <p className="text-[10px] text-white/60">Offer ended</p>;
+  }
+
   if (reducedMotion) {
     return (
       <p className="text-[10px] text-white/60">
         {formatPromoEndsStaticLabel(endsAt)}
       </p>
     );
-  }
-
-  if (!parts) {
-    return <p className="text-[10px] text-white/60">Offer ended</p>;
   }
 
   const segments: Array<{ value: string; unit: string }> = [];
