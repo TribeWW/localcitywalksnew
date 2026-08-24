@@ -5,13 +5,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const fetchMock = vi.fn();
+const withConfigMock = vi.fn();
 
 vi.mock("@/sanity/lib/client", () => ({
   client: {
     fetch: (...args: unknown[]) => fetchMock(...args),
-    withConfig: () => ({
-      fetch: (...args: unknown[]) => fetchMock(...args),
-    }),
+    withConfig: (...args: unknown[]) => {
+      withConfigMock(...args);
+      return {
+        fetch: (...fetchArgs: unknown[]) => fetchMock(...fetchArgs),
+      };
+    },
   },
 }));
 
@@ -85,6 +89,7 @@ describe("intersectFeaturedWithCatalog", () => {
 describe("getFeaturedExploreCountries", () => {
   beforeEach(() => {
     fetchMock.mockReset();
+    withConfigMock.mockReset();
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
@@ -99,6 +104,7 @@ describe("getFeaturedExploreCountries", () => {
       { countryCode: "FR", country: "France" },
     ]);
 
+    expect(withConfigMock).toHaveBeenCalledWith({ useCdn: false });
     expect(fetchMock).toHaveBeenCalledWith(
       expect.any(String),
       {},
