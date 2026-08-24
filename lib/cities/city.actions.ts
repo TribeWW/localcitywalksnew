@@ -472,9 +472,17 @@ function draftId(baseId: string): string {
   return DRAFT_PREFIX + baseId;
 }
 
-/** Result of syncing countries to Sanity (used by syncCountries) */
+/**
+ * Result of syncing countries to Sanity (used by {@link syncCountries}).
+ *
+ * `created` holds ISO2 codes that were successfully ensured via
+ * `createIfNotExists` (newly inserted or already present). It does not mean
+ * only newly created documents. `updated` stays empty for the same reason.
+ */
 export type CountrySyncResult = {
+  /** ISO2 codes successfully ensured with `createIfNotExists` (create or already existed). */
   created: string[];
+  /** Always empty today; `createIfNotExists` does not report updates separately. */
   updated: string[];
   errors: Array<{ type: "country"; identifier: string; error: string }>;
 };
@@ -485,11 +493,11 @@ export type CountrySyncResult = {
  * Uses `createIfNotExists` for each country (never `createOrReplace` or patch).
  * Idempotent and safe to call multiple times. Existing documents are left
  * untouched, so editor fields such as `featuredOnExplore` survive daily sync.
- * Collects created country codes and errors; "updated" is left empty
- * (`createIfNotExists` does not distinguish create vs existing).
+ * Successful codes are collected on `result.created` as *ensured* countries
+ * (not “newly created only”); `updated` stays empty.
  *
  * @param countries - Array of country data from extractUniqueCountries()
- * @returns Promise with created country codes, updated (empty), and errors
+ * @returns Promise with ensured country codes in `created`, empty `updated`, and errors
  */
 export async function syncCountries(
   countries: CountryFromProduct[]
