@@ -538,7 +538,7 @@ export async function syncCountries(
 
   if (result.created.length > 0) {
     console.log(
-      `[Country Sync] Created ${result.created.length} countries:`,
+      `[Country Sync] Ensured ${result.created.length} countries:`,
       result.created.join(", ")
     );
   }

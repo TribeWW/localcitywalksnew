@@ -9,6 +9,9 @@ const fetchMock = vi.fn();
 vi.mock("@/sanity/lib/client", () => ({
   client: {
     fetch: (...args: unknown[]) => fetchMock(...args),
+    withConfig: () => ({
+      fetch: (...args: unknown[]) => fetchMock(...args),
+    }),
   },
 }));
 

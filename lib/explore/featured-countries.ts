@@ -59,20 +59,23 @@ export function intersectFeaturedWithCatalog(
 }
 
 /**
- * Fetches featured explore countries from Sanity CDN.
+ * Fetches featured explore countries from Sanity (API, not CDN).
  *
- * Uses `revalidate: 60` (same pattern as the promo banner). On failure logs
- * with prefix `[Explore featured countries]` and returns `[]`.
+ * Uses `client.withConfig({ useCdn: false })` so Next.js `{ revalidate: 60 }`
+ * owns freshness (avoids stacking Sanity CDN cache). On failure logs with
+ * prefix `[Explore featured countries]` and returns `[]`.
  *
  * @returns Featured countries as `{ countryCode, country }[]`, or empty on error
  */
 export async function getFeaturedExploreCountries(): Promise<FeaturedCountry[]> {
   try {
-    const rows = await client.fetch<FeaturedCountrySanityRow[]>(
-      FEATURED_EXPLORE_COUNTRIES_QUERY,
-      {},
-      { next: { revalidate: 60 } },
-    );
+    const rows = await client
+      .withConfig({ useCdn: false })
+      .fetch<FeaturedCountrySanityRow[]>(
+        FEATURED_EXPLORE_COUNTRIES_QUERY,
+        {},
+        { next: { revalidate: 60 } },
+      );
 
     return (rows ?? []).flatMap((row) => {
       if (
