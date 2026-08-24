@@ -480,11 +480,13 @@ export type CountrySyncResult = {
 };
 
 /**
- * Creates or ensures country documents exist in Sanity
+ * Creates or ensures country documents exist in Sanity.
  *
- * Uses createIfNotExists for each country. Idempotent and safe to call multiple times.
- * Collects created country codes and errors; "updated" is left empty (createIfNotExists
- * does not distinguish create vs existing).
+ * Uses `createIfNotExists` for each country (never `createOrReplace` or patch).
+ * Idempotent and safe to call multiple times. Existing documents are left
+ * untouched, so editor fields such as `featuredOnExplore` survive daily sync.
+ * Collects created country codes and errors; "updated" is left empty
+ * (`createIfNotExists` does not distinguish create vs existing).
  *
  * @param countries - Array of country data from extractUniqueCountries()
  * @returns Promise with created country codes, updated (empty), and errors
