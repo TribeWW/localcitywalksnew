@@ -10,7 +10,10 @@ import Link from "next/link";
 import { Star } from "lucide-react";
 import { upsizeBokunCardImageUrl } from "@/lib/bokun/pick-bokun-card-image-url";
 import { slugifyForUrl } from "@/lib/utils";
-import { getCityCardDisplayContent, getCityCardImageAlt } from "@/lib/city-cards/display";
+import {
+  getCityCardDisplayContent,
+  getCityCardImageAlt,
+} from "@/lib/city-cards/display";
 import { CityCardData } from "@/types/bokun";
 
 interface CityCardProps {
@@ -103,24 +106,21 @@ function MinimalCityCardItem({
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/80" />
         {ratingLine ? (
           <div className="absolute right-3 top-3 z-10 flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-xs font-semibold text-nightsky shadow">
-            <Star
-              className="size-3 fill-nightsky text-nightsky"
-              aria-hidden
-            />
+            <Star className="size-3 fill-nightsky text-nightsky" aria-hidden />
             <span>{ratingLine}</span>
           </div>
         ) : null}
         <div className="absolute inset-0 z-10 flex flex-col justify-end p-5">
-          <span className="mb-0.5 text-sm font-medium text-white/90 [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
+          <span className="mb-0.5 text-base font-medium text-white/90 [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
             Hello
           </span>
-          <h3 className="m-0 mb-2 text-xl font-semibold leading-tight text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.3)]">
+          <h3 className="m-0 mb-2 text-2xl font-semibold leading-tight text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.3)]">
             {cityName}
           </h3>
           {priceAmount ? (
-            <div className="text-sm text-white/80 [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
+            <div className="text-base text-white/80 [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
               From{" "}
-              <span className="text-base font-bold text-white">
+              <span className="text-xl font-bold text-white">
                 {priceAmount}
               </span>{" "}
               / adult
