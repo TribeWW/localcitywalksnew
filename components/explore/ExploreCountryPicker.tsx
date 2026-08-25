@@ -93,45 +93,43 @@ export default function ExploreCountryPicker({
       {open ? (
         <div
           id={menuId}
-          className="absolute left-0 top-12 z-40 w-full rounded-sm border border-border bg-white p-2 shadow-lg"
+          className="absolute left-0 top-12 z-40 w-max min-w-full overflow-visible rounded-sm border border-border bg-white p-2 shadow-lg"
         >
-          <div className="max-h-60 overflow-y-auto">
-            {countries.map(({ countryCode, country }) => {
-              const isSelected = selectedCountryCodes.includes(countryCode);
-              return (
-                <button
-                  key={`picker-${countryCode || "unknown"}`}
-                  type="button"
-                  onClick={() => onToggleCountry(countryCode)}
-                  role="checkbox"
-                  aria-checked={isSelected}
-                  className="flex w-full items-center justify-between rounded-md px-2 py-2 text-sm hover:bg-muted"
-                  aria-label={`Country option ${country}`}
-                >
-                  <span className="flex items-center gap-2">
-                    <span
-                      className={`inline-flex h-4 w-4 items-center justify-center rounded-[3px] border ${
-                        isSelected
-                          ? "border-[#0F172A] bg-[#0F172A]"
-                          : "border-[#CBD5E1] bg-white"
-                      }`}
-                      aria-hidden
-                    >
-                      {isSelected ? (
-                        <Check className="h-3 w-3 text-white" aria-hidden />
-                      ) : null}
-                    </span>
-                    <span>{country}</span>
+          {countries.map(({ countryCode, country }) => {
+            const isSelected = selectedCountryCodes.includes(countryCode);
+            return (
+              <button
+                key={`picker-${countryCode || "unknown"}`}
+                type="button"
+                onClick={() => onToggleCountry(countryCode)}
+                role="checkbox"
+                aria-checked={isSelected}
+                className="flex w-full items-center justify-between rounded-md px-2 py-2 text-sm hover:bg-muted"
+                aria-label={`Country option ${country}`}
+              >
+                <span className="flex items-center gap-2 whitespace-nowrap">
+                  <span
+                    className={`inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border ${
+                      isSelected
+                        ? "border-[#0F172A] bg-[#0F172A]"
+                        : "border-[#CBD5E1] bg-white"
+                    }`}
+                    aria-hidden
+                  >
+                    {isSelected ? (
+                      <Check className="h-3 w-3 text-white" aria-hidden />
+                    ) : null}
                   </span>
-                </button>
-              );
-            })}
-          </div>
+                  <span>{country}</span>
+                </span>
+              </button>
+            );
+          })}
           {selectedCountryCodes.length > 0 ? (
             <button
               type="button"
               onClick={onClear}
-              className="mt-2 w-full border-t border-border px-2 pt-3 pb-1 text-left text-sm font-medium text-[#6A6A6A] hover:text-[#0F172A]"
+              className="mt-2 w-full whitespace-nowrap border-t border-border px-2 pt-3 pb-1 text-left text-sm font-medium text-[#6A6A6A] hover:text-[#0F172A]"
             >
               Clear
             </button>

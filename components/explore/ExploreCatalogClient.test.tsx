@@ -213,7 +213,7 @@ describe("ExploreCatalogClient country filters", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Select country" }));
     expect(
-      screen.getByRole("button", { name: "Country option Spain" }),
+      screen.getByRole("checkbox", { name: "Country option Spain" }),
     ).toBeInTheDocument();
   });
 
@@ -258,7 +258,7 @@ describe("ExploreCatalogClient country filters", () => {
 
     await user.click(screen.getByRole("button", { name: "Select country" }));
     await user.click(
-      screen.getByRole("button", { name: "Country option Greece" }),
+      screen.getByRole("checkbox", { name: "Country option Greece" }),
     );
 
     expect(meta).toContainElement(
@@ -307,12 +307,12 @@ describe("ExploreCatalogClient country filters", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Select country" }));
     await user.click(
-      screen.getByRole("button", { name: "Country option Greece" }),
+      screen.getByRole("checkbox", { name: "Country option Greece" }),
     );
     await user.click(screen.getByRole("button", { name: "Select country" }));
     await user.click(screen.getByRole("button", { name: "Select country" }));
     await user.click(
-      screen.getByRole("button", { name: "Country option Portugal" }),
+      screen.getByRole("checkbox", { name: "Country option Portugal" }),
     );
 
     const secondCallArgs = mockedGetExploreCatalogPage.mock.calls[1];
@@ -354,12 +354,12 @@ describe("ExploreCatalogClient country filters", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Select country" }));
     expect(
-      screen.getByRole("button", { name: "Country option Greece" }),
+      screen.getByRole("checkbox", { name: "Country option Greece" }),
     ).toBeInTheDocument();
 
     await user.click(document.body);
     expect(
-      screen.queryByRole("button", { name: "Country option Greece" }),
+      screen.queryByRole("checkbox", { name: "Country option Greece" }),
     ).not.toBeInTheDocument();
   });
 
@@ -376,12 +376,12 @@ describe("ExploreCatalogClient country filters", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Select country" }));
     expect(
-      screen.getByRole("button", { name: "Country option Greece" }),
+      screen.getByRole("checkbox", { name: "Country option Greece" }),
     ).toBeInTheDocument();
 
     await user.keyboard("{Escape}");
     expect(
-      screen.queryByRole("button", { name: "Country option Greece" }),
+      screen.queryByRole("checkbox", { name: "Country option Greece" }),
     ).not.toBeInTheDocument();
   });
 
@@ -419,7 +419,7 @@ describe("ExploreCatalogClient country filters", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Select country" }));
     await userEvent.click(
-      screen.getByRole("button", { name: "Country option Portugal" }),
+      screen.getByRole("checkbox", { name: "Country option Portugal" }),
     );
 
     expect(mockedEnrichListingCardsIfFlagged).toHaveBeenCalledWith(
