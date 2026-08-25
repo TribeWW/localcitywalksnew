@@ -38,9 +38,27 @@ describe("cardNeedsCountryBackfill", () => {
     ).toBe(true);
   });
 
-  it("is false when an ISO2 code is already present", () => {
+  it("is true for malformed non-empty codes such as PRT or Unknown", () => {
+    expect(
+      cardNeedsCountryBackfill(baseCard({ countryCode: "PRT" })),
+    ).toBe(true);
+    expect(
+      cardNeedsCountryBackfill(baseCard({ countryCode: "Unknown" })),
+    ).toBe(true);
+    expect(
+      cardNeedsCountryBackfill(baseCard({ countryCode: "P" })),
+    ).toBe(true);
+    expect(
+      cardNeedsCountryBackfill(baseCard({ countryCode: "12" })),
+    ).toBe(true);
+  });
+
+  it("is false when a usable ISO2 code is already present", () => {
     expect(
       cardNeedsCountryBackfill(baseCard({ countryCode: "PT" })),
+    ).toBe(false);
+    expect(
+      cardNeedsCountryBackfill(baseCard({ countryCode: "pt" })),
     ).toBe(false);
   });
 });
@@ -78,7 +96,7 @@ describe("mergeBackfilledCountry", () => {
     );
   });
 
-  it("does not overwrite an existing countryCode", () => {
+  it("does not overwrite an existing valid ISO2 countryCode", () => {
     const card = baseCard({ countryCode: "GR", country: "Greece" });
     expect(
       mergeBackfilledCountry(card, {
@@ -86,6 +104,20 @@ describe("mergeBackfilledCountry", () => {
         country: "Spain",
       }),
     ).toBe(card);
+  });
+
+  it("replaces a malformed countryCode with a valid ISO2 from detail", () => {
+    expect(
+      mergeBackfilledCountry(
+        baseCard({ countryCode: "PRT", country: "Portugal" }),
+        { countryCode: "PT", country: "Portugal" },
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        countryCode: "PT",
+        country: "Portugal",
+      }),
+    );
   });
 
   it("keeps a real country label when only the code was missing", () => {

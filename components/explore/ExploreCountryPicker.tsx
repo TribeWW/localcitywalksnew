@@ -73,7 +73,7 @@ export default function ExploreCountryPicker({
   }, [open]);
 
   return (
-    <div ref={rootRef} className={className}>
+    <div ref={rootRef} className={`relative ${className ?? ""}`}>
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
@@ -103,6 +103,8 @@ export default function ExploreCountryPicker({
                   key={`picker-${countryCode || "unknown"}`}
                   type="button"
                   onClick={() => onToggleCountry(countryCode)}
+                  role="checkbox"
+                  aria-checked={isSelected}
                   className="flex w-full items-center justify-between rounded-md px-2 py-2 text-sm hover:bg-muted"
                   aria-label={`Country option ${country}`}
                 >

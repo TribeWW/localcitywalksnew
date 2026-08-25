@@ -19,10 +19,14 @@ const ISO2_REGEX = /^[A-Z]{2}$/;
 /**
  * Returns whether a listing card is missing a usable ISO2 country code.
  *
+ * Empty, whitespace, and non-ISO2 values (e.g. `"PRT"`, `"Unknown"`) need
+ * backfill. Valid two-letter codes are accepted case-insensitively.
+ *
  * @param card - Catalog card from search mapping
  */
 export function cardNeedsCountryBackfill(card: CityCardData): boolean {
-  return !card.countryCode?.trim();
+  const code = card.countryCode?.trim().toUpperCase();
+  return !code || !ISO2_REGEX.test(code);
 }
 
 /**
@@ -44,9 +48,9 @@ export function countryFromGooglePlace(
 }
 
 /**
- * Copies country fields from activity detail onto a card that lacks ISO2.
+ * Copies country fields from activity detail onto a card that lacks a usable ISO2.
  *
- * Existing `countryCode` is never overwritten. `country` is set when blank or
+ * Existing valid ISO2 codes are never overwritten. `country` is set when blank or
  * `"Unknown"`.
  *
  * @param card - Listing card that may lack country fields
