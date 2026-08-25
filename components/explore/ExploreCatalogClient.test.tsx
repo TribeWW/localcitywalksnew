@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ExploreCatalogClient from "./ExploreCatalogClient";
@@ -57,26 +57,40 @@ const completeCountryList = [
 ];
 
 describe("ExploreCatalogClient country filters", () => {
-  it("renders countries from completeCountryList even when not present in current page data", async () => {
-    render(
+  it("accepts featuredCountries prop and defaults to an empty list", () => {
+    const { rerender } = render(
       <ExploreCatalogClient
         initialData={initialData}
         totalHits={2}
         initialSortAscending={true}
-        completeCountryList={[
-          ...completeCountryList,
+        completeCountryList={completeCountryList}
+      />,
+    );
+
+    const filterBar = screen.getByTestId("explore-filter-bar");
+    expect(filterBar).toHaveAttribute("data-featured-count", "0");
+    expect(screen.getByRole("button", { name: "Select country" })).toBeInTheDocument();
+
+    rerender(
+      <ExploreCatalogClient
+        initialData={initialData}
+        totalHits={2}
+        initialSortAscending={true}
+        completeCountryList={completeCountryList}
+        featuredCountries={[
           { countryCode: "ES", country: "Spain" },
+          { countryCode: "PT", country: "Portugal" },
         ]}
       />,
     );
 
-    const tablist = screen.getByRole("tablist", { name: "Filter by country" });
-    expect(
-      within(tablist).getByRole("tab", { name: "Spain" }),
-    ).toBeInTheDocument();
+    expect(filterBar).toHaveAttribute("data-featured-count", "2");
+    expect(screen.getByTestId("city-card-list")).toHaveTextContent(
+      "Athens Walk,Porto Walk",
+    );
   });
 
-  it("renders sticky country tablist and removes old modal trigger", async () => {
+  it("omits the All tab, per-country tabs, and quick-filter group when featured list is empty", () => {
     render(
       <ExploreCatalogClient
         initialData={initialData}
@@ -86,29 +100,55 @@ describe("ExploreCatalogClient country filters", () => {
       />,
     );
 
-    const tablist = screen.getByRole("tablist", { name: "Filter by country" });
-    expect(tablist).toBeInTheDocument();
-
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "All" })).not.toBeInTheDocument();
     expect(
-      within(tablist).getByRole("tab", { name: "All" }),
-    ).toBeInTheDocument();
-    expect(
-      within(tablist).getByRole("tab", { name: "Greece" }),
-    ).toBeInTheDocument();
-    expect(
-      within(tablist).getByRole("tab", { name: "Portugal" }),
-    ).toBeInTheDocument();
-
-    expect(
-      screen.queryByRole("button", { name: "Select country" }),
+      screen.queryByRole("group", { name: "Filter by country" }),
     ).not.toBeInTheDocument();
-    expect(screen.queryByText("Filter by country")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Select country" })).toBeInTheDocument();
 
-    const gridArea = screen.getByTestId("city-card-list").parentElement;
-    expect(gridArea).toHaveTextContent(/2\s*tours\s*found/);
+    expect(screen.getByTestId("explore-tours-found")).toHaveTextContent(
+      /2\s*tours\s*found/,
+    );
   });
 
-  it("keeps active tab semantics and calls filter on click", async () => {
+  it("renders featured quick filters without selected/tab semantics", () => {
+    render(
+      <ExploreCatalogClient
+        initialData={initialData}
+        totalHits={2}
+        initialSortAscending={true}
+        completeCountryList={[
+          ...completeCountryList,
+          { countryCode: "ES", country: "Spain" },
+        ]}
+        featuredCountries={[
+          { countryCode: "ES", country: "Spain" },
+          { countryCode: "PT", country: "Portugal" },
+        ]}
+      />,
+    );
+
+    const quickFilters = screen.getByRole("group", {
+      name: "Filter by country",
+    });
+    expect(within(quickFilters).getByRole("button", { name: "Spain" })).toBeInTheDocument();
+    expect(
+      within(quickFilters).getByRole("button", { name: "Portugal" }),
+    ).toBeInTheDocument();
+    expect(
+      within(quickFilters).queryByRole("button", { name: "Greece" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "All" })).not.toBeInTheDocument();
+
+    const spain = within(quickFilters).getByRole("button", { name: "Spain" });
+    expect(spain).not.toHaveAttribute("aria-current");
+    expect(spain).not.toHaveAttribute("aria-selected");
+  });
+
+  it("resets the country filter to a single ISO2 when a quick filter is clicked", async () => {
     mockedGetExploreCatalogPage.mockResolvedValue({
       success: true,
       data: [initialData[1]],
@@ -121,22 +161,67 @@ describe("ExploreCatalogClient country filters", () => {
         totalHits={2}
         initialSortAscending={true}
         completeCountryList={completeCountryList}
+        featuredCountries={[{ countryCode: "PT", country: "Portugal" }]}
       />,
     );
 
-    const allTab = screen.getByRole("tab", { name: "All" });
-    expect(allTab).toHaveAttribute("aria-current", "true");
-
-    await userEvent.click(screen.getByRole("tab", { name: "Portugal" }));
+    await userEvent.click(screen.getByRole("button", { name: "Portugal" }));
 
     expect(mockedGetExploreCatalogPage).toHaveBeenCalledWith(1, ["PT"], true);
   });
 
-  it("resets to all countries after selecting a country", async () => {
+  it("keeps a single-country reset when the same quick filter is clicked twice", async () => {
+    mockedGetExploreCatalogPage.mockResolvedValue({
+      success: true,
+      data: [initialData[1]],
+      totalHits: 1,
+    });
+
+    render(
+      <ExploreCatalogClient
+        initialData={initialData}
+        totalHits={2}
+        initialSortAscending={true}
+        completeCountryList={completeCountryList}
+        featuredCountries={[{ countryCode: "PT", country: "Portugal" }]}
+      />,
+    );
+
+    const user = userEvent.setup();
+    const portugal = screen.getByRole("button", { name: "Portugal" });
+    await user.click(portugal);
+    await user.click(portugal);
+
+    expect(mockedGetExploreCatalogPage).toHaveBeenNthCalledWith(1, 1, ["PT"], true);
+    expect(mockedGetExploreCatalogPage).toHaveBeenNthCalledWith(2, 1, ["PT"], true);
+  });
+
+  it("still lists catalog-only countries in the picker", async () => {
+    render(
+      <ExploreCatalogClient
+        initialData={initialData}
+        totalHits={2}
+        initialSortAscending={true}
+        completeCountryList={[
+          ...completeCountryList,
+          { countryCode: "ES", country: "Spain" },
+        ]}
+        featuredCountries={[{ countryCode: "PT", country: "Portugal" }]}
+      />,
+    );
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Select country" }));
+    expect(
+      screen.getByRole("button", { name: "Country option Spain" }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows chips for a quick-filter selection and for picker multi-add after reset", async () => {
     mockedGetExploreCatalogPage
       .mockResolvedValueOnce({
         success: true,
-        data: [initialData[0]],
+        data: [initialData[1]],
         totalHits: 1,
       })
       .mockResolvedValueOnce({
@@ -151,24 +236,40 @@ describe("ExploreCatalogClient country filters", () => {
         totalHits={2}
         initialSortAscending={true}
         completeCountryList={completeCountryList}
+        featuredCountries={[{ countryCode: "PT", country: "Portugal" }]}
       />,
     );
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole("tab", { name: "Greece" }));
-    await user.click(screen.getByRole("tab", { name: "All" }));
+    await user.click(screen.getByRole("button", { name: "Portugal" }));
 
-    expect(mockedGetExploreCatalogPage).toHaveBeenNthCalledWith(
-      1,
-      1,
-      ["GR"],
-      true,
+    const meta = screen.getByTestId("explore-catalog-meta");
+    const chipRow = screen.getByTestId("explore-country-chips");
+    const toursFound = screen.getByTestId("explore-tours-found");
+    expect(meta).toContainElement(chipRow);
+    expect(meta).toContainElement(toursFound);
+    expect(toursFound).toHaveTextContent(/1\s*tour\s*found/);
+    expect(
+      screen.getByRole("button", { name: "Portugal remove" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Greece remove" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Select country" }));
+    await user.click(
+      screen.getByRole("button", { name: "Country option Greece" }),
     );
-    expect(mockedGetExploreCatalogPage).toHaveBeenNthCalledWith(2, 1, [], true);
-    expect(screen.getByRole("tab", { name: "All" })).toHaveAttribute(
-      "aria-current",
-      "true",
+
+    expect(meta).toContainElement(
+      screen.getByRole("button", { name: "Portugal remove" }),
     );
+    expect(meta).toContainElement(
+      screen.getByRole("button", { name: "Greece remove" }),
+    );
+    expect(
+      screen.getByRole("button", { name: "Clear all countries" }),
+    ).toBeInTheDocument();
   });
 
   it("supports mobile multi-select chips with remove and clear all", async () => {
@@ -204,12 +305,12 @@ describe("ExploreCatalogClient country filters", () => {
     );
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "Country" }));
+    await user.click(screen.getByRole("button", { name: "Select country" }));
     await user.click(
       screen.getByRole("button", { name: "Country option Greece" }),
     );
-    await user.click(screen.getByRole("button", { name: "Country" }));
-    await user.click(screen.getByRole("button", { name: "Country" }));
+    await user.click(screen.getByRole("button", { name: "Select country" }));
+    await user.click(screen.getByRole("button", { name: "Select country" }));
     await user.click(
       screen.getByRole("button", { name: "Country option Portugal" }),
     );
@@ -251,7 +352,7 @@ describe("ExploreCatalogClient country filters", () => {
     );
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "Country" }));
+    await user.click(screen.getByRole("button", { name: "Select country" }));
     expect(
       screen.getByRole("button", { name: "Country option Greece" }),
     ).toBeInTheDocument();
@@ -273,7 +374,7 @@ describe("ExploreCatalogClient country filters", () => {
     );
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "Country" }));
+    await user.click(screen.getByRole("button", { name: "Select country" }));
     expect(
       screen.getByRole("button", { name: "Country option Greece" }),
     ).toBeInTheDocument();
@@ -316,7 +417,10 @@ describe("ExploreCatalogClient country filters", () => {
       />,
     );
 
-    await userEvent.click(screen.getByRole("tab", { name: "Portugal" }));
+    await userEvent.click(screen.getByRole("button", { name: "Select country" }));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Country option Portugal" }),
+    );
 
     expect(mockedEnrichListingCardsIfFlagged).toHaveBeenCalledWith(
       [filteredCard],
@@ -358,12 +462,13 @@ describe("ExploreCatalogClient country filters", () => {
         totalHits={40}
         initialSortAscending={true}
         completeCountryList={completeCountryList}
+        featuredCountries={[{ countryCode: "PT", country: "Portugal" }]}
       />,
     );
 
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Load more tours" }));
-    await user.click(screen.getByRole("tab", { name: "Portugal" }));
+    fireEvent.click(screen.getByRole("button", { name: "Portugal" }));
 
     resolvePageTwo({
       success: true,

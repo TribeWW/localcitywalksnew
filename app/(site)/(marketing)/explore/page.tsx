@@ -7,6 +7,12 @@ import { buildExplorePageMetadata } from "@/lib/explore/page-metadata";
 
 export const metadata = buildExplorePageMetadata();
 
+/**
+ * ISR for `/explore` (1 hour).
+ * Balances freshness of the catalog HTML with reduced Bokun/Sanity load.
+ */
+export const revalidate = 60 * 60;
+
 /** Render the Explore page; hero streams while catalog and JSON-LD resolve in Suspense. */
 export default function ExplorePage() {
   return (
@@ -33,7 +39,7 @@ export default function ExplorePage() {
               className="h-10 w-auto"
             />
             <span className="text-sm font-medium text-[#6A6A6A]">
-              100+ cities to discover across Europe
+              150+ cities to discover across Europe
             </span>
           </div>
         </div>

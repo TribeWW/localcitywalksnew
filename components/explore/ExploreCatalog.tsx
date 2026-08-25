@@ -1,18 +1,30 @@
 import { getExploreCatalogPage } from "@/lib/explore/catalog";
+import {
+  getFeaturedExploreCountries,
+  intersectFeaturedWithCatalog,
+} from "@/lib/explore/featured-countries";
 import ExploreCatalogClient from "@/components/explore/ExploreCatalogClient";
 import { enrichCityCardsForListing } from "@/lib/city-cards/enrich-city-cards-for-listing";
 import { cardsWidgetUpdate } from "@/flags";
 
 /**
- * Render the Explore Catalog server component using data fetched from the first catalog page.
+ * Render the Explore Catalog server component.
  *
- * @returns A JSX element that shows a styled error message when the initial fetch fails, or the
- * `ExploreCatalogClient` populated with `initialData`, `totalHits`, and an ascending initial sort
- * when the fetch succeeds.
+ * Loads the first catalog page and featured Sanity countries in parallel.
+ * Featured list is intersected with the catalog country list before being
+ * passed to the client. Featured fetch failures fail open as `[]` (handled in
+ * {@link getFeaturedExploreCountries}); catalog failure still shows the error UI.
+ *
+ * @returns Error UI when the catalog fetch fails, otherwise `ExploreCatalogClient`
+ * with initial data, sort, country list, and featured quick-filter countries
  */
 export default async function ExploreCatalog() {
-  const cardsWidgetUpdateEnabled = await cardsWidgetUpdate();
-  const result = await getExploreCatalogPage(1, undefined, true);
+  const [cardsWidgetUpdateEnabled, result, featuredFromSanity] =
+    await Promise.all([
+      cardsWidgetUpdate(),
+      getExploreCatalogPage(1, undefined, true),
+      getFeaturedExploreCountries(),
+    ]);
 
   if (!result.success) {
     return (
@@ -37,6 +49,10 @@ export default async function ExploreCatalog() {
   }
   const totalHits = result.totalHits ?? initialData.length;
   const completeCountryList = result.completeCountryList ?? [];
+  const featuredCountries = intersectFeaturedWithCatalog(
+    featuredFromSanity,
+    completeCountryList,
+  );
 
   return (
     <ExploreCatalogClient
@@ -44,6 +60,7 @@ export default async function ExploreCatalog() {
       totalHits={totalHits}
       initialSortAscending
       completeCountryList={completeCountryList}
+      featuredCountries={featuredCountries}
       cardsWidgetUpdate={cardsWidgetUpdateEnabled}
     />
   );
