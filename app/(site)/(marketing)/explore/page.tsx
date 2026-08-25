@@ -11,7 +11,7 @@ export const metadata = buildExplorePageMetadata();
  * ISR for `/explore` (1 hour).
  * Balances freshness of the catalog HTML with reduced Bokun/Sanity load.
  */
-export const revalidate = 60 * 60;
+export const revalidate = 3600;
 
 /** Render the Explore page; hero streams while catalog and JSON-LD resolve in Suspense. */
 export default function ExplorePage() {
