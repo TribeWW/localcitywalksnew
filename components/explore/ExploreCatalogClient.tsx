@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  useState,
-  useCallback,
-  useMemo,
-  useRef,
-  useEffect,
-} from "react";
+import React, { useState, useCallback, useMemo, useRef } from "react";
 import CityCard from "@/components/cards/CityCard";
 import {
   Select,
@@ -19,7 +13,8 @@ import { getExploreCatalogPage } from "@/lib/explore/tour.actions";
 import { enrichListingCardsIfFlagged } from "@/lib/city-cards/enrich-listing-cards-if-flagged";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CityCardData } from "@/types/bokun";
-import { Check, ChevronDown, X } from "lucide-react";
+import { X } from "lucide-react";
+import ExploreCountryPicker from "@/components/explore/ExploreCountryPicker";
 
 const PAGE_SIZE = 20;
 
@@ -33,18 +28,30 @@ interface ExploreCatalogClientProps {
   totalHits: number;
   initialSortAscending: boolean;
   completeCountryList: CountryOption[];
+  /**
+   * Featured countries for desktop quick filters (Sanity ∩ catalog, max 5).
+   * Empty list omits the divider and quick-filter group on the sticky bar.
+   */
+  featuredCountries?: CountryOption[];
   /** Vercel Flag `cards-widget-update` — forwarded to `CityCard` for gated UI. */
   cardsWidgetUpdate?: boolean;
 }
 
 /**
- * Render an explore-catalog UI that displays city cards with title sorting, country filtering, and incremental "Show more" pagination.
+ * Render an explore-catalog UI that displays city cards with title sorting,
+ * country filtering, and incremental "Show more" pagination.
  *
- * Renders a sticky country tab bar (including "All"), title sorting controls (A–Z / Z–A), a grid of city cards or loading/empty states, and a "Show more" button to load or reveal additional results.
+ * Sticky filter bar: shared country picker and optional desktop quick filters.
+ * Sort is desktop-only in the catalog meta row (`N tours found` → gap → chips →
+ * Sort right-aligned) and is hidden on mobile. Quick filters always reset to a
+ * single country; the picker remains multi-select.
  *
  * @param initialData - Initial page of city card data shown when the component mounts
  * @param totalHits - Total number of available results used to determine whether more pages exist
  * @param initialSortAscending - Whether the initial title sort order is ascending (A–Z)
+ * @param completeCountryList - Full catalog country options for the picker
+ * @param featuredCountries - Optional featured countries for desktop quick filters (default `[]`)
+ * @param cardsWidgetUpdate - When true, enrich listing cards via the cards-widget flag path
  * @returns The ExploreCatalogClient React element
  */
 export default function ExploreCatalogClient({
@@ -52,6 +59,7 @@ export default function ExploreCatalogClient({
   totalHits,
   initialSortAscending,
   completeCountryList,
+  featuredCountries = [],
   cardsWidgetUpdate = false,
 }: ExploreCatalogClientProps) {
   const [accumulatedList, setAccumulatedList] =
@@ -65,8 +73,6 @@ export default function ExploreCatalogClient({
   );
   const [loadingFilter, setLoadingFilter] = useState(false);
   const [sortAscending, setSortAscending] = useState(initialSortAscending);
-  const [mobileCountryOpen, setMobileCountryOpen] = useState(false);
-  const mobileCountryRef = useRef<HTMLDivElement | null>(null);
   const refreshRequestId = useRef(0);
 
   const visibleList = useMemo(
@@ -188,9 +194,10 @@ export default function ExploreCatalogClient({
     accumulatedList.length === 0 &&
     !loadingFilter;
   const controlsDisabled = loadingFilter || loadingMore;
-  const selectedCountryLabel = "Country";
+  const showResultsMeta = !loadingFilter && !showEmptyForCountry;
+  const showMetaRow = selectedCountryCodes.length > 0 || showResultsMeta;
 
-  const toggleMobileCountry = useCallback(
+  const toggleCountry = useCallback(
     async (countryCode: string) => {
       const isSelected = selectedCountryCodes.includes(countryCode);
       const nextCountryCodes = isSelected
@@ -201,206 +208,137 @@ export default function ExploreCatalogClient({
     [selectCountry, selectedCountryCodes],
   );
 
-  useEffect(() => {
-    if (!mobileCountryOpen) return;
-
-    const handleOutsideClick = (event: MouseEvent) => {
-      if (!mobileCountryRef.current) return;
-      const target = event.target as Node;
-      if (!mobileCountryRef.current.contains(target)) {
-        setMobileCountryOpen(false);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setMobileCountryOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleOutsideClick);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [mobileCountryOpen]);
+  /**
+   * Desktop-only Sort control for the catalog meta row.
+   *
+   * @param className - Layout classes for the label wrapper
+   */
+  const sortControl = (className: string) => (
+    <label className={className}>
+      <span className="shrink-0 text-sm text-muted-foreground">Sort:</span>
+      <Select
+        value={sortAscending ? "asc" : "desc"}
+        onValueChange={(v) => void applySortOrder(v === "asc")}
+        disabled={controlsDisabled}
+      >
+        <SelectTrigger
+          className="px-0 text-[#6A6A6A] border-0 shadow-none"
+          disabled={controlsDisabled}
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="asc">Title A–Z</SelectItem>
+          <SelectItem value="desc">Title Z–A</SelectItem>
+        </SelectContent>
+      </Select>
+    </label>
+  );
 
   return (
     <>
-      <div className="sticky top-0 z-30 w-full border-b border-[#D3CED2] bg-white">
-        <div className="mx-auto flex w-full max-w-[1140px] flex-wrap items-center gap-3 px-6 lg:flex-nowrap lg:justify-between lg:gap-4 lg:px-0">
-          <div
-            role="tablist"
-            aria-label="Filter by country"
-            className="hidden min-w-0 flex-1 items-center overflow-x-auto [scrollbar-width:none] lg:flex [&::-webkit-scrollbar]:hidden"
-          >
-            <button
-              type="button"
-              role="tab"
-              aria-current={
-                selectedCountryCodes.length === 0 ? "true" : undefined
-              }
-              aria-selected={selectedCountryCodes.length === 0}
-              onClick={() => void selectCountry([])}
-              disabled={controlsDisabled}
-              className={`-mb-px border-b px-5 py-4 text-sm transition-colors duration-150 ${
-                selectedCountryCodes.length === 0
-                  ? "border-[#FF5500] font-semibold text-slate-900"
-                  : "border-transparent font-normal text-[#6A6A6A] hover:text-slate-900"
-              } disabled:opacity-50`}
-            >
-              All
-            </button>
-            {completeCountryList.map(({ countryCode, country }) => (
-              <button
-                key={countryCode || "unknown"}
-                type="button"
-                role="tab"
-                aria-current={
-                  selectedCountryCodes.includes(countryCode)
-                    ? "true"
-                    : undefined
-                }
-                aria-selected={selectedCountryCodes.includes(countryCode)}
-                onClick={() => void selectCountry([countryCode])}
-                disabled={controlsDisabled}
-                className={`-mb-px border-b px-5 py-4 text-sm transition-colors duration-150 ${
-                  selectedCountryCodes.includes(countryCode)
-                    ? "border-[#FF5500] font-semibold text-slate-900"
-                    : "border-transparent font-normal text-[#6A6A6A] hover:text-slate-900"
-                } disabled:opacity-50`}
-              >
-                {country}
-              </button>
-            ))}
-          </div>
+      <div
+        className="sticky top-0 z-30 w-full border-b border-[#D3CED2] bg-white"
+        data-testid="explore-filter-bar"
+        data-featured-count={featuredCountries.length}
+      >
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-3 px-6 lg:flex-nowrap lg:gap-4 lg:px-0">
+          <ExploreCountryPicker
+            countries={completeCountryList}
+            selectedCountryCodes={selectedCountryCodes}
+            disabled={controlsDisabled}
+            className="relative flex min-w-0 flex-1 items-center py-2 lg:flex-none"
+            menuId="explore-country-menu"
+            onToggleCountry={(code) => void toggleCountry(code)}
+            onClear={() => void selectCountry([])}
+          />
 
-          <div
-            ref={mobileCountryRef}
-            className="relative flex min-w-0 flex-1 items-center py-2 lg:hidden"
-          >
-            <button
-              type="button"
-              onClick={() => setMobileCountryOpen((open) => !open)}
-              disabled={controlsDisabled}
-              aria-expanded={mobileCountryOpen}
-              aria-controls="mobile-country-menu"
-              className="flex h-10 w-full items-center justify-between rounded-sm border border-input bg-white px-3 text-left text-sm disabled:opacity-50"
-            >
-              <span className="truncate">{selectedCountryLabel}</span>
-              <ChevronDown
-                className={`h-4 w-4 shrink-0 text-[#6A6A6A] transition-transform ${
-                  mobileCountryOpen ? "rotate-180" : ""
-                }`}
-                aria-hidden
-              />
-            </button>
-            {mobileCountryOpen && (
+          {featuredCountries.length > 0 ? (
+            <>
               <div
-                id="mobile-country-menu"
-                className="absolute left-0 top-12 z-40 w-full rounded-sm border border-border bg-white p-2 shadow-lg"
+                aria-hidden
+                className="hidden h-6 w-px shrink-0 bg-border lg:block"
+              />
+              <div
+                role="group"
+                aria-label="Filter by country"
+                className="hidden min-w-0 items-center gap-1 lg:flex"
               >
-                <div className="max-h-60 overflow-y-auto">
-                  {completeCountryList.map(({ countryCode, country }) => {
-                    const isSelected =
-                      selectedCountryCodes.includes(countryCode);
-                    return (
-                      <button
-                        key={`mobile-${countryCode || "unknown"}`}
-                        type="button"
-                        onClick={() => void toggleMobileCountry(countryCode)}
-                        className="flex w-full items-center justify-between rounded-md px-2 py-2 text-sm hover:bg-muted"
-                        aria-label={`Country option ${country}`}
-                      >
-                        <span className="flex items-center gap-2">
-                          <span
-                            className={`inline-flex h-4 w-4 items-center justify-center rounded-[3px] border ${
-                              isSelected
-                                ? "border-[#0F172A] bg-[#0F172A]"
-                                : "border-[#CBD5E1] bg-white"
-                            }`}
-                            aria-hidden
-                          >
-                            {isSelected ? (
-                              <Check
-                                className="h-3 w-3 text-white"
-                                aria-hidden
-                              />
-                            ) : null}
-                          </span>
-                          <span>{country}</span>
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-                {selectedCountryCodes.length > 0 && (
+                {featuredCountries.map(({ countryCode, country }) => (
                   <button
+                    key={`quick-${countryCode || "unknown"}`}
                     type="button"
-                    onClick={() => void selectCountry([])}
-                    className="mt-2 w-full border-t border-border px-2 pt-3 pb-1 text-left text-sm font-medium text-[#6A6A6A] hover:text-[#0F172A]"
+                    onClick={() => void selectCountry([countryCode])}
+                    disabled={controlsDisabled}
+                    className="px-3 py-2 text-sm font-normal text-[#6A6A6A] transition-colors duration-150 hover:text-[#0F172A] disabled:opacity-50"
                   >
-                    Clear
+                    {country}
                   </button>
-                )}
+                ))}
               </div>
-            )}
-          </div>
-
-          <label className="flex min-w-0 flex-1 shrink-0 items-center gap-2 py-2 lg:w-auto lg:flex-none">
-            <span className="shrink-0 text-sm text-muted-foreground">Sort</span>
-            <Select
-              value={sortAscending ? "asc" : "desc"}
-              onValueChange={(v) => void applySortOrder(v === "asc")}
-              disabled={controlsDisabled}
-            >
-              <SelectTrigger
-                className="w-full lg:w-[170px]"
-                disabled={controlsDisabled}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="asc">Title A–Z</SelectItem>
-                <SelectItem value="desc">Title Z–A</SelectItem>
-              </SelectContent>
-            </Select>
-          </label>
+            </>
+          ) : null}
         </div>
       </div>
 
-      <section id="explore-catalog" className="py-8">
-        <div className="max-w-6xl mx-auto px-6 md:px-8 lg:px-0">
-          {selectedCountryCodes.length > 0 && (
-            <div className="mb-4 flex flex-wrap items-center gap-2 lg:hidden">
-              {selectedCountryCodes.map((countryCode) => {
-                const label =
-                  completeCountryList.find((c) => c.countryCode === countryCode)
-                    ?.country ?? countryCode;
-                return (
-                  <button
-                    key={`chip-${countryCode}`}
-                    type="button"
-                    onClick={() => void toggleMobileCountry(countryCode)}
-                    className="inline-flex items-center gap-1 rounded-md border border-border bg-[#F8FAFC] px-3 py-1.5 text-sm font-medium text-[#334155]"
-                    aria-label={`${label} remove`}
-                  >
-                    {label}
-                    <X className="h-3.5 w-3.5 text-[#6A6A6A]" aria-hidden />
-                  </button>
-                );
-              })}
-              <button
-                type="button"
-                onClick={() => void selectCountry([])}
-                className="text-sm text-[#6A6A6A] underline underline-offset-2 hover:text-[#0F172A]"
-                aria-label="Clear all countries"
+      <section id="explore-catalog" className="py-6">
+        <div className="mx-auto max-w-6xl px-6 md:px-8 lg:px-0">
+          <div
+            data-testid="explore-catalog-meta"
+            className={`flex flex-wrap items-center gap-x-4 gap-y-3 ${
+              showMetaRow ? "" : "hidden lg:flex"
+            }`}
+          >
+            {showResultsMeta ? (
+              <div
+                className="order-2 text-sm text-[#6A6A6A] lg:order-1"
+                data-testid="explore-tours-found"
               >
-                Clear all
-              </button>
+                <span>
+                  {totalHitsView} {totalHitsView === 1 ? "tour" : "tours"} found
+                </span>
+              </div>
+            ) : null}
+
+            {selectedCountryCodes.length > 0 ? (
+              <div
+                className="order-1 flex flex-wrap items-center gap-2 lg:order-2"
+                data-testid="explore-country-chips"
+              >
+                {selectedCountryCodes.map((countryCode) => {
+                  const label =
+                    completeCountryList.find(
+                      (c) => c.countryCode === countryCode,
+                    )?.country ?? countryCode;
+                  return (
+                    <button
+                      key={`chip-${countryCode}`}
+                      type="button"
+                      onClick={() => void toggleCountry(countryCode)}
+                      className="inline-flex items-center gap-1 rounded-md border border-border bg-[#F8FAFC] px-3 py-1.5 text-sm font-medium text-[#334155]"
+                      aria-label={`${label} remove`}
+                    >
+                      {label}
+                      <X className="h-3.5 w-3.5 text-[#6A6A6A]" aria-hidden />
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => void selectCountry([])}
+                  className="text-sm text-[#6A6A6A] underline underline-offset-2 hover:text-[#0F172A]"
+                  aria-label="Clear all countries"
+                >
+                  Clear all
+                </button>
+              </div>
+            ) : null}
+
+            <div className="order-3 ml-auto hidden min-w-0 shrink-0 lg:block">
+              {sortControl("flex items-center gap-2 py-0")}
             </div>
-          )}
+          </div>
+
           <div className="px-0 ">
             {loadingFilter ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center ">
@@ -425,14 +363,6 @@ export default function ExploreCatalogClient({
               </div>
             ) : (
               <>
-                <div className="text-sm text-[#6A6A6A]">
-                  <span>
-                    <span>
-                      {totalHitsView} {totalHitsView === 1 ? "tour" : "tours"}
-                    </span>{" "}
-                    found
-                  </span>
-                </div>
                 <CityCard
                   cities={visibleList}
                   noHorizontalPadding

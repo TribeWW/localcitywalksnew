@@ -23,8 +23,8 @@ vi.mock("@/lib/bokun/transform-search-product-to-city-card", () => {
       id: product.id,
       title: product.title,
       image: "/test.jpg",
-      countryCode: product.googlePlace?.countryCode ?? "PT",
-      country: product.googlePlace?.country ?? "Portugal",
+      countryCode: product.googlePlace?.countryCode ?? "",
+      country: product.googlePlace?.country ?? "Unknown",
     }),
   );
 
@@ -49,16 +49,24 @@ vi.mock("@/lib/bokun/transform-search-product-to-city-card", () => {
 const mockReadSnapshot = vi.fn();
 const mockWriteSnapshot = vi.fn();
 const mockWarmListingPrices = vi.fn();
+const mockBackfillCountries = vi.fn();
 
 vi.mock("@/lib/explore/catalog-store", () => ({
   readExploreCatalogSnapshot: (...args: unknown[]) => mockReadSnapshot(...args),
   writeExploreCatalogSnapshot: (...args: unknown[]) =>
     mockWriteSnapshot(...args),
+  shouldUseExploreCatalogSnapshot: () =>
+    process.env.VERCEL_ENV === "production",
 }));
 
 vi.mock("@/lib/city-cards/warm-listing-prices-for-cards", () => ({
   warmListingPricesForCards: (...args: unknown[]) =>
     mockWarmListingPrices(...args),
+}));
+
+vi.mock("@/lib/explore/backfill-catalog-countries", () => ({
+  backfillMissingCatalogCountries: (...args: unknown[]) =>
+    mockBackfillCountries(...args),
 }));
 
 import {
@@ -105,10 +113,14 @@ describe("getExploreCatalogPage", () => {
           displayPriceCurrency: "EUR",
         })),
     );
+    mockBackfillCountries.mockImplementation(
+      async (cards: CityCardData[]) => cards,
+    );
   });
 
   afterEach(() => {
     resetExploreCatalogCacheForTests();
+    vi.unstubAllEnvs();
     vi.unstubAllGlobals();
     vi.useRealTimers();
   });
@@ -159,6 +171,7 @@ describe("getExploreCatalogPage", () => {
   });
 
   it("rebuilds from Bokun, warms prices, and writes Redis on snapshot miss", async () => {
+    vi.stubEnv("VERCEL_ENV", "production");
     mockReadSnapshot.mockResolvedValue(null);
     mockWriteSnapshot.mockResolvedValue(true);
 
@@ -202,7 +215,78 @@ describe("getExploreCatalogPage", () => {
         displayPriceCurrency: "EUR",
       }),
     ]);
+    expect(mockBackfillCountries).not.toHaveBeenCalled();
     expect(result.data[0]?.displayPricePerPerson).toBe(50);
+  });
+
+  it("backfills missing countries from activity detail outside production", async () => {
+    vi.stubEnv("VERCEL_ENV", "preview");
+    mockBackfillCountries.mockImplementation(async (cards: CityCardData[]) =>
+      cards.map((card) => ({
+        ...card,
+        countryCode: "PT",
+        country: "Portugal",
+      })),
+    );
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: "15683",
+            title: "Test Walk",
+            keyPhoto: { derived: [{ name: "preview", url: "/test.jpg" }] },
+          },
+        ],
+        totalHits: 1,
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await getExploreCatalogPage(1, null, true);
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(mockBackfillCountries).toHaveBeenCalledTimes(1);
+    expect(result.completeCountryList).toEqual([
+      { countryCode: "PT", country: "Portugal" },
+    ]);
+    expect(mockWriteSnapshot).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not backfill countries on a production Redis miss", async () => {
+    vi.stubEnv("VERCEL_ENV", "production");
+    mockWriteSnapshot.mockResolvedValue(true);
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            id: "1",
+            title: "Porto Walk",
+            keyPhoto: { derived: [{ name: "preview", url: "/porto.jpg" }] },
+          },
+        ],
+        totalHits: 1,
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await getExploreCatalogPage(1, null, true);
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(mockBackfillCountries).not.toHaveBeenCalled();
+    expect(result.completeCountryList).toEqual([]);
+    expect(mockWriteSnapshot.mock.calls[0][0]).toEqual([
+      expect.objectContaining({
+        id: "1",
+        title: "Porto Walk",
+        countryCode: "",
+      }),
+    ]);
   });
 
   it("caches Bokun rebuild failures briefly and retries after cooldown", async () => {

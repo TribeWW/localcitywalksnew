@@ -1,8 +1,10 @@
 import { fetchAllBokunSearchProducts } from "@/lib/bokun/fetch-all-search-products";
 import { mapSearchProductsToCityCards } from "@/lib/bokun/transform-search-product-to-city-card";
 import { warmListingPricesForCards } from "@/lib/city-cards/warm-listing-prices-for-cards";
+import { backfillMissingCatalogCountries } from "@/lib/explore/backfill-catalog-countries";
 import {
   readExploreCatalogSnapshot,
+  shouldUseExploreCatalogSnapshot,
   writeExploreCatalogSnapshot,
 } from "@/lib/explore/catalog-store";
 import { CityCardData, GetProductsPageResult } from "@/types/bokun";
@@ -10,7 +12,11 @@ import { CityCardData, GetProductsPageResult } from "@/types/bokun";
 /** Client-facing explore listing page size (unchanged UX). */
 const EXPLORE_PAGE_SIZE = 20;
 
-const CACHE_TTL = 15 * 60 * 1000;
+/**
+ * Process-local L1 TTL for the full catalog snapshot (1 hour).
+ * Aligns with `/explore` page ISR; Redis remains the durable store.
+ */
+const CACHE_TTL = 60 * 60 * 1000;
 /** Cooldown after a failed Bokun rebuild so cold misses do not stampede. */
 const FAILURE_CACHE_TTL = 30_000;
 
@@ -111,6 +117,11 @@ function filterAndApplySortDirection(
  * subsequent cold instances hit a priced durable snapshot. Cards are stored
  * sorted A→Z.
  *
+ * Preview/staging (Redis skipped) also backfill missing `countryCode` from
+ * activity detail so the explore picker is not empty when search omits
+ * `googlePlace`. Production rebuilds never run that backfill and never persist
+ * it to Redis.
+ *
  * @returns Sorted catalog cards, or a Bokun rebuild error
  */
 async function getOrBuildExploreCatalogSnapshot(): Promise<ExploreSnapshotBuildResult> {
@@ -158,7 +169,10 @@ async function getOrBuildExploreCatalogSnapshot(): Promise<ExploreSnapshotBuildR
         "explore-catalog",
       );
       const pricedCards = await warmListingPricesForCards(mapped);
-      const cards = sortByTitleAsc(pricedCards);
+      const cardsWithCountries = shouldUseExploreCatalogSnapshot()
+        ? pricedCards
+        : await backfillMissingCatalogCountries(pricedCards);
+      const cards = sortByTitleAsc(cardsWithCountries);
 
       await writeExploreCatalogSnapshot(cards);
 

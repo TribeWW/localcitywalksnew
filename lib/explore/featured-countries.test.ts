@@ -108,7 +108,7 @@ describe("getFeaturedExploreCountries", () => {
     expect(fetchMock).toHaveBeenCalledWith(
       expect.any(String),
       {},
-      { next: { revalidate: 60 } },
+      { next: { revalidate: 60 * 60 } },
     );
   });
 
