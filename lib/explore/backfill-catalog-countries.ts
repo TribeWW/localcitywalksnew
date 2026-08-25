@@ -71,8 +71,7 @@ export function mergeBackfilledCountry(
   }
 
   const currentLabel = card.country?.trim();
-  const shouldReplaceLabel =
-    !currentLabel || currentLabel === "Unknown";
+  const shouldReplaceLabel = !currentLabel || currentLabel === "Unknown";
 
   return {
     ...card,
@@ -106,7 +105,7 @@ export async function backfillMissingCatalogCountries(
       continue;
     }
 
-    const productId = toBokunProductIdDigits(card.id) ?? String(card.id);
+    const productId = toBokunProductIdDigits(card.id);
     if (!productId || seen.has(productId)) {
       continue;
     }
@@ -149,7 +148,9 @@ export async function backfillMissingCatalogCountries(
   }
 
   return cards.map((card) => {
-    const productId = toBokunProductIdDigits(card.id) ?? String(card.id);
-    return mergeBackfilledCountry(card, googlePlaceByProductId.get(productId));
+    const productId = toBokunProductIdDigits(card.id);
+    return productId
+      ? mergeBackfilledCountry(card, googlePlaceByProductId.get(productId))
+      : card;
   });
 }

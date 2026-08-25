@@ -16,7 +16,7 @@ export default function ExploreCatalogSkeleton() {
         data-testid="explore-catalog-skeleton-filters"
         aria-hidden
       >
-        <div className="mx-auto flex w-full max-w-[1140px] flex-wrap items-center gap-3 px-6 py-2 lg:flex-nowrap lg:gap-4 lg:px-0">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-3 px-6 py-2 lg:flex-nowrap lg:gap-4 lg:px-0">
           <Skeleton
             data-testid="explore-catalog-skeleton-picker"
             className="h-10 w-full rounded-sm lg:w-[200px] lg:flex-none"
@@ -36,11 +36,11 @@ export default function ExploreCatalogSkeleton() {
         </div>
       </div>
 
-      <section className="py-8" aria-hidden>
+      <section className="py-6" aria-hidden>
         <div className="mx-auto max-w-6xl px-6 md:px-8 lg:px-0">
           <div
             data-testid="explore-catalog-skeleton-meta"
-            className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-3"
+            className="flex flex-wrap items-center gap-x-4 gap-y-3"
           >
             <Skeleton
               data-testid="explore-catalog-skeleton-count"
