@@ -31,11 +31,12 @@ Our color palette is inspired by vibrant, warm tones that evoke the excitement o
 
 - **Tangerine** `#ff5500` - Primary brand color, used for CTAs and key interactive elements
 - **Grapefruit** `#d52410` - Secondary brand color, used for accents and highlights
+- **Grapes** `#0f172a` - Dark navy (promo bar background / on-dark chrome); Tailwind `bg-grapes` / `from-grapes` / `text-grapes`
 - **Nightsky** `#333333` - Dark text and important UI elements
 - **Watermelon** `#040606` - Deep dark color for backgrounds and contrast
 - **Pearl Gray** `#f7f7f7` - Light background color, subtle borders
 
-In Tailwind v4 theme (`app/globals.css` `@theme inline`), brand colors map to utilities such as **`bg-tangerine`**, **`text-watermelon`**, **`bg-pearl-gray`**, etc. Prefer these tokens over arbitrary hex values when matching brand UI.
+In Tailwind v4 theme (`app/globals.css` `@theme inline`), brand colors map to utilities such as **`bg-tangerine`**, **`text-watermelon`**, **`bg-pearl-gray`**, **`bg-grapes`**, etc. Prefer these tokens over arbitrary hex values when matching brand UI.
 
 ### shadcn UI tokens (globals)
 
@@ -47,6 +48,7 @@ The app uses **shadcn-style CSS variables** in `:root` / `.dark` for primitives 
 
 - **Tangerine**: Primary buttons, links, important CTAs, brand highlights
 - **Grapefruit**: Secondary actions, warnings, accent elements
+- **Grapes**: Sitewide promo banner gradient base; white type on grapes for AA. Do **not** use Tangerine/Grapefruit as that bar’s background (small white type fails AA).
 - **Nightsky**: Primary text, headings, important information
 - **Watermelon**: Dark mode backgrounds, high contrast elements
 - **Pearl Gray**: Light backgrounds, card backgrounds, subtle separators
@@ -246,9 +248,10 @@ Tour pages add in-content navigation (e.g. **Breadcrumb**) in `app/tours/[city]/
 ### Component Library
 
 - Reusable UI components in `components/ui/` (Radix-based primitives: **Button**, **Dialog**, **Sheet**, **Accordion**, **Breadcrumb**, **Card**, etc.)
-- Feature components in `components/home/`, `components/tours/`, `components/forms/`, etc.
+- Feature components in `components/home/`, `components/tours/`, `components/forms/`, `components/checkout/` (incl. **PromoCodeInput**), etc.
 - Listing tour grids: **`components/cards/CityCard.tsx`** — see [Listing city cards](./LISTING_CITY_CARDS.md) and **Cards** above
-- Shared layout/marketing in `components/shared/` (**Navbar**, **Footer**)
+- Shared layout/marketing in `components/shared/` (**Navbar**, **Footer**, **PromoBanner**)
+  - **PromoBanner**: Grapes gradient bar above marketing nav; copy confirmation is **inline** (no toast); countdown respects **`prefers-reduced-motion`** (static `Ends {d MMM}` UTC). Not shown on checkout. CMS + flag wiring: [Sanity configuration](./SANITY_CONFIGURATION.md); Bókun validation at Apply: [Bokun configuration](./BOKUN_CONFIGURATION.md).
 
 Radix imports should use **scoped packages** (e.g. `@radix-ui/react-accordion`, `@radix-ui/react-slot`), not the umbrella `radix-ui` meta-package.
 

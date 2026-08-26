@@ -87,6 +87,8 @@ The configuration file exports:
 - `PICKUP_PLACES`: `/activity.json/{id}/pickup-places` - Get pickup locations
 - `PRICE_LIST`: `/activity.json/{id}/price-list` - Tiered catalogue pricing (listing cards + widget “from” price)
 - `AVAILABILITIES`: `/activity.json/{id}/availabilities` - Live slots for the booking widget (see below)
+- `CHECKOUT_OPTIONS`: `/checkout.json/options/booking-request` - Checkout options (incl. promo pricing)
+- `CHECKOUT_SUBMIT`: `/checkout.json/submit` - Reserve / submit for external payment
 
 ### Search: pagination and filtering
 
@@ -176,6 +178,30 @@ When the **`cards-widget-update`** feature flag is on (`flags.ts`, Vercel key `c
 **Listing cards:** same flag drives minimal card chrome and “From {price} / adult” — see [Listing city cards](./LISTING_CITY_CARDS.md).
 
 **Implementation plan:** [`documentation/implementation-plans/2026-06-04-feature-booking-widget.md`](../implementation-plans/2026-06-04-feature-booking-widget.md).
+
+### Native checkout: promo / discount codes
+
+Promo codes are **created and validated in Bókun**. The site only advertises a code (Sanity promo banner) and applies it at checkout when the visitor Uses **Apply**.
+
+**Feature flag**: `promo-code` in [`flags.ts`](../../flags.ts) (Vercel Flags). When off:
+
+- Checkout hides the promo input.
+- Marketing promo banner does not load (same flag).
+- Pay/reserve paths do not send a promo code.
+
+**Apply (options-only, no inventory hold)** — [`lib/checkout/promo-code.ts`](../../lib/checkout/promo-code.ts) via [`lib/checkout/promo-code.actions.ts`](../../lib/checkout/promo-code.actions.ts):
+
+1. Re-quote the booking selection (undiscounted) from Bókun availabilities.
+2. `POST` checkout **options** with `promoCode` on the booking request ([`fetchBokunCheckoutOptions`](../../lib/bokun/checkout.ts) / `BOKUN_ENDPOINTS.CHECKOUT_OPTIONS`).
+3. Compare the discounted options amount to the undiscounted quote; UI shows success only when the amount changes.
+
+A **placeholder contact** is used only to satisfy Bókun’s options request shape — never persisted and never used for Pay. Invalid / expired codes map to a safe user-facing error (`invalid_promo_code`).
+
+**Pay / reserve**: when the flag is on and the guest applied a code, [`initiate-checkout-payment`](../../lib/checkout/initiate-checkout-payment.ts) forwards `promoCode` into Bókun reserve (`buildBokunBookingRequest` / checkout submit). Amount checks allow a promo-driven price change (`allowAmountChange`).
+
+**Marketing awareness (not Bókun)**: the sitewide bar is CMS-driven — see **Promo banner** in [`SANITY_CONFIGURATION.md`](./SANITY_CONFIGURATION.md). Copying the code does **not** auto-apply it at checkout.
+
+**UI**: [`components/checkout/PromoCodeInput.tsx`](../../components/checkout/PromoCodeInput.tsx) on the checkout summary (flag-gated).
 
 ### Tour page: HTML description safety
 
