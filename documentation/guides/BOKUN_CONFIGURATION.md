@@ -98,16 +98,17 @@ The search endpoint supports **pagination** (`page`, `pageSize`) and optional **
 
 **Explore catalog** (`/explore`) uses **`getExploreCatalogPage`** (implementation in [`lib/explore/catalog.ts`](../../lib/explore/catalog.ts), server-action wrapper in [`lib/explore/tour.actions.ts`](../../lib/explore/tour.actions.ts)) to provide alphabetically sorted tour listings:
 
-- **Per country filter and sort direction** (title A–Z vs Z–A):
-  - Server loads **every page** from Bokun using the same search shape as `getProductsPage` (`BEST_SELLING_GLOBAL` + facets)
-  - Merges results to `CityCardData` and sorts via `localeCompare` on the **card title**
-  - Stores the **full sorted list** in an in-memory cache with **~15-minute TTL**
-  - Cache keys include the country filter + `alphaAsc` / `alphaDesc`
-  - Returns **slices of 20** for pagination
-
-- **UI**: [`ExploreCatalogClient`](../../components/explore/ExploreCatalogClient.tsx)
-
-- **Rationale**: Bokun's **`sortField` / `sortOrder`** cannot guarantee strict title order across pages ([LOC-756](https://linear.app/localcitywalks/issue/LOC-756/explore-sorting-spike-bokun-title-sort-across-pages-a-z-z-a)). This merge+sort approach implements the **"Show more"** feature in title order.
+- **Snapshot + paging**:
+  - Builds (or reads) a **full catalog snapshot** of `CityCardData` (Redis durable store + process-local L1, **~1 hour** TTL, aligned with `/explore` ISR)
+  - Sorts by card title (`localeCompare`) for A–Z / Z–A
+  - Filters by **one or more ISO2** country codes (`string[]`; empty = all countries)
+  - Returns **slices of 20** for pagination / “Show more”
+- **Country UI** ([`ExploreCatalogClient`](../../components/explore/ExploreCatalogClient.tsx)):
+  - Shared **country picker** (multi-select) on desktop and mobile — no per-country tab strip, no picker search
+  - Optional **featured quick filters** (desktop only, max 5) from Sanity `featuredOnExplore`, intersected with the catalog country list ([`lib/explore/featured-countries.ts`](../../lib/explore/featured-countries.ts)); each click **resets** to that single country
+  - Selection **chips** + Clear all; Sort lives on the catalog meta row (desktop)
+- **Fail open**: if the featured Sanity fetch fails, explore still renders the picker + full catalog (featured shortcuts omitted)
+- **Rationale**: Bokun's **`sortField` / `sortOrder`** cannot guarantee strict title order across pages ([LOC-756](https://linear.app/localcitywalks/issue/LOC-756/explore-sorting-spike-bokun-title-sort-across-pages-a-z-z-a)). Snapshot + title sort implements **"Show more"** in title order.
 
 ### Tour page URL scheme (`/tours/{city}/{slug}`)
 

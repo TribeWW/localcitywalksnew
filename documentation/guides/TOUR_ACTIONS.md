@@ -21,7 +21,7 @@ Bokun API → Server Action → React Component → UI Display
 - **Server Actions**: `lib/explore/tour.actions.ts` — Bokun search/listing; `lib/tours/detail.actions.ts` — single product by id (tour page)
 - **URL helpers**: `slugifyForUrl` in `lib/utils.ts` (shared with the tour page for canonical city slugs)
 - **Type Definitions**: `types/bokun.ts` — `CityCardData`, `BokunProductDetail`, result types, etc.
-- **UI**: `components/cards/CityCard.tsx` (links to `/tours/{citySlug}/{slug}`), `components/explore/ExploreCatalogClient.tsx` (filter + pagination)
+- **UI**: `components/cards/CityCard.tsx` (links to `/tours/{citySlug}/{slug}`), `components/explore/ExploreCatalogClient.tsx` (country picker / featured shortcuts / chips + pagination)
 
 ## Server Actions
 
@@ -121,15 +121,18 @@ Do not duplicate large interface blocks in this guide; update `types/bokun.ts` a
 
 ### Explore catalog (`components/explore/ExploreCatalog.tsx`)
 
-**Purpose**: Server component that loads the first page of the explore catalog and passes it to the client catalog for display, filter, and pagination.
+**Purpose**: Server component that loads the first page of the explore catalog (and featured Sanity countries) and passes them to the client catalog for display, filter, and pagination.
 
 **Key Features**:
 
-- ✅ **Async Server Component**: Calls `getExploreCatalogPage(1, …)` and passes initial data to `ExploreCatalogClient`
+- ✅ **Async Server Component**: `Promise.all` of `getExploreCatalogPage(1, …)` + `getFeaturedExploreCountries()`, then intersects featured with `completeCountryList`
 - ✅ **Snapshot-backed catalog**: Reads from Redis/L1 via `lib/explore/catalog.ts` (Bokun rebuild on miss)
-- ✅ **Error Resilience**: Graceful handling of API / snapshot failures
+- ✅ **Featured fail open**: Sanity featured errors become `[]` — picker + catalog still render
+- ✅ **Error Resilience**: Catalog/snapshot failure shows the explore error UI (separate from featured)
 
-The client wrapper `ExploreCatalogClient` owns country filters, sort, pagination, and skeleton loading. Filtering by country is done server-side via `getExploreCatalogPage` / `lib/explore/tour.actions.ts`.
+The client wrapper `ExploreCatalogClient` owns multi-select country filtering (`selectedCountryCodes`), featured quick filters (desktop), chips, sort, pagination, and skeleton loading. Filtering is done server-side via `getExploreCatalogPage` / `lib/explore/tour.actions.ts`. Shared picker UI lives in `components/explore/ExploreCountryPicker.tsx`.
+
+See implementation plan: `documentation/implementation-plans/2026-08-24-feature-improved-country-filters.md`.
 
 ### CityCard Component (`components/cards/CityCard.tsx`)
 

@@ -196,6 +196,67 @@ describe("ExploreCatalogClient country filters", () => {
     expect(mockedGetExploreCatalogPage).toHaveBeenNthCalledWith(2, 1, ["PT"], true);
   });
 
+  it("clears a prior multi-select when a featured quick filter is clicked", async () => {
+    mockedGetExploreCatalogPage
+      .mockResolvedValueOnce({
+        success: true,
+        data: [initialData[0]],
+        totalHits: 1,
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        data: initialData,
+        totalHits: 2,
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        data: [initialData[1]],
+        totalHits: 1,
+      });
+
+    render(
+      <ExploreCatalogClient
+        initialData={initialData}
+        totalHits={2}
+        initialSortAscending={true}
+        completeCountryList={completeCountryList}
+        featuredCountries={[{ countryCode: "PT", country: "Portugal" }]}
+      />,
+    );
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Select country" }));
+    await user.click(
+      screen.getByRole("checkbox", { name: "Country option Greece" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Select country" }));
+    await user.click(screen.getByRole("button", { name: "Select country" }));
+    await user.click(
+      screen.getByRole("checkbox", { name: "Country option Portugal" }),
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Greece remove" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Portugal remove" }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Portugal" }));
+
+    expect(mockedGetExploreCatalogPage).toHaveBeenLastCalledWith(
+      1,
+      ["PT"],
+      true,
+    );
+    expect(
+      screen.getByRole("button", { name: "Portugal remove" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Greece remove" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("still lists catalog-only countries in the picker", async () => {
     render(
       <ExploreCatalogClient
