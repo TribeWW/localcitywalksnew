@@ -60,7 +60,7 @@ export default function ExploreCatalogSkeleton() {
           </div>
           <div
             data-testid="explore-catalog-skeleton-grid"
-            className="grid grid-cols-1 justify-items-center gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            className="grid grid-cols-1 justify-items-center gap-6 py-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           >
             {Array.from({ length: 8 }).map((_, i) => (
               <div

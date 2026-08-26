@@ -156,7 +156,7 @@ export default function ExploreCountryPicker({
                 onClick={() => onToggleCountry(countryCode)}
                 role="checkbox"
                 aria-checked={isSelected}
-                className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-normal text-grapes transition-colors hover:bg-pearl-gray ${
+                className={`flex w-full items-center gap-2.5 px-4 py-4 text-left text-sm font-normal text-grapes transition-colors hover:bg-pearl-gray ${
                   isSelected ? "bg-pearl-gray" : "bg-white"
                 }`}
                 aria-label={`Country option ${country}`}
