@@ -131,6 +131,13 @@ export default function ExploreCatalogClient({
   const selectCountry = useCallback(
     async (countryCodes: string[]) => {
       const reqId = ++refreshRequestId.current;
+      // Optimistic UI: update chips / picker selection immediately so Clear all
+      // and toggles don't leave stale chips over a loading grid.
+      let previousCodes: string[] = [];
+      setSelectedCountryCodes((prev) => {
+        previousCodes = prev;
+        return countryCodes;
+      });
       setLoadingFilter(true);
       try {
         const result = await getExploreCatalogPage(
@@ -145,12 +152,15 @@ export default function ExploreCatalogClient({
             cardsWidgetUpdate,
           );
           if (reqId !== refreshRequestId.current) return;
-          setSelectedCountryCodes(countryCodes);
           setAccumulatedList(enriched);
           setVisibleCount(PAGE_SIZE);
           setCurrentPage(1);
           if (result.totalHits != null) setTotalHitsView(result.totalHits);
+        } else {
+          setSelectedCountryCodes(previousCodes);
         }
+      } catch {
+        setSelectedCountryCodes(previousCodes);
       } finally {
         if (reqId === refreshRequestId.current) setLoadingFilter(false);
       }
@@ -338,17 +348,17 @@ export default function ExploreCatalogClient({
             </div>
           </div>
 
-          <div className="px-0 ">
+          <div className="px-0">
             {loadingFilter ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center ">
+              <div className="grid grid-cols-1 justify-items-center gap-6 py-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <div
                     key={i}
-                    className="bg-white rounded-xl shadow-sm overflow-hidden w-full border border-border"
+                    className="w-full overflow-hidden rounded-xl border border-border bg-white shadow-sm"
                   >
                     <Skeleton className="h-48 w-full rounded-none" />
-                    <div className=" space-y-4">
-                      <Skeleton className="h-6 w-3/4 mx-auto" />
+                    <div className="space-y-4">
+                      <Skeleton className="mx-auto h-6 w-3/4" />
                       <Skeleton className="h-10 w-full rounded-md" />
                     </div>
                   </div>
