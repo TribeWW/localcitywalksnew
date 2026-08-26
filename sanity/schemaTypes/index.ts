@@ -4,6 +4,7 @@ import { country } from "./country";
 import { faqItem } from "./faqItem";
 import { homeSpotlight } from "./homeSpotlight";
 import { promoBanner } from "./promoBanner";
+import { region } from "./region";
 import { review } from "./review";
 import { tourSeoMetadata } from "./tourSeoMetaData";
 
@@ -14,6 +15,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     faqItem,
     homeSpotlight,
     promoBanner,
+    region,
     review,
     tourSeoMetadata,
   ],

@@ -1,4 +1,5 @@
 import { defineField, defineType } from "sanity";
+import { Star } from "lucide-react";
 import BokunSpotlightItemInput from "../components/BokunSpotlightItemInput";
 
 const SAFE_BOKUN_ID_REGEX = /^\d+$/;
@@ -7,6 +8,7 @@ export const homeSpotlight = defineType({
   name: "homeSpotlight",
   title: "Home spotlight",
   type: "document",
+  icon: Star,
   preview: {
     prepare: () => ({
       title: "Spotlight Activities",
