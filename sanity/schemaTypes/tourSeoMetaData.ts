@@ -3,7 +3,7 @@
  *
  * Editors pick a Bokun tour by title, optionally set page title/description overrides,
  * and track keywords internally. One document per tour (`tour.bokunProductId`).
- * Shared SEO fields come from `definePlaceSeoFields` with FAQ required.
+ * Shared SEO fields come from `definePlaceSeoFields` (FAQ optional until backfill).
  */
 
 import { defineField, defineType } from "sanity";
@@ -56,7 +56,7 @@ export const tourSeoMetadata = defineType({
       ],
       validation: (rule) => rule.required(),
     }),
-    ...definePlaceSeoFields({ faqRequired: true, variant: "tour" }),
+    ...definePlaceSeoFields({ variant: "tour" }),
   ],
   preview: {
     select: {
