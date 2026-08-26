@@ -3,9 +3,10 @@
  *
  * Editors pick a Bokun tour by title, optionally set page title/description overrides,
  * and track keywords internally. One document per tour (`tour.bokunProductId`).
+ * Shared SEO fields come from `definePlaceSeoFields` (FAQ optional until backfill).
  */
 
-import { defineArrayMember, defineField, defineType } from "sanity";
+import { defineField, defineType } from "sanity";
 import { Search } from "lucide-react";
 import BokunSpotlightItemInput from "../components/BokunSpotlightItemInput";
 import {
@@ -13,6 +14,10 @@ import {
   prepareTourSeoMetadataPreview,
   validateUniqueTourSeoDocument,
 } from "./tour-seo-metadata.helpers";
+import {
+  definePlaceSeoFields,
+  definePlaceSeoFieldset,
+} from "./place-seo-fields";
 
 /** Sanity document type for per-tour SEO overrides (`tourSeoMetadata`). */
 export const tourSeoMetadata = defineType({
@@ -20,6 +25,7 @@ export const tourSeoMetadata = defineType({
   title: "Tour SEO Meta Data",
   type: "document",
   icon: Search,
+  fieldsets: [definePlaceSeoFieldset({ collapsed: false })],
   validation: (rule) => rule.custom(validateUniqueTourSeoDocument),
   fields: [
     defineField({
@@ -50,84 +56,7 @@ export const tourSeoMetadata = defineType({
       ],
       validation: (rule) => rule.required(),
     }),
-    defineField({
-      name: "seoTitle",
-      title: "SEO Title",
-      type: "string",
-      description: "Google title tag (recommended ≤60 characters).",
-      validation: (rule) =>
-        rule
-          .custom((value) =>
-            value == null || (typeof value === "string" && value.trim() !== "")
-              ? true
-              : "Leave empty or enter a non-blank SEO title",
-          )
-          .max(60)
-          .warning("Recommended ≤60 characters for Google title tags"),
-    }),
-    defineField({
-      name: "metaDescription",
-      title: "Meta Description",
-      type: "text",
-      rows: 3,
-      description: "Google snippet description (recommended ≤160 characters).",
-      validation: (rule) =>
-        rule
-          .custom((value) =>
-            value == null || (typeof value === "string" && value.trim() !== "")
-              ? true
-              : "Leave empty or enter a non-blank meta description",
-          )
-          .max(160)
-          .warning("Recommended ≤160 characters for Google meta descriptions"),
-    }),
-    defineField({
-      name: "focusKeyword",
-      title: "Focus Keyword",
-      type: "string",
-      description: "Primary keyword (for tracking only).",
-    }),
-    defineField({
-      name: "secondaryKeywords",
-      title: "Secondary Keywords",
-      type: "array",
-      of: [{ type: "string" }],
-      options: {
-        layout: "tags",
-      },
-      description: "Additional keywords (for tracking only).",
-    }),
-    defineField({
-      name: "aiSummary",
-      title: "AI Summary",
-      type: "text",
-      rows: 4,
-      description:
-        "Plain-language factual summary for AI citation: tour type, city, duration, group size, what's included. No marketing language.",
-      validation: (rule) =>
-        rule.max(500).error("Keep the AI summary ≤500 characters"),
-    }),
-    defineField({
-      name: "faq",
-      title: "FAQ",
-      type: "array",
-      of: [defineArrayMember({ type: "faqItem" })],
-      description:
-        "Tour-specific Q&A (e.g. duration, meeting point). Do not copy the generic on-page FAQ block used across all tours.",
-      validation: (rule) =>
-        rule.min(2).error("Add at least 2 tour-specific FAQ items"),
-    }),
-    defineField({
-      name: "sameAsUrl",
-      title: "Same As URL",
-      type: "url",
-      description:
-        "Wikidata or Wikipedia link for the city/landmark this tour centers on. Used for entity disambiguation in structured data (schema.org sameAs). Tour-specific — not used on /explore.",
-      validation: (rule) =>
-        rule.uri({
-          scheme: ["http", "https"],
-        }),
-    }),
+    ...definePlaceSeoFields({ variant: "tour" }),
   ],
   preview: {
     select: {

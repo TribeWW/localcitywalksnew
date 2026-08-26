@@ -1,9 +1,11 @@
 import { defineField, defineType } from "sanity";
+import { MessageCircle } from "lucide-react";
 
 export const review = defineType({
   name: "review",
   title: "Review",
   type: "document",
+  icon: MessageCircle,
   fields: [
     defineField({
       name: "tourId",

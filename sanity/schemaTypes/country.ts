@@ -1,17 +1,28 @@
-import { defineField, defineType } from "sanity";
-import FeaturedOnExploreInput from "../components/FeaturedOnExploreInput";
-import { validateFeaturedOnExploreCap } from "./country.helpers";
-
 /**
  * Sanity document schema for a catalog country.
  *
  * Synced from Bokun via `createIfNotExists` (`syncCountries`). Editors may set
- * `featuredOnExplore` for up to five desktop quick filters on `/explore`.
+ * `featuredOnExplore` for up to five desktop quick filters on `/explore`, an
+ * optional SVG `flagIcon`, plus images and SEO overlays aligned with city/region.
  */
+
+import { defineField, defineType } from "sanity";
+import { Globe2 } from "lucide-react";
+import FeaturedOnExploreInput from "../components/FeaturedOnExploreInput";
+import { validateFeaturedOnExploreCap } from "./country.helpers";
+import { definePlaceImagesField } from "./place-images";
+import {
+  definePlaceSeoFields,
+  definePlaceSeoFieldset,
+} from "./place-seo-fields";
+
+/** Sanity document type for a catalog country (`country`). */
 export const country = defineType({
   name: "country",
   title: "Country",
   type: "document",
+  icon: Globe2,
+  fieldsets: [definePlaceSeoFieldset()],
   fields: [
     defineField({
       name: "name",
@@ -50,5 +61,15 @@ export const country = defineType({
           validateFeaturedOnExploreCap(value, context),
         ),
     }),
+    defineField({
+      name: "flagIcon",
+      title: "Flag Icon",
+      type: "image",
+      options: { accept: "image/svg+xml" },
+      description:
+        "Small SVG country flag, used in menus/selectors across the site.",
+    }),
+    definePlaceImagesField({ entityLabel: "country" }),
+    ...definePlaceSeoFields({ variant: "place" }),
   ],
 });

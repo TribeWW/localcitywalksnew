@@ -1,9 +1,26 @@
-import { defineArrayMember, defineField, defineType } from "sanity";
+/**
+ * City document schema for Sanity Studio.
+ *
+ * Synced from Bokun with identity fields (`cityCode`, `country` / `countryCode`).
+ * Editors may set region, tour page path, images, description, and SEO overlays.
+ */
 
+import { defineField, defineType } from "sanity";
+import { Building2 } from "lucide-react";
+import { definePlaceDescriptionField } from "./place-description";
+import { definePlaceImagesField } from "./place-images";
+import {
+  definePlaceSeoFields,
+  definePlaceSeoFieldset,
+} from "./place-seo-fields";
+
+/** Sanity document type for a catalog city (`city`). */
 export const city = defineType({
   name: "city",
   title: "City",
   type: "document",
+  icon: Building2,
+  fieldsets: [definePlaceSeoFieldset()],
   fields: [
     defineField({
       name: "name",
@@ -17,6 +34,14 @@ export const city = defineType({
       to: [{ type: "country" }],
       description: "Country this city belongs to",
       validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: "region",
+      title: "Region",
+      type: "reference",
+      to: [{ type: "region" }],
+      description:
+        "Optional region this city belongs to (e.g. Provence). One region per city.",
     }),
     defineField({
       name: "cityCode",
@@ -56,92 +81,8 @@ export const city = defineType({
           return true;
         }),
     }),
-    defineField({
-      name: "images",
-      title: "Images",
-      type: "array",
-      description: "Upload multiple images for this city. Drag and drop multiple files to upload at once.",
-      of: [
-        {
-          type: "image",
-          options: {
-            hotspot: true, // Enables cropping/focus point selection
-          },
-          fields: [
-            {
-              name: "alt",
-              type: "string",
-              title: "Alternative text",
-              description: "Important for accessibility and SEO",
-              validation: (rule) => rule.required(),
-            },
-            {
-              name: "caption",
-              type: "string",
-              title: "Caption",
-              description: "Optional caption for the image",
-            },
-          ],
-        },
-      ],
-      options: {
-        layout: "grid", // Displays images in a grid layout
-      },
-    }),
-    defineField({
-      name: "description",
-      title: "Description",
-      type: "array",
-      description: "Rich text description of the city. Use formatting tools for headings, lists, links, etc.",
-      of: [
-        defineArrayMember({
-          type: "block",
-          styles: [
-            { title: "Normal", value: "normal" },
-            { title: "H1", value: "h1" },
-            { title: "H2", value: "h2" },
-            { title: "H3", value: "h3" },
-            { title: "H4", value: "h4" },
-            { title: "Quote", value: "blockquote" },
-          ],
-          lists: [
-            { title: "Bullet", value: "bullet" },
-            { title: "Number", value: "number" },
-          ],
-          marks: {
-            decorators: [
-              { title: "Strong", value: "strong" },
-              { title: "Emphasis", value: "em" },
-              { title: "Code", value: "code" },
-            ],
-            annotations: [
-              {
-                title: "URL",
-                name: "link",
-                type: "object",
-                fields: [
-                  {
-                    title: "URL",
-                    name: "href",
-                    type: "url",
-                    validation: (rule) =>
-                      rule.uri({
-                        allowRelative: true,
-                        scheme: ["http", "https", "mailto", "tel"],
-                      }),
-                  },
-                  {
-                    title: "Open in new tab",
-                    name: "blank",
-                    type: "boolean",
-                    initialValue: false,
-                  },
-                ],
-              },
-            ],
-          },
-        }),
-      ],
-    }),
+    definePlaceImagesField({ entityLabel: "city" }),
+    definePlaceDescriptionField({ entityLabel: "city" }),
+    ...definePlaceSeoFields({ variant: "place" }),
   ],
 });
