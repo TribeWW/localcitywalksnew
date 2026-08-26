@@ -14,14 +14,13 @@ import { enrichListingCardsIfFlagged } from "@/lib/city-cards/enrich-listing-car
 import { Skeleton } from "@/components/ui/skeleton";
 import { CityCardData } from "@/types/bokun";
 import { X } from "lucide-react";
-import ExploreCountryPicker from "@/components/explore/ExploreCountryPicker";
+import ExploreCountryPicker, {
+  type ExploreCountryOption,
+} from "@/components/explore/ExploreCountryPicker";
 
 const PAGE_SIZE = 20;
 
-interface CountryOption {
-  countryCode: string;
-  country: string;
-}
+type CountryOption = ExploreCountryOption;
 
 interface ExploreCatalogClientProps {
   initialData: CityCardData[];
@@ -247,7 +246,7 @@ export default function ExploreCatalogClient({
             countries={completeCountryList}
             selectedCountryCodes={selectedCountryCodes}
             disabled={controlsDisabled}
-            className="relative flex min-w-0 flex-1 items-center py-2 lg:flex-none"
+            className="relative min-w-0 flex-1 lg:flex-none"
             menuId="explore-country-menu"
             onToggleCountry={(code) => void toggleCountry(code)}
             onClear={() => void selectCountry([])}

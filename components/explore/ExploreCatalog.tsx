@@ -1,5 +1,9 @@
 import { getExploreCatalogPage } from "@/lib/explore/catalog";
 import {
+  getCountryFlagIconUrls,
+  mergeFlagIconsOntoCountries,
+} from "@/lib/explore/country-flag-icons";
+import {
   getFeaturedExploreCountries,
   intersectFeaturedWithCatalog,
 } from "@/lib/explore/featured-countries";
@@ -10,21 +14,28 @@ import { cardsWidgetUpdate } from "@/flags";
 /**
  * Render the Explore Catalog server component.
  *
- * Loads the first catalog page and featured Sanity countries in parallel.
- * Featured list is intersected with the catalog country list before being
- * passed to the client. Featured fetch failures fail open as `[]` (handled in
- * {@link getFeaturedExploreCountries}); catalog failure still shows the error UI.
+ * Loads the first catalog page, featured Sanity countries, and country flag
+ * icons in parallel. Featured list is intersected with the catalog country
+ * list; flag URLs are merged onto catalog options by ISO2. Featured/flag fetch
+ * failures fail open (handled in their loaders); catalog failure still shows
+ * the error UI.
  *
  * @returns Error UI when the catalog fetch fails, otherwise `ExploreCatalogClient`
- * with initial data, sort, country list, and featured quick-filter countries
+ * with initial data, sort, country list (with optional flags), and featured
+ * quick-filter countries
  */
 export default async function ExploreCatalog() {
-  const [cardsWidgetUpdateEnabled, result, featuredFromSanity] =
-    await Promise.all([
-      cardsWidgetUpdate(),
-      getExploreCatalogPage(1, undefined, true),
-      getFeaturedExploreCountries(),
-    ]);
+  const [
+    cardsWidgetUpdateEnabled,
+    result,
+    featuredFromSanity,
+    flagIconUrls,
+  ] = await Promise.all([
+    cardsWidgetUpdate(),
+    getExploreCatalogPage(1, undefined, true),
+    getFeaturedExploreCountries(),
+    getCountryFlagIconUrls(),
+  ]);
 
   if (!result.success) {
     return (
@@ -48,10 +59,14 @@ export default async function ExploreCatalog() {
     }
   }
   const totalHits = result.totalHits ?? initialData.length;
-  const completeCountryList = result.completeCountryList ?? [];
+  const catalogCountries = result.completeCountryList ?? [];
   const featuredCountries = intersectFeaturedWithCatalog(
     featuredFromSanity,
-    completeCountryList,
+    catalogCountries,
+  );
+  const completeCountryList = mergeFlagIconsOntoCountries(
+    catalogCountries,
+    flagIconUrls,
   );
 
   return (

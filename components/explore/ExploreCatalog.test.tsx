@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getExploreCatalogPageMock = vi.fn();
 const getFeaturedExploreCountriesMock = vi.fn();
+const getCountryFlagIconUrlsMock = vi.fn();
 const cardsWidgetUpdateMock = vi.fn();
 const enrichCityCardsForListingMock = vi.fn();
 
@@ -22,6 +23,16 @@ vi.mock("@/lib/explore/featured-countries", async (importOriginal) => {
     ...actual,
     getFeaturedExploreCountries: (...args: unknown[]) =>
       getFeaturedExploreCountriesMock(...args),
+  };
+});
+
+vi.mock("@/lib/explore/country-flag-icons", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/explore/country-flag-icons")>();
+  return {
+    ...actual,
+    getCountryFlagIconUrls: (...args: unknown[]) =>
+      getCountryFlagIconUrlsMock(...args),
   };
 });
 
@@ -71,9 +82,11 @@ describe("ExploreCatalog (async server entry)", () => {
   beforeEach(() => {
     getExploreCatalogPageMock.mockReset();
     getFeaturedExploreCountriesMock.mockReset();
+    getCountryFlagIconUrlsMock.mockReset();
     cardsWidgetUpdateMock.mockReset();
     enrichCityCardsForListingMock.mockReset();
     cardsWidgetUpdateMock.mockResolvedValue(false);
+    getCountryFlagIconUrlsMock.mockResolvedValue(new Map());
   });
 
   it("fetches catalog and featured countries together and passes the intersection", async () => {

@@ -7,6 +7,8 @@ import { Check, ChevronDown } from "lucide-react";
 export type ExploreCountryOption = {
   countryCode: string;
   country: string;
+  /** Optional Sanity `flagIcon` asset URL for the circular flag glyph. */
+  flagIconUrl?: string | null;
 };
 
 export type ExploreCountryPickerProps = {
@@ -27,10 +29,51 @@ export type ExploreCountryPickerProps = {
 };
 
 /**
+ * Circular flag glyph for a country option.
+ *
+ * Renders a Sanity SVG/image URL when present; otherwise a muted placeholder
+ * matching the design-brief empty-flag treatment.
+ *
+ * @param flagIconUrl - Optional Sanity flag asset URL
+ * @param country - Country display name (used only for img alt fallback context)
+ */
+function CountryFlagGlyph({
+  flagIconUrl,
+  country,
+}: {
+  flagIconUrl?: string | null;
+  country: string;
+}) {
+  if (flagIconUrl) {
+    return (
+      // Decorative; option already has an accessible name via aria-label
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={flagIconUrl}
+        alt=""
+        width={18}
+        height={18}
+        aria-hidden
+        className="size-[18px] shrink-0 rounded-full object-cover ring-1 ring-grapes/14"
+        data-country={country}
+      />
+    );
+  }
+
+  return (
+    <span
+      aria-hidden
+      className="size-[18px] shrink-0 rounded-full border border-border bg-pearl-gray"
+    />
+  );
+}
+
+/**
  * Multi-select country picker for the explore catalog filters.
  *
- * Trigger labelled **Country**, checkbox list, Clear inside the menu, close on
- * outside click / Escape. No search field. Shared by mobile and desktop layouts.
+ * Trigger labelled **Select country**, checkbox list with optional flags,
+ * footer with selection count + Clear all, close on outside click / Escape.
+ * No search field. Shared by mobile and desktop layouts.
  *
  * @param props - Countries, selection, callbacks, and optional layout classes
  * @returns Country picker trigger + dropdown panel
@@ -46,6 +89,8 @@ export default function ExploreCountryPicker({
 }: ExploreCountryPickerProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const selectedCount = selectedCountryCodes.length;
+  const hasSelection = selectedCount > 0;
 
   useEffect(() => {
     if (!open) return;
@@ -73,18 +118,23 @@ export default function ExploreCountryPicker({
   }, [open]);
 
   return (
-    <div ref={rootRef} className={`relative ${className ?? ""}`}>
+    <div ref={rootRef} className={`relative shrink-0 ${className ?? ""}`}>
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         disabled={disabled}
         aria-expanded={open}
         aria-controls={menuId}
-        className="flex h-10 w-full items-center gap-2 rounded-sm border-input text-[#6A6A6A] bg-white text-left text-sm disabled:opacity-50"
+        aria-haspopup="true"
+        className={`mb-[-1px] flex items-center gap-2 whitespace-nowrap border-0 border-b-2 bg-transparent px-4 py-4 text-left text-sm transition-colors disabled:opacity-50 ${
+          hasSelection
+            ? "border-tangerine font-semibold text-grapes"
+            : "border-transparent font-normal text-muted-foreground hover:text-grapes"
+        }`}
       >
         <span className="truncate">Select country</span>
         <ChevronDown
-          className={`h-4 w-4 shrink-0 text-[#6A6A6A] transition-transform ${
+          className={`size-[13px] shrink-0 text-muted-foreground transition-transform duration-150 ${
             open ? "rotate-180" : ""
           }`}
           aria-hidden
@@ -93,9 +143,11 @@ export default function ExploreCountryPicker({
       {open ? (
         <div
           id={menuId}
-          className="absolute left-0 top-12 z-40 w-max min-w-full overflow-visible rounded-sm border border-border bg-white p-2 shadow-lg"
+          role="group"
+          aria-label="Filter by country"
+          className="absolute left-0 top-[calc(100%+1px)] z-40 min-w-[248px] overflow-hidden rounded-md border-[1.5px] border-border bg-white shadow-[0px_8px_16px_rgba(0,0,0,0.08)]"
         >
-          {countries.map(({ countryCode, country }) => {
+          {countries.map(({ countryCode, country, flagIconUrl }) => {
             const isSelected = selectedCountryCodes.includes(countryCode);
             return (
               <button
@@ -104,36 +156,52 @@ export default function ExploreCountryPicker({
                 onClick={() => onToggleCountry(countryCode)}
                 role="checkbox"
                 aria-checked={isSelected}
-                className="flex w-full items-center justify-between rounded-md px-2 py-2 text-sm hover:bg-muted"
+                className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-normal text-grapes transition-colors hover:bg-pearl-gray ${
+                  isSelected ? "bg-pearl-gray" : "bg-white"
+                }`}
                 aria-label={`Country option ${country}`}
               >
-                <span className="flex items-center gap-2 whitespace-nowrap">
-                  <span
-                    className={`inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border ${
-                      isSelected
-                        ? "border-[#0F172A] bg-[#0F172A]"
-                        : "border-[#CBD5E1] bg-white"
-                    }`}
-                    aria-hidden
-                  >
-                    {isSelected ? (
-                      <Check className="h-3 w-3 text-white" aria-hidden />
-                    ) : null}
-                  </span>
-                  <span>{country}</span>
+                <span
+                  aria-hidden
+                  className={`inline-flex size-4 shrink-0 items-center justify-center rounded border-[1.5px] transition-colors ${
+                    isSelected
+                      ? "border-grapes bg-grapes"
+                      : "border-border bg-white"
+                  }`}
+                >
+                  {isSelected ? (
+                    <Check
+                      className="size-[11px] text-white"
+                      strokeWidth={3}
+                      aria-hidden
+                    />
+                  ) : null}
                 </span>
+                <CountryFlagGlyph
+                  flagIconUrl={flagIconUrl}
+                  country={country}
+                />
+                <span className="whitespace-nowrap">{country}</span>
               </button>
             );
           })}
-          {selectedCountryCodes.length > 0 ? (
-            <button
-              type="button"
-              onClick={onClear}
-              className="mt-2 w-full whitespace-nowrap border-t border-border px-2 pt-3 pb-1 text-left text-sm font-medium text-[#6A6A6A] hover:text-[#0F172A]"
-            >
-              Clear
-            </button>
-          ) : null}
+
+          <div className="flex items-center justify-between gap-3 border-t border-border bg-pearl-gray px-3.5 py-2.5">
+            <span className="text-xs text-muted-foreground">
+              {hasSelection
+                ? `${selectedCount} selected`
+                : "None selected"}
+            </span>
+            {hasSelection ? (
+              <button
+                type="button"
+                onClick={onClear}
+                className="bg-transparent p-0 text-[13px] text-muted-foreground underline underline-offset-[3px] hover:text-grapes"
+              >
+                Clear all
+              </button>
+            ) : null}
+          </div>
         </div>
       ) : null}
     </div>
