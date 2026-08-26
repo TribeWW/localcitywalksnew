@@ -2,8 +2,8 @@
  * Sanity document schema for a catalog country.
  *
  * Synced from Bokun via `createIfNotExists` (`syncCountries`). Editors may set
- * `featuredOnExplore` for up to five desktop quick filters on `/explore`, plus
- * optional images and SEO overlays aligned with city/region.
+ * `featuredOnExplore` for up to five desktop quick filters on `/explore`, an
+ * optional SVG `flagIcon`, plus images and SEO overlays aligned with city/region.
  */
 
 import { defineField, defineType } from "sanity";
@@ -60,6 +60,14 @@ export const country = defineType({
         rule.custom((value, context) =>
           validateFeaturedOnExploreCap(value, context),
         ),
+    }),
+    defineField({
+      name: "flagIcon",
+      title: "Flag Icon",
+      type: "image",
+      options: { accept: "image/svg+xml" },
+      description:
+        "Small SVG country flag, used in menus/selectors across the site.",
     }),
     definePlaceImagesField({ entityLabel: "country" }),
     ...definePlaceSeoFields({ variant: "place" }),
