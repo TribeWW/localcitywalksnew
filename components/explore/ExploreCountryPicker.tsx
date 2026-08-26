@@ -126,7 +126,7 @@ export default function ExploreCountryPicker({
         aria-expanded={open}
         aria-controls={menuId}
         aria-haspopup="true"
-        className={`mb-[-1px] flex items-center gap-2 whitespace-nowrap border-0 border-b-2 bg-transparent px-4 py-4 text-left text-sm transition-colors disabled:opacity-50 ${
+        className={`mb-[-1px] flex items-center gap-2 whitespace-nowrap border-0 border-b-2 bg-transparent py-4 text-left text-sm transition-colors disabled:opacity-50 ${
           hasSelection
             ? "border-tangerine font-semibold text-grapes"
             : "border-transparent font-normal text-muted-foreground hover:text-grapes"
@@ -177,10 +177,7 @@ export default function ExploreCountryPicker({
                     />
                   ) : null}
                 </span>
-                <CountryFlagGlyph
-                  flagIconUrl={flagIconUrl}
-                  country={country}
-                />
+                <CountryFlagGlyph flagIconUrl={flagIconUrl} country={country} />
                 <span className="whitespace-nowrap">{country}</span>
               </button>
             );
@@ -188,9 +185,7 @@ export default function ExploreCountryPicker({
 
           <div className="flex items-center justify-between gap-3 border-t border-border bg-pearl-gray px-3.5 py-2.5">
             <span className="text-xs text-muted-foreground">
-              {hasSelection
-                ? `${selectedCount} selected`
-                : "None selected"}
+              {hasSelection ? `${selectedCount} selected` : "None selected"}
             </span>
             {hasSelection ? (
               <button
