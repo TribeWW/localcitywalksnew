@@ -130,6 +130,7 @@ export function definePlaceSeoFields(
       validation: faqRequired
         ? (rule) =>
             rule
+              .required()
               .min(PLACE_SEO_FAQ_MIN_WHEN_REQUIRED)
               .error(
                 `Add at least ${PLACE_SEO_FAQ_MIN_WHEN_REQUIRED} tour-specific FAQ items`,
