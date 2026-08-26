@@ -507,7 +507,7 @@ export default async function TourPage({
         ) : null}
 
         <div id="faq" className="mt-10 scroll-mt-28 pb-4 md:mt-4">
-          <h2 className="mb-6 text-xl font-semibold text-[#0F172A]">
+          <h2 className="mb-6 text-xl font-semibold text-[#0F172A] ">
             Frequently asked questions
           </h2>
           <FaqAccordion
