@@ -66,7 +66,7 @@ const Footer = ({ variant = "full" }: FooterProps) => {
   if (variant === "minimal") {
     return (
       <footer className="border-t border-border bg-white font-sans">
-        <div className="mx-auto max-w-6xl px-6 py-6">
+        <div className="mx-auto max-w-6xl px-4 py-6">
           <div className="flex flex-col items-center gap-3 md:flex-row md:justify-between">
             <p className="m-0 text-xs text-muted-foreground">
               © {currentYear} LocalCityWalks™. All rights reserved.
