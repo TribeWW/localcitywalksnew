@@ -42,10 +42,18 @@ function shouldUsePreviewSpotlightIds(): boolean {
 }
 
 /**
- * Loads spotlight Bokun ids: the curated test list in preview/local, otherwise the
- * published `homeSpotlight` doc from Sanity (no drafts). Returns `null` on Sanity failure.
+ * Loads Home Spotlight Bokun product ids in editorial (1–8) order.
+ *
+ * - Preview/local (`VERCEL_ENV !== "production"`): curated `PREVIEW_SPOTLIGHT_IDS`
+ *   for the bokuntest catalog — does not call Sanity.
+ * - Production: published `homeSpotlight` document (drafts excluded).
+ * - Sanity fetch failure: returns `null` (callers treat as no ids / empty).
+ * - Empty Sanity items: returns `[]`.
+ *
+ * Safe for Server Components (plain module, not `"use server"`). Used by the home
+ * spotlight cards loader and by related-tours selection (tier 4).
  */
-async function getSpotlightProductIds(): Promise<string[] | null> {
+export async function getHomeSpotlightProductIds(): Promise<string[] | null> {
   if (shouldUsePreviewSpotlightIds()) {
     return normalizeBokunProductIds(PREVIEW_SPOTLIGHT_IDS, MAX_ITEMS);
   }
@@ -70,7 +78,7 @@ async function getSpotlightProductIds(): Promise<string[] | null> {
  * failures. Safe for Server Components (plain module, not `"use server"`).
  */
 export async function getHomeSpotlightCityCards(): Promise<CityCardData[]> {
-  const ids = await getSpotlightProductIds();
+  const ids = await getHomeSpotlightProductIds();
 
   if (!ids || ids.length === 0) {
     return [];
