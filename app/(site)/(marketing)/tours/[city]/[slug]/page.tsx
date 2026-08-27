@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import type { SanityReviewListItem } from "@/types/review";
 import Image from "next/image";
@@ -25,6 +26,8 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TourRequestFormSection from "@/components/tours/tour-request-form-section";
+import RelatedToursSection from "@/components/tours/RelatedToursSection";
+import { RelatedToursSkeleton } from "@/components/tours/RelatedToursSkeleton";
 import { cardsWidgetUpdate } from "@/flags";
 import { extractGuidedLanguagesFromGuidanceTypes } from "@/lib/bokun/extract-guided-languages";
 import { enrichProductPricesFromPriceList } from "@/lib/bokun/enrich-product-prices-from-price-list";
@@ -62,7 +65,7 @@ export async function generateMetadata({
 /**
  * Render the tour detail page for the provided route parameters.
  *
- * Extracts the numeric tour id from `slug`, validates and loads tour data, enforces canonical city/slug by redirecting when necessary, prepares images and sanitized content, and loads and displays reviews. The rendered page includes images, tour metadata, booking request form, reviews (when available), and an FAQ section.
+ * Extracts the numeric tour id from `slug`, validates and loads tour data, enforces canonical city/slug by redirecting when necessary, prepares images and sanitized content, and loads and displays reviews. The rendered page includes images, tour metadata, booking request form, reviews (when available), a Suspense-wrapped related-tours section, and an FAQ section.
  *
  * @param params - A promise that resolves to route parameters `{ city, slug }`
  * @returns The React element for the tour detail page containing images, content, booking UI, reviews, and FAQ
@@ -507,7 +510,7 @@ export default async function TourPage({
         ) : null}
 
         <div id="faq" className="mt-10 scroll-mt-28 pb-4 md:mt-4">
-          <h2 className="mb-6 text-xl font-semibold text-[#0F172A] ">
+          <h2 className="b-2 text-2xl font-semibold text-[#0F172A] ">
             Frequently asked questions
           </h2>
           <FaqAccordion
@@ -542,6 +545,17 @@ export default async function TourPage({
             ]}
           />
         </div>
+        {/* Related tours stream in via Suspense — do not await in this page. */}
+        <Suspense fallback={<RelatedToursSkeleton />}>
+          <RelatedToursSection
+            productId={id}
+            citySlug={canonicalCity}
+            cityCode={detail.data.googlePlace?.cityCode}
+            countryCode={detail.data.googlePlace?.countryCode}
+            countryName={detail.data.googlePlace?.country}
+            cardsWidgetUpdate={cardsWidgetUpdateEnabled}
+          />
+        </Suspense>
       </div>
     </main>
   );
