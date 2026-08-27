@@ -13,11 +13,71 @@ vi.mock("@/lib/tours/detail.actions", () => ({
   getTourDetailById: (...args: unknown[]) => getTourDetailByIdMock(...args),
 }));
 
-import { getHomeSpotlightCityCards } from "@/lib/home/spotlight";
+import {
+  getHomeSpotlightCityCards,
+  getHomeSpotlightProductIds,
+} from "@/lib/home/spotlight";
 
 const keyPhoto = {
   derived: [{ name: "preview", url: "/preview.jpg" }],
 };
+
+describe("getHomeSpotlightProductIds", () => {
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubEnv("VERCEL_ENV", "production");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("returns normalized production Sanity ids in editorial order", async () => {
+    fetchMock.mockResolvedValue({
+      items: [{ id: 1077682 }, { id: "999" }, { id: null }],
+    });
+
+    await expect(getHomeSpotlightProductIds()).resolves.toEqual([
+      "1077682",
+      "999",
+    ]);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses curated preview ids and skips Sanity outside production", async () => {
+    vi.stubEnv("VERCEL_ENV", "preview");
+
+    const ids = await getHomeSpotlightProductIds();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(ids).toEqual([
+      "15683",
+      "15684",
+      "15685",
+      "15686",
+      "15687",
+      "15688",
+      "15689",
+      "15690",
+    ]);
+  });
+
+  it("returns an empty list when Sanity has no spotlight items", async () => {
+    fetchMock.mockResolvedValue({ items: [] });
+
+    await expect(getHomeSpotlightProductIds()).resolves.toEqual([]);
+  });
+
+  it("returns null when the Sanity fetch throws", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    fetchMock.mockRejectedValue(new Error("Sanity down"));
+
+    await expect(getHomeSpotlightProductIds()).resolves.toBeNull();
+    expect(errorSpy).toHaveBeenCalled();
+
+    errorSpy.mockRestore();
+  });
+});
 
 describe("getHomeSpotlightCityCards", () => {
   beforeEach(() => {
