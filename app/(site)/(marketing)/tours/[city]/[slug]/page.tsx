@@ -419,11 +419,11 @@ export default async function TourPage({
               <div>
                 <h3
                   id="hello-banner-heading"
-                  className="mb-2 text-base font-semibold text-[#0F172A]"
+                  className="mb-2 lg:text-lg text-base font-semibold text-[#0F172A]"
                 >
                   Hello by LocalCityWalks
                 </h3>
-                <p className="text-sm leading-[1.6] text-[#1A1A1A]">
+                <p className="lg:text-base text-sm leading-[1.6] text-[#1A1A1A]">
                   Local-led private walking tours that blend iconic landmarks,
                   hidden local corners and personal stories, bringing the city
                   to life.
