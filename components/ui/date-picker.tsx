@@ -133,7 +133,9 @@ const DatePicker = ({
   const preferWidgetDialog = usePreferWidgetDialog();
   const useWidgetDialog = variant === "widget" && preferWidgetDialog;
 
-  const useDropdownCaption = Boolean(minDate && maxDate);
+  // Native month/year <select> menus misbehave on touch (iOS shows the picker
+  // persistently). Use prev/next navigation in the centered widget dialog instead.
+  const useDropdownCaption = Boolean(minDate && maxDate) && !useWidgetDialog;
 
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen);
@@ -211,12 +213,29 @@ const DatePicker = ({
       initialFocus
       className={cn(
         variant === "widget" &&
-          "w-full [--cell-size:max(2rem,calc((100%_-_0.25rem)_/_7))]",
+          (useWidgetDialog
+            ? "w-full p-1 [--cell-size:min(2rem,calc((100%_-_1rem)_/_7))]"
+            : "w-full [--cell-size:max(2rem,calc((100%_-_0.25rem)_/_7))]"),
       )}
     />
   );
 
   if (useWidgetDialog) {
+    const widgetDialogOverlayClass = cn(
+      elevatedLayer && BOOKING_STACKED_OVERLAY_Z_CLASS,
+      elevatedLayer && "!top-14",
+    );
+
+    const widgetDialogContentClass = cn(
+      "w-[calc(100%-3rem)] max-w-sm max-h-[min(36rem,calc(100vh-4rem))] gap-0 overflow-y-auto rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-sm",
+      elevatedLayer
+        ? cn(
+            BOOKING_STACKED_OVERLAY_Z_CLASS,
+            "!top-[calc(4.75rem+1.25rem)] !bottom-auto !max-h-[min(36rem,calc(100vh-6rem))] !translate-y-0",
+          )
+        : undefined,
+    );
+
     return (
       <div className="w-full">
         <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -224,16 +243,17 @@ const DatePicker = ({
           <DialogContent
             showCloseButton={false}
             {...bookingStackedOverlayDataAttributes(elevatedLayer)}
-            overlayClassName={
-              elevatedLayer ? BOOKING_STACKED_OVERLAY_Z_CLASS : undefined
-            }
-            className={cn(
-              "w-[calc(100%-2rem)] max-w-sm gap-0 border-border bg-popover p-0 shadow-lg sm:max-w-sm",
-              elevatedLayer && BOOKING_STACKED_OVERLAY_Z_CLASS,
-            )}
+            overlayClassName={widgetDialogOverlayClass}
+            className={widgetDialogContentClass}
           >
-            <DialogTitle className="sr-only">Select a date</DialogTitle>
-            <div className="w-full p-4">{calendar}</div>
+            <DialogTitle className="border-b border-border px-5 py-4 text-center text-base font-semibold text-nightsky">
+              Select a date
+            </DialogTitle>
+            <div className="px-5 pb-6 pt-4">
+              <div className="min-h-[22rem] rounded-xl bg-background px-4 pb-5 pt-3 ">
+                {calendar}
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

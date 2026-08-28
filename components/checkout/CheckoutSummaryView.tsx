@@ -13,7 +13,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Separator } from "@/components/ui/separator";
 import { initiateCheckoutPayment } from "@/lib/checkout/payment.actions";
 import { buildInitiateCheckoutPaymentInput } from "@/lib/checkout/build-initiate-checkout-payment-input";
 import { runCheckoutPayClick } from "@/lib/checkout/run-checkout-pay-click";
@@ -230,20 +229,21 @@ export function CheckoutSummaryView({
               onAcknowledgedChange={setPriceAcknowledged}
             />
           ) : null}
-          <CheckoutContactFields
-            values={contact}
-            onFieldChange={handleFieldChange}
-            contactRequirements={contactRequirements}
-          />
-          <Separator />
-          <CheckoutPaymentSection
-            payLabel={payLabel}
-            termsAccepted={termsAccepted}
-            onTermsAcceptedChange={setTermsAccepted}
-            onPayClick={handlePayClick}
-            payDisabled={!isPriceGateOpen || isPromoValidating}
-            payLoading={isPayLoading}
-          />
+          <div>
+            <CheckoutContactFields
+              values={contact}
+              onFieldChange={handleFieldChange}
+              contactRequirements={contactRequirements}
+            />
+            <CheckoutPaymentSection
+              payLabel={payLabel}
+              termsAccepted={termsAccepted}
+              onTermsAcceptedChange={setTermsAccepted}
+              onPayClick={handlePayClick}
+              payDisabled={!isPriceGateOpen || isPromoValidating}
+              payLoading={isPayLoading}
+            />
+          </div>
         </>
       }
       rightColumn={

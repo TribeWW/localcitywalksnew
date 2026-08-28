@@ -9,8 +9,8 @@
  * - Pricing: debounced `getTourBookingQuote` (400ms)
  * - Checkout: `startCheckoutHandoff` → `/checkout?h=…` (LOC-1157)
  *
- * **Small screens (`<md`)**: scroll-gated fixed bottom bar + full-screen drawer.
- * **Medium and up (`md+`)**: unchanged sticky in-page card.
+ * **Small screens (`<lg`)**: scroll-gated fixed bottom bar + full-screen drawer.
+ * **Large screens (`lg+`)**: sticky in-page card in the tour sidebar column.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -608,7 +608,10 @@ export default function BookingWidget({
 
   return (
     <Form {...form}>
-      <form className="space-y-0" onSubmit={(event) => event.preventDefault()}>
+      <form
+        className="space-y-0"
+        onSubmit={(event) => event.preventDefault()}
+      >
         {isMediumScreen ? (
           <BookingWidgetShell>
             <BookingWidgetConfigureStep {...configureStepProps} showFromPrice />

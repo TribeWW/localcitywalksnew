@@ -7,7 +7,7 @@
  * matches design brief §3.3 visual structure.
  */
 
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck, Lock, TicketCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,7 +17,6 @@ import {
   CHECKOUT_CHECKBOX_CLASS,
   CHECKOUT_PRIMARY_BUTTON_CLASS,
 } from "./checkout-field-styles";
-import { CheckoutSectionHeading } from "./CheckoutSectionHeading";
 
 const DEFAULT_TERMS_HREF = "/docs/LocalCityWalks_TermsAndConditions_EN.pdf";
 
@@ -46,12 +45,7 @@ export function CheckoutPaymentSection({
 }: CheckoutPaymentSectionProps) {
   const isPayDisabled = payDisabled || !termsAccepted || payLoading;
   return (
-    <section>
-      <CheckoutSectionHeading
-        title="Payment"
-        lead="Secure checkout powered by Stripe."
-      />
-
+    <section className="mt-6">
       <div className="mb-6 flex items-start gap-3 sm:mb-8">
         <Checkbox
           id="checkout-terms"
@@ -73,7 +67,6 @@ export function CheckoutPaymentSection({
           >
             terms &amp; conditions
           </a>
-          .
         </Label>
       </div>
 
@@ -96,6 +89,30 @@ export function CheckoutPaymentSection({
         <p>
           <span className="font-medium text-nightsky">Free cancellation</span>
           {" — until 24 hours before activity"}
+        </p>
+      </div>
+      <div className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
+        <TicketCheck
+          className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-600"
+          aria-hidden
+        />
+        <p className=" text-sm text-muted-foreground ">
+          <span className="font-medium text-nightsky">
+            Instant confirmation
+          </span>
+          {" — "}
+          <span className="text-muted-foreground">sent immediately</span>
+        </p>
+      </div>
+      <div className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
+        <Lock
+          className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-600"
+          aria-hidden
+        />
+        <p className="text-sm text-muted-foreground ">
+          <span className="font-medium text-nightsky">Secure checkout</span>
+          {" — "}
+          <span className="text-muted-foreground">powered by Stripe</span>
         </p>
       </div>
     </section>

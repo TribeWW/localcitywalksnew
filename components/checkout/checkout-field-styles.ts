@@ -14,7 +14,7 @@ export const CHECKOUT_SUCCESS_MAX_WIDTH_CLASS = "max-w-[600px]";
 
 /** Page horizontal + vertical padding; tighter on mobile. */
 export const CHECKOUT_PAGE_PADDING_CLASS =
-  "px-4 pt-10 pb-16 sm:px-6 sm:pt-12 sm:pb-20";
+  "px-4 pt-10 pb-16 sm:px-6 sm:pt-12 sm:pb-15";
 
 /**
  * Summary grid: stacked ≤959px, 1.4fr / 1fr from 960px — design brief §3.1.

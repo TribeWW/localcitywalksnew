@@ -291,10 +291,10 @@ export default function ExploreCatalogClient({
       </div>
 
       <section id="explore-catalog" className="py-6">
-        <div className="mx-auto max-w-6xl px-6 md:px-8 lg:px-0">
+        <div className="mx-auto max-w-6xl px-6 md:px-8 lg:px-0 ">
           <div
             data-testid="explore-catalog-meta"
-            className={`flex flex-wrap items-center gap-x-4 gap-y-3 ${
+            className={`flex flex-wrap items-center gap-x-4 gap-y-3 pb-6 ${
               showMetaRow ? "" : "hidden lg:flex"
             }`}
           >
