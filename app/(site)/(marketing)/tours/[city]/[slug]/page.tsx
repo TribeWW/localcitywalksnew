@@ -283,22 +283,19 @@ export default async function TourPage({
       <div className="mx-auto w-full max-w-6xl px-4 md:px-8 xl:px-0 py-6">
         <div className="mb-6 flex items-center justify-between gap-4">
           <Breadcrumb>
-            <BreadcrumbList className="flex-wrap gap-2 text-xs text-[#6A6A6A] sm:gap-2">
+            <BreadcrumbList className="flex-wrap gap-2 text-xs text-muted-foreground sm:gap-2">
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link
-                    href="/"
-                    className="font-medium text-[#0F172A] no-underline hover:text-[#0F172A]"
-                  >
+                  <Link href="/" className="font-medium no-underline">
                     Home
                   </Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
-              <BreadcrumbSeparator className="text-[#D3CED2] [&>svg]:hidden">
+              <BreadcrumbSeparator className="text-border [&>svg]:hidden">
                 /
               </BreadcrumbSeparator>
               <BreadcrumbItem>
-                <span className="font-medium text-[#0F172A]">
+                <span className="font-medium">
                   Private tour in {cityDisplayName}
                 </span>
               </BreadcrumbItem>
@@ -321,13 +318,18 @@ export default async function TourPage({
             <div>
               {heroReviewStats ? (
                 <div className="mb-3 flex items-center gap-1.5">
-                  <Star size={14} fill="#0F172A" color="#0F172A" aria-hidden />
-                  <span className="text-[14px] font-semibold text-[#0F172A]">
+                  <Star
+                    size={14}
+                    className="text-nightsky"
+                    fill="currentColor"
+                    aria-hidden
+                  />
+                  <span className="text-[14px] font-semibold text-nightsky">
                     {heroReviewStats.ratingLabel}
                   </span>
                   <a
                     href="#tour-reviews"
-                    className="cursor-pointer text-[14px] text-[#6A6A6A] underline decoration-[#D3CED2] underline-offset-2"
+                    className="cursor-pointer text-[14px] text-muted-foreground underline decoration-border underline-offset-2"
                   >
                     ·{" "}
                     {heroReviewStats.usesFallbackReviews
@@ -340,11 +342,11 @@ export default async function TourPage({
                 </div>
               ) : null}
 
-              <h1 className="mb-4 text-[32px] font-bold leading-[1.3] text-[#0F172A]">
+              <h1 className="mb-4 text-[32px] font-bold leading-[1.3] text-nightsky">
                 {productTitle}
               </h1>
               {excerpt ? (
-                <p className="mb-6 text-lg font-normal leading-[1.6] text-[#1A1A1A]">
+                <p className="mb-6 text-lg font-normal leading-[1.6] text-foreground">
                   {excerpt}
                 </p>
               ) : null}
@@ -377,7 +379,7 @@ export default async function TourPage({
                 ].map((tag, i) => (
                   <div
                     key={i}
-                    className="inline-flex items-center gap-1.5 rounded-lg border-[1.5px] border-[#D3CED2] bg-[#F7F7F7] px-2.5 py-1 text-sm font-medium text-[#0F172A]"
+                    className="inline-flex items-center gap-1.5 rounded-lg border-[1.5px] border-border bg-[#F7F7F7] px-2.5 py-1 text-sm font-medium text-nightsky"
                   >
                     {tag.icon}
                     <span>{tag.text}</span>
@@ -394,19 +396,19 @@ export default async function TourPage({
               >
                 <h2
                   id="about-heading"
-                  className="mb-4 text-xl font-semibold text-[#0F172A]"
+                  className="mb-4 text-xl font-semibold text-nightsky"
                 >
                   About
                 </h2>
                 <div
-                  className="flex flex-col gap-6 text-base leading-[1.6] text-[#1A1A1A] [&_p]:m-0 [&_p]:!text-[#1A1A1A] [&_p]:text-base [&_p]:leading-[1.6]"
+                  className="flex flex-col gap-6 text-base leading-[1.6] text-foreground [&_p]:m-0 [&_p]:!text-foreground [&_p]:text-base [&_p]:leading-[1.6]"
                   dangerouslySetInnerHTML={{ __html: sanitizedAboutHtml }}
                 />
               </section>
             ) : null}
 
             <section
-              className="mb-12 flex items-center gap-6 rounded-lg border-[1.5px] border-[#D3CED2] bg-white p-6"
+              className="mb-12 flex items-center gap-6 rounded-lg border-[1.5px] border-border bg-white p-6"
               aria-labelledby="hello-banner-heading"
             >
               <Image
@@ -419,11 +421,11 @@ export default async function TourPage({
               <div>
                 <h3
                   id="hello-banner-heading"
-                  className="mb-2 lg:text-lg text-base font-semibold text-[#0F172A]"
+                  className="mb-2 lg:text-lg text-base font-semibold text-nightsky"
                 >
                   Hello by LocalCityWalks
                 </h3>
-                <p className="lg:text-base text-sm leading-[1.6] text-[#1A1A1A]">
+                <p className="lg:text-base text-sm leading-[1.6] text-foreground">
                   Local-led private walking tours that blend iconic landmarks,
                   hidden local corners and personal stories, bringing the city
                   to life.
@@ -434,11 +436,11 @@ export default async function TourPage({
             <section className="mb-12" aria-labelledby="good-to-know-heading">
               <h2
                 id="good-to-know-heading"
-                className="mb-4 text-xl font-semibold text-[#0F172A]"
+                className="mb-4 text-xl font-semibold text-nightsky"
               >
                 Good to know
               </h2>
-              <ul className="list-disc space-y-2 pl-5 text-base leading-[1.6] text-[#1A1A1A]">
+              <ul className="list-disc space-y-2 pl-5 text-base leading-[1.6] text-foreground">
                 <li>Group size limited to 15 for an intimate experience.</li>
                 <li>
                   Not suitable for participants with severe mobility
@@ -453,11 +455,11 @@ export default async function TourPage({
             <section aria-labelledby="cancellation-policy-heading">
               <h2
                 id="cancellation-policy-heading"
-                className="mb-4 text-xl font-semibold text-[#0F172A]"
+                className="mb-4 text-xl font-semibold text-nightsky"
               >
                 Cancellation policy
               </h2>
-              <p className="text-base leading-[1.6] text-[#1A1A1A]">
+              <p className="text-base leading-[1.6] text-foreground">
                 Receive a full refund if you cancel at least 24 hours before the
                 experience starts. No refund if cancelled less than 24 hours
                 before the start time.
@@ -509,8 +511,8 @@ export default async function TourPage({
           <div className="w-full mt-16">{reviewsSection}</div>
         ) : null}
 
-        <div id="faq" className="mt-10 scroll-mt-28 pb-4 md:mt-4">
-          <h2 className="b-2 text-2xl font-semibold text-[#0F172A] ">
+        <div id="faq" className="mt-16 scroll-mt-28">
+          <h2 className="mb-6 text-2xl font-semibold text-nightsky">
             Frequently asked questions
           </h2>
           <FaqAccordion

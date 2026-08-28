@@ -47,7 +47,7 @@ export function RelatedToursView({
     <section className="mt-16 w-full" aria-labelledby="related-tours-heading">
       <h2
         id="related-tours-heading"
-        className="b-2 text-2xl font-semibold text-[#0F172A]"
+        className="mb-6 text-2xl font-semibold text-nightsky"
       >
         {heading}
       </h2>

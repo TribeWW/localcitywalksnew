@@ -60,7 +60,7 @@ export function ReviewsSection({
             >
               {title}
             </h2>
-            <p className="flex flex-wrap items-center justify-center gap-2 text-lg leading-relaxed text-[#6A6A6A]">
+            <p className="flex flex-wrap items-center justify-center gap-2 text-lg leading-relaxed text-muted-foreground">
               <Star
                 className="size-5 shrink-0 fill-[#0F172A] text-[#0F172A]"
                 aria-hidden
@@ -84,9 +84,9 @@ export function ReviewsSection({
       <section
         id="tour-reviews"
         aria-labelledby="reviews-section-title"
-        className="mb-12 w-full scroll-mt-28"
+        className="w-full scroll-mt-28"
       >
-        <div className="w-full pb-16">
+        <div className="w-full">
           <h2
             id="reviews-section-title"
             className="mb-2 text-2xl font-semibold text-[#0F172A]"
@@ -97,7 +97,7 @@ export function ReviewsSection({
           {variant === "fallback" ? (
             <FallbackReviewsNotice />
           ) : (
-            <p className="mb-8 max-w-2xl text-sm leading-relaxed text-[#6A6A6A]">
+            <p className="mb-8 max-w-2xl text-sm leading-relaxed text-muted-foreground">
               <span>
                 All reviews come from verified travellers who joined this
                 specific activity with LocalCityWalks.
@@ -115,7 +115,7 @@ export function ReviewsSection({
                 <span className="text-[32px] font-bold leading-none text-[#0F172A]">
                   {avg.toFixed(1)}
                 </span>
-                <span className="text-sm text-[#6A6A6A]">
+                <span className="text-sm text-muted-foreground">
                   {variant === "fallback"
                     ? "based on recent reviews"
                     : `based on ${summaryTotal} ${summaryTotal === 1 ? "review" : "reviews"}`}
@@ -128,7 +128,7 @@ export function ReviewsSection({
                     key={row.label}
                     className="flex items-center gap-3 last:mb-0"
                   >
-                    <span className="min-w-[4.75rem] shrink-0 text-xs text-[#6A6A6A]">
+                    <span className="min-w-[4.75rem] shrink-0 text-xs text-muted-foreground">
                       {row.stars === 1 ? "1 star" : `${row.stars} stars`}
                     </span>
                     <div className="relative h-2 min-w-0 flex-1 overflow-hidden rounded bg-[#F7F7F7]">
@@ -142,7 +142,7 @@ export function ReviewsSection({
                         }}
                       />
                     </div>
-                    <span className="w-5 shrink-0 text-right text-xs text-[#6A6A6A]">
+                    <span className="w-5 shrink-0 text-right text-xs text-muted-foreground">
                       {row.count}
                     </span>
                   </li>

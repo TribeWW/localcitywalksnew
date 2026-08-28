@@ -21,10 +21,10 @@ export default function FaqAccordion({ items }: FaqAccordionProps) {
     <Accordion type="single" collapsible className="w-full">
       {items.map((item) => (
         <AccordionItem key={item.question} value={item.question}>
-          <AccordionTrigger className=" py-4 pr-1 text-[15px] leading-6 font-semibold text-[#0F172A] hover:underline cursor-pointer sm:py-5 sm:text-base">
+          <AccordionTrigger className=" py-4 pr-1 text-[15px] leading-6 font-semibold text-nightsky hover:underline cursor-pointer sm:py-6 sm:text-base">
             {item.question}
           </AccordionTrigger>
-          <AccordionContent className="pb-4 pr-6 text-[15px] leading-6 text-[#1A1A1A] sm:pb-5 sm:text-base">
+          <AccordionContent className="pb-4 pr-6 text-[15px] leading-6 text-foreground sm:pb-5 sm:text-base">
             {item.answer}
           </AccordionContent>
         </AccordionItem>

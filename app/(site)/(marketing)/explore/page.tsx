@@ -22,10 +22,10 @@ export default function ExplorePage() {
       </Suspense>
       <div className="bg-[#F7F7F7]">
         <div className="mx-auto w-full max-w-[1140px] px-6 pb-6 pt-8 lg:px-0">
-          <h1 className="mb-2 text-[32px] font-bold leading-[1.3] text-[#0F172A]">
+          <h1 className="mb-2 text-[32px] font-bold leading-[1.3] text-nightsky">
             👋 Hello Walks
           </h1>
-          <p className="max-w-[640px] text-[18px] leading-[1.6] text-[#6A6A6A]">
+          <p className="max-w-[640px] text-[18px] leading-[1.6] text-muted-foreground">
             Local-led private walking tours that blend iconic landmarks, hidden
             local corners and personal stories, bringing the city to life.
           </p>
@@ -38,7 +38,7 @@ export default function ExplorePage() {
               height={80}
               className="h-10 w-auto"
             />
-            <span className="text-sm font-medium text-[#6A6A6A]">
+            <span className="text-sm font-medium text-muted-foreground">
               150+ cities to discover across Europe
             </span>
           </div>

@@ -32,24 +32,45 @@ Our color palette is inspired by vibrant, warm tones that evoke the excitement o
 - **Tangerine** `#ff5500` - Primary brand color, used for CTAs and key interactive elements
 - **Grapefruit** `#d52410` - Secondary brand color, used for accents and highlights
 - **Grapes** `#0f172a` - Dark navy (promo bar background / on-dark chrome); Tailwind `bg-grapes` / `from-grapes` / `text-grapes`
-- **Nightsky** `#333333` - Dark text and important UI elements
+- **Nightsky** `#0f172a` - On-light headings, emphasis text, and primary chrome; Tailwind `text-nightsky` / `bg-nightsky` (`--color-nightsky` in `app/globals.css`)
 - **Watermelon** `#040606` - Deep dark color for backgrounds and contrast
 - **Pearl Gray** `#f7f7f7` - Light background color, subtle borders
 
-In Tailwind v4 theme (`app/globals.css` `@theme inline`), brand colors map to utilities such as **`bg-tangerine`**, **`text-watermelon`**, **`bg-pearl-gray`**, **`bg-grapes`**, etc. Prefer these tokens over arbitrary hex values when matching brand UI.
+In Tailwind v4 theme (`app/globals.css` `@theme inline`), brand colors map to utilities such as **`bg-tangerine`**, **`text-watermelon`**, **`bg-pearl-gray`**, **`text-nightsky`**, **`bg-grapes`**, etc. Prefer these tokens over arbitrary hex values when matching brand UI.
 
 ### shadcn UI tokens (globals)
 
 The app uses **shadcn-style CSS variables** in `:root` / `.dark` for primitives such as **`background`**, **`foreground`**, **`border`**, **`muted`**, **`muted-foreground`**, **`primary`**, **`ring`**, and **`radius`**. Tailwind maps them to classes like **`bg-background`**, **`text-foreground`**, **`border-border`**, **`text-muted-foreground`**.
 
+Defined in `app/globals.css` (`:root`, light mode):
+
+| CSS variable | Hex (light) | Tailwind utility |
+| ------------ | ----------- | ---------------- |
+| `--foreground` | `#1A1A1A` | `text-foreground` |
+| `--muted-foreground` | `#6A6A6A` | `text-muted-foreground` |
+| `--border` | `#D3CED2` | `border-border` |
+
+**Confirmed:** `--foreground` is **`#1a1a1a`** (same as `#1A1A1A`). Prefer **`text-foreground`** over arbitrary `text-[#1A1A1A]` for primary body copy.
+
+#### Legacy hex → semantic token (prefer tokens)
+
+When touching existing UI, replace arbitrary hex classes with the matching shadcn token:
+
+| Legacy (avoid) | Use instead | Typical surfaces |
+| -------------- | ----------- | ---------------- |
+| `text-[#6A6A6A]` | `text-muted-foreground` | Secondary/helper copy, meta lines, breadcrumbs, form hints |
+| `border-[#D3CED2]` | `border-border` | Hello banner (tour page), review cards, explore sticky bar, checkout/booking field chrome |
+| `text-[#1A1A1A]` | `text-foreground` | About, Good to know, Cancellation policy, Hello banner body, review card body, tour description |
+
 - Secondary / helper copy often uses **`text-muted-foreground`**. The project sets **`--muted-foreground`** to **`#6A6A6A`** (light mode) for consistent gray body/supporting text alongside brand colors.
+- **Do not** swap **`text-[#0F172A]`** or **`text-nightsky`** to `text-foreground` — on-light headings use **`#0F172A`** (`--color-nightsky` in `app/globals.css`), separate from body copy **`#1A1A1A`** (`text-foreground`). Prefer **`text-nightsky`** over arbitrary `text-[#0F172A]`.
 
 ### Usage Guidelines
 
 - **Tangerine**: Primary buttons, links, important CTAs, brand highlights
 - **Grapefruit**: Secondary actions, warnings, accent elements
 - **Grapes**: Sitewide promo banner gradient base; white type on grapes for AA. Do **not** use Tangerine/Grapefruit as that bar’s background (small white type fails AA).
-- **Nightsky**: Primary text, headings, important information
+- **Nightsky**: On-light headings (`h1`/`h2`), emphasis text, nav links; use **`text-nightsky`** (`#0F172A`)
 - **Watermelon**: Dark mode backgrounds, high contrast elements
 - **Pearl Gray**: Light backgrounds, card backgrounds, subtle separators
 

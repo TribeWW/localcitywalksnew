@@ -163,7 +163,7 @@ export function HomeReviewsCarousel({ reviews }: HomeReviewsCarouselProps) {
                 className={
                   isActive
                     ? "size-2.5 rounded-full bg-[#0F172A] transition-colors"
-                    : "size-2.5 rounded-full bg-[#D3CED2] transition-colors hover:bg-[#9CA3AF]"
+                    : "size-2.5 rounded-full bg-border transition-colors hover:bg-[#9CA3AF]"
                 }
                 onClick={() => scrollToPage(i)}
               />

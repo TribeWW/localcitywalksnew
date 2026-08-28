@@ -22,7 +22,7 @@ export default function CustomTourBanner() {
           aria-labelledby="custom-tour-banner-heading"
           className="px-4 sm:px-0 max-w-[1140px] mx-auto"
         >
-          <div className="flex flex-col items-center gap-6 text-center bg-[#F7F7F7] rounded-[16px] border-[1.5px] border-[#D3CED2] px-5 py-6 sm:px-6 sm:py-7 md:flex-row md:items-center md:gap-8 md:text-left md:px-8 md:py-8">
+          <div className="flex flex-col items-center gap-6 text-center bg-[#F7F7F7] rounded-[16px] border-[1.5px] border-border px-5 py-6 sm:px-6 sm:py-7 md:flex-row md:items-center md:gap-8 md:text-left md:px-8 md:py-8">
             <Image
               src="/operator.svg"
               alt="Custom tour"
@@ -38,7 +38,7 @@ export default function CustomTourBanner() {
               >
                 Looking for a private or custom city walk?
               </h2>
-              <p className="text-[15px] sm:text-base text-[#6A6A6A] leading-[1.6] m-0 max-w-[560px] mx-auto md:mx-0 text-pretty">
+              <p className="text-[15px] sm:text-base text-muted-foreground leading-[1.6] m-0 max-w-[560px] mx-auto md:mx-0 text-pretty">
                 We organise tailor-made walking experiences for private groups,
                 families, and corporate events.
               </p>

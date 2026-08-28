@@ -43,7 +43,7 @@ export function ReviewBodyClamp({
     clone.textContent = text;
     clone.setAttribute("aria-hidden", "true");
     clone.className =
-      "invisible absolute left-0 top-0 z-[-1] w-full text-sm leading-[1.6] text-[#1A1A1A]";
+      "invisible absolute left-0 top-0 z-[-1] w-full text-sm leading-[1.6] text-foreground";
     clone.style.width = `${el.offsetWidth}px`;
     parent.appendChild(clone);
     const fullHeight = clone.offsetHeight;
@@ -58,7 +58,7 @@ export function ReviewBodyClamp({
       <p
         ref={textRef}
         className={cn(
-          "text-sm leading-[1.6] text-[#1A1A1A]",
+          "text-sm leading-[1.6] text-foreground",
           !expanded && clampClass,
         )}
       >

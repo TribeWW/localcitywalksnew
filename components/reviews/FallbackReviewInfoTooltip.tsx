@@ -30,7 +30,7 @@ export function FallbackReviewInfoTooltip({
           <button
             type="button"
             className={cn(
-              "relative top-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full text-[#6A6A6A] transition-colors hover:text-[#0F172A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F172A] focus-visible:ring-offset-2",
+              "relative top-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-[#0F172A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F172A] focus-visible:ring-offset-2",
               className,
             )}
             aria-label="Why these reviews are shown"

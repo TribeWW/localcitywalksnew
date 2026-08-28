@@ -8,7 +8,7 @@ import { FallbackReviewInfoTooltip } from "./FallbackReviewInfoTooltip";
  */
 export function FallbackReviewsNotice() {
   return (
-    <p className="max-w-2xl text-sm leading-relaxed text-[#6A6A6A] mb-8">
+    <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground mb-8">
       <span>
         Reviews from travellers on other LocalCityWalks tours, not this specific
         activity.{" "}
