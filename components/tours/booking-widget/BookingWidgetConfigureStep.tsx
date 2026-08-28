@@ -8,7 +8,7 @@
  */
 
 import { Calendar, Clock, MessagesSquare } from "lucide-react";
-import type { FieldValues, UseFormReturn } from "react-hook-form";
+import type { UseFormReturn } from "react-hook-form";
 import BookingWidgetFromPrice from "@/components/tours/booking-widget/BookingWidgetFromPrice";
 import BookingWidgetField from "@/components/tours/booking-widget/BookingWidgetField";
 import BookingGuestsPicker from "@/components/tours/booking-widget/BookingGuestsPicker";
@@ -43,18 +43,15 @@ export interface BookingWidgetConfigureFormValues {
 }
 
 /** Props for {@link BookingWidgetConfigureStep}. */
-export interface BookingWidgetConfigureStepProps<
-  TFieldValues extends BookingWidgetConfigureFormValues & FieldValues =
-    BookingWidgetConfigureFormValues,
-> {
+export interface BookingWidgetConfigureStepProps {
   /** When true, renders the “From €X per adult” headline (md+ shell). */
   showFromPrice?: boolean;
   fromPriceAmount?: number;
   fromPriceCurrency?: string;
   availError: string | null;
   availLoading: boolean;
-  /** Parent `useForm` instance (configure + hidden contact fields). */
-  form: UseFormReturn<TFieldValues>;
+  /** Parent `useForm` instance for configure-step fields. */
+  form: UseFormReturn<BookingWidgetConfigureFormValues>;
   minDate: Date;
   maxDate: Date;
   isDateDisabled: (date: Date) => boolean;
@@ -80,10 +77,7 @@ export interface BookingWidgetConfigureStepProps<
  *
  * @param props.showFromPrice - `false` inside the mobile drawer (price shown in bottom bar)
  */
-export default function BookingWidgetConfigureStep<
-  TFieldValues extends BookingWidgetConfigureFormValues & FieldValues =
-    BookingWidgetConfigureFormValues,
->({
+export default function BookingWidgetConfigureStep({
   showFromPrice = true,
   fromPriceAmount,
   fromPriceCurrency,
@@ -108,7 +102,7 @@ export default function BookingWidgetConfigureStep<
   canBookNow,
   continuingToCheckout,
   onContinueToCheckout,
-}: BookingWidgetConfigureStepProps<TFieldValues>) {
+}: BookingWidgetConfigureStepProps) {
   const startTimeIdValue = form.watch("startTimeId");
 
   return (

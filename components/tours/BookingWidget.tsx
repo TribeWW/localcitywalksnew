@@ -16,7 +16,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { useForm } from "react-hook-form";
+import { useForm, type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import {
   getTourAvailabilities,
@@ -36,7 +36,9 @@ import {
   toIsoDateString,
 } from "@/lib/booking/dates";
 import BookingWidgetShell from "@/components/tours/booking-widget/BookingWidgetShell";
-import BookingWidgetConfigureStep from "@/components/tours/booking-widget/BookingWidgetConfigureStep";
+import BookingWidgetConfigureStep, {
+  type BookingWidgetConfigureFormValues,
+} from "@/components/tours/booking-widget/BookingWidgetConfigureStep";
 import BookingWidgetMobileBar, {
   MOBILE_BAR_SCROLL_THRESHOLD_PX,
 } from "@/components/tours/booking-widget/BookingWidgetMobileBar";
@@ -104,7 +106,8 @@ const bookingWidgetFormSchema = z.object({
 });
 
 /** Inferred form values for the full booking widget (step 1 + step 2 fields). */
-type BookingWidgetFormValues = z.infer<typeof bookingWidgetFormSchema>;
+type BookingWidgetFormValues = z.infer<typeof bookingWidgetFormSchema> &
+  BookingWidgetConfigureFormValues;
 
 /**
  * Formats `BokunStartTime` as `HH:mm` for the time selector.
@@ -580,7 +583,7 @@ export default function BookingWidget({
     fromPriceCurrency,
     availError,
     availLoading,
-    form,
+    form: form as unknown as UseFormReturn<BookingWidgetConfigureFormValues>,
     minDate,
     maxDate,
     isDateDisabled,
