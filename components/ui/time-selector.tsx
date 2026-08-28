@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { WIDGET_DROPDOWN_TRIGGER_LAYOUT_CLASS, WIDGET_FIELD_TRIGGER_CLASS } from "@/components/tours/booking-widget/widget-field-styles";
+import { BOOKING_STACKED_OVERLAY_Z_CLASS, bookingStackedOverlayDataAttributes } from "@/components/tours/booking-widget/stacked-overlay-layer";
 
 /** Props for `TimeSelector`. */
 interface TimeSelectorProps {
@@ -33,6 +34,8 @@ interface TimeSelectorProps {
   className?: string;
   /** Compact bordered trigger for booking widget (LOC-1063). */
   variant?: "default" | "widget";
+  /** Raises the dropdown above the mobile booking drawer (`z-[80]`). */
+  elevatedLayer?: boolean;
 }
 
 /** Legacy static times for `TourRequestForm` when `options` is not passed. */
@@ -63,6 +66,7 @@ const TimeSelector = ({
   options,
   className,
   variant = "default",
+  elevatedLayer = false,
 }: TimeSelectorProps) => {
   const timeOptions = options ?? TIME_OPTIONS;
 
@@ -82,7 +86,10 @@ const TimeSelector = ({
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent
+        {...bookingStackedOverlayDataAttributes(elevatedLayer)}
+        className={elevatedLayer ? BOOKING_STACKED_OVERLAY_Z_CLASS : undefined}
+      >
         {timeOptions.length === 0 ? (
           <SelectItem value="__none__" disabled>
             No times available

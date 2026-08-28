@@ -46,6 +46,11 @@ export interface BookingWidgetConfigureFormValues {
 export interface BookingWidgetConfigureStepProps {
   /** When true, renders the “From €X per adult” headline (md+ shell). */
   showFromPrice?: boolean;
+  /**
+   * When true, raises portaled pickers above the mobile drawer (`z-[80]`) and
+   * should only be set inside `BookingWidgetMobileDrawer`.
+   */
+  useElevatedOverlays?: boolean;
   fromPriceAmount?: number;
   fromPriceCurrency?: string;
   availError: string | null;
@@ -79,6 +84,7 @@ export interface BookingWidgetConfigureStepProps {
  */
 export default function BookingWidgetConfigureStep({
   showFromPrice = true,
+  useElevatedOverlays = false,
   fromPriceAmount,
   fromPriceCurrency,
   availError,
@@ -154,6 +160,7 @@ export default function BookingWidgetConfigureStep({
                     disabled={availLoading}
                     variant="widget"
                     hideLeadingIcon
+                    elevatedLayer={useElevatedOverlays}
                   />
                 </BookingWidgetField>
               </FormControl>
@@ -169,14 +176,15 @@ export default function BookingWidgetConfigureStep({
             <FormItem>
               <FormControl>
                 <BookingWidgetField icon={Clock}>
-                  <TimeSelector
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Select time"
-                    options={timeOptions}
-                    disabled={!preferredDate || timeOptions.length === 0}
-                    variant="widget"
-                  />
+                      <TimeSelector
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select time"
+                        options={timeOptions}
+                        disabled={!preferredDate || timeOptions.length === 0}
+                        variant="widget"
+                        elevatedLayer={useElevatedOverlays}
+                      />
                 </BookingWidgetField>
               </FormControl>
               <FormMessage />
@@ -192,14 +200,15 @@ export default function BookingWidgetConfigureStep({
               <FormItem>
                 <FormControl>
                   <BookingWidgetField icon={MessagesSquare}>
-                    <LanguageSelector
-                      value={field.value}
-                      onChange={field.onChange}
-                      options={languageOptions}
-                      placeholder="Select a language"
-                      disabled={!startTimeIdValue}
-                      variant="widget"
-                    />
+                        <LanguageSelector
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={languageOptions}
+                          placeholder="Select a language"
+                          disabled={!startTimeIdValue}
+                          variant="widget"
+                          elevatedLayer={useElevatedOverlays}
+                        />
                   </BookingWidgetField>
                 </FormControl>
                 <FormMessage />

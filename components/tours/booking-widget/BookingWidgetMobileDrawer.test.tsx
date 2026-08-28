@@ -7,6 +7,10 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import BookingWidgetMobileDrawer from "@/components/tours/booking-widget/BookingWidgetMobileDrawer";
+import {
+  BOOKING_STACKED_OVERLAY_ATTRIBUTE,
+  BOOKING_STACKED_OVERLAY_VALUE,
+} from "@/components/tours/booking-widget/stacked-overlay-layer";
 
 describe("BookingWidgetMobileDrawer", () => {
   it("renders dialog with title, close button, and children when open", () => {
@@ -92,5 +96,24 @@ describe("BookingWidgetMobileDrawer", () => {
     fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
 
     expect(lastField).toHaveFocus();
+  });
+
+  it("does not close the drawer on Escape when a stacked overlay is open", () => {
+    const onClose = vi.fn();
+    render(
+      <BookingWidgetMobileDrawer open onClose={onClose}>
+        <p>Configure form</p>
+      </BookingWidgetMobileDrawer>,
+    );
+
+    const dialog = document.createElement("div");
+    dialog.setAttribute(BOOKING_STACKED_OVERLAY_ATTRIBUTE, BOOKING_STACKED_OVERLAY_VALUE);
+    dialog.setAttribute("data-state", "open");
+    document.body.appendChild(dialog);
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(onClose).not.toHaveBeenCalled();
+    dialog.remove();
   });
 });
