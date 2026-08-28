@@ -67,29 +67,23 @@ export function ReviewCard({
           stars > 0 ? `${stars} out of 5 stars` : "No star rating shown"
         }
       >
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Star
-            key={i}
-            className="size-[14px] shrink-0"
-            fill={
-              i < stars
-                ? isHome || isTourDetail
-                  ? "#0F172A"
-                  : "currentColor"
-                : "none"
-            }
-            color={
-              i < stars
-                ? isHome || isTourDetail
-                  ? "#0F172A"
-                  : "currentColor"
-                : isHome || isTourDetail
-                  ? "border"
-                  : "currentColor"
-            }
-            aria-hidden
-          />
-        ))}
+        {Array.from({ length: 5 }).map((_, i) => {
+          const filled = i < stars;
+          const branded = isHome || isTourDetail;
+
+          return (
+            <Star
+              key={i}
+              className={cn(
+                "size-[14px] shrink-0",
+                branded && (filled ? "text-nightsky" : "text-border"),
+              )}
+              fill={filled ? "currentColor" : "none"}
+              color={branded ? undefined : "currentColor"}
+              aria-hidden
+            />
+          );
+        })}
       </div>
 
       <p
