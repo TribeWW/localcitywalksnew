@@ -144,8 +144,8 @@ const CityCard = ({
   return (
     <div
       data-cards-widget-update={cardsWidgetUpdate ? "true" : "false"}
-      className={`grid grid-cols-1 justify-items-center gap-x-6 gap-y-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${
-        noHorizontalPadding ? "py-6" : "px-4 py-6 md:px-6 lg:px-0"
+      className={`grid grid-cols-1 justify-items-center gap-x-6 gap-y-6 md:grid-cols-2 lg:grid-cols-4 ${
+        noHorizontalPadding ? "pb-6" : "px-4 pb-6 md:px-6 lg:px-0"
       }`}
     >
       {cities.map((city) => {

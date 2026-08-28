@@ -353,7 +353,7 @@ export default function ExploreCatalogClient({
 
           <div className="px-0">
             {loadingFilter ? (
-              <div className="grid grid-cols-1 justify-items-center gap-6 py-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-1 justify-items-center gap-6 pb-6 md:grid-cols-2 lg:grid-cols-4">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <div
                     key={i}
