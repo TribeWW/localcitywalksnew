@@ -198,6 +198,18 @@ const DatePicker = ({
     </Button>
   );
 
+  const widgetCalendarClassNames =
+    variant === "widget"
+      ? {
+          caption_label:
+            "inline-flex select-none items-center font-medium leading-none text-base",
+          dropdowns: "flex items-center justify-center gap-1.5 text-base font-medium",
+          weekday:
+            "min-w-0 flex-1 rounded-md text-sm font-normal text-muted-foreground select-none",
+          week_number: "text-sm select-none text-muted-foreground",
+        }
+      : undefined;
+
   const calendar = (
     <Calendar
       mode="single"
@@ -211,14 +223,30 @@ const DatePicker = ({
       disabled={isDayDisabled}
       showOutsideDays={false}
       initialFocus
+      classNames={widgetCalendarClassNames}
       className={cn(
         variant === "widget" &&
-          "w-full [--cell-size:max(2rem,calc((100%_-_0.25rem)_/_7))]",
+          "w-full [--cell-size:max(2.25rem,calc((100%_-_0.25rem)_/_7))] [&_[data-day]]:text-[0.9375rem]",
       )}
     />
   );
 
   if (useWidgetDialog) {
+    const widgetDialogOverlayClass = cn(
+      elevatedLayer && BOOKING_STACKED_OVERLAY_Z_CLASS,
+      elevatedLayer && "!top-14",
+    );
+
+    const widgetDialogContentClass = cn(
+      "w-[calc(100%-3rem)] max-w-sm gap-0 overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-sm",
+      elevatedLayer
+        ? cn(
+            BOOKING_STACKED_OVERLAY_Z_CLASS,
+            "!top-[calc(4.75rem+1.25rem)] !bottom-auto !max-h-[min(32rem,calc(100vh-7rem))] !translate-y-0",
+          )
+        : undefined,
+    );
+
     return (
       <div className="w-full">
         <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -226,16 +254,15 @@ const DatePicker = ({
           <DialogContent
             showCloseButton={false}
             {...bookingStackedOverlayDataAttributes(elevatedLayer)}
-            overlayClassName={
-              elevatedLayer ? BOOKING_STACKED_OVERLAY_Z_CLASS : undefined
-            }
-            className={cn(
-              "w-[calc(100%-2rem)] max-w-sm gap-0 border-border bg-popover p-0 shadow-lg sm:max-w-sm",
-              elevatedLayer && BOOKING_STACKED_OVERLAY_Z_CLASS,
-            )}
+            overlayClassName={widgetDialogOverlayClass}
+            className={widgetDialogContentClass}
           >
-            <DialogTitle className="sr-only">Select a date</DialogTitle>
-            <div className="w-full p-4">{calendar}</div>
+            <DialogTitle className="border-b border-border px-5 py-4 text-center text-base font-semibold text-nightsky">
+              Select a date
+            </DialogTitle>
+            <div className="py-5 px-3">
+              <div className="pb-2 ">{calendar}</div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

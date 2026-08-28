@@ -37,10 +37,10 @@ export default function ExploreCatalogSkeleton() {
       </div>
 
       <section className="py-6" aria-hidden>
-        <div className="mx-auto max-w-6xl px-6 md:px-8 lg:px-0">
+        <div className="mx-auto max-w-6xl px-6 md:px-8 lg:px-0 ">
           <div
             data-testid="explore-catalog-skeleton-meta"
-            className="flex flex-wrap items-center gap-x-4 gap-y-3"
+            className="flex flex-wrap items-center gap-x-4 gap-y-3 pb-6"
           >
             <Skeleton
               data-testid="explore-catalog-skeleton-count"

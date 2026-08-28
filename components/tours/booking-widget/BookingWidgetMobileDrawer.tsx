@@ -139,7 +139,7 @@ export default function BookingWidgetMobileDrawer({
       aria-modal="true"
       aria-label="Select dates and guests"
     >
-      <div className="flex shrink-0 items-center justify-between border-b-[1.5px] border-border px-6 py-4">
+      <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b-[1.5px] border-border bg-white px-6 py-4">
         <div className="text-base font-semibold text-nightsky">
           Select dates &amp; guests
         </div>
