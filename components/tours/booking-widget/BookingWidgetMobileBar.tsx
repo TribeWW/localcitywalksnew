@@ -46,6 +46,7 @@ export default function BookingWidgetMobileBar({
   return (
     <div
       data-testid="booking-mobile-bar"
+      aria-hidden={!visible}
       className={cn(
         "fixed bottom-0 left-0 right-0 z-[45] flex items-center justify-between gap-4 border-t-[1.5px] border-border bg-white p-4 shadow-[0px_-4px_12px_rgba(0,0,0,0.08)] transition-[transform,opacity] duration-200 ease-out md:hidden",
         visible
@@ -61,10 +62,8 @@ export default function BookingWidgetMobileBar({
       />
       <Button
         type="button"
-        className={cn(
-          WIDGET_PRIMARY_BUTTON_CLASS,
-          "w-auto shrink-0 px-7 py-3",
-        )}
+        tabIndex={visible ? undefined : -1}
+        className={cn(WIDGET_PRIMARY_BUTTON_CLASS, "w-auto shrink-0 px-7 py-3")}
         onClick={onCheckAvailability}
       >
         Check availability

@@ -43,12 +43,7 @@ import BookingWidgetMobileBar, {
 import BookingWidgetMobileDrawer from "@/components/tours/booking-widget/BookingWidgetMobileDrawer";
 import { useIsMediumScreen } from "@/components/tours/booking-widget/use-is-medium-screen";
 import type { GuestCategoryKey } from "@/components/tours/booking-widget/guest-categories";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { resolveLanguageOptionsForSlot } from "@/lib/bokun/extract-guided-languages";
 import type {
@@ -265,6 +260,7 @@ export default function BookingWidget({
   useEffect(() => {
     if (isMediumScreen) {
       setMobileBarVisible(false);
+      setMobileDrawerOpen(false);
       return;
     }
 
@@ -609,16 +605,10 @@ export default function BookingWidget({
 
   return (
     <Form {...form}>
-      <form
-        className="space-y-0"
-        onSubmit={(event) => event.preventDefault()}
-      >
+      <form className="space-y-0" onSubmit={(event) => event.preventDefault()}>
         {isMediumScreen ? (
           <BookingWidgetShell>
-            <BookingWidgetConfigureStep
-              {...configureStepProps}
-              showFromPrice
-            />
+            <BookingWidgetConfigureStep {...configureStepProps} showFromPrice />
           </BookingWidgetShell>
         ) : null}
 

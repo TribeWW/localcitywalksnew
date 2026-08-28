@@ -18,12 +18,8 @@ export const BOOKING_WIDGET_MD_MEDIA_QUERY = "(min-width: 768px)";
  * @returns `true` for medium+ viewports (in-page widget); `false` for small screens (bottom bar + drawer)
  */
 export function useIsMediumScreen(): boolean {
-  const [isMediumScreen, setIsMediumScreen] = useState(() => {
-    if (typeof window === "undefined") {
-      return true;
-    }
-    return window.matchMedia(BOOKING_WIDGET_MD_MEDIA_QUERY).matches;
-  });
+  // Match the server render; the effect below applies the real value on mount.
+  const [isMediumScreen, setIsMediumScreen] = useState(true);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia(BOOKING_WIDGET_MD_MEDIA_QUERY);
@@ -33,6 +29,5 @@ export function useIsMediumScreen(): boolean {
     mediaQuery.addEventListener("change", sync);
     return () => mediaQuery.removeEventListener("change", sync);
   }, []);
-
   return isMediumScreen;
 }

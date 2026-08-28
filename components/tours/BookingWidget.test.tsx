@@ -639,6 +639,9 @@ describe("BookingWidget — small-screen mobile chrome", () => {
 
     await act(async () => {
       setScrollY(300);
+    });
+
+    await act(async () => {
       fireEvent.click(
         screen.getByRole("button", { name: "Check availability" }),
       );

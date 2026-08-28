@@ -11,6 +11,24 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/** Selector for tabbable elements inside the drawer focus trap. */
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Returns visible, enabled focusable elements within `container`.
+ *
+ * @param container - Drawer root element
+ */
+function getFocusableElements(container: HTMLElement): HTMLElement[] {
+  return Array.from(
+    container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+  ).filter(
+    (element) =>
+      element.tabIndex !== -1 && !element.hasAttribute("disabled"),
+  );
+}
+
 /** Props for {@link BookingWidgetMobileDrawer}. */
 export interface BookingWidgetMobileDrawerProps {
   /** When true, renders the full-screen dialog shell. */
@@ -27,7 +45,7 @@ export interface BookingWidgetMobileDrawerProps {
  * Full-screen overlay with header and scrollable body for the configure step.
  *
  * @param props.open - Controls mount and visibility
- * @param props.onClose - Invoked on close button click or Escape key
+ * @param props.onClose - Invoked on close button click or document Escape key
  */
 export default function BookingWidgetMobileDrawer({
   open,
@@ -35,13 +53,53 @@ export default function BookingWidgetMobileDrawer({
   children,
   className,
 }: BookingWidgetMobileDrawerProps) {
+  const drawerRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (open) {
-      closeButtonRef.current?.focus();
+    if (!open) {
+      return;
     }
-  }, [open]);
+
+    closeButtonRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (event.key !== "Tab" || !drawerRef.current) {
+        return;
+      }
+
+      const focusable = getFocusableElements(drawerRef.current);
+      if (focusable.length === 0) {
+        return;
+      }
+
+      const first = focusable[0]!;
+      const last = focusable[focusable.length - 1]!;
+      const active = document.activeElement as HTMLElement | null;
+
+      if (event.shiftKey) {
+        if (active === first || !drawerRef.current.contains(active)) {
+          event.preventDefault();
+          last.focus();
+        }
+        return;
+      }
+
+      if (active === last || !drawerRef.current.contains(active)) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open, onClose]);
 
   if (!open) {
     return null;
@@ -49,6 +107,7 @@ export default function BookingWidgetMobileDrawer({
 
   return (
     <div
+      ref={drawerRef}
       data-testid="booking-mobile-drawer"
       className={cn(
         "fixed inset-0 z-[70] flex flex-col bg-white md:hidden",
@@ -57,11 +116,6 @@ export default function BookingWidgetMobileDrawer({
       role="dialog"
       aria-modal="true"
       aria-label="Select dates and guests"
-      onKeyDown={(event) => {
-        if (event.key === "Escape") {
-          onClose();
-        }
-      }}
     >
       <div className="flex shrink-0 items-center justify-between border-b-[1.5px] border-border px-6 py-4">
         <div className="text-base font-semibold text-nightsky">

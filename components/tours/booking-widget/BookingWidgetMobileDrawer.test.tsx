@@ -47,7 +47,7 @@ describe("BookingWidgetMobileDrawer", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it("calls onClose when Escape is pressed", () => {
+  it("calls onClose when Escape is pressed anywhere on the document", () => {
     const onClose = vi.fn();
     render(
       <BookingWidgetMobileDrawer open onClose={onClose}>
@@ -55,8 +55,42 @@ describe("BookingWidgetMobileDrawer", () => {
       </BookingWidgetMobileDrawer>,
     );
 
-    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+    fireEvent.keyDown(document, { key: "Escape" });
 
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("wraps Tab focus from the last focusable element to the first", () => {
+    render(
+      <BookingWidgetMobileDrawer open onClose={vi.fn()}>
+        <button type="button">First field</button>
+        <button type="button">Last field</button>
+      </BookingWidgetMobileDrawer>,
+    );
+
+    const closeButton = screen.getByLabelText("Close");
+    const lastField = screen.getByRole("button", { name: "Last field" });
+
+    lastField.focus();
+    fireEvent.keyDown(document, { key: "Tab" });
+
+    expect(closeButton).toHaveFocus();
+  });
+
+  it("wraps Shift+Tab focus from the first focusable element to the last", () => {
+    render(
+      <BookingWidgetMobileDrawer open onClose={vi.fn()}>
+        <button type="button">First field</button>
+        <button type="button">Last field</button>
+      </BookingWidgetMobileDrawer>,
+    );
+
+    const closeButton = screen.getByLabelText("Close");
+    const lastField = screen.getByRole("button", { name: "Last field" });
+
+    closeButton.focus();
+    fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+
+    expect(lastField).toHaveFocus();
   });
 });
