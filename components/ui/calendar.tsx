@@ -57,7 +57,9 @@ function Calendar({
           defaultClassNames.month
         ),
         nav: cn(
-          "absolute inset-x-0 top-0 flex h-(--cell-size) w-full items-stretch justify-between",
+          navLayout === "after"
+            ? "flex h-(--cell-size) w-full items-center justify-between"
+            : "absolute inset-x-0 top-0 flex h-(--cell-size) w-full items-stretch justify-between",
           defaultClassNames.nav
         ),
         button_previous: cn(
