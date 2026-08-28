@@ -128,6 +128,7 @@ vi.mock("@/components/ui/select", () => ({
 }));
 
 import BookingWidget from "@/components/tours/BookingWidget";
+import { BOOKING_WIDGET_MD_MEDIA_QUERY } from "@/components/tours/booking-widget/use-is-medium-screen";
 
 const SLOT_DATE_ISO = "2026-06-15";
 const START_TIME_ID = 4252139;
@@ -217,8 +218,40 @@ async function completeStep1WithQuote() {
   await waitForQuoteTotal();
 }
 
+/**
+ * Mocks `window.matchMedia` for layout branching (`md` breakpoint).
+ *
+ * @param matches - `true` for md+ (in-page widget); `false` for small screens
+ */
+function mockMatchMedia(matches: boolean) {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    configurable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: query === BOOKING_WIDGET_MD_MEDIA_QUERY ? matches : false,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+}
+
+function setScrollY(value: number) {
+  Object.defineProperty(window, "scrollY", {
+    configurable: true,
+    writable: true,
+    value,
+  });
+  window.dispatchEvent(new Event("scroll"));
+}
+
 describe("BookingWidget — structure invariants", () => {
   beforeEach(() => {
+    mockMatchMedia(true);
+    setScrollY(0);
+    document.body.style.overflow = "unset";
     locationAssignMock.mockReset();
     Object.defineProperty(window, "location", {
       configurable: true,
@@ -297,6 +330,8 @@ describe("BookingWidget — structure invariants", () => {
 
 describe("BookingWidget — availability and quote invariants", () => {
   beforeEach(() => {
+    mockMatchMedia(true);
+    setScrollY(0);
     locationAssignMock.mockReset();
     Object.defineProperty(window, "location", {
       configurable: true,
@@ -440,6 +475,8 @@ describe("BookingWidget — availability and quote invariants", () => {
 
 describe("BookingWidget — slot-driven invariants", () => {
   beforeEach(() => {
+    mockMatchMedia(true);
+    setScrollY(0);
     locationAssignMock.mockReset();
     Object.defineProperty(window, "location", {
       configurable: true,
@@ -521,5 +558,99 @@ describe("BookingWidget — slot-driven invariants", () => {
     expect(
       screen.getByRole("button", { name: "Continue to checkout" }),
     ).toBeDisabled();
+  });
+});
+
+describe("BookingWidget — small-screen mobile chrome", () => {
+  beforeEach(() => {
+    mockMatchMedia(false);
+    setScrollY(0);
+    document.body.style.overflow = "unset";
+    locationAssignMock.mockReset();
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { assign: locationAssignMock },
+    });
+    getTourAvailabilitiesMock.mockResolvedValue({
+      success: true,
+      data: [buildOpenSlot()],
+    });
+    getTourBookingQuoteMock.mockResolvedValue({
+      success: true,
+      data: sampleQuote,
+    });
+  });
+
+  it("does not render in-page configure form on small screens", async () => {
+    render(<BookingWidget {...defaultBootstrap} />);
+    await flushAvailabilitiesLoad();
+
+    expect(
+      screen.queryByRole("button", { name: "Select a date" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Continue to checkout" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("hides mobile bar before scroll threshold and shows it after 240px", async () => {
+    render(<BookingWidget {...defaultBootstrap} />);
+    await flushAvailabilitiesLoad();
+
+    const bar = screen.getByTestId("booking-mobile-bar");
+    expect(bar).toHaveClass("translate-y-full");
+    expect(bar).toHaveClass("opacity-0");
+
+    await act(async () => {
+      setScrollY(241);
+    });
+
+    expect(bar).toHaveClass("translate-y-0");
+    expect(bar).toHaveClass("opacity-100");
+  });
+
+  it("opens configure drawer when Check availability is tapped", async () => {
+    render(<BookingWidget {...defaultBootstrap} />);
+    await flushAvailabilitiesLoad();
+
+    await act(async () => {
+      setScrollY(300);
+    });
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole("button", { name: "Check availability" }),
+      );
+    });
+
+    expect(screen.getByTestId("booking-mobile-drawer")).toBeInTheDocument();
+    expect(screen.getByText("Select dates & guests")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Select a date" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Continue to checkout" }),
+    ).toBeInTheDocument();
+  });
+
+  it("closes drawer and restores body scroll on dismiss", async () => {
+    render(<BookingWidget {...defaultBootstrap} />);
+    await flushAvailabilitiesLoad();
+
+    await act(async () => {
+      setScrollY(300);
+      fireEvent.click(
+        screen.getByRole("button", { name: "Check availability" }),
+      );
+    });
+
+    expect(document.body.style.overflow).toBe("hidden");
+
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText("Close"));
+    });
+
+    expect(screen.queryByTestId("booking-mobile-drawer")).not.toBeInTheDocument();
+    expect(document.body.style.overflow).toBe("unset");
   });
 });

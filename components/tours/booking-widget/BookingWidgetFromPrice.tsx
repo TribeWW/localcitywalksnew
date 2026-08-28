@@ -7,7 +7,11 @@
  * `fromPriceAmount` / `fromPriceCurrency` are available from the price list.
  */
 
+import { cn } from "@/lib/utils";
 import { formatCataloguePriceAmount } from "@/lib/bokun/format-catalogue-price";
+
+/** Visual density for the from-price headline. */
+export type BookingWidgetFromPriceSize = "default" | "compact";
 
 /** Props for `BookingWidgetFromPrice`. */
 interface BookingWidgetFromPriceProps {
@@ -15,6 +19,11 @@ interface BookingWidgetFromPriceProps {
   amount?: number;
   /** ISO currency code (e.g. `"EUR"`). */
   currency?: string;
+  /**
+   * `default` — sidebar card (32px price).
+   * `compact` — mobile bottom bar (20px price).
+   */
+  size?: BookingWidgetFromPriceSize;
 }
 
 /**
@@ -26,6 +35,7 @@ interface BookingWidgetFromPriceProps {
 export default function BookingWidgetFromPrice({
   amount,
   currency,
+  size = "default",
 }: BookingWidgetFromPriceProps) {
   const formatted =
     amount != null && currency
@@ -36,12 +46,35 @@ export default function BookingWidgetFromPrice({
     return null;
   }
 
+  const isCompact = size === "compact";
+
   return (
     <div className="mb-0">
-      <p className="text-sm text-muted-foreground mb-1">From</p>
+      <p
+        className={cn(
+          "text-muted-foreground mb-0.5",
+          isCompact ? "text-xs" : "text-sm mb-1",
+        )}
+      >
+        From
+      </p>
       <div className="flex items-baseline gap-1">
-        <span className="text-[32px] font-bold text-nightsky">{formatted}</span>
-        <span className="text-sm text-muted-foreground">per adult</span>
+        <span
+          className={cn(
+            "font-bold text-nightsky leading-tight",
+            isCompact ? "text-xl" : "text-[32px]",
+          )}
+        >
+          {formatted}
+        </span>
+        <span
+          className={cn(
+            "text-muted-foreground",
+            isCompact ? "text-xs" : "text-sm",
+          )}
+        >
+          per adult
+        </span>
       </div>
     </div>
   );
