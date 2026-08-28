@@ -17,6 +17,7 @@ function Calendar({
   showOutsideDays = true,
   captionLayout = "label",
   buttonVariant = "ghost",
+  navLayout = "around",
   formatters,
   components,
   ...props
@@ -24,10 +25,15 @@ function Calendar({
   buttonVariant?: React.ComponentProps<typeof Button>["variant"];
 }) {
   const defaultClassNames = getDefaultClassNames();
+  const isDropdownCaption =
+    captionLayout === "dropdown" ||
+    captionLayout === "dropdown-months" ||
+    captionLayout === "dropdown-years";
 
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
+      navLayout={navLayout}
       className={cn(
         "bg-background group/calendar p-3 [--cell-size:--spacing(8)] [[data-slot=card-content]_&]:bg-transparent [[data-slot=dialog-content]_&]:bg-popover [[data-slot=popover-content]_&]:bg-popover",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
@@ -46,31 +52,41 @@ function Calendar({
           "relative flex flex-col gap-4 md:flex-row",
           defaultClassNames.months
         ),
-        month: cn("flex w-full flex-col gap-4", defaultClassNames.month),
+        month: cn(
+          "relative grid w-full grid-cols-[var(--cell-size)_minmax(0,1fr)_var(--cell-size)] grid-rows-[var(--cell-size)_auto] gap-y-4",
+          defaultClassNames.month
+        ),
         nav: cn(
-          "absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1",
+          "absolute inset-x-0 top-0 flex h-(--cell-size) w-full items-stretch justify-between",
           defaultClassNames.nav
         ),
         button_previous: cn(
-          buttonVariants({ variant: buttonVariant }),
-          "size-(--cell-size) aria-disabled:opacity-50 p-0 select-none",
+          buttonVariants({
+            variant: buttonVariant,
+            className: "h-(--cell-size) w-full p-0",
+          }),
+          "z-20 col-start-1 row-start-1 flex items-center justify-center rounded-md select-none aria-disabled:opacity-50",
           defaultClassNames.button_previous
         ),
         button_next: cn(
-          buttonVariants({ variant: buttonVariant }),
-          "size-(--cell-size) aria-disabled:opacity-50 p-0 select-none",
+          buttonVariants({
+            variant: buttonVariant,
+            className: "h-(--cell-size) w-full p-0",
+          }),
+          "z-20 col-start-3 row-start-1 flex items-center justify-center rounded-md select-none aria-disabled:opacity-50",
           defaultClassNames.button_next
         ),
         month_caption: cn(
-          "flex items-center justify-center h-(--cell-size) w-full px-(--cell-size)",
+          "z-10 col-span-3 col-start-1 row-start-1 flex h-(--cell-size) w-full items-center justify-center px-(--cell-size)",
           defaultClassNames.month_caption
         ),
         dropdowns: cn(
-          "w-full flex items-center text-sm font-medium justify-center h-(--cell-size) gap-1.5",
+          "flex items-center justify-center gap-1.5 text-sm font-medium",
           defaultClassNames.dropdowns
         ),
         dropdown_root: cn(
-          "relative has-focus:border-ring border border-input shadow-xs has-focus:ring-ring/50 has-focus:ring-[3px] rounded-md",
+          "relative inline-flex h-8 items-center justify-center has-focus:border-ring border border-input shadow-xs has-focus:ring-ring/50 has-focus:ring-[3px] rounded-md px-2",
+          isDropdownCaption && "min-w-0",
           defaultClassNames.dropdown_root
         ),
         dropdown: cn(
@@ -78,13 +94,16 @@ function Calendar({
           defaultClassNames.dropdown
         ),
         caption_label: cn(
-          "select-none font-medium",
+          "inline-flex select-none items-center font-medium leading-none",
           captionLayout === "label"
             ? "text-sm"
-            : "rounded-md pl-2 pr-1 flex items-center gap-1 text-sm h-8 [&>svg]:text-muted-foreground [&>svg]:size-3.5",
+            : "h-full gap-1 px-0.5 text-sm [&>svg]:size-3.5 [&>svg]:shrink-0 [&>svg]:text-muted-foreground",
           defaultClassNames.caption_label
         ),
-        month_grid: cn("w-full border-collapse", defaultClassNames.month_grid),
+        month_grid: cn(
+          "col-span-3 row-start-2 w-full border-collapse",
+          defaultClassNames.month_grid
+        ),
         weeks: cn("w-full", defaultClassNames.weeks),
         weekdays: cn("flex w-full", defaultClassNames.weekdays),
         weekday: cn(

@@ -25,7 +25,7 @@ export const WIDGET_FIELD_TRIGGER_CLASS = cn(
 export const WIDGET_DROPDOWN_TRIGGER_LAYOUT_CLASS =
   "justify-between *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:flex-1 *:data-[slot=select-value]:text-left";
 
-/** Full-width tangerine primary button used for Check availability, Book now, and Send request. */
+/** Full-width tangerine primary button used for Book now, Continue to checkout, and Send request. */
 export const WIDGET_PRIMARY_BUTTON_CLASS =
   "w-full rounded-md bg-tangerine h-9 px-4 text-base font-semibold text-white hover:bg-grapefruit whitespace-nowrap transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:pointer-events-none";
 
