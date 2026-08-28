@@ -133,7 +133,9 @@ const DatePicker = ({
   const preferWidgetDialog = usePreferWidgetDialog();
   const useWidgetDialog = variant === "widget" && preferWidgetDialog;
 
-  const useDropdownCaption = Boolean(minDate && maxDate);
+  // Native month/year <select> menus misbehave on touch (iOS shows the picker
+  // persistently). Use prev/next navigation in the centered widget dialog instead.
+  const useDropdownCaption = Boolean(minDate && maxDate) && !useWidgetDialog;
 
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen);
