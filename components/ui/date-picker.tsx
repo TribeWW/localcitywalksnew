@@ -227,7 +227,7 @@ const DatePicker = ({
     );
 
     const widgetDialogContentClass = cn(
-      "w-[calc(100%-3rem)] max-w-sm gap-0 overflow-y-auto rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-sm",
+      "w-[calc(100%-3rem)] max-w-sm max-h-[min(36rem,calc(100vh-4rem))] gap-0 overflow-y-auto rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-sm",
       elevatedLayer
         ? cn(
             BOOKING_STACKED_OVERLAY_Z_CLASS,
