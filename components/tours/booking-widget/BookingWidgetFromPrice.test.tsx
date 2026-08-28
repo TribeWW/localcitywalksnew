@@ -28,4 +28,13 @@ describe("BookingWidgetFromPrice", () => {
 
     expect(container).toBeEmptyDOMElement();
   });
+
+  it("renders compact typography when size is compact", () => {
+    render(<BookingWidgetFromPrice amount={124} currency="EUR" size="compact" />);
+
+    const price = screen.getByText("€124.00");
+    expect(price).toHaveClass("text-xl");
+    expect(screen.getByText("From")).toHaveClass("text-xs");
+    expect(screen.getByText("per adult")).toHaveClass("text-xs");
+  });
 });

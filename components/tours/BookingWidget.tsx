@@ -8,13 +8,15 @@
  * - Availabilities: month-scoped fetch via `getTourAvailabilities`
  * - Pricing: debounced `getTourBookingQuote` (400ms)
  * - Checkout: `startCheckoutHandoff` → `/checkout?h=…` (LOC-1157)
+ *
+ * **Small screens (`<md`)**: scroll-gated fixed bottom bar + full-screen drawer.
+ * **Medium and up (`md+`)**: unchanged sticky in-page card.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { Calendar, Clock, MessagesSquare } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import {
   getTourAvailabilities,
@@ -34,23 +36,17 @@ import {
   toIsoDateString,
 } from "@/lib/booking/dates";
 import BookingWidgetShell from "@/components/tours/booking-widget/BookingWidgetShell";
-import BookingWidgetFromPrice from "@/components/tours/booking-widget/BookingWidgetFromPrice";
-import BookingWidgetField from "@/components/tours/booking-widget/BookingWidgetField";
-import BookingGuestsPicker from "@/components/tours/booking-widget/BookingGuestsPicker";
-import BookingWidgetBreakdown from "@/components/tours/booking-widget/BookingWidgetBreakdown";
-import BookingWidgetStepOneFooter from "@/components/tours/booking-widget/BookingWidgetStepOneFooter";
+import BookingWidgetConfigureStep, {
+  type BookingWidgetConfigureFormValues,
+} from "@/components/tours/booking-widget/BookingWidgetConfigureStep";
+import BookingWidgetMobileBar, {
+  MOBILE_BAR_SCROLL_THRESHOLD_PX,
+} from "@/components/tours/booking-widget/BookingWidgetMobileBar";
+import BookingWidgetMobileDrawer from "@/components/tours/booking-widget/BookingWidgetMobileDrawer";
+import { useIsMediumScreen } from "@/components/tours/booking-widget/use-is-medium-screen";
 import type { GuestCategoryKey } from "@/components/tours/booking-widget/guest-categories";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import DatePicker from "@/components/ui/date-picker";
-import TimeSelector from "@/components/ui/time-selector";
-import LanguageSelector from "@/components/tours/LanguageSelector";
 import { resolveLanguageOptionsForSlot } from "@/lib/bokun/extract-guided-languages";
 import type {
   BokunAvailability,
@@ -110,7 +106,8 @@ const bookingWidgetFormSchema = z.object({
 });
 
 /** Inferred form values for the full booking widget (step 1 + step 2 fields). */
-type BookingWidgetFormValues = z.infer<typeof bookingWidgetFormSchema>;
+type BookingWidgetFormValues = z.infer<typeof bookingWidgetFormSchema> &
+  BookingWidgetConfigureFormValues;
 
 /**
  * Formats `BokunStartTime` as `HH:mm` for the time selector.
@@ -156,6 +153,9 @@ export default function BookingWidget({
   fromPriceAmount,
   fromPriceCurrency,
 }: BookingWidgetBootstrap) {
+  const isMediumScreen = useIsMediumScreen();
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [mobileBarVisible, setMobileBarVisible] = useState(false);
   const [availabilities, setAvailabilities] = useState<BokunAvailability[]>([]);
   const [availLoading, setAvailLoading] = useState(false);
   const [availError, setAvailError] = useState<string | null>(null);
@@ -258,6 +258,36 @@ export default function BookingWidget({
     if (!preferredDate) return;
     void loadMonthAvailabilities(preferredDate);
   }, [preferredDate, loadMonthAvailabilities]);
+
+  /** Scroll-gated visibility for the small-screen bottom bar only. */
+  useEffect(() => {
+    if (isMediumScreen) {
+      setMobileBarVisible(false);
+      setMobileDrawerOpen(false);
+      return;
+    }
+
+    const onScroll = () => {
+      setMobileBarVisible(window.scrollY > MOBILE_BAR_SCROLL_THRESHOLD_PX);
+    };
+
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isMediumScreen]);
+
+  /** Prevent background scroll while the mobile configure drawer is open. */
+  useEffect(() => {
+    if (!isMediumScreen && mobileDrawerOpen) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "unset";
+      };
+    }
+
+    document.body.style.overflow = "unset";
+    return undefined;
+  }, [isMediumScreen, mobileDrawerOpen]);
 
   const availableDateSet = useMemo(() => {
     const set = new Set<string>();
@@ -548,160 +578,78 @@ export default function BookingWidget({
     }
   }
 
+  const configureStepProps = {
+    fromPriceAmount,
+    fromPriceCurrency,
+    availError,
+    availLoading,
+    form: form as unknown as UseFormReturn<BookingWidgetConfigureFormValues>,
+    minDate,
+    maxDate,
+    isDateDisabled,
+    preferredDate,
+    timeOptions,
+    languageOptions,
+    participants,
+    onParticipantChange: handleParticipantChange,
+    quote,
+    quoteLoading,
+    quoteError,
+    isLanguageReady,
+    maxGroupSize,
+    belowMinParticipants,
+    minParticipantsRequired,
+    canBookNow,
+    continuingToCheckout: isContinuingToCheckout,
+    onContinueToCheckout: () => {
+      void handleContinueToCheckout();
+    },
+  };
+
   return (
-    <BookingWidgetShell>
-      <Form {...form}>
-        <form
-          className="space-y-0"
-          onSubmit={(event) => event.preventDefault()}
-        >
-          <BookingWidgetFromPrice
+    <Form {...form}>
+      <form className="space-y-0" onSubmit={(event) => event.preventDefault()}>
+        {isMediumScreen ? (
+          <BookingWidgetShell>
+            <BookingWidgetConfigureStep {...configureStepProps} showFromPrice />
+          </BookingWidgetShell>
+        ) : null}
+
+        <FormField
+          control={form.control}
+          name="city"
+          render={({ field }) => (
+            <FormItem className="hidden">
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <input type="hidden" name="productTitle" value={productTitle} />
+      </form>
+
+      {!isMediumScreen ? (
+        <>
+          <BookingWidgetMobileBar
+            visible={mobileBarVisible}
             amount={fromPriceAmount}
             currency={fromPriceCurrency}
+            onCheckAvailability={() => setMobileDrawerOpen(true)}
           />
 
-          <div
-            className={
-              fromPriceAmount != null ? "mt-6 space-y-3" : "mt-0 space-y-3"
-            }
+          <BookingWidgetMobileDrawer
+            open={mobileDrawerOpen}
+            onClose={() => setMobileDrawerOpen(false)}
           >
-            {availError ? (
-              <p className="text-sm text-destructive" role="alert">
-                {availError}
-              </p>
-            ) : null}
-
-            {availLoading ? (
-              <p className="text-sm text-muted-foreground" aria-live="polite">
-                Loading available dates…
-              </p>
-            ) : null}
-
-            <FormField
-              control={form.control}
-              name="preferredDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <BookingWidgetField icon={Calendar}>
-                      <DatePicker
-                        value={field.value}
-                        onChange={(date) => {
-                          field.onChange(date);
-                          form.setValue("startTimeId", undefined);
-                          form.setValue("language", undefined);
-                        }}
-                        placeholder="Select a date"
-                        minDate={minDate}
-                        maxDate={maxDate}
-                        isDateDisabled={isDateDisabled}
-                        disabled={availLoading}
-                        variant="widget"
-                        hideLeadingIcon
-                      />
-                    </BookingWidgetField>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+            <BookingWidgetConfigureStep
+              {...configureStepProps}
+              showFromPrice={false}
             />
-
-            <FormField
-              control={form.control}
-              name="startTimeId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <BookingWidgetField icon={Clock}>
-                      <TimeSelector
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="Select time"
-                        options={timeOptions}
-                        disabled={!preferredDate || timeOptions.length === 0}
-                        variant="widget"
-                      />
-                    </BookingWidgetField>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {languageOptions.length > 0 ? (
-              <FormField
-                control={form.control}
-                name="language"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <BookingWidgetField icon={MessagesSquare}>
-                        <LanguageSelector
-                          value={field.value}
-                          onChange={field.onChange}
-                          options={languageOptions}
-                          placeholder="Select a language"
-                          disabled={!startTimeIdValue}
-                          variant="widget"
-                        />
-                      </BookingWidgetField>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ) : null}
-
-            <BookingGuestsPicker
-              participants={participants}
-              onChange={handleParticipantChange}
-              quote={quote}
-              disabled={!isLanguageReady}
-              maxGroupSize={maxGroupSize}
-            />
-
-            <div className="pt-3">
-              <BookingWidgetBreakdown
-                quote={quote}
-                loading={quoteLoading}
-                error={quoteError}
-              />
-            </div>
-
-            {belowMinParticipants ? (
-              <p className="text-sm text-destructive" role="alert">
-                This tour requires at least {minParticipantsRequired}{" "}
-                participant
-                {minParticipantsRequired === 1 ? "" : "s"} for the selected
-                time.
-              </p>
-            ) : null}
-
-            <BookingWidgetStepOneFooter
-              canBookNow={canBookNow}
-              mode="checkout"
-              continuing={isContinuingToCheckout}
-              onPrimaryAction={() => {
-                void handleContinueToCheckout();
-              }}
-            />
-          </div>
-
-          <FormField
-            control={form.control}
-            name="city"
-            render={({ field }) => (
-              <FormItem className="hidden">
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <input type="hidden" name="productTitle" value={productTitle} />
-        </form>
-      </Form>
-    </BookingWidgetShell>
+          </BookingWidgetMobileDrawer>
+        </>
+      ) : null}
+    </Form>
   );
 }
