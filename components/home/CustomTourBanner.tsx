@@ -45,7 +45,7 @@ export default function CustomTourBanner() {
             </div>
             <button
               type="button"
-              className="w-full min-h-11 px-6 py-2.5 text-base font-medium text-[#0F172A] bg-transparent border-[1.5px] border-[#0F172A] rounded-[8px] cursor-pointer font-['Outfit',sans-serif] transition-all duration-150 hover:bg-[#0F172A] hover:text-white active:bg-[#0F172A] active:text-white md:w-auto md:shrink-0 md:whitespace-nowrap touch-manipulation"
+              className="w-full min-h-11 px-6 py-2.5 text-base font-medium text-nightsky bg-transparent border-[1.5px] border-nightskºy rounded-md cursor-pointer font-['Outfit',sans-serif] transition-all duration-150 hover:bg-[#0F172A] hover:text-white active:bg-[#0F172A] active:text-white md:w-auto md:shrink-0 md:whitespace-nowrap touch-manipulation"
               onClick={() => setOpen(true)}
             >
               Request a custom tour

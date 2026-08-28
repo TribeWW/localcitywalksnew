@@ -128,3 +128,10 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  /** White secondary CTA — hero “Browse tours”, on-light panels. */
+  .btn-default {
+    @apply inline-flex items-center justify-center px-8 py-3  font-semibold rounded-md transition-colors duration-200;
+  }
+}

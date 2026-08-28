@@ -40,7 +40,7 @@ export const CHECKOUT_CHECKBOX_CLASS = cn(
 
 /** Full-width tangerine primary CTA for Pay button. */
 export const CHECKOUT_PRIMARY_BUTTON_CLASS =
-  "w-full rounded-lg bg-tangerine py-2.5 px-5 text-base font-medium text-white hover:bg-tangerine/90 disabled:opacity-50 disabled:pointer-events-none";
+  "w-full rounded-md bg-tangerine h-auto py-3 px-8 text-base font-semibold text-white hover:bg-grapefruit whitespace-nowrap transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:pointer-events-none";
 
 /** Inline tangerine CTA (success page — not full width). */
 export const CHECKOUT_INLINE_BUTTON_CLASS =
