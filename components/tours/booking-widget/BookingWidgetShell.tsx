@@ -33,7 +33,7 @@ export default function BookingWidgetShell({
   return (
     <div
       className={cn(
-        "rounded-lg border-[1.5px] border-border bg-white p-6 shadow-sm",
+        "w-full self-start rounded-lg border-[1.5px] border-border bg-white p-6 shadow-sm",
         className,
       )}
       style={{ position: "sticky", top: stickyTop }}
