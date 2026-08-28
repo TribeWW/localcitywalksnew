@@ -18,7 +18,7 @@ import { CityCardData } from "@/types/bokun";
 
 interface CityCardProps {
   cities: CityCardData[];
-  /** When true, grid has no horizontal padding (py-6 only); use when parent provides px-6 for alignment with a sibling (e.g. filter button) */
+  /** When true, grid has bottom padding only (`pb-6`); use when the parent supplies horizontal padding (e.g. home spotlight band). */
   noHorizontalPadding?: boolean;
   /** Vercel Flag `cards-widget-update` — gates enriched card UI (price, ratings). */
   cardsWidgetUpdate?: boolean;
