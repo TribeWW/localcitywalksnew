@@ -29,7 +29,10 @@ import {
   WIDGET_DROPDOWN_TRIGGER_LAYOUT_CLASS,
   WIDGET_FIELD_TRIGGER_CLASS,
 } from "@/components/tours/booking-widget/widget-field-styles";
-import { BOOKING_STACKED_OVERLAY_Z_CLASS, bookingStackedOverlayDataAttributes } from "@/components/tours/booking-widget/stacked-overlay-layer";
+import {
+  BOOKING_STACKED_OVERLAY_Z_CLASS,
+  bookingStackedOverlayDataAttributes,
+} from "@/components/tours/booking-widget/stacked-overlay-layer";
 
 /** Props for `DatePicker`. */
 interface DatePickerProps {
@@ -186,9 +189,7 @@ const DatePicker = ({
         </>
       ) : (
         <>
-          {!hideLeadingIcon ? (
-            <CalendarIcon className="mr-2 h-4 w-4" />
-          ) : null}
+          {!hideLeadingIcon ? <CalendarIcon className="mr-2 h-4 w-4" /> : null}
           {value ? format(value, "PPP") : placeholder}
         </>
       )}
@@ -223,14 +224,16 @@ const DatePicker = ({
           <DialogContent
             showCloseButton={false}
             {...bookingStackedOverlayDataAttributes(elevatedLayer)}
-            overlayClassName={elevatedLayer ? BOOKING_STACKED_OVERLAY_Z_CLASS : undefined}
+            overlayClassName={
+              elevatedLayer ? BOOKING_STACKED_OVERLAY_Z_CLASS : undefined
+            }
             className={cn(
               "w-[calc(100%-2rem)] max-w-sm gap-0 border-border bg-popover p-0 shadow-lg sm:max-w-sm",
               elevatedLayer && BOOKING_STACKED_OVERLAY_Z_CLASS,
             )}
           >
             <DialogTitle className="sr-only">Select a date</DialogTitle>
-            <div className="w-full p-2">{calendar}</div>
+            <div className="w-full p-4">{calendar}</div>
           </DialogContent>
         </Dialog>
       </div>
@@ -259,9 +262,7 @@ const DatePicker = ({
         >
           <div
             className={cn(
-              variant === "widget"
-                ? "w-full p-2"
-                : "flex justify-center p-3",
+              variant === "widget" ? "w-full p-2" : "flex justify-center p-3",
             )}
           >
             {calendar}
