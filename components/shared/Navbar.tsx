@@ -50,7 +50,7 @@ export default function Navbar({
   }, []);
 
   const browseClassName = cn(
-    "flex h-9 items-center rounded-lg bg-tangerine px-4 text-sm font-medium text-white",
+    "h-9 px-4 rounded-md text-sm font-semibold flex items-center justify-center bg-tangerine text-white",
     "hover:bg-grapefruit whitespace-nowrap transition-colors duration-200",
   );
 
@@ -121,7 +121,7 @@ export default function Navbar({
                           href={BROWSE_HREF}
                           className={cn(
                             browseClassName,
-                            "w-full justify-center text-[15px]",
+                            "w-full justify-center",
                           )}
                         >
                           Browse tours

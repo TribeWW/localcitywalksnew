@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
-import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Page not found - LocalCityWalks",
@@ -37,16 +36,20 @@ export default function NotFound() {
             …but this page doesn&apos;t seem to go anywhere.
           </p>
 
-          <div className="flex flex-col items-center gap-4 sm:flex-row">
-            <Button
-              asChild
-              className="bg-tangerine text-white hover:bg-grapefruit"
+          <div className="flex w-full max-w-xs flex-col items-stretch justify-center gap-3 sm:max-w-none sm:flex-row sm:items-center sm:gap-4">
+            <Link
+              className="btn-default min-h-[44px] w-full bg-tangerine text-white hover:bg-grapefruit sm:w-auto sm:min-w-[10.5rem]"
+              href="/"
             >
-              <Link href="/">Take me home</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/explore">Browse tours</Link>
-            </Button>
+              Take me home
+            </Link>
+
+            <Link
+              className="btn-default min-h-[44px] w-full border border-border bg-white text-nightsky hover:bg-gray-50 sm:w-auto sm:min-w-[10.5rem]"
+              href="/explore"
+            >
+              Browse tours
+            </Link>
           </div>
         </div>
       </main>

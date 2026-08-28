@@ -100,13 +100,13 @@ export default async function Home() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
                   href="/explore"
-                  className="inline-flex items-center justify-center px-8 py-3 bg-white text-nightsky font-semibold rounded-md hover:bg-gray-50 transition-colors duration-200"
+                  className="btn-default bg-white text-nightsky hover:bg-gray-50"
                 >
                   Browse tours
                 </Link>
                 <Link
                   href="#contact"
-                  className="inline-flex items-center justify-center px-8 py-3 bg-nightsky text-white font-semibold rounded-md hover:bg-nightsky/90 transition-colors duration-200"
+                  className="btn-default bg-nightsky text-white  hover:bg-nightsky/90 "
                 >
                   Get in touch
                 </Link>
