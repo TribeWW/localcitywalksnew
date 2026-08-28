@@ -1,10 +1,10 @@
 "use client";
 
 /**
- * Sticky card shell for the tour-page booking widget (LOC-1063).
+ * Card shell for the tour-page booking widget (LOC-1063).
  *
- * Wraps all widget steps in a white bordered card that stays visible while
- * scrolling the tour detail page.
+ * Sticky positioning is applied on the tour page sidebar wrapper (`lg:sticky`)
+ * so the widget can stick within the full-height grid column.
  */
 
 import type { ReactNode } from "react";
@@ -16,19 +16,16 @@ interface BookingWidgetShellProps {
   children: ReactNode;
   /** Optional extra classes on the outer card. */
   className?: string;
-  /** Sticky `top` offset in pixels; defaults to `96` to clear the site header. */
+  /** @deprecated Sticky offset is owned by the tour page sidebar wrapper. */
   stickyTop?: number;
 }
 
 /**
- * Renders the booking widget card with sticky positioning.
- *
- * @param props.stickyTop - CSS `top` value for `position: sticky`
+ * Renders the booking widget card chrome.
  */
 export default function BookingWidgetShell({
   children,
   className,
-  stickyTop = 96,
 }: BookingWidgetShellProps) {
   return (
     <div
@@ -36,7 +33,6 @@ export default function BookingWidgetShell({
         "w-full self-start rounded-lg border-[1.5px] border-border bg-white p-6 shadow-sm",
         className,
       )}
-      style={{ position: "sticky", top: stickyTop }}
     >
       {children}
     </div>

@@ -219,9 +219,9 @@ async function completeStep1WithQuote() {
 }
 
 /**
- * Mocks `window.matchMedia` for layout branching (`md` breakpoint).
+ * Mocks `window.matchMedia` for layout branching (`lg` breakpoint).
  *
- * @param matches - `true` for md+ (in-page widget); `false` for small screens
+ * @param matches - `true` for lg+ (in-page sticky widget); `false` for small screens
  */
 function mockMatchMedia(matches: boolean) {
   Object.defineProperty(window, "matchMedia", {

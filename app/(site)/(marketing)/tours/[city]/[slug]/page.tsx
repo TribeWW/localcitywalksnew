@@ -283,7 +283,7 @@ export default async function TourPage({
       <div
         className={
           cardsWidgetUpdateEnabled
-            ? "mx-auto w-full max-w-6xl px-4 pb-24 md:px-8 md:pb-0 xl:px-0 py-6"
+            ? "mx-auto w-full max-w-6xl px-4 pb-24 md:px-8 lg:pb-0 xl:px-0 py-6"
             : "mx-auto w-full max-w-6xl px-4 md:px-8 xl:px-0 py-6"
         }
       >
@@ -473,16 +473,13 @@ export default async function TourPage({
             </section>
           </div>
 
-          <div
-            className={
-              cardsWidgetUpdateEnabled ? "space-y-6 lg:h-full" : "space-y-6"
-            }
-          >
+          <div className="space-y-6">
+            <div className="w-full lg:sticky lg:top-24">
             <Card
               id="request"
               className={
                 cardsWidgetUpdateEnabled
-                  ? "h-full border-0 bg-transparent py-0 shadow-none"
+                  ? "border-0 bg-transparent py-0 shadow-none"
                   : undefined
               }
             >
@@ -494,7 +491,7 @@ export default async function TourPage({
                 </CardHeader>
               ) : null}
               <CardContent
-                className={cardsWidgetUpdateEnabled ? "h-full p-0" : undefined}
+                className={cardsWidgetUpdateEnabled ? "p-0" : undefined}
               >
                 <TourRequestFormSection
                   cityName={gpCity ?? detail.data.title}
@@ -514,6 +511,7 @@ export default async function TourPage({
                 />
               </CardContent>
             </Card>
+            </div>
           </div>
         </div>
 

@@ -198,18 +198,6 @@ const DatePicker = ({
     </Button>
   );
 
-  const widgetCalendarClassNames =
-    variant === "widget"
-      ? {
-          caption_label:
-            "inline-flex select-none items-center font-medium leading-none text-base",
-          dropdowns: "flex items-center justify-center gap-1.5 text-base font-medium",
-          weekday:
-            "min-w-0 flex-1 rounded-md text-sm font-normal text-muted-foreground select-none",
-          week_number: "text-sm select-none text-muted-foreground",
-        }
-      : undefined;
-
   const calendar = (
     <Calendar
       mode="single"
@@ -223,10 +211,11 @@ const DatePicker = ({
       disabled={isDayDisabled}
       showOutsideDays={false}
       initialFocus
-      classNames={widgetCalendarClassNames}
       className={cn(
         variant === "widget" &&
-          "w-full [--cell-size:max(2.25rem,calc((100%_-_0.25rem)_/_7))] [&_[data-day]]:text-[0.9375rem]",
+          (useWidgetDialog
+            ? "w-full p-1 [--cell-size:min(2rem,calc((100%_-_1rem)_/_7))]"
+            : "w-full [--cell-size:max(2rem,calc((100%_-_0.25rem)_/_7))]"),
       )}
     />
   );
@@ -238,11 +227,11 @@ const DatePicker = ({
     );
 
     const widgetDialogContentClass = cn(
-      "w-[calc(100%-3rem)] max-w-sm gap-0 overflow-hidden rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-sm",
+      "w-[calc(100%-3rem)] max-w-sm gap-0 overflow-y-auto rounded-2xl border border-border bg-white p-0 shadow-2xl sm:max-w-sm",
       elevatedLayer
         ? cn(
             BOOKING_STACKED_OVERLAY_Z_CLASS,
-            "!top-[calc(4.75rem+1.25rem)] !bottom-auto !max-h-[min(32rem,calc(100vh-7rem))] !translate-y-0",
+            "!top-[calc(4.75rem+1.25rem)] !bottom-auto !max-h-[min(36rem,calc(100vh-6rem))] !translate-y-0",
           )
         : undefined,
     );
@@ -260,8 +249,10 @@ const DatePicker = ({
             <DialogTitle className="border-b border-border px-5 py-4 text-center text-base font-semibold text-nightsky">
               Select a date
             </DialogTitle>
-            <div className="py-5 px-3">
-              <div className="pb-2 ">{calendar}</div>
+            <div className="px-5 pb-6 pt-4">
+              <div className="min-h-[22rem] rounded-xl bg-background px-4 pb-5 pt-3 ">
+                {calendar}
+              </div>
             </div>
           </DialogContent>
         </Dialog>

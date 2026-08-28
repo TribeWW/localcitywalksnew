@@ -131,7 +131,7 @@ export default function BookingWidgetMobileDrawer({
       ref={drawerRef}
       data-testid="booking-mobile-drawer"
       className={cn(
-        "fixed inset-0 flex flex-col bg-white md:hidden",
+        "fixed inset-0 flex flex-col bg-white lg:hidden",
         BOOKING_MOBILE_DRAWER_Z_CLASS,
         className,
       )}

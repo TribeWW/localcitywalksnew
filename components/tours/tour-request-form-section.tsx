@@ -32,7 +32,7 @@ export default function TourRequestFormSection({
 }) {
   if (cardsWidgetUpdate && bookingBootstrap) {
     return (
-      <div data-cards-widget-update="true" className="h-full self-start">
+      <div data-cards-widget-update="true" className="w-full">
         <BookingWidget {...bookingBootstrap} />
       </div>
     );
