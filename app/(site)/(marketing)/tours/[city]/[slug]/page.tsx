@@ -320,8 +320,8 @@ export default async function TourPage({
                 <div className="mb-3 flex items-center gap-1.5">
                   <Star
                     size={14}
-                    fill="nightsky"
-                    color="nightsky"
+                    className="text-nightsky"
+                    fill="currentColor"
                     aria-hidden
                   />
                   <span className="text-[14px] font-semibold text-nightsky">
