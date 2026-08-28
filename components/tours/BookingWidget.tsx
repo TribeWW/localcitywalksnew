@@ -13,7 +13,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { Calendar, Clock, Globe } from "lucide-react";
+import { Calendar, Clock, MessagesSquare } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
@@ -161,7 +161,8 @@ export default function BookingWidget({
   const [availError, setAvailError] = useState<string | null>(null);
   const [quote, setQuote] = useState<BookingWidgetQuote | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
-  const [quoteError, setQuoteError] = useState<BookingWidgetQuoteErrorState>(null);
+  const [quoteError, setQuoteError] =
+    useState<BookingWidgetQuoteErrorState>(null);
   /** True while `startCheckoutHandoff` is in flight; disables Continue to checkout. */
   const [isContinuingToCheckout, setIsContinuingToCheckout] = useState(false);
   const loadedMonthsRef = useRef<Set<string>>(new Set());
@@ -564,60 +565,83 @@ export default function BookingWidget({
               fromPriceAmount != null ? "mt-6 space-y-3" : "mt-0 space-y-3"
             }
           >
-              {availError ? (
-                <p className="text-sm text-destructive" role="alert">
-                  {availError}
-                </p>
-              ) : null}
+            {availError ? (
+              <p className="text-sm text-destructive" role="alert">
+                {availError}
+              </p>
+            ) : null}
 
-              {availLoading ? (
-                <p className="text-sm text-muted-foreground" aria-live="polite">
-                  Loading available dates…
-                </p>
-              ) : null}
+            {availLoading ? (
+              <p className="text-sm text-muted-foreground" aria-live="polite">
+                Loading available dates…
+              </p>
+            ) : null}
 
+            <FormField
+              control={form.control}
+              name="preferredDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <BookingWidgetField icon={Calendar}>
+                      <DatePicker
+                        value={field.value}
+                        onChange={(date) => {
+                          field.onChange(date);
+                          form.setValue("startTimeId", undefined);
+                          form.setValue("language", undefined);
+                        }}
+                        placeholder="Select a date"
+                        minDate={minDate}
+                        maxDate={maxDate}
+                        isDateDisabled={isDateDisabled}
+                        disabled={availLoading}
+                        variant="widget"
+                        hideLeadingIcon
+                      />
+                    </BookingWidgetField>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="startTimeId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <BookingWidgetField icon={Clock}>
+                      <TimeSelector
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select time"
+                        options={timeOptions}
+                        disabled={!preferredDate || timeOptions.length === 0}
+                        variant="widget"
+                      />
+                    </BookingWidgetField>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {languageOptions.length > 0 ? (
               <FormField
                 control={form.control}
-                name="preferredDate"
+                name="language"
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <BookingWidgetField icon={Calendar}>
-                        <DatePicker
-                          value={field.value}
-                          onChange={(date) => {
-                            field.onChange(date);
-                            form.setValue("startTimeId", undefined);
-                            form.setValue("language", undefined);
-                          }}
-                          placeholder="Select a date"
-                          minDate={minDate}
-                          maxDate={maxDate}
-                          isDateDisabled={isDateDisabled}
-                          disabled={availLoading}
-                          variant="widget"
-                          hideLeadingIcon
-                        />
-                      </BookingWidgetField>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="startTimeId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <BookingWidgetField icon={Clock}>
-                        <TimeSelector
+                      <BookingWidgetField icon={MessagesSquare}>
+                        <LanguageSelector
                           value={field.value}
                           onChange={field.onChange}
-                          placeholder="Select time"
-                          options={timeOptions}
-                          disabled={!preferredDate || timeOptions.length === 0}
+                          options={languageOptions}
+                          placeholder="Select a language"
+                          disabled={!startTimeIdValue}
                           variant="widget"
                         />
                       </BookingWidgetField>
@@ -626,64 +650,41 @@ export default function BookingWidget({
                   </FormItem>
                 )}
               />
+            ) : null}
 
-              {languageOptions.length > 0 ? (
-                <FormField
-                  control={form.control}
-                  name="language"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <BookingWidgetField icon={Globe}>
-                          <LanguageSelector
-                            value={field.value}
-                            onChange={field.onChange}
-                            options={languageOptions}
-                            placeholder="Select a language"
-                            disabled={!startTimeIdValue}
-                            variant="widget"
-                          />
-                        </BookingWidgetField>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : null}
+            <BookingGuestsPicker
+              participants={participants}
+              onChange={handleParticipantChange}
+              quote={quote}
+              disabled={!isLanguageReady}
+              maxGroupSize={maxGroupSize}
+            />
 
-              <BookingGuestsPicker
-                participants={participants}
-                onChange={handleParticipantChange}
+            <div className="pt-3">
+              <BookingWidgetBreakdown
                 quote={quote}
-                disabled={!isLanguageReady}
-                maxGroupSize={maxGroupSize}
+                loading={quoteLoading}
+                error={quoteError}
               />
+            </div>
 
-              <div className="pt-3">
-                <BookingWidgetBreakdown
-                  quote={quote}
-                  loading={quoteLoading}
-                  error={quoteError}
-                />
-              </div>
+            {belowMinParticipants ? (
+              <p className="text-sm text-destructive" role="alert">
+                This tour requires at least {minParticipantsRequired}{" "}
+                participant
+                {minParticipantsRequired === 1 ? "" : "s"} for the selected
+                time.
+              </p>
+            ) : null}
 
-              {belowMinParticipants ? (
-                <p className="text-sm text-destructive" role="alert">
-                  This tour requires at least {minParticipantsRequired}{" "}
-                  participant
-                  {minParticipantsRequired === 1 ? "" : "s"} for the selected
-                  time.
-                </p>
-              ) : null}
-
-              <BookingWidgetStepOneFooter
-                canBookNow={canBookNow}
-                mode="checkout"
-                continuing={isContinuingToCheckout}
-                onPrimaryAction={() => {
-                  void handleContinueToCheckout();
-                }}
-              />
+            <BookingWidgetStepOneFooter
+              canBookNow={canBookNow}
+              mode="checkout"
+              continuing={isContinuingToCheckout}
+              onPrimaryAction={() => {
+                void handleContinueToCheckout();
+              }}
+            />
           </div>
 
           <FormField

@@ -6,7 +6,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "lucide-react";
-import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker";
+import { DayButton, DayPicker, defaultDateLib, getDefaultClassNames } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -42,8 +42,8 @@ function Calendar({
       )}
       captionLayout={captionLayout}
       formatters={{
-        formatMonthDropdown: (date) =>
-          date.toLocaleString("default", { month: "short" }),
+        formatMonthDropdown: (date, dateLib) =>
+          (dateLib ?? defaultDateLib).format(date, "LLL"),
         ...formatters,
       }}
       classNames={{
@@ -54,11 +54,13 @@ function Calendar({
         ),
         month: cn(
           "relative grid w-full grid-cols-[var(--cell-size)_minmax(0,1fr)_var(--cell-size)] grid-rows-[var(--cell-size)_auto] gap-y-4",
+          navLayout === "after" &&
+            "has-[>nav]:grid-rows-[var(--cell-size)_var(--cell-size)_auto]",
           defaultClassNames.month
         ),
         nav: cn(
           navLayout === "after"
-            ? "flex h-(--cell-size) w-full items-center justify-between"
+            ? "col-span-3 row-start-2 flex h-(--cell-size) w-full items-center justify-between"
             : "absolute inset-x-0 top-0 flex h-(--cell-size) w-full items-stretch justify-between",
           defaultClassNames.nav
         ),
@@ -104,6 +106,7 @@ function Calendar({
         ),
         month_grid: cn(
           "col-span-3 row-start-2 w-full border-collapse",
+          navLayout === "after" && "[.rdp-month:has(>nav)_&]:row-start-3",
           defaultClassNames.month_grid
         ),
         weeks: cn("w-full", defaultClassNames.weeks),

@@ -5,7 +5,7 @@ import type { SanityReviewListItem } from "@/types/review";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { BadgeCheck, Clock, Globe, Users, Star } from "lucide-react";
+import { BadgeCheck, Clock, MessagesSquare, Users, Star } from "lucide-react";
 import { getTourDetailById } from "@/lib/tours/detail.actions";
 import {
   getAllReviewRatings,
@@ -367,7 +367,7 @@ export default async function TourPage({
                   ...(languageBadgeText
                     ? [
                         {
-                          icon: <Globe size={14} />,
+                          icon: <MessagesSquare size={14} />,
                           text: languageBadgeText,
                         },
                       ]
@@ -476,7 +476,7 @@ export default async function TourPage({
               id="request"
               className={
                 cardsWidgetUpdateEnabled
-                  ? "h-full border-0 bg-transparent shadow-none"
+                  ? "h-full border-0 bg-transparent py-0 shadow-none"
                   : undefined
               }
             >
@@ -488,9 +488,7 @@ export default async function TourPage({
                 </CardHeader>
               ) : null}
               <CardContent
-                className={
-                  cardsWidgetUpdateEnabled ? "h-full p-0" : undefined
-                }
+                className={cardsWidgetUpdateEnabled ? "h-full p-0" : undefined}
               >
                 <TourRequestFormSection
                   cityName={gpCity ?? detail.data.title}
