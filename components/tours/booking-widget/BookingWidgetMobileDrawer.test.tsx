@@ -7,6 +7,10 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import BookingWidgetMobileDrawer from "@/components/tours/booking-widget/BookingWidgetMobileDrawer";
+import {
+  BOOKING_STACKED_OVERLAY_ATTRIBUTE,
+  BOOKING_STACKED_OVERLAY_VALUE,
+} from "@/components/tours/booking-widget/stacked-overlay-layer";
 
 describe("BookingWidgetMobileDrawer", () => {
   it("renders dialog with title, close button, and children when open", () => {
@@ -103,7 +107,7 @@ describe("BookingWidgetMobileDrawer", () => {
     );
 
     const dialog = document.createElement("div");
-    dialog.setAttribute("data-slot", "dialog-content");
+    dialog.setAttribute(BOOKING_STACKED_OVERLAY_ATTRIBUTE, BOOKING_STACKED_OVERLAY_VALUE);
     dialog.setAttribute("data-state", "open");
     document.body.appendChild(dialog);
 

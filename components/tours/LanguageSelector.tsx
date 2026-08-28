@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { WIDGET_DROPDOWN_TRIGGER_LAYOUT_CLASS, WIDGET_FIELD_TRIGGER_CLASS } from "@/components/tours/booking-widget/widget-field-styles";
-import { BOOKING_STACKED_OVERLAY_Z_CLASS } from "@/components/tours/booking-widget/stacked-overlay-layer";
+import { BOOKING_STACKED_OVERLAY_Z_CLASS, bookingStackedOverlayDataAttributes } from "@/components/tours/booking-widget/stacked-overlay-layer";
 
 /** Props for `LanguageSelector`. */
 interface LanguageSelectorProps {
@@ -74,6 +74,7 @@ const LanguageSelector = ({
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent
+        {...bookingStackedOverlayDataAttributes(elevatedLayer)}
         className={elevatedLayer ? BOOKING_STACKED_OVERLAY_Z_CLASS : undefined}
       >
         {uniqueOptions.map((option) => (

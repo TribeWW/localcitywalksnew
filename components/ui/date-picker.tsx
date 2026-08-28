@@ -29,7 +29,7 @@ import {
   WIDGET_DROPDOWN_TRIGGER_LAYOUT_CLASS,
   WIDGET_FIELD_TRIGGER_CLASS,
 } from "@/components/tours/booking-widget/widget-field-styles";
-import { BOOKING_STACKED_OVERLAY_Z_CLASS } from "@/components/tours/booking-widget/stacked-overlay-layer";
+import { BOOKING_STACKED_OVERLAY_Z_CLASS, bookingStackedOverlayDataAttributes } from "@/components/tours/booking-widget/stacked-overlay-layer";
 
 /** Props for `DatePicker`. */
 interface DatePickerProps {
@@ -222,6 +222,7 @@ const DatePicker = ({
           <DialogTrigger asChild>{triggerButton}</DialogTrigger>
           <DialogContent
             showCloseButton={false}
+            {...bookingStackedOverlayDataAttributes(elevatedLayer)}
             overlayClassName={elevatedLayer ? BOOKING_STACKED_OVERLAY_Z_CLASS : undefined}
             className={cn(
               "w-[calc(100%-2rem)] max-w-sm gap-0 border-border bg-popover p-0 shadow-lg sm:max-w-sm",
@@ -249,6 +250,7 @@ const DatePicker = ({
           side="bottom"
           sideOffset={4}
           collisionPadding={12}
+          {...bookingStackedOverlayDataAttributes(elevatedLayer)}
           className={cn(
             "w-[var(--radix-popover-trigger-width)] p-0",
             variant === "widget" && "overflow-hidden",
