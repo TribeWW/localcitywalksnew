@@ -29,6 +29,7 @@ import {
   WIDGET_DROPDOWN_TRIGGER_LAYOUT_CLASS,
   WIDGET_FIELD_TRIGGER_CLASS,
 } from "@/components/tours/booking-widget/widget-field-styles";
+import { BOOKING_STACKED_OVERLAY_Z_CLASS } from "@/components/tours/booking-widget/stacked-overlay-layer";
 
 /** Props for `DatePicker`. */
 interface DatePickerProps {
@@ -47,6 +48,11 @@ interface DatePickerProps {
   /** Widget chrome: icon provided by `BookingWidgetField`, compact bordered trigger. */
   variant?: "default" | "widget";
   hideLeadingIcon?: boolean;
+  /**
+   * When true, raises the touch dialog above the mobile booking drawer (`z-[80]`).
+   * Use inside `BookingWidgetMobileDrawer` only.
+   */
+  elevatedLayer?: boolean;
 }
 
 const NARROW_WIDGET_MEDIA = "(max-width: 1023px)";
@@ -117,6 +123,7 @@ const DatePicker = ({
   className,
   variant = "default",
   hideLeadingIcon = false,
+  elevatedLayer = false,
 }: DatePickerProps) => {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(() => resolveVisibleMonth(value, minDate));
@@ -215,7 +222,11 @@ const DatePicker = ({
           <DialogTrigger asChild>{triggerButton}</DialogTrigger>
           <DialogContent
             showCloseButton={false}
-            className="w-[calc(100%-2rem)] max-w-sm gap-0 border-border bg-popover p-0 shadow-lg sm:max-w-sm"
+            overlayClassName={elevatedLayer ? BOOKING_STACKED_OVERLAY_Z_CLASS : undefined}
+            className={cn(
+              "w-[calc(100%-2rem)] max-w-sm gap-0 border-border bg-popover p-0 shadow-lg sm:max-w-sm",
+              elevatedLayer && BOOKING_STACKED_OVERLAY_Z_CLASS,
+            )}
           >
             <DialogTitle className="sr-only">Select a date</DialogTitle>
             <div className="w-full p-2">{calendar}</div>
@@ -241,6 +252,7 @@ const DatePicker = ({
           className={cn(
             "w-[var(--radix-popover-trigger-width)] p-0",
             variant === "widget" && "overflow-hidden",
+            elevatedLayer && BOOKING_STACKED_OVERLAY_Z_CLASS,
           )}
         >
           <div

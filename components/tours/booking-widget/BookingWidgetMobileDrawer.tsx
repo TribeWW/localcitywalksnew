@@ -10,6 +10,10 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  BOOKING_MOBILE_DRAWER_Z_CLASS,
+  isBookingStackedOverlayOpen,
+} from "@/components/tours/booking-widget/stacked-overlay-layer";
 
 /** Selector for tabbable elements inside the drawer focus trap. */
 const FOCUSABLE_SELECTOR =
@@ -44,7 +48,7 @@ export interface BookingWidgetMobileDrawerProps {
 /**
  * Full-screen overlay with header and scrollable body for the configure step.
  *
- * @param props.open - Controls mount and visibility
+ * @param props.open - Controls mount, initial focus, and focus restoration on close
  * @param props.onClose - Invoked on close button click or document Escape key
  */
 export default function BookingWidgetMobileDrawer({
@@ -55,15 +59,32 @@ export default function BookingWidgetMobileDrawer({
 }: BookingWidgetMobileDrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!open) {
       return;
     }
 
+    previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
     closeButtonRef.current?.focus();
 
+    return () => {
+      previouslyFocusedRef.current?.focus();
+      previouslyFocusedRef.current = null;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (isBookingStackedOverlayOpen()) {
+        return;
+      }
+
       if (event.key === "Escape") {
         event.preventDefault();
         onClose();
@@ -110,7 +131,8 @@ export default function BookingWidgetMobileDrawer({
       ref={drawerRef}
       data-testid="booking-mobile-drawer"
       className={cn(
-        "fixed inset-0 z-[70] flex flex-col bg-white md:hidden",
+        "fixed inset-0 flex flex-col bg-white md:hidden",
+        BOOKING_MOBILE_DRAWER_Z_CLASS,
         className,
       )}
       role="dialog"

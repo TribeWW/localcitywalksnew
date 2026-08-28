@@ -646,6 +646,7 @@ export default function BookingWidget({
             <BookingWidgetConfigureStep
               {...configureStepProps}
               showFromPrice={false}
+              useElevatedOverlays
             />
           </BookingWidgetMobileDrawer>
         </>

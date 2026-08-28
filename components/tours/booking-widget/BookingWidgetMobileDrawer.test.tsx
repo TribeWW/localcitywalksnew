@@ -93,4 +93,23 @@ describe("BookingWidgetMobileDrawer", () => {
 
     expect(lastField).toHaveFocus();
   });
+
+  it("does not close the drawer on Escape when a stacked overlay is open", () => {
+    const onClose = vi.fn();
+    render(
+      <BookingWidgetMobileDrawer open onClose={onClose}>
+        <p>Configure form</p>
+      </BookingWidgetMobileDrawer>,
+    );
+
+    const dialog = document.createElement("div");
+    dialog.setAttribute("data-slot", "dialog-content");
+    dialog.setAttribute("data-state", "open");
+    document.body.appendChild(dialog);
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(onClose).not.toHaveBeenCalled();
+    dialog.remove();
+  });
 });

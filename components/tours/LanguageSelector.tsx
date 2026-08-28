@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { WIDGET_DROPDOWN_TRIGGER_LAYOUT_CLASS, WIDGET_FIELD_TRIGGER_CLASS } from "@/components/tours/booking-widget/widget-field-styles";
+import { BOOKING_STACKED_OVERLAY_Z_CLASS } from "@/components/tours/booking-widget/stacked-overlay-layer";
 
 /** Props for `LanguageSelector`. */
 interface LanguageSelectorProps {
@@ -31,6 +32,8 @@ interface LanguageSelectorProps {
   className?: string;
   /** Compact bordered trigger for booking widget (LOC-1063). */
   variant?: "default" | "widget";
+  /** Raises the dropdown above the mobile booking drawer (`z-[80]`). */
+  elevatedLayer?: boolean;
 }
 
 /**
@@ -46,6 +49,7 @@ const LanguageSelector = ({
   disabled = false,
   className,
   variant = "default",
+  elevatedLayer = false,
 }: LanguageSelectorProps) => {
   const uniqueOptions = options.filter(
     (option, index, all) =>
@@ -69,7 +73,9 @@ const LanguageSelector = ({
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent
+        className={elevatedLayer ? BOOKING_STACKED_OVERLAY_Z_CLASS : undefined}
+      >
         {uniqueOptions.map((option) => (
           <SelectItem key={option.code} value={option.code}>
             {option.label}
