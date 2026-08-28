@@ -286,10 +286,7 @@ export default async function TourPage({
             <BreadcrumbList className="flex-wrap gap-2 text-xs text-muted-foreground sm:gap-2">
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link
-                    href="/"
-                    className="font-medium text-[#0F172A] no-underline hover:text-[#0F172A]"
-                  >
+                  <Link href="/" className="font-medium no-underline">
                     Home
                   </Link>
                 </BreadcrumbLink>
@@ -298,7 +295,7 @@ export default async function TourPage({
                 /
               </BreadcrumbSeparator>
               <BreadcrumbItem>
-                <span className="font-medium text-[#0F172A]">
+                <span className="font-medium">
                   Private tour in {cityDisplayName}
                 </span>
               </BreadcrumbItem>
@@ -321,8 +318,13 @@ export default async function TourPage({
             <div>
               {heroReviewStats ? (
                 <div className="mb-3 flex items-center gap-1.5">
-                  <Star size={14} fill="#0F172A" color="#0F172A" aria-hidden />
-                  <span className="text-[14px] font-semibold text-[#0F172A]">
+                  <Star
+                    size={14}
+                    fill="nightsky"
+                    color="nightsky"
+                    aria-hidden
+                  />
+                  <span className="text-[14px] font-semibold text-nightsky">
                     {heroReviewStats.ratingLabel}
                   </span>
                   <a
@@ -340,7 +342,7 @@ export default async function TourPage({
                 </div>
               ) : null}
 
-              <h1 className="mb-4 text-[32px] font-bold leading-[1.3] text-[#0F172A]">
+              <h1 className="mb-4 text-[32px] font-bold leading-[1.3] text-nightsky">
                 {productTitle}
               </h1>
               {excerpt ? (
@@ -377,7 +379,7 @@ export default async function TourPage({
                 ].map((tag, i) => (
                   <div
                     key={i}
-                    className="inline-flex items-center gap-1.5 rounded-lg border-[1.5px] border-border bg-[#F7F7F7] px-2.5 py-1 text-sm font-medium text-[#0F172A]"
+                    className="inline-flex items-center gap-1.5 rounded-lg border-[1.5px] border-border bg-[#F7F7F7] px-2.5 py-1 text-sm font-medium text-nightsky"
                   >
                     {tag.icon}
                     <span>{tag.text}</span>
@@ -394,7 +396,7 @@ export default async function TourPage({
               >
                 <h2
                   id="about-heading"
-                  className="mb-4 text-xl font-semibold text-[#0F172A]"
+                  className="mb-4 text-xl font-semibold text-nightsky"
                 >
                   About
                 </h2>
@@ -419,7 +421,7 @@ export default async function TourPage({
               <div>
                 <h3
                   id="hello-banner-heading"
-                  className="mb-2 lg:text-lg text-base font-semibold text-[#0F172A]"
+                  className="mb-2 lg:text-lg text-base font-semibold text-nightsky"
                 >
                   Hello by LocalCityWalks
                 </h3>
@@ -434,7 +436,7 @@ export default async function TourPage({
             <section className="mb-12" aria-labelledby="good-to-know-heading">
               <h2
                 id="good-to-know-heading"
-                className="mb-4 text-xl font-semibold text-[#0F172A]"
+                className="mb-4 text-xl font-semibold text-nightsky"
               >
                 Good to know
               </h2>
@@ -453,7 +455,7 @@ export default async function TourPage({
             <section aria-labelledby="cancellation-policy-heading">
               <h2
                 id="cancellation-policy-heading"
-                className="mb-4 text-xl font-semibold text-[#0F172A]"
+                className="mb-4 text-xl font-semibold text-nightsky"
               >
                 Cancellation policy
               </h2>

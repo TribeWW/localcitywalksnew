@@ -26,7 +26,8 @@ export function FooterCityLinksView({
                 {city.name}
               </Link>
               {i < items.length - 1 ? (
-                <span className="text-xs text-" aria-hidden>
+                <span className="text-xs text-border" aria-hidden>
+                  {" "}
                   ·
                 </span>
               ) : null}
