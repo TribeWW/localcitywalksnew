@@ -20,7 +20,10 @@ import {
   WIDGET_FIELD_DISABLED_CLASS,
   WIDGET_GUESTS_TRIGGER_CLASS,
 } from "@/components/tours/booking-widget/widget-field-styles";
-import type { BookingWidgetParticipants, BookingWidgetQuote } from "@/types/bokun";
+import type {
+  BookingWidgetParticipants,
+  BookingWidgetQuote,
+} from "@/types/bokun";
 
 /** Props for `BookingGuestsPicker`. */
 interface BookingGuestsPickerProps {
@@ -155,7 +158,7 @@ export default function BookingGuestsPicker({
       </button>
 
       {open && !disabled ? (
-        <div className="overflow-hidden rounded-b-lg border-2 border-t-0 border-[#1A1A1A]">
+        <div className="overflow-hidden rounded-b-lg border-2 border-t-0 border-foreground">
           {GUEST_CATEGORIES.map((category, index) => {
             const count = participants[category.key];
             const unitHint = formatGuestUnitHint(category.label, quote);

@@ -231,7 +231,7 @@ export default function ExploreCatalogClient({
         disabled={controlsDisabled}
       >
         <SelectTrigger
-          className="px-0 text-[#6A6A6A] border-0 shadow-none"
+          className="px-0 text-muted-foreground border-0 shadow-none"
           disabled={controlsDisabled}
         >
           <SelectValue />
@@ -247,7 +247,7 @@ export default function ExploreCatalogClient({
   return (
     <>
       <div
-        className="sticky top-0 z-30 w-full border-b border-[#D3CED2] bg-white"
+        className="sticky top-0 z-30 w-full border-b border-border bg-white"
         data-testid="explore-filter-bar"
         data-featured-count={featuredCountries.length}
       >
@@ -279,7 +279,7 @@ export default function ExploreCatalogClient({
                     type="button"
                     onClick={() => void selectCountry([countryCode])}
                     disabled={controlsDisabled}
-                    className="px-3 py-2 text-sm font-normal text-[#6A6A6A] transition-colors duration-150 hover:text-[#0F172A] disabled:opacity-50"
+                    className="px-3 py-2 text-sm font-normal text-muted-foreground transition-colors duration-150 hover:text-[#0F172A] disabled:opacity-50"
                   >
                     {country}
                   </button>
@@ -300,7 +300,7 @@ export default function ExploreCatalogClient({
           >
             {showResultsMeta ? (
               <div
-                className="order-2 text-sm text-[#6A6A6A] lg:order-1"
+                className="order-2 text-sm text-muted-foreground lg:order-1"
                 data-testid="explore-tours-found"
               >
                 <span>
@@ -328,14 +328,17 @@ export default function ExploreCatalogClient({
                       aria-label={`${label} remove`}
                     >
                       {label}
-                      <X className="h-3.5 w-3.5 text-[#6A6A6A]" aria-hidden />
+                      <X
+                        className="h-3.5 w-3.5 text-muted-foreground"
+                        aria-hidden
+                      />
                     </button>
                   );
                 })}
                 <button
                   type="button"
                   onClick={() => void selectCountry([])}
-                  className="text-sm text-[#6A6A6A] underline underline-offset-2 hover:text-[#0F172A]"
+                  className="text-sm text-muted-foreground underline underline-offset-2 hover:text-[#0F172A]"
                   aria-label="Clear all countries"
                 >
                   Clear all

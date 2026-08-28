@@ -42,7 +42,28 @@ In Tailwind v4 theme (`app/globals.css` `@theme inline`), brand colors map to ut
 
 The app uses **shadcn-style CSS variables** in `:root` / `.dark` for primitives such as **`background`**, **`foreground`**, **`border`**, **`muted`**, **`muted-foreground`**, **`primary`**, **`ring`**, and **`radius`**. Tailwind maps them to classes like **`bg-background`**, **`text-foreground`**, **`border-border`**, **`text-muted-foreground`**.
 
+Defined in `app/globals.css` (`:root`, light mode):
+
+| CSS variable | Hex (light) | Tailwind utility |
+| ------------ | ----------- | ---------------- |
+| `--foreground` | `#1A1A1A` | `text-foreground` |
+| `--muted-foreground` | `#6A6A6A` | `text-muted-foreground` |
+| `--border` | `#D3CED2` | `border-border` |
+
+**Confirmed:** `--foreground` is **`#1a1a1a`** (same as `#1A1A1A`). Prefer **`text-foreground`** over arbitrary `text-[#1A1A1A]` for primary body copy.
+
+#### Legacy hex → semantic token (prefer tokens)
+
+When touching existing UI, replace arbitrary hex classes with the matching shadcn token:
+
+| Legacy (avoid) | Use instead | Typical surfaces |
+| -------------- | ----------- | ---------------- |
+| `text-[#6A6A6A]` | `text-muted-foreground` | Secondary/helper copy, meta lines, breadcrumbs, form hints |
+| `border-[#D3CED2]` | `border-border` | Hello banner (tour page), review cards, explore sticky bar, checkout/booking field chrome |
+| `text-[#1A1A1A]` | `text-foreground` | About, Good to know, Cancellation policy, Hello banner body, review card body, tour description |
+
 - Secondary / helper copy often uses **`text-muted-foreground`**. The project sets **`--muted-foreground`** to **`#6A6A6A`** (light mode) for consistent gray body/supporting text alongside brand colors.
+- **Do not** swap **`text-[#0F172A]`** (Grapes / `nightsky` headings) to `text-foreground` — that is a separate on-light heading colour (`#0F172A` ≠ `#1A1A1A`). Tour page `h2`s and some card titles still use `#0F172A` intentionally.
 
 ### Usage Guidelines
 

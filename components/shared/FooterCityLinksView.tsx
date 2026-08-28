@@ -21,12 +21,12 @@ export function FooterCityLinksView({
             <Fragment key={`${city.href}-${city.name}`}>
               <Link
                 href={city.href}
-                className="text-xs text-[#6A6A6A] no-underline transition-colors duration-150 hover:text-[#0F172A] hover:underline hover:underline-offset-[3px]"
+                className="text-xs text-muted-foreground no-underline transition-colors duration-150 hover:text-[#0F172A] hover:underline hover:underline-offset-[3px]"
               >
                 {city.name}
               </Link>
               {i < items.length - 1 ? (
-                <span className="text-xs text-[#D3CED2]" aria-hidden>
+                <span className="text-xs text-" aria-hidden>
                   ·
                 </span>
               ) : null}

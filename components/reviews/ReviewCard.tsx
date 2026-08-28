@@ -54,7 +54,7 @@ export function ReviewCard({
         isHome && "shrink-0",
         !isHome && "h-full min-h-0",
         isHome || isTourDetail
-          ? "border-[1.5px] border-[#D3CED2] bg-white"
+          ? "border-[1.5px] border-border bg-white"
           : "border border-border bg-card",
       )}
     >
@@ -84,7 +84,7 @@ export function ReviewCard({
                   ? "#0F172A"
                   : "currentColor"
                 : isHome || isTourDetail
-                  ? "#D3CED2"
+                  ? "border"
                   : "currentColor"
             }
             aria-hidden
@@ -105,7 +105,7 @@ export function ReviewCard({
         className={cn(
           "text-xs",
           isHome || isTourDetail
-            ? "mb-4 text-[#6A6A6A]"
+            ? "mb-4 text-muted-foreground"
             : "mt-1 text-muted-foreground",
         )}
       >
@@ -122,7 +122,7 @@ export function ReviewCard({
             className={cn(
               "text-sm leading-relaxed",
               isTourDetail
-                ? "mt-0 flex-1 text-[#1A1A1A] leading-[1.6]"
+                ? "mt-0 flex-1 text-foreground leading-[1.6]"
                 : "mt-4 text-foreground",
             )}
           >

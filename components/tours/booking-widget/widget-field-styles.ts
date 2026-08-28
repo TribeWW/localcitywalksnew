@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 /** Focus/active/open border — aligned with checkout `CHECKOUT_FIELD_FOCUS_CLASS`. */
 const WIDGET_FIELD_FOCUS_CLASS =
-  "focus:border-2 focus-visible:border-2 active:border-2 focus:border-[#1A1A1A] focus-visible:border-[#1A1A1A] active:border-[#1A1A1A] focus:ring-0 focus-visible:ring-0 active:ring-0 focus-visible:ring-offset-0 data-[state=open]:border-2 data-[state=open]:border-[#1A1A1A] aria-expanded:border-[#1A1A1A]";
+  "focus:border-2 focus-visible:border-2 active:border-2 focus:border-foreground focus-visible:border-foreground active:border-foreground focus:ring-0 focus-visible:ring-0 active:ring-0 focus-visible:ring-offset-0 data-[state=open]:border-2 data-[state=open]:border-foreground aria-expanded:border-foreground";
 
 /** Trigger/input chrome for icon-in-field controls (date, time, language, contact fields). */
 export const WIDGET_FIELD_TRIGGER_CLASS = cn(

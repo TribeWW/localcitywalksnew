@@ -24,7 +24,7 @@ export const CHECKOUT_SUMMARY_GRID_CLASS =
 
 /** Focus/active border for checkout inputs — design brief #1A1A1A. */
 const CHECKOUT_FIELD_FOCUS_CLASS =
-  "focus:border-2 focus-visible:border-2 active:border-2 focus:border-[#1A1A1A] focus-visible:border-[#1A1A1A] active:border-[#1A1A1A] focus:ring-0 focus-visible:ring-0 active:ring-0";
+  "focus:border-2 focus-visible:border-2 active:border-2 focus:border-foreground focus-visible:border-foreground active:border-foreground focus:ring-0 focus-visible:ring-0 active:ring-0";
 
 /** Input/textarea chrome for checkout contact fields. */
 export const CHECKOUT_FIELD_CLASS = cn(

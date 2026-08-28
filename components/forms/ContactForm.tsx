@@ -115,7 +115,7 @@ const ContactForm = () => {
                     <FormControl>
                       <Input
                         placeholder={`Enter your ${FIELD_NAMES[name].toLowerCase()}`}
-                        className="h-10 text-[#000] placeholder-[#6A6A6A] rounded-[4px] bg-white"
+                        className="h-10 text-[#000] placeholder-muted-foreground rounded-[4px] bg-white"
                         type={FIELD_TYPES[name]}
                         {...field}
                       />
@@ -137,7 +137,7 @@ const ContactForm = () => {
                     value={field.value || undefined}
                   >
                     <FormControl className="w-full rounded-[4px]">
-                      <SelectTrigger className="py-[18px] text-[#000] placeholder-[#6A6A6A] bg-white">
+                      <SelectTrigger className="py-[18px] text-[#000] placeholder-muted-foreground bg-white">
                         <SelectValue placeholder="Select a topic" />
                       </SelectTrigger>
                     </FormControl>
@@ -163,7 +163,7 @@ const ContactForm = () => {
                   <FormControl>
                     <Textarea
                       placeholder="Write your message"
-                      className="min-h-[110px] resize-none text-[#000] placeholder-[#6A6A6A] rounded-[4px] bg-white"
+                      className="min-h-[110px] resize-none text-[#000] placeholder-muted-foreground rounded-[4px] bg-white"
                       {...field}
                     />
                   </FormControl>

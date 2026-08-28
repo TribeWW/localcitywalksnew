@@ -12,7 +12,7 @@ export default function ExploreCatalogSkeleton() {
   return (
     <>
       <div
-        className="sticky top-0 z-30 w-full border-b border-[#D3CED2] bg-white"
+        className="sticky top-0 z-30 w-full border-b border-border bg-white"
         data-testid="explore-catalog-skeleton-filters"
         aria-hidden
       >
