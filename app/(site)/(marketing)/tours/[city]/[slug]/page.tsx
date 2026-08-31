@@ -292,7 +292,10 @@ export default async function TourPage({
             <BreadcrumbList className="flex-wrap gap-2 text-xs text-muted-foreground sm:gap-2">
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/" className="font-medium no-underline">
+                  <Link
+                    href="/"
+                    className="font-medium underline decoration-border underline-offset-2 hover:text-nightsky"
+                  >
                     Home
                   </Link>
                 </BreadcrumbLink>
@@ -302,7 +305,10 @@ export default async function TourPage({
               </BreadcrumbSeparator>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/explore" className="font-medium no-underline">
+                  <Link
+                    href="/explore"
+                    className="font-medium underline decoration-border underline-offset-2 hover:text-nightsky"
+                  >
                     Explore
                   </Link>
                 </BreadcrumbLink>
@@ -345,7 +351,7 @@ export default async function TourPage({
                   </span>
                   <a
                     href="#tour-reviews"
-                    className="cursor-pointer text-[14px] text-muted-foreground underline decoration-border underline-offset-2"
+                    className="cursor-pointer text-[14px] text-muted-foreground underline decoration-border hover:text-nightsky underline-offset-2"
                   >
                     ·{" "}
                     {heroReviewStats.usesFallbackReviews
