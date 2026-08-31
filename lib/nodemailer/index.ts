@@ -106,10 +106,14 @@ export async function sendEmail(data: EmailContent) {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #333;">New Contact Form Submission</h2>
-          <p><strong>From:</strong> ${data.name} (${data.email})</p>
-          <p><strong>Subject:</strong> ${data.subject}</p>
+          <p><strong>From:</strong> ${escapeHtml(data.name)} (${escapeHtml(
+            data.email,
+          )})</p>
+          <p><strong>Subject:</strong> ${escapeHtml(data.subject)}</p>
           <p><strong>Message:</strong></p>
-          <p style="background: #f5f5f5; padding: 15px; border-radius: 5px;">${data.message}</p>
+          <p style="background: `#f5f5f5`; padding: 15px; border-radius: 5px;">${escapeHtml(
+            data.message,
+          )}</p>
           <p><strong>Consent:</strong> ${data.consent}</p>
         </div>
       `,
@@ -238,7 +242,9 @@ export async function sendTourRequestEmail(data: TourRequestEmailContent) {
  *
  * @param data - Server-verified booking payload; totals must not come from `clientQuote`
  */
-export async function sendBookingWidgetTeamEmail(data: BookingWidgetEmailContent) {
+export async function sendBookingWidgetTeamEmail(
+  data: BookingWidgetEmailContent,
+) {
   try {
     const isVerified = await verifyTransporter(transporter);
     if (!isVerified) {
@@ -262,7 +268,9 @@ export async function sendBookingWidgetTeamEmail(data: BookingWidgetEmailContent
       code: emailError.code,
       command: emailError.command,
     });
-    throw new Error(`Failed to send booking widget team email: ${errorMessage}`);
+    throw new Error(
+      `Failed to send booking widget team email: ${errorMessage}`,
+    );
   }
 }
 

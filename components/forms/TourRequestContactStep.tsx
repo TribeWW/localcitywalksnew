@@ -71,11 +71,15 @@ export default function TourRequestContactStep({
         name="fullName"
         render={({ field }) => (
           <FormItem>
-            <LabeledField id="tour-request-full-name" label="Full name" required>
+            <LabeledField
+              id="tour-request-full-name"
+              label="Full name"
+              required
+            >
               <FormControl>
                 <Input
                   id="tour-request-full-name"
-                  placeholder="Jane Smith"
+                  placeholder="Alex Walker"
                   className={CHECKOUT_FIELD_CLASS}
                   {...field}
                 />
@@ -100,7 +104,7 @@ export default function TourRequestContactStep({
                 <Input
                   id="tour-request-email"
                   type="email"
-                  placeholder="jane@example.com"
+                  placeholder="alex.walker@example.com"
                   className={CHECKOUT_FIELD_CLASS}
                   {...field}
                 />
@@ -171,7 +175,7 @@ export default function TourRequestContactStep({
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex shrink-0 cursor-pointer items-center gap-2 border-none bg-transparent px-1 py-2 text-sm font-medium text-nightsky transition-colors hover:text-tangerine"
+            className="inline-flex shrink-0 cursor-pointer items-center gap-2 border-none bg-transparent px-1 py-2 text-sm font-medium text-nightsky underline-offset-2 transition-colors hover:underline"
           >
             <ArrowLeft className="size-4" aria-hidden />
             Back
@@ -187,10 +191,7 @@ export default function TourRequestContactStep({
           </div>
         </div>
         {submitError ? (
-          <p
-            role="alert"
-            className="text-sm text-destructive"
-          >
+          <p role="alert" className="text-sm text-destructive">
             {submitError}
           </p>
         ) : null}

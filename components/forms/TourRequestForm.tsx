@@ -7,12 +7,7 @@ import { z } from "zod";
 import TourRequestConfigureStep from "@/components/forms/TourRequestConfigureStep";
 import TourRequestContactStep from "@/components/forms/TourRequestContactStep";
 import TourRequestSuccessToast from "@/components/forms/TourRequestSuccessToast";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   TOUR_REQUEST_DURATION_OPTIONS,
@@ -49,14 +44,12 @@ type TourRequestFormProps =
 
 const STEP_COPY = {
   1: {
-    title: "Customise your walk",
-    description:
-      "Tell us what you have in mind and a local guide will tailor the walk to you.",
+    title: "Customise your walking tour",
+    description: "Tell us what you have in mind.",
   },
   2: {
     title: "How can we reach you?",
-    description:
-      "Add your details and we'll be in touch within one business day.",
+    description: "Add your details and we'll be in touch.",
   },
 } as const;
 
@@ -125,9 +118,11 @@ const TourRequestForm = ({
 
   const focusStepContent = () => {
     requestAnimationFrame(() => {
-      stepContentRef.current?.querySelector<HTMLElement>(
-        "input, textarea, button, select, [tabindex]",
-      )?.focus();
+      stepContentRef.current
+        ?.querySelector<HTMLElement>(
+          "input, textarea, button, select, [tabindex]",
+        )
+        ?.focus();
     });
   };
 

@@ -4,7 +4,7 @@
  * Step 1 of the custom tour request form — walk configuration fields.
  */
 
-import { Calendar, Clock, Globe, MapPin, Timer } from "lucide-react";
+import { Calendar, Clock, MessagesSquare, MapPin, Timer } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import type { z } from "zod";
 import BookingWidgetField from "@/components/tours/booking-widget/BookingWidgetField";
@@ -24,7 +24,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { WIDGET_FIELD_TRIGGER_CLASS, WIDGET_PRIMARY_BUTTON_CLASS } from "@/components/tours/booking-widget/widget-field-styles";
+import {
+  WIDGET_FIELD_TRIGGER_CLASS,
+  WIDGET_PRIMARY_BUTTON_CLASS,
+} from "@/components/tours/booking-widget/widget-field-styles";
 import {
   TOUR_REQUEST_DURATION_SELECT_OPTIONS,
   TOUR_REQUEST_TIME_SELECT_OPTIONS,
@@ -74,9 +77,7 @@ export default function TourRequestConfigureStep({
                   placeholder="Select a date"
                   ariaLabel="Preferred date"
                   minDate={new Date()}
-                  maxDate={
-                    new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-                  }
+                  maxDate={new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)}
                   variant="widget"
                   hideLeadingIcon
                   elevatedLayer={elevatedLayer}
@@ -140,7 +141,7 @@ export default function TourRequestConfigureStep({
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <BookingWidgetField icon={Globe}>
+              <BookingWidgetField icon={MessagesSquare}>
                 <TourRequestLanguageSelector
                   value={field.value}
                   onChange={field.onChange}
@@ -165,7 +166,10 @@ export default function TourRequestConfigureStep({
               <FormControl>
                 <Input
                   placeholder="Please specify your language"
-                  className={WIDGET_FIELD_TRIGGER_CLASS}
+                  className={cn(
+                    WIDGET_FIELD_TRIGGER_CLASS,
+                    "resize-y leading-relaxed px-3.5",
+                  )}
                   {...field}
                 />
               </FormControl>
