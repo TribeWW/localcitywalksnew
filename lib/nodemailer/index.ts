@@ -111,7 +111,7 @@ export async function sendEmail(data: EmailContent) {
           )})</p>
           <p><strong>Subject:</strong> ${escapeHtml(data.subject)}</p>
           <p><strong>Message:</strong></p>
-          <p style="background: `#f5f5f5`; padding: 15px; border-radius: 5px;">${escapeHtml(
+          <p style="background: #f5f5f5; padding: 15px; border-radius: 5px;">${escapeHtml(
             data.message,
           )}</p>
           <p><strong>Consent:</strong> ${data.consent}</p>
