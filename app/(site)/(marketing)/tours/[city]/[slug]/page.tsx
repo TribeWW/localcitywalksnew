@@ -298,11 +298,21 @@ export default async function TourPage({
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator className="text-border [&>svg]:hidden">
-                /
+                {">"}
+              </BreadcrumbSeparator>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/explore" className="font-medium no-underline">
+                    Explore
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="text-border [&>svg]:hidden">
+                {">"}
               </BreadcrumbSeparator>
               <BreadcrumbItem>
                 <span className="font-medium">
-                  Private tour in {cityDisplayName}
+                  Private walking tour in {cityDisplayName}
                 </span>
               </BreadcrumbItem>
             </BreadcrumbList>
@@ -475,35 +485,35 @@ export default async function TourPage({
 
           <div className="space-y-6">
             <div className="w-full lg:sticky lg:top-24">
-            <Card
-              id="request"
-              className={
-                cardsWidgetUpdateEnabled
-                  ? "border-0 bg-transparent py-0 shadow-none"
-                  : "self-start rounded-lg border-[1.5px] border-border bg-white shadow-sm"
-              }
-            >
-              <CardContent
-                className={cardsWidgetUpdateEnabled ? "p-0" : "p-6"}
+              <Card
+                id="request"
+                className={
+                  cardsWidgetUpdateEnabled
+                    ? "border-0 bg-transparent py-0 shadow-none"
+                    : "self-start rounded-lg border-[1.5px] border-border bg-white shadow-sm"
+                }
               >
-                <TourRequestFormSection
-                  cityName={gpCity ?? detail.data.title}
-                  cardsWidgetUpdate={cardsWidgetUpdateEnabled}
-                  bookingBootstrap={{
-                    productId: id,
-                    productTitle: detail.data.title,
-                    cityName: gpCity ?? detail.data.title,
-                    startTimes: detail.data.startTimes ?? [],
-                    guidedLanguageOptions,
-                    pricingCategories: detail.data.pricingCategories,
-                    durationText: detail.data.durationText,
-                    defaultRateId: detail.data.defaultRateId,
-                    fromPriceAmount,
-                    fromPriceCurrency,
-                  }}
-                />
-              </CardContent>
-            </Card>
+                <CardContent
+                  className={cardsWidgetUpdateEnabled ? "p-0" : "p-6"}
+                >
+                  <TourRequestFormSection
+                    cityName={gpCity ?? detail.data.title}
+                    cardsWidgetUpdate={cardsWidgetUpdateEnabled}
+                    bookingBootstrap={{
+                      productId: id,
+                      productTitle: detail.data.title,
+                      cityName: gpCity ?? detail.data.title,
+                      startTimes: detail.data.startTimes ?? [],
+                      guidedLanguageOptions,
+                      pricingCategories: detail.data.pricingCategories,
+                      durationText: detail.data.durationText,
+                      defaultRateId: detail.data.defaultRateId,
+                      fromPriceAmount,
+                      fromPriceCurrency,
+                    }}
+                  />
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
