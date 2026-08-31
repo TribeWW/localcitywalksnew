@@ -5,7 +5,7 @@ import Image from "next/image";
  */
 export function CustomTourPromoCard() {
   return (
-    <div className="rounded-2xl border-[1.5px] border-border bg-pearl-gray p-6 md:p-8">
+    <div className="rounded-2xl border-[1.5px] border-border  p-6 md:p-8">
       <div className="mb-6 flex justify-center">
         <Image
           src="/operator.svg"

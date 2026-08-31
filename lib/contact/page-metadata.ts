@@ -6,11 +6,14 @@ import type { Metadata } from "next";
 import { absoluteUrl } from "@/lib/site";
 
 /** Contact page `<title>` and Open Graph title. */
-export const CONTACT_PAGE_TITLE = "Contact Us | LocalCityWalks";
+export const CONTACT_PAGE_TITLE = "Contact us | LocalCityWalks";
 
 /** Contact page meta description. */
 export const CONTACT_PAGE_DESCRIPTION =
-  "Get in touch with LocalCityWalks. We usually reply within one business day. For booking questions, include your booking reference.";
+  "Questions about a booking, a custom request, or joining as a local guide? Get in touch with the LocalCityWalks team and we'll help you sort it out.";
+
+/** Contact page `<meta name="keywords">`. */
+export const CONTACT_PAGE_KEYWORDS = "contact localcitywalks";
 
 export const CONTACT_PAGE_URL = absoluteUrl("/contact");
 
@@ -23,6 +26,7 @@ export function buildContactPageMetadata(): Metadata {
   return {
     title: CONTACT_PAGE_TITLE,
     description: CONTACT_PAGE_DESCRIPTION,
+    keywords: CONTACT_PAGE_KEYWORDS,
     alternates: {
       canonical: CONTACT_PAGE_URL,
     },
