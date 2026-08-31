@@ -10,6 +10,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import { buildSelectTriggerAriaLabel } from "@/lib/a11y/select-trigger-aria-label";
 import {
   Select,
   SelectContent,
@@ -36,6 +37,8 @@ interface TimeSelectorProps {
   variant?: "default" | "widget";
   /** Raises the dropdown above the mobile booking drawer (`z-[80]`). */
   elevatedLayer?: boolean;
+  /** Accessible name for the trigger when no visible label is associated. */
+  ariaLabel?: string;
 }
 
 /** Legacy static times for `TourRequestForm` when `options` is not passed. */
@@ -67,8 +70,12 @@ const TimeSelector = ({
   className,
   variant = "default",
   elevatedLayer = false,
+  ariaLabel,
 }: TimeSelectorProps) => {
   const timeOptions = options ?? TIME_OPTIONS;
+  const fieldLabel = ariaLabel ?? placeholder;
+  const selectedLabel = timeOptions.find((option) => option.value === value)
+    ?.label;
 
   return (
     <Select
@@ -77,6 +84,7 @@ const TimeSelector = ({
       disabled={disabled || timeOptions.length === 0}
     >
       <SelectTrigger
+        aria-label={buildSelectTriggerAriaLabel(fieldLabel, selectedLabel)}
         className={cn(
           variant === "widget"
             ? cn(WIDGET_FIELD_TRIGGER_CLASS, WIDGET_DROPDOWN_TRIGGER_LAYOUT_CLASS)

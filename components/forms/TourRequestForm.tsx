@@ -1,55 +1,101 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import TourRequestConfigureStep from "@/components/forms/TourRequestConfigureStep";
+import TourRequestContactStep from "@/components/forms/TourRequestContactStep";
+import TourRequestSuccessToast from "@/components/forms/TourRequestSuccessToast";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import ParticipantCounter from "@/components/ui/participant-counter";
-import DatePicker from "@/components/ui/date-picker";
-import TimeSelector from "@/components/ui/time-selector";
-import DurationSelector from "@/components/ui/duration-selector";
-import { TourRequestSchema } from "@/lib/validation/forms";
+import {
+  TOUR_REQUEST_DURATION_OPTIONS,
+  TOUR_REQUEST_LANGUAGE_OPTIONS,
+  TOUR_REQUEST_TIME_OPTIONS,
+} from "@/lib/forms/tour-request-options";
 import { sendTourRequestEmail } from "@/lib/nodemailer";
-import { toast } from "sonner";
+import {
+  TOUR_REQUEST_STEP_ONE_FIELDS,
+  TourRequestSchema,
+} from "@/lib/validation/forms";
+
+type TourRequestFormValues = z.infer<typeof TourRequestSchema>;
 
 type TourRequestFormProps =
   | {
       lockCity: true;
-      /**
-       * Required when `lockCity` is true because the city input is hidden and
-       * the schema requires a non-empty city.
-       */
       initialCity: string;
       onClose: () => void;
+      onSuccess?: () => void;
+      presentation?: "inline" | "modal";
+      showStepHeadings?: boolean;
+      elevatedLayer?: boolean;
     }
   | {
       lockCity?: false;
-      /** Optional; user can type a city when unlocked. */
       initialCity?: string;
       onClose: () => void;
+      onSuccess?: () => void;
+      presentation?: "inline" | "modal";
+      showStepHeadings?: boolean;
+      elevatedLayer?: boolean;
     };
+
+const STEP_COPY = {
+  1: {
+    title: "Customise your walking tour",
+    description: "Tell us what you have in mind.",
+  },
+  2: {
+    title: "How can we reach you?",
+    description: "Add your details and we'll be in touch.",
+  },
+} as const;
+
+function buildDefaultValues(
+  lockCity: boolean,
+  initialCity?: string,
+): TourRequestFormValues {
+  return {
+    fullName: "",
+    email: "",
+    city: lockCity ? (initialCity ?? "") : (initialCity ?? ""),
+    message: "",
+    phoneNumber: "",
+    adults: 2,
+    youth: 0,
+    children: 0,
+    infants: 0,
+    preferredDate: undefined as unknown as Date,
+    preferredTime: TOUR_REQUEST_TIME_OPTIONS[0],
+    tourDuration: TOUR_REQUEST_DURATION_OPTIONS[2],
+    language: TOUR_REQUEST_LANGUAGE_OPTIONS[0],
+    otherLanguage: "",
+    consent: false,
+  };
+}
+
+const SUBMIT_EMAIL_FAILURE_ERROR =
+  "Failed to send tour request. Please try again later.";
 
 const TourRequestForm = ({
   initialCity,
   lockCity = true,
   onClose,
+  onSuccess,
+  presentation = "inline",
+  showStepHeadings = true,
+  elevatedLayer = false,
 }: TourRequestFormProps) => {
+  const [step, setStep] = useState<1 | 2>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [consentError, setConsentError] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const stepContentRef = useRef<HTMLDivElement>(null);
 
   if (lockCity && !initialCity) {
-    // Avoid a hidden empty city value that will fail z.string().min(1).
     console.error(
       "[TourRequestForm] lockCity=true requires a non-empty initialCity.",
     );
@@ -58,27 +104,56 @@ const TourRequestForm = ({
     );
   }
 
-  const form = useForm<z.infer<typeof TourRequestSchema>>({
+  const form = useForm<TourRequestFormValues>({
     resolver: zodResolver(TourRequestSchema),
-    defaultValues: {
-      fullName: "",
-      email: "",
-      city: lockCity ? initialCity : (initialCity ?? ""),
-      message: "",
-      phoneNumber: "",
-      adults: 1,
-      youth: 0,
-      children: 0,
-      preferredDate: undefined,
-      preferredTime: undefined,
-      tourDuration: undefined,
-      consent: false,
-    },
+    defaultValues: buildDefaultValues(lockCity, initialCity),
   });
 
-  async function onSubmit(values: z.infer<typeof TourRequestSchema>) {
+  const resetForm = useCallback(() => {
+    setStep(1);
+    setConsentError(false);
+    setSubmitError(null);
+    form.reset(buildDefaultValues(lockCity, initialCity));
+  }, [form, initialCity, lockCity]);
+
+  const focusStepContent = () => {
+    requestAnimationFrame(() => {
+      stepContentRef.current
+        ?.querySelector<HTMLElement>(
+          "input, textarea, button, select, [tabindex]",
+        )
+        ?.focus();
+    });
+  };
+
+  const handleNext = async () => {
+    const stepOneFields = lockCity
+      ? TOUR_REQUEST_STEP_ONE_FIELDS.filter((field) => field !== "city")
+      : [...TOUR_REQUEST_STEP_ONE_FIELDS];
+
+    const valid = await form.trigger(stepOneFields);
+    if (!valid) return;
+
+    setStep(2);
+    focusStepContent();
+  };
+
+  const handleBack = () => {
+    setStep(1);
+    setConsentError(false);
+    setSubmitError(null);
+    focusStepContent();
+  };
+
+  async function onSubmit(values: TourRequestFormValues) {
+    if (!values.consent) {
+      setConsentError(true);
+      return;
+    }
+
     try {
       setIsSubmitting(true);
+      setSubmitError(null);
 
       await sendTourRequestEmail({
         fullName: values.fullName,
@@ -89,327 +164,100 @@ const TourRequestForm = ({
         adults: values.adults,
         youth: values.youth,
         children: values.children,
+        infants: values.infants,
         preferredDate: values.preferredDate,
         preferredTime: values.preferredTime,
         tourDuration: values.tourDuration,
+        language: values.language,
+        otherLanguage: values.otherLanguage,
         consent: values.consent,
       });
 
-      toast.success(
-        "Tour request sent successfully! We'll get back to you soon.",
-      );
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        setShowSuccessToast(true);
+        onClose();
+      }
 
-      // Close modal after successful submission
-      onClose();
-      form.reset();
+      resetForm();
     } catch (error) {
-      toast.error("Failed to send tour request. Please try again later.");
       console.error("Submission error:", error);
+      setSubmitError(SUBMIT_EMAIL_FAILURE_ERROR);
     } finally {
       setIsSubmitting(false);
     }
   }
 
+  const stepCopy = STEP_COPY[step];
+
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-4 max-h-[70vh]  overflow-y-auto pr-2"
-      >
-        <FormField
-          control={form.control}
-          name="fullName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-sm font-medium text-nightsky">
-                Full Name
-              </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Your full name"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <>
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className={
+            presentation === "modal"
+              ? undefined
+              : "max-h-[70vh] overflow-y-auto pr-1"
+          }
+        >
+          {showStepHeadings ? (
+            <header className="mb-6 pr-8">
+              <h2
+                id="custom-tour-title"
+                className="mb-2 text-2xl font-semibold leading-[1.35] text-nightsky"
+              >
+                {stepCopy.title}
+              </h2>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                {stepCopy.description}
+              </p>
+            </header>
+          ) : null}
 
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-sm font-medium text-nightsky">
-                Email
-              </FormLabel>
-              <FormControl>
-                <Input
-                  type="email"
-                  placeholder="your.email@example.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="phoneNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-sm font-medium text-nightsky">
-                Phone Number (Optional)
-              </FormLabel>
-              <FormControl>
-                <Input
-                  type="tel"
-                  placeholder="+1 234 567 8900 (optional)"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-nightsky">Participants</h3>
-
-          <FormField
-            control={form.control}
-            name="adults"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <ParticipantCounter
-                    label="Adults (18+)"
-                    value={field.value}
-                    onChange={field.onChange}
-                    min={0}
-                    max={20}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div ref={stepContentRef}>
+            {step === 1 ? (
+              <TourRequestConfigureStep
+                form={form}
+                lockCity={lockCity}
+                onNext={handleNext}
+                elevatedLayer={elevatedLayer}
+              />
+            ) : (
+              <TourRequestContactStep
+                control={form.control}
+                isSubmitting={isSubmitting}
+                consentError={consentError}
+                submitError={submitError}
+                onBack={handleBack}
+                onConsentChange={(checked) => {
+                  if (checked) setConsentError(false);
+                }}
+              />
             )}
-          />
+          </div>
 
-          <FormField
-            control={form.control}
-            name="youth"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <ParticipantCounter
-                    label="Youth (13-17)"
-                    value={field.value}
-                    onChange={field.onChange}
-                    min={0}
-                    max={20}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {lockCity ? (
+            <FormField
+              control={form.control}
+              name="city"
+              render={({ field }) => (
+                <FormItem className="hidden">
+                  <FormControl>
+                    <Input type="hidden" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          ) : null}
+        </form>
+      </Form>
 
-          <FormField
-            control={form.control}
-            name="children"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <ParticipantCounter
-                    label="Children (0-12)"
-                    value={field.value}
-                    onChange={field.onChange}
-                    min={0}
-                    max={20}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-nightsky">Tour Schedule</h3>
-
-          <FormField
-            control={form.control}
-            name="preferredDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium text-nightsky">
-                  Preferred Date
-                </FormLabel>
-                <FormControl>
-                  <DatePicker
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Select a date"
-                    minDate={new Date()}
-                    maxDate={new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)} // 1 year from now
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="preferredTime"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium text-nightsky">
-                  Preferred Time
-                </FormLabel>
-                <FormControl>
-                  <TimeSelector
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Select time"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="tourDuration"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium text-nightsky">
-                  Tour Duration
-                </FormLabel>
-                <FormControl>
-                  <DurationSelector
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Select duration"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        {lockCity ? (
-          <FormField
-            control={form.control}
-            name="city"
-            render={({ field }) => (
-              <FormItem className="hidden">
-                <FormLabel className="text-sm font-medium text-nightsky">
-                  City
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600"
-                    disabled
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        ) : (
-          <FormField
-            control={form.control}
-            name="city"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm font-medium text-nightsky">
-                  City
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="e.g. Barcelona"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-
-        <FormField
-          control={form.control}
-          name="message"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-sm font-medium text-nightsky">
-                Message
-              </FormLabel>
-              <FormControl>
-                <Textarea
-                  rows={3}
-                  placeholder="Tell us about your tour preferences."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tangerine"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="consent"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                  className="bg-white"
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel className="text-sm text-nightsky">
-                  I agree that LocalCityWalks may use my details to respond to
-                  my tour request.
-                </FormLabel>
-                <FormMessage />
-              </div>
-            </FormItem>
-          )}
-        />
-
-        <div className="flex gap-3 my-6 ">
-          <Button
-            type="submit"
-            className="flex-1 bg-nightsky hover:bg-nightsky/80"
-            disabled={isSubmitting || !form.watch("consent")}
-          >
-            {isSubmitting ? "Sending..." : "Send request"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="flex-1 "
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </Form>
+      {showSuccessToast && !onSuccess ? (
+        <TourRequestSuccessToast onDismiss={() => setShowSuccessToast(false)} />
+      ) : null}
+    </>
   );
 };
 

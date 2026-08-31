@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  TOUR_REQUEST_DURATION_OPTIONS,
+  TOUR_REQUEST_LANGUAGE_OPTIONS,
+  TOUR_REQUEST_TIME_OPTIONS,
+} from "@/lib/forms/tour-request-options";
 
 export const ContactSchema = z.object({
   fullName: z.string().min(3, {
@@ -38,10 +43,9 @@ export const TourRequestSchema = z
       .optional()
       .refine(
         (val) => {
-          if (!val || val.trim() === "") return true; // Optional field
-          // Basic international phone validation: + followed by 7-15 digits
+          if (!val || val.trim() === "") return true;
           const phoneRegex = /^\+?[1-9]\d{6,14}$/;
-          return phoneRegex.test(val.replace(/\s/g, "")); // Remove spaces for validation
+          return phoneRegex.test(val.replace(/\s/g, ""));
         },
         {
           message:
@@ -51,7 +55,7 @@ export const TourRequestSchema = z
     adults: z
       .number()
       .int()
-      .min(0, { message: "Adults cannot be negative" })
+      .min(1, { message: "At least one adult is required" })
       .max(20, { message: "Maximum 20 adults per tour" }),
     youth: z
       .number()
@@ -63,6 +67,11 @@ export const TourRequestSchema = z
       .int()
       .min(0, { message: "Children cannot be negative" })
       .max(20, { message: "Maximum 20 children per tour" }),
+    infants: z
+      .number()
+      .int()
+      .min(0, { message: "Infants cannot be negative" })
+      .max(20, { message: "Maximum 20 infants per tour" }),
     preferredDate: z
       .date({
         required_error: "Please select a preferred date for your tour",
@@ -92,22 +101,10 @@ export const TourRequestSchema = z
         required_error: "Please select a preferred time for your tour",
       })
       .refine(
-        (time) => {
-          const validTimes = [
-            "09:00",
-            "10:00",
-            "11:00",
-            "12:00",
-            "13:00",
-            "14:00",
-            "15:00",
-            "16:00",
-            "17:00",
-          ];
-          return validTimes.includes(time);
-        },
+        (time) =>
+          (TOUR_REQUEST_TIME_OPTIONS as readonly string[]).includes(time),
         {
-          message: "Please select a valid time between 09:00 and 17:00",
+          message: "Please select a valid preferred time",
         },
       ),
     tourDuration: z
@@ -115,26 +112,64 @@ export const TourRequestSchema = z
         required_error: "Please select a tour duration",
       })
       .refine(
-        (duration) => {
-          const validDurations = [
-            "1 hour",
-            "90 minutes",
-            "2 hours",
-            "3 hours",
-            "4 hours",
-            "5 hours",
-          ];
-          return validDurations.includes(duration);
-        },
+        (duration) =>
+          (TOUR_REQUEST_DURATION_OPTIONS as readonly string[]).includes(
+            duration,
+          ),
         {
           message: "Please select a valid tour duration",
         },
       ),
+    language: z
+      .string({
+        required_error: "Please select a language",
+      })
+      .refine(
+        (language) =>
+          (TOUR_REQUEST_LANGUAGE_OPTIONS as readonly string[]).includes(
+            language,
+          ),
+        {
+          message: "Please select a valid language",
+        },
+      ),
+    otherLanguage: z.string().optional(),
     consent: z.boolean().refine((val) => val === true, {
-      message: "You must agree to the terms to submit the form",
+      message: "Please agree before sending your request.",
     }),
   })
-  .refine((data) => data.adults + data.youth + data.children > 0, {
-    message: "Please select at least one participant for the tour",
-    path: ["adults"], // Show error on adults field
+  .refine(
+    (data) =>
+      data.adults + data.youth + data.children + data.infants > 0,
+    {
+      message: "Please select at least one participant for the tour",
+      path: ["adults"],
+    },
+  )
+  .superRefine((data, ctx) => {
+    if (
+      data.language === "Other" &&
+      (!data.otherLanguage || data.otherLanguage.trim().length < 2)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please specify your language",
+        path: ["otherLanguage"],
+      });
+    }
   });
+
+/** Step 1 field names validated before advancing to contact step. */
+export const TOUR_REQUEST_STEP_ONE_FIELDS = [
+  "preferredDate",
+  "preferredTime",
+  "tourDuration",
+  "language",
+  "otherLanguage",
+  "adults",
+  "youth",
+  "children",
+  "infants",
+  "message",
+  "city",
+] as const satisfies readonly (keyof z.infer<typeof TourRequestSchema>)[];

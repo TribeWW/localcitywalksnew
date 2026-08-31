@@ -2,21 +2,30 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import TourRequestForm from "@/components/forms/TourRequestForm";
+import TourRequestModalShell from "@/components/forms/TourRequestModalShell";
+import TourRequestSuccessToast from "@/components/forms/TourRequestSuccessToast";
 
 export default function CustomTourBanner() {
   const [open, setOpen] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleSuccess = () => {
+    setOpen(false);
+    setShowSuccessToast(true);
+  };
+
+  const handleDismissSuccessToast = () => {
+    setShowSuccessToast(false);
+    setOpen(false);
+  };
 
   return (
     <>
-      {/* Custom Tour Banner */}
       <div className="w-full bg-white px-6 py-8 md:py-10">
         <section
           aria-labelledby="custom-tour-banner-heading"
@@ -45,7 +54,7 @@ export default function CustomTourBanner() {
             </div>
             <button
               type="button"
-              className="w-full min-h-11 px-6 py-2.5 text-base font-medium text-nightsky bg-transparent border-[1.5px] border-nightskºy rounded-md cursor-pointer font-['Outfit',sans-serif] transition-all duration-150 hover:bg-[#0F172A] hover:text-white active:bg-[#0F172A] active:text-white md:w-auto md:shrink-0 md:whitespace-nowrap touch-manipulation"
+              className="w-full min-h-11 px-6 py-2.5 text-base font-medium text-nightsky bg-transparent border-[1.5px] border-nightsky rounded-md cursor-pointer font-['Outfit',sans-serif] transition-all duration-150 hover:bg-[#0F172A] hover:text-white active:bg-[#0F172A] active:text-white md:w-auto md:shrink-0 md:whitespace-nowrap touch-manipulation"
               onClick={() => setOpen(true)}
             >
               Request a custom tour
@@ -54,24 +63,20 @@ export default function CustomTourBanner() {
         </section>
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        {open ? (
-          <DialogContent className="max-h-[min(90dvh,900px)] overflow-y-auto sm:max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Request a custom tour</DialogTitle>
-              <DialogDescription>
-                Share your preferred city, date, and group details.
-              </DialogDescription>
-            </DialogHeader>
+      <TourRequestModalShell open={open} onClose={handleClose}>
+        <TourRequestForm
+          lockCity={false}
+          initialCity=""
+          onClose={handleClose}
+          onSuccess={handleSuccess}
+          presentation="modal"
+          elevatedLayer
+        />
+      </TourRequestModalShell>
 
-            <TourRequestForm
-              lockCity={false}
-              initialCity=""
-              onClose={() => setOpen(false)}
-            />
-          </DialogContent>
-        ) : null}
-      </Dialog>
+      {showSuccessToast ? (
+        <TourRequestSuccessToast onDismiss={handleDismissSuccessToast} />
+      ) : null}
     </>
   );
 }

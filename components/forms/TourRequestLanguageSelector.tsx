@@ -1,14 +1,12 @@
 "use client";
 
 /**
- * Tour duration select for tour request and booking flows.
- *
- * Accepts dynamic `options`; falls back to legacy static list when omitted.
+ * Static language dropdown for the custom tour request form.
  */
 
-import React from "react";
 import { cn } from "@/lib/utils";
 import { buildSelectTriggerAriaLabel } from "@/lib/a11y/select-trigger-aria-label";
+import { TOUR_REQUEST_LANGUAGE_OPTIONS } from "@/lib/forms/tour-request-options";
 import {
   Select,
   SelectContent,
@@ -25,55 +23,35 @@ import {
   bookingStackedOverlayDataAttributes,
 } from "@/components/tours/booking-widget/stacked-overlay-layer";
 
-interface DurationSelectorProps {
+interface TourRequestLanguageSelectorProps {
   value?: string;
-  onChange: (duration: string | undefined) => void;
+  onChange: (language: string | undefined) => void;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
-  options?: { value: string; label: string }[];
-  variant?: "default" | "widget";
   elevatedLayer?: boolean;
   /** Accessible name for the trigger when no visible label is associated. */
   ariaLabel?: string;
 }
 
-const LEGACY_DURATION_OPTIONS = [
-  { value: "1 hour", label: "1 hour" },
-  { value: "90 minutes", label: "90 minutes" },
-  { value: "2 hours", label: "2 hours" },
-  { value: "3 hours", label: "3 hours" },
-  { value: "4 hours", label: "4 hours" },
-  { value: "5 hours", label: "5 hours" },
-];
-
-const DurationSelector = ({
+export default function TourRequestLanguageSelector({
   value,
   onChange,
-  placeholder = "Select duration",
+  placeholder = "Select language",
   disabled = false,
   className,
-  options,
-  variant = "default",
   elevatedLayer = false,
   ariaLabel,
-}: DurationSelectorProps) => {
-  const durationOptions = options ?? LEGACY_DURATION_OPTIONS;
+}: TourRequestLanguageSelectorProps) {
   const fieldLabel = ariaLabel ?? placeholder;
-  const selectedLabel = durationOptions.find((option) => option.value === value)
-    ?.label;
 
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger
-        aria-label={buildSelectTriggerAriaLabel(fieldLabel, selectedLabel)}
+        aria-label={buildSelectTriggerAriaLabel(fieldLabel, value)}
         className={cn(
-          variant === "widget"
-            ? cn(
-                WIDGET_FIELD_TRIGGER_CLASS,
-                WIDGET_DROPDOWN_TRIGGER_LAYOUT_CLASS,
-              )
-            : "w-full",
+          WIDGET_FIELD_TRIGGER_CLASS,
+          WIDGET_DROPDOWN_TRIGGER_LAYOUT_CLASS,
           className,
         )}
       >
@@ -83,14 +61,12 @@ const DurationSelector = ({
         {...bookingStackedOverlayDataAttributes(elevatedLayer)}
         className={elevatedLayer ? BOOKING_STACKED_OVERLAY_Z_CLASS : undefined}
       >
-        {durationOptions.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            {option.label}
+        {TOUR_REQUEST_LANGUAGE_OPTIONS.map((option) => (
+          <SelectItem key={option} value={option}>
+            {option}
           </SelectItem>
         ))}
       </SelectContent>
     </Select>
   );
-};
-
-export default DurationSelector;
+}

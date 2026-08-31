@@ -51,6 +51,8 @@ interface DatePickerProps {
   /** Widget chrome: icon provided by `BookingWidgetField`, compact bordered trigger. */
   variant?: "default" | "widget";
   hideLeadingIcon?: boolean;
+  /** Accessible name for the trigger when no visible label is associated. */
+  ariaLabel?: string;
   /**
    * When true, raises the touch dialog above the mobile booking drawer (`z-[80]`).
    * Use inside `BookingWidgetMobileDrawer` only.
@@ -127,11 +129,15 @@ const DatePicker = ({
   variant = "default",
   hideLeadingIcon = false,
   elevatedLayer = false,
+  ariaLabel,
 }: DatePickerProps) => {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(() => resolveVisibleMonth(value, minDate));
   const preferWidgetDialog = usePreferWidgetDialog();
-  const useWidgetDialog = variant === "widget" && preferWidgetDialog;
+  // Touch/narrow viewports, and any elevated layer (e.g. tour-request modal), use the
+  // centered dialog — avoids popover height clipping against the form below.
+  const useWidgetDialog =
+    variant === "widget" && (preferWidgetDialog || elevatedLayer);
 
   // Native month/year <select> menus misbehave on touch (iOS shows the picker
   // persistently). Use prev/next navigation in the centered widget dialog instead.
@@ -165,6 +171,11 @@ const DatePicker = ({
     <Button
       type="button"
       variant="outline"
+      aria-label={
+        value
+          ? `${ariaLabel ?? placeholder}: ${format(value, "PPP")}`
+          : (ariaLabel ?? placeholder)
+      }
       className={cn(
         variant === "widget"
           ? cn(
@@ -215,7 +226,7 @@ const DatePicker = ({
         variant === "widget" &&
           (useWidgetDialog
             ? "w-full p-1 [--cell-size:min(2rem,calc((100%_-_1rem)_/_7))]"
-            : "w-full [--cell-size:max(2rem,calc((100%_-_0.25rem)_/_7))]"),
+            : "w-full p-0 [--cell-size:max(2rem,calc((100%_-_0.25rem)_/_7))]"),
       )}
     />
   );
@@ -250,7 +261,7 @@ const DatePicker = ({
               Select a date
             </DialogTitle>
             <div className="px-5 pb-6 pt-4">
-              <div className="min-h-[22rem] rounded-xl bg-background px-4 pb-5 pt-3 ">
+              <div className="min-h-[22rem] rounded-xl bg-background px-4 pb-5 pt-3">
                 {calendar}
               </div>
             </div>
@@ -275,18 +286,11 @@ const DatePicker = ({
           collisionPadding={12}
           {...bookingStackedOverlayDataAttributes(elevatedLayer)}
           className={cn(
-            "w-[var(--radix-popover-trigger-width)] p-0",
-            variant === "widget" && "overflow-hidden",
+            "w-[var(--radix-popover-trigger-width)] p-3",
             elevatedLayer && BOOKING_STACKED_OVERLAY_Z_CLASS,
           )}
         >
-          <div
-            className={cn(
-              variant === "widget" ? "w-full p-2" : "flex justify-center p-3",
-            )}
-          >
-            {calendar}
-          </div>
+          {calendar}
         </PopoverContent>
       </Popover>
     </div>

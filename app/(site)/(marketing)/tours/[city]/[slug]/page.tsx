@@ -24,7 +24,7 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import TourRequestFormSection from "@/components/tours/tour-request-form-section";
 import RelatedToursSection from "@/components/tours/RelatedToursSection";
 import { RelatedToursSkeleton } from "@/components/tours/RelatedToursSkeleton";
@@ -480,18 +480,11 @@ export default async function TourPage({
               className={
                 cardsWidgetUpdateEnabled
                   ? "border-0 bg-transparent py-0 shadow-none"
-                  : undefined
+                  : "self-start rounded-lg border-[1.5px] border-border bg-white shadow-sm"
               }
             >
-              {!cardsWidgetUpdateEnabled ? (
-                <CardHeader>
-                  <CardTitle className="text-nightsky text-xl">
-                    Request your tour
-                  </CardTitle>
-                </CardHeader>
-              ) : null}
               <CardContent
-                className={cardsWidgetUpdateEnabled ? "p-0" : undefined}
+                className={cardsWidgetUpdateEnabled ? "p-0" : "p-6"}
               >
                 <TourRequestFormSection
                   cityName={gpCity ?? detail.data.title}
