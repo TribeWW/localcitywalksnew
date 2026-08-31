@@ -171,7 +171,11 @@ const DatePicker = ({
     <Button
       type="button"
       variant="outline"
-      aria-label={ariaLabel ?? placeholder}
+      aria-label={
+        value
+          ? `${ariaLabel ?? placeholder}: ${format(value, "PPP")}`
+          : (ariaLabel ?? placeholder)
+      }
       className={cn(
         variant === "widget"
           ? cn(

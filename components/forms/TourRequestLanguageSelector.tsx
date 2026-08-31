@@ -5,6 +5,7 @@
  */
 
 import { cn } from "@/lib/utils";
+import { buildSelectTriggerAriaLabel } from "@/lib/a11y/select-trigger-aria-label";
 import { TOUR_REQUEST_LANGUAGE_OPTIONS } from "@/lib/forms/tour-request-options";
 import {
   Select,
@@ -42,10 +43,12 @@ export default function TourRequestLanguageSelector({
   elevatedLayer = false,
   ariaLabel,
 }: TourRequestLanguageSelectorProps) {
+  const fieldLabel = ariaLabel ?? placeholder;
+
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger
-        aria-label={ariaLabel ?? placeholder}
+        aria-label={buildSelectTriggerAriaLabel(fieldLabel, value)}
         className={cn(
           WIDGET_FIELD_TRIGGER_CLASS,
           WIDGET_DROPDOWN_TRIGGER_LAYOUT_CLASS,

@@ -15,6 +15,7 @@ export default function CustomTourBanner() {
   };
 
   const handleSuccess = () => {
+    setOpen(false);
     setShowSuccessToast(true);
   };
 

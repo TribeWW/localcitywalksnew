@@ -8,6 +8,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import { buildSelectTriggerAriaLabel } from "@/lib/a11y/select-trigger-aria-label";
 import {
   Select,
   SelectContent,
@@ -58,11 +59,14 @@ const DurationSelector = ({
   ariaLabel,
 }: DurationSelectorProps) => {
   const durationOptions = options ?? LEGACY_DURATION_OPTIONS;
+  const fieldLabel = ariaLabel ?? placeholder;
+  const selectedLabel = durationOptions.find((option) => option.value === value)
+    ?.label;
 
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger
-        aria-label={ariaLabel ?? placeholder}
+        aria-label={buildSelectTriggerAriaLabel(fieldLabel, selectedLabel)}
         className={cn(
           variant === "widget"
             ? cn(
