@@ -21,7 +21,7 @@ export interface CheckoutPageLayoutProps {
 }
 
 /**
- * Renders the checkout summary grid: stacked on mobile, two columns from 960px.
+ * Renders the checkout summary grid: order summary first on mobile, two columns from 960px.
  */
 export function CheckoutPageLayout({
   leftColumn,
@@ -32,8 +32,12 @@ export function CheckoutPageLayout({
       className={`mx-auto ${CHECKOUT_SUMMARY_MAX_WIDTH_CLASS} ${CHECKOUT_PAGE_PADDING_CLASS}`}
     >
       <div className={CHECKOUT_SUMMARY_GRID_CLASS}>
-        <div className="flex flex-col gap-8 min-[960px]:gap-12">{leftColumn}</div>
-        <div className="min-[960px]:sticky min-[960px]:top-8">{rightColumn}</div>
+        <div className="order-2 flex flex-col gap-8 min-[960px]:order-1 min-[960px]:gap-12">
+          {leftColumn}
+        </div>
+        <div className="order-1 min-[960px]:order-2 min-[960px]:sticky min-[960px]:top-8">
+          {rightColumn}
+        </div>
       </div>
     </main>
   );
