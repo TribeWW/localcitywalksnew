@@ -173,7 +173,7 @@ const DatePicker = ({
               // Button `has-[>svg]:px-3` would shrink pl-10 and overlap BookingWidgetField icon
               "has-[>svg]:pl-10 has-[>svg]:pr-3.5",
             )
-          : "w-full justify-start text-left font-normal",
+          : "w-full justify-start text-left text-base font-normal",
         !value && "text-muted-foreground",
         className,
       )}

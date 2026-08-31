@@ -195,8 +195,7 @@ export function PromoCodeInput({
           onClick={() => void handleApply()}
           disabled={!hasInput || isPending}
           className={cn(
-            // Match contact `CHECKOUT_FIELD_CLASS` height (incl. Input `md:text-sm`)
-            "h-auto min-h-[44px] shrink-0 whitespace-nowrap rounded-lg border-2 px-3.5 py-2.5 text-base font-medium md:text-sm outline-none transition-colors duration-150",
+            "h-auto min-h-[44px] shrink-0 whitespace-nowrap rounded-lg border-2 px-3.5 py-2.5 text-base font-medium outline-none transition-colors duration-150",
             hasInput && !isPending
               ? "cursor-pointer border-nightsky bg-nightsky text-white hover:bg-watermelon"
               : "cursor-not-allowed border-border bg-white text-muted-foreground opacity-40",
