@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -26,8 +25,9 @@ import { Textarea } from "../ui/textarea";
 import { toast } from "sonner";
 import { sendEmail } from "@/lib/nodemailer";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ContactSectionHeading } from "@/components/contact/ContactSectionHeading";
+import { cn } from "@/lib/utils";
 
-const NAME_EMAIL_FIELDS = ["fullName", "email"] as const;
 const OPTIONS = ["General Inquiry", "Booking Questions", "Collaborations"];
 
 const FIELD_ITEM_IDS = {
@@ -38,10 +38,28 @@ const FIELD_ITEM_IDS = {
   consent: "contact-consent",
 } as const;
 
-const formShellClassName =
-  "w-full max-w-4xl mx-auto p-8 bg-white rounded-2xl shadow-lg";
+const PLACEHOLDERS = {
+  fullName: "Jane Smith",
+  email: "jane@example.com",
+  description: "How can we help?",
+} as const;
 
-const ContactForm = () => {
+const formShellClassName =
+  "w-full rounded-2xl border-[1.5px] border-border bg-white p-6 md:p-8";
+
+const formLabelClassName = "text-sm data-[error=true]:text-nightsky";
+
+const submitButtonClassName =
+  "btn-default w-full cursor-pointer bg-nightsky text-white hover:bg-nightsky/90 disabled:cursor-not-allowed disabled:opacity-50";
+
+export interface ContactFormProps {
+  /** When true, shows "Send us a message" heading above the fields. */
+  showHeading?: boolean;
+  /** Optional class names for the outer form shell. */
+  className?: string;
+}
+
+const ContactForm = ({ showHeading = false, className }: ContactFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Radix Select/Checkbox use React.useId(); with Next 15.5 streaming those IDs
   // can diverge on hydrate. Mount the interactive form only on the client.
@@ -73,9 +91,10 @@ const ContactForm = () => {
         consent: values.consent,
       });
 
-      toast(
-        "Success! Your message has been sent. Please check your spam or junk folder if you don't see our reply soon.",
-      );
+      toast.success("Message sent!", {
+        description:
+          "We'll get back to you within one business day. Please also check your spam folder, just in case.",
+      });
 
       form.reset();
     } catch (error) {
@@ -90,7 +109,7 @@ const ContactForm = () => {
   if (!hasMounted) {
     return (
       <div
-        className={`${formShellClassName} min-h-[480px]`}
+        className={cn(formShellClassName, "min-h-[480px]", className)}
         aria-busy="true"
         aria-label="Loading contact form"
       />
@@ -98,119 +117,143 @@ const ContactForm = () => {
   }
 
   return (
-    <div className={formShellClassName}>
-      <div className="max-w-4xl mx-auto">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-            {NAME_EMAIL_FIELDS.map((name) => (
-              <FormField
-                key={name}
-                control={form.control}
-                name={name}
-                render={({ field }) => (
-                  <FormItem id={FIELD_ITEM_IDS[name]}>
-                    <FormLabel className="text-sm">
-                      {FIELD_NAMES[name]}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={`Enter your ${FIELD_NAMES[name].toLowerCase()}`}
-                        className="h-10 text-[#000] placeholder-muted-foreground rounded-[4px] bg-white"
-                        type={FIELD_TYPES[name]}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ))}
+    <div className={cn(formShellClassName, className)}>
+      {showHeading && (
+        <ContactSectionHeading
+          title="Send us a message"
+          lead="Fill in the form and we'll get back to you as soon as we can."
+        />
+      )}
 
-            <FormField
-              control={form.control}
-              name="subject"
-              render={({ field }) => (
-                <FormItem id={FIELD_ITEM_IDS.subject}>
-                  <FormLabel className="text-sm">Subject</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value || undefined}
-                  >
-                    <FormControl className="w-full rounded-[4px]">
-                      <SelectTrigger className="py-[18px] text-[#000] placeholder-muted-foreground bg-white">
-                        <SelectValue placeholder="Select a topic" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {OPTIONS.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          <FormField
+            control={form.control}
+            name="fullName"
+            render={({ field }) => (
+              <FormItem id={FIELD_ITEM_IDS.fullName}>
+                <FormLabel className={formLabelClassName}>{FIELD_NAMES.fullName}</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder={PLACEHOLDERS.fullName}
+                    className="h-10 rounded-[4px] bg-white text-[#000] placeholder:text-muted-foreground"
+                    type={FIELD_TYPES.fullName}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem id={FIELD_ITEM_IDS.description}>
-                  <FormLabel className="text-sm">Message</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Write your message"
-                      className="min-h-[110px] resize-none text-[#000] placeholder-muted-foreground rounded-[4px] bg-white"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem id={FIELD_ITEM_IDS.email}>
+                <FormLabel className={formLabelClassName}>Email address</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder={PLACEHOLDERS.email}
+                    className="h-10 rounded-[4px] bg-white text-[#000] placeholder:text-muted-foreground"
+                    type={FIELD_TYPES.email}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="consent"
-              render={({ field }) => (
-                <FormItem
-                  id={FIELD_ITEM_IDS.consent}
-                  className="flex flex-row items-start space-x-3 space-y-0"
+          <FormField
+            control={form.control}
+            name="subject"
+            render={({ field }) => (
+              <FormItem id={FIELD_ITEM_IDS.subject}>
+                <FormLabel className={formLabelClassName}>Subject</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value || undefined}
                 >
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      className="bg-white"
-                    />
+                  <FormControl className="w-full rounded-[4px]">
+                    <SelectTrigger className="bg-white py-[18px] text-[#000] placeholder:text-muted-foreground">
+                      <SelectValue placeholder="Select a topic" />
+                    </SelectTrigger>
                   </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel className="text-sm text-[#000]">
-                      I agree that LocalCityWalks may use my details to respond
-                      to my message.
-                    </FormLabel>
-                    <FormMessage />
-                  </div>
-                </FormItem>
-              )}
-            />
+                  <SelectContent>
+                    {OPTIONS.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <div className="flex justify-start mt-10">
-              <Button
-                type="submit"
-                size="lg"
-                className="px-8 bg-nightsky hover:bg-nightsky/80 cursor-pointer text-white w-full rounded-[4px]"
-                disabled={isSubmitting || !form.watch("consent")}
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem id={FIELD_ITEM_IDS.description}>
+                <FormLabel className={formLabelClassName}>Message</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder={PLACEHOLDERS.description}
+                    className="min-h-[150px] resize-none rounded-[4px] bg-white text-[#000] placeholder:text-muted-foreground"
+                    rows={6}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="consent"
+            render={({ field }) => (
+              <FormItem
+                id={FIELD_ITEM_IDS.consent}
+                className="mt-2 flex flex-row items-start space-x-3 space-y-0"
               >
-                {isSubmitting ? "Sending..." : "Get in touch"}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </div>
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    className="mt-1 bg-white"
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel
+                    className={cn(
+                      formLabelClassName,
+                      "leading-relaxed text-nightsky",
+                    )}
+                  >
+                    I agree that LocalCityWalks may use my details to respond to
+                    my message.
+                  </FormLabel>
+                  <FormMessage />
+                </div>
+              </FormItem>
+            )}
+          />
+
+          <div className="mt-4">
+            <button
+              type="submit"
+              className={submitButtonClassName}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Sending..." : "Get in touch"}
+            </button>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 };
