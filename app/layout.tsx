@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
@@ -29,6 +29,13 @@ const outfit = Outfit({
   subsets: ["latin"],
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
+
+/** Edge-to-edge layout so `env(safe-area-inset-*)` is non-zero on notched phones. */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -164,7 +171,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         />
       </head>
       <body
-        className={`${outfit.className} antialiased h-screen min-h-screen bg-white`}
+        className={`${outfit.className} antialiased min-h-screen bg-white`}
       >
         {/* Google Tag Manager (noscript) */}
         {loadThirdPartyScripts && GTM_ID && (

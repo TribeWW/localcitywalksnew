@@ -45,6 +45,22 @@ describe("BookingWidgetMobileBar", () => {
     expect(bar).toHaveClass("pointer-events-none");
   });
 
+  it("ports to document.body and pads for the safe-area inset", () => {
+    render(
+      <BookingWidgetMobileBar
+        visible
+        amount={124}
+        currency="EUR"
+        onCheckAvailability={vi.fn()}
+      />,
+    );
+
+    const bar = screen.getByTestId("booking-mobile-bar");
+    expect(bar.parentElement).toBe(document.body);
+    expect(bar.className).toContain("safe-area-inset-bottom");
+    expect(bar).toHaveClass("bottom-0");
+  });
+
   it("calls onCheckAvailability when CTA is clicked", () => {
     const onCheckAvailability = vi.fn();
     render(

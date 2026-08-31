@@ -283,7 +283,7 @@ export default async function TourPage({
       <div
         className={
           cardsWidgetUpdateEnabled
-            ? "mx-auto w-full max-w-6xl px-4 pb-24 md:px-8 lg:pb-0 xl:px-0 py-6"
+            ? "mx-auto w-full max-w-6xl px-4 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:px-8 lg:pb-0 xl:px-0 py-6"
             : "mx-auto w-full max-w-6xl px-4 md:px-8 xl:px-0 py-6"
         }
       >
