@@ -40,6 +40,12 @@ interface BookingGuestsPickerProps {
   disabled?: boolean;
   /** Bókun `maxPerBooking` for the selected slot; caps total group size when set. */
   maxGroupSize?: number | null;
+  /** When false, hides per-category unit price hints (tour request form). */
+  showUnitHints?: boolean;
+  /** When set, shows a large-group note when total exceeds this threshold. */
+  largeGroupNoteThreshold?: number | null;
+  /** Optional per-category minimum overrides (e.g. adults min 1 for tour requests). */
+  categoryMinOverrides?: Partial<Record<GuestCategoryKey, number>>;
 }
 
 /**
@@ -79,6 +85,9 @@ export default function BookingGuestsPicker({
   quote,
   disabled = false,
   maxGroupSize = null,
+  showUnitHints = true,
+  largeGroupNoteThreshold = null,
+  categoryMinOverrides,
 }: BookingGuestsPickerProps) {
   const [open, setOpen] = useState(false);
 
@@ -95,15 +104,16 @@ export default function BookingGuestsPicker({
     if (disabled) return;
 
     const config = GUEST_CATEGORIES.find((c) => c.key === key)!;
+    const categoryMin = categoryMinOverrides?.[key] ?? config.min;
     const current = participants[key];
     const stepperMax = resolveCategoryStepperMax(
       key,
       participants,
-      config.min,
+      categoryMin,
       config.max,
       maxGroupSize,
     );
-    const next = Math.max(config.min, Math.min(stepperMax, current + delta));
+    const next = Math.max(categoryMin, Math.min(stepperMax, current + delta));
     onChange(key, next);
   };
 
@@ -161,11 +171,12 @@ export default function BookingGuestsPicker({
         <div className="overflow-hidden rounded-b-lg border-2 border-t-0 border-foreground">
           {GUEST_CATEGORIES.map((category, index) => {
             const count = participants[category.key];
+            const categoryMin = categoryMinOverrides?.[category.key] ?? category.min;
             const unitHint = formatGuestUnitHint(category.label, quote);
             const stepperMax = resolveCategoryStepperMax(
               category.key,
               participants,
-              category.min,
+              categoryMin,
               category.max,
               maxGroupSize,
             );
@@ -183,18 +194,20 @@ export default function BookingGuestsPicker({
                     {category.label}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {category.ageRange} · {unitHint}
+                    {showUnitHints
+                      ? `${category.ageRange} · ${unitHint}`
+                      : category.ageRange}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     aria-label={`Decrease ${category.label}`}
-                    disabled={disabled || count <= category.min}
+                    disabled={disabled || count <= categoryMin}
                     onClick={() => updateCount(category.key, -1)}
                     className={cn(
                       "flex h-7 w-7 items-center justify-center rounded-full border-[1.5px] border-border bg-white",
-                      disabled || count <= category.min
+                      disabled || count <= categoryMin
                         ? "cursor-not-allowed opacity-40"
                         : "cursor-pointer",
                     )}
@@ -222,6 +235,12 @@ export default function BookingGuestsPicker({
               </div>
             );
           })}
+          {largeGroupNoteThreshold != null &&
+          totalGuests > largeGroupNoteThreshold ? (
+            <div className="border-t border-border bg-muted/40 px-4 py-2 text-xs text-muted-foreground">
+              Large group requests are handled personally by our team.
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>

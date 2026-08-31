@@ -53,35 +53,35 @@ function Calendar({
           defaultClassNames.months
         ),
         month: cn(
-          "relative grid w-full grid-cols-[var(--cell-size)_minmax(0,1fr)_var(--cell-size)] grid-rows-[var(--cell-size)_auto] gap-y-4",
+          "relative grid w-full grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] grid-rows-[auto_auto] gap-y-4",
           navLayout === "after" &&
-            "has-[>nav]:grid-rows-[var(--cell-size)_var(--cell-size)_auto]",
+            "has-[>nav]:grid-rows-[auto_auto_auto]",
           defaultClassNames.month
         ),
         nav: cn(
           navLayout === "after"
-            ? "col-span-3 row-start-2 flex h-(--cell-size) w-full items-center justify-between"
-            : "absolute inset-x-0 top-0 flex h-(--cell-size) w-full items-stretch justify-between",
+            ? "col-span-3 row-start-2 flex min-h-11 w-full items-center justify-between"
+            : "pointer-events-none absolute inset-x-0 top-0 flex min-h-11 w-full items-center justify-between [&_.rdp-button_next]:pointer-events-auto [&_.rdp-button_previous]:pointer-events-auto",
           defaultClassNames.nav
         ),
         button_previous: cn(
           buttonVariants({
             variant: buttonVariant,
-            className: "h-(--cell-size) w-full p-0",
+            className: "size-11 shrink-0 p-0",
           }),
-          "z-20 col-start-1 row-start-1 flex items-center justify-center rounded-md select-none aria-disabled:opacity-50",
+          "z-20 col-start-1 row-start-1 flex items-center justify-center rounded-lg select-none hover:bg-accent active:scale-95 aria-disabled:pointer-events-none aria-disabled:opacity-50",
           defaultClassNames.button_previous
         ),
         button_next: cn(
           buttonVariants({
             variant: buttonVariant,
-            className: "h-(--cell-size) w-full p-0",
+            className: "size-11 shrink-0 p-0",
           }),
-          "z-20 col-start-3 row-start-1 flex items-center justify-center rounded-md select-none aria-disabled:opacity-50",
+          "z-20 col-start-3 row-start-1 flex items-center justify-center rounded-lg select-none hover:bg-accent active:scale-95 aria-disabled:pointer-events-none aria-disabled:opacity-50",
           defaultClassNames.button_next
         ),
         month_caption: cn(
-          "z-10 col-span-3 col-start-1 row-start-1 flex h-(--cell-size) w-full items-center justify-center px-(--cell-size)",
+          "z-10 col-span-3 col-start-1 row-start-1 flex min-h-11 w-full items-center justify-center px-11",
           defaultClassNames.month_caption
         ),
         dropdowns: cn(
@@ -163,14 +163,14 @@ function Calendar({
         Chevron: ({ className, orientation, ...props }) => {
           if (orientation === "left") {
             return (
-              <ChevronLeftIcon className={cn("size-4", className)} {...props} />
+              <ChevronLeftIcon className={cn("size-5", className)} {...props} />
             );
           }
 
           if (orientation === "right") {
             return (
               <ChevronRightIcon
-                className={cn("size-4", className)}
+                className={cn("size-5", className)}
                 {...props}
               />
             );

@@ -35,10 +35,24 @@ interface TourRequestEmailContent {
   adults: number;
   youth: number;
   children: number;
+  infants: number;
   preferredDate: Date;
   preferredTime: string;
   tourDuration: string;
+  language: string;
+  otherLanguage?: string;
   consent: boolean;
+}
+
+/** Resolves the language label for tour request emails. */
+function formatTourRequestLanguage(
+  language: string,
+  otherLanguage?: string,
+): string {
+  if (language === "Other" && otherLanguage?.trim()) {
+    return otherLanguage.trim();
+  }
+  return language;
 }
 
 interface EmailError {
@@ -156,24 +170,23 @@ export async function sendTourRequestEmail(data: TourRequestEmailContent) {
                 day: "numeric",
               },
             )}</p>
-            <p><strong>🕐 Time:</strong> ${data.preferredTime} (${new Date(
-              "2000-01-01T" + data.preferredTime,
-            ).toLocaleTimeString("en-US", {
-              hour: "numeric",
-              minute: "2-digit",
-              hour12: true,
-            })})</p>
+            <p><strong>🕐 Time:</strong> ${data.preferredTime}</p>
             <p><strong>⏱️ Duration:</strong> ${data.tourDuration}</p>
+            <p><strong>🌐 Language:</strong> ${formatTourRequestLanguage(
+              data.language,
+              data.otherLanguage,
+            )}</p>
           </div>
           
           <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">
             <h3 style="color: #333; margin-top: 0;">👥 Participants</h3>
             <p><strong>👨‍💼 Adults (18+):</strong> ${data.adults}</p>
             <p><strong>🧑‍🎓 Youth (13-17):</strong> ${data.youth}</p>
-            <p><strong>👶 Children (0-12):</strong> ${data.children}</p>
+            <p><strong>👶 Children (4-12):</strong> ${data.children}</p>
+            <p><strong>🍼 Infants (0-3):</strong> ${data.infants}</p>
             <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ccc;">
               <strong>📊 Total:</strong> ${
-                data.adults + data.youth + data.children
+                data.adults + data.youth + data.children + data.infants
               } participants
             </p>
           </div>
