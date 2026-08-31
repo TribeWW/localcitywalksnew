@@ -128,7 +128,7 @@ export function CheckoutContactFields({
       label: "First name",
       field: "firstName",
       autoComplete: "given-name",
-      placeholder: "Jane",
+      placeholder: "Alex",
       required: contactRequirements.firstName,
     },
     {
@@ -136,7 +136,7 @@ export function CheckoutContactFields({
       label: "Last name",
       field: "lastName",
       autoComplete: "family-name",
-      placeholder: "Smith",
+      placeholder: "Walker",
       required: contactRequirements.lastName,
     },
   ];
@@ -171,7 +171,7 @@ export function CheckoutContactFields({
           required={contactRequirements.email}
           type="email"
           autoComplete="email"
-          placeholder="jane@example.com"
+          placeholder="alex.walker@example.com"
           value={values.email}
           onChange={handleChange("email")}
         />

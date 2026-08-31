@@ -71,6 +71,10 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function sendEmail(data: EmailContent) {
+  if (data.consent !== true) {
+    throw new Error("Consent is required to submit the contact form");
+  }
+
   try {
     // Verify transporter before sending
     const isVerified = await verifyTransporter(transporter);

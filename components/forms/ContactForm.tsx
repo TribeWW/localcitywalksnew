@@ -26,6 +26,10 @@ import { toast } from "sonner";
 import { sendEmail } from "@/lib/nodemailer";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ContactSectionHeading } from "@/components/contact/ContactSectionHeading";
+import {
+  CHECKOUT_CHECKBOX_CLASS,
+  CHECKOUT_FIELD_CLASS,
+} from "@/components/checkout/checkout-field-styles";
 import { cn } from "@/lib/utils";
 
 const OPTIONS = ["General Inquiry", "Booking Questions", "Collaborations"];
@@ -39,8 +43,8 @@ const FIELD_ITEM_IDS = {
 } as const;
 
 const PLACEHOLDERS = {
-  fullName: "Jane Smith",
-  email: "jane@example.com",
+  fullName: "Alex Walker",
+  email: "alex.walker@example.com",
   description: "How can we help?",
 } as const;
 
@@ -49,8 +53,21 @@ const formShellClassName =
 
 const formLabelClassName = "text-sm data-[error=true]:text-nightsky";
 
+const consentLabelClassName =
+  "text-sm font-normal leading-relaxed text-nightsky data-[error=true]:text-nightsky";
+
+const selectTriggerClassName = cn(
+  CHECKOUT_FIELD_CLASS,
+  "w-full justify-between data-[state=open]:border-2 data-[state=open]:border-foreground",
+);
+
+const textareaClassName = cn(
+  CHECKOUT_FIELD_CLASS,
+  "min-h-[150px] resize-none",
+);
+
 const submitButtonClassName =
-  "btn-default w-full cursor-pointer bg-nightsky text-white hover:bg-nightsky/90 disabled:cursor-not-allowed disabled:opacity-50";
+  "btn-default w-full cursor-pointer bg-nightsky text-white hover:bg-nightsky/90 disabled:cursor-not-allowed disabled:opacity-90 disabled:hover:bg-nightsky";
 
 export interface ContactFormProps {
   /** When true, shows "Send us a message" heading above the fields. */
@@ -79,6 +96,8 @@ const ContactForm = ({ showHeading = false, className }: ContactFormProps) => {
       consent: false,
     },
   });
+
+  const hasConsent = form.watch("consent");
 
   async function onSubmit(values: z.infer<typeof ContactSchema>) {
     try {
@@ -126,17 +145,22 @@ const ContactForm = ({ showHeading = false, className }: ContactFormProps) => {
       )}
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex flex-col gap-4"
+        >
           <FormField
             control={form.control}
             name="fullName"
             render={({ field }) => (
               <FormItem id={FIELD_ITEM_IDS.fullName}>
-                <FormLabel className={formLabelClassName}>{FIELD_NAMES.fullName}</FormLabel>
+                <FormLabel className={formLabelClassName}>
+                  {FIELD_NAMES.fullName}
+                </FormLabel>
                 <FormControl>
                   <Input
                     placeholder={PLACEHOLDERS.fullName}
-                    className="h-10 rounded-[4px] bg-white text-[#000] placeholder:text-muted-foreground"
+                    className={CHECKOUT_FIELD_CLASS}
                     type={FIELD_TYPES.fullName}
                     {...field}
                   />
@@ -151,11 +175,13 @@ const ContactForm = ({ showHeading = false, className }: ContactFormProps) => {
             name="email"
             render={({ field }) => (
               <FormItem id={FIELD_ITEM_IDS.email}>
-                <FormLabel className={formLabelClassName}>Email address</FormLabel>
+                <FormLabel className={formLabelClassName}>
+                  Email address
+                </FormLabel>
                 <FormControl>
                   <Input
                     placeholder={PLACEHOLDERS.email}
-                    className="h-10 rounded-[4px] bg-white text-[#000] placeholder:text-muted-foreground"
+                    className={CHECKOUT_FIELD_CLASS}
                     type={FIELD_TYPES.email}
                     {...field}
                   />
@@ -175,8 +201,8 @@ const ContactForm = ({ showHeading = false, className }: ContactFormProps) => {
                   onValueChange={field.onChange}
                   value={field.value || undefined}
                 >
-                  <FormControl className="w-full rounded-[4px]">
-                    <SelectTrigger className="bg-white py-[18px] text-[#000] placeholder:text-muted-foreground">
+                  <FormControl className="w-full">
+                    <SelectTrigger className={selectTriggerClassName}>
                       <SelectValue placeholder="Select a topic" />
                     </SelectTrigger>
                   </FormControl>
@@ -202,7 +228,7 @@ const ContactForm = ({ showHeading = false, className }: ContactFormProps) => {
                 <FormControl>
                   <Textarea
                     placeholder={PLACEHOLDERS.description}
-                    className="min-h-[150px] resize-none rounded-[4px] bg-white text-[#000] placeholder:text-muted-foreground"
+                    className={textareaClassName}
                     rows={6}
                     {...field}
                   />
@@ -224,16 +250,11 @@ const ContactForm = ({ showHeading = false, className }: ContactFormProps) => {
                   <Checkbox
                     checked={field.value}
                     onCheckedChange={field.onChange}
-                    className="mt-1 bg-white"
+                    className={CHECKOUT_CHECKBOX_CLASS}
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel
-                    className={cn(
-                      formLabelClassName,
-                      "leading-relaxed text-nightsky",
-                    )}
-                  >
+                  <FormLabel className={consentLabelClassName}>
                     I agree that LocalCityWalks may use my details to respond to
                     my message.
                   </FormLabel>
@@ -247,7 +268,7 @@ const ContactForm = ({ showHeading = false, className }: ContactFormProps) => {
             <button
               type="submit"
               className={submitButtonClassName}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !hasConsent}
             >
               {isSubmitting ? "Sending..." : "Get in touch"}
             </button>
