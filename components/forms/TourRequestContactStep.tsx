@@ -32,6 +32,7 @@ interface TourRequestContactStepProps {
   control: Control<TourRequestFormValues>;
   isSubmitting: boolean;
   consentError: boolean;
+  submitError: string | null;
   onBack: () => void;
   onConsentChange: (checked: boolean) => void;
 }
@@ -59,6 +60,7 @@ export default function TourRequestContactStep({
   control,
   isSubmitting,
   consentError,
+  submitError,
   onBack,
   onConsentChange,
 }: TourRequestContactStepProps) {
@@ -164,24 +166,34 @@ export default function TourRequestContactStep({
         )}
       />
 
-      <div className="mt-2 flex items-center gap-3">
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex shrink-0 cursor-pointer items-center gap-2 border-none bg-transparent px-1 py-2 text-sm font-medium text-nightsky transition-colors hover:text-tangerine"
-        >
-          <ArrowLeft className="size-4" aria-hidden />
-          Back
-        </button>
-        <div className="flex-1">
-          <Button
-            type="submit"
-            className={WIDGET_PRIMARY_BUTTON_CLASS}
-            disabled={isSubmitting}
+      <div className="mt-2 space-y-2">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex shrink-0 cursor-pointer items-center gap-2 border-none bg-transparent px-1 py-2 text-sm font-medium text-nightsky transition-colors hover:text-tangerine"
           >
-            {isSubmitting ? "Sending..." : "Send request"}
-          </Button>
+            <ArrowLeft className="size-4" aria-hidden />
+            Back
+          </button>
+          <div className="flex-1">
+            <Button
+              type="submit"
+              className={WIDGET_PRIMARY_BUTTON_CLASS}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Sending..." : "Send request"}
+            </Button>
+          </div>
         </div>
+        {submitError ? (
+          <p
+            role="alert"
+            className="text-sm text-destructive"
+          >
+            {submitError}
+          </p>
+        ) : null}
       </div>
     </div>
   );

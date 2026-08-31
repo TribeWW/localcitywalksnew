@@ -4,11 +4,22 @@ import React, { useState } from "react";
 import Image from "next/image";
 import TourRequestForm from "@/components/forms/TourRequestForm";
 import TourRequestModalShell from "@/components/forms/TourRequestModalShell";
+import TourRequestSuccessToast from "@/components/forms/TourRequestSuccessToast";
 
 export default function CustomTourBanner() {
   const [open, setOpen] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleSuccess = () => {
+    setShowSuccessToast(true);
+  };
+
+  const handleDismissSuccessToast = () => {
+    setShowSuccessToast(false);
     setOpen(false);
   };
 
@@ -56,10 +67,15 @@ export default function CustomTourBanner() {
           lockCity={false}
           initialCity=""
           onClose={handleClose}
+          onSuccess={handleSuccess}
           presentation="modal"
           elevatedLayer
         />
       </TourRequestModalShell>
+
+      {showSuccessToast ? (
+        <TourRequestSuccessToast onDismiss={handleDismissSuccessToast} />
+      ) : null}
     </>
   );
 }

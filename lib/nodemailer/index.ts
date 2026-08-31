@@ -9,6 +9,7 @@ import {
   buildBookingWidgetCustomerSubject,
   buildBookingWidgetTeamHtml,
   buildBookingWidgetTeamSubject,
+  escapeHtml,
   type BookingWidgetEmailContent,
 } from "@/lib/nodemailer/booking-widget-email";
 import {
@@ -137,6 +138,17 @@ export async function sendTourRequestEmail(data: TourRequestEmailContent) {
       throw new Error("Email transporter verification failed");
     }
 
+    const city = escapeHtml(data.city);
+    const fullName = escapeHtml(data.fullName);
+    const email = escapeHtml(data.email);
+    const phoneNumber = escapeHtml(data.phoneNumber?.trim() || "Not provided");
+    const preferredTime = escapeHtml(data.preferredTime);
+    const tourDuration = escapeHtml(data.tourDuration);
+    const language = escapeHtml(
+      formatTourRequestLanguage(data.language, data.otherLanguage),
+    );
+    const message = escapeHtml(data.message);
+
     // Email to support team for tour request
     const tourRequestMailOptions = {
       from: config.email.supportEmail,
@@ -151,12 +163,10 @@ export async function sendTourRequestEmail(data: TourRequestEmailContent) {
           
           <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: #333; margin-top: 0;">Tour Details</h3>
-            <p><strong>🏙️ City:</strong> ${data.city}</p>
-            <p><strong>👤 Requested by:</strong> ${data.fullName}</p>
-            <p><strong>📧 Email:</strong> ${data.email}</p>
-            <p><strong>📞 Phone:</strong> ${
-              data.phoneNumber || "Not provided"
-            }</p>
+            <p><strong>🏙️ City:</strong> ${city}</p>
+            <p><strong>👤 Requested by:</strong> ${fullName}</p>
+            <p><strong>📧 Email:</strong> ${email}</p>
+            <p><strong>📞 Phone:</strong> ${phoneNumber}</p>
           </div>
           
           <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196f3;">
@@ -170,12 +180,9 @@ export async function sendTourRequestEmail(data: TourRequestEmailContent) {
                 day: "numeric",
               },
             )}</p>
-            <p><strong>🕐 Time:</strong> ${data.preferredTime}</p>
-            <p><strong>⏱️ Duration:</strong> ${data.tourDuration}</p>
-            <p><strong>🌐 Language:</strong> ${formatTourRequestLanguage(
-              data.language,
-              data.otherLanguage,
-            )}</p>
+            <p><strong>🕐 Time:</strong> ${preferredTime}</p>
+            <p><strong>⏱️ Duration:</strong> ${tourDuration}</p>
+            <p><strong>🌐 Language:</strong> ${language}</p>
           </div>
           
           <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">
@@ -193,9 +200,7 @@ export async function sendTourRequestEmail(data: TourRequestEmailContent) {
           
           <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
             <h4 style="color: #856404; margin-top: 0;">Tour Preferences</h4>
-            <p style="background: #fff; padding: 15px; border-radius: 5px; margin: 0;">${
-              data.message
-            }</p>
+            <p style="background: #fff; padding: 15px; border-radius: 5px; margin: 0;">${message}</p>
           </div>
           
           <div style="background: #d1ecf1; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #17a2b8;">

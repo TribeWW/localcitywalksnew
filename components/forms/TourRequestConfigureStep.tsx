@@ -21,6 +21,7 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { WIDGET_FIELD_TRIGGER_CLASS, WIDGET_PRIMARY_BUTTON_CLASS } from "@/components/tours/booking-widget/widget-field-styles";
@@ -71,6 +72,7 @@ export default function TourRequestConfigureStep({
                   value={field.value}
                   onChange={field.onChange}
                   placeholder="Select a date"
+                  ariaLabel="Preferred date"
                   minDate={new Date()}
                   maxDate={
                     new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
@@ -97,6 +99,7 @@ export default function TourRequestConfigureStep({
                   value={field.value}
                   onChange={field.onChange}
                   placeholder="Select time"
+                  ariaLabel="Preferred time"
                   options={TOUR_REQUEST_TIME_SELECT_OPTIONS}
                   variant="widget"
                   elevatedLayer={elevatedLayer}
@@ -119,6 +122,7 @@ export default function TourRequestConfigureStep({
                   value={field.value}
                   onChange={field.onChange}
                   placeholder="Select duration"
+                  ariaLabel="Tour duration"
                   options={TOUR_REQUEST_DURATION_SELECT_OPTIONS}
                   variant="widget"
                   elevatedLayer={elevatedLayer}
@@ -141,6 +145,7 @@ export default function TourRequestConfigureStep({
                   value={field.value}
                   onChange={field.onChange}
                   placeholder="Select language"
+                  ariaLabel="Language"
                   elevatedLayer={elevatedLayer}
                 />
               </BookingWidgetField>
@@ -156,6 +161,7 @@ export default function TourRequestConfigureStep({
           name="otherLanguage"
           render={({ field }) => (
             <FormItem>
+              <FormLabel className="sr-only">Other language</FormLabel>
               <FormControl>
                 <Input
                   placeholder="Please specify your language"
@@ -194,13 +200,14 @@ export default function TourRequestConfigureStep({
         name="message"
         render={({ field }) => (
           <FormItem>
+            <FormLabel className="sr-only">Additional details</FormLabel>
             <FormControl>
               <Textarea
                 rows={4}
                 placeholder="Preferred route, interests, accessibility needs, anything else we should know..."
                 className={cn(
                   WIDGET_FIELD_TRIGGER_CLASS,
-                  "min-h-24 resize-y leading-relaxed",
+                  "min-h-24 resize-y leading-relaxed px-3.5",
                 )}
                 {...field}
               />
@@ -219,6 +226,7 @@ export default function TourRequestConfigureStep({
               <FormControl>
                 <BookingWidgetField icon={MapPin}>
                   <Input
+                    aria-label="City"
                     placeholder="e.g. Barcelona"
                     className={WIDGET_FIELD_TRIGGER_CLASS}
                     {...field}

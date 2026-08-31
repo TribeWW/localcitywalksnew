@@ -29,6 +29,8 @@ interface TourRequestLanguageSelectorProps {
   disabled?: boolean;
   className?: string;
   elevatedLayer?: boolean;
+  /** Accessible name for the trigger when no visible label is associated. */
+  ariaLabel?: string;
 }
 
 export default function TourRequestLanguageSelector({
@@ -38,10 +40,12 @@ export default function TourRequestLanguageSelector({
   disabled = false,
   className,
   elevatedLayer = false,
+  ariaLabel,
 }: TourRequestLanguageSelectorProps) {
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger
+        aria-label={ariaLabel ?? placeholder}
         className={cn(
           WIDGET_FIELD_TRIGGER_CLASS,
           WIDGET_DROPDOWN_TRIGGER_LAYOUT_CLASS,

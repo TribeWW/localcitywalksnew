@@ -5,6 +5,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import TourRequestForm from "@/components/forms/TourRequestForm";
+import { sendTourRequestEmail } from "@/lib/nodemailer";
 
 vi.mock("@/lib/nodemailer", () => ({
   sendTourRequestEmail: vi.fn().mockResolvedValue({ success: true }),
@@ -227,5 +228,107 @@ describe("TourRequestForm", () => {
         screen.getByText("Please agree before sending your request."),
       ).toBeInTheDocument();
     });
+  });
+
+  it("shows submit error when email delivery fails", async () => {
+    vi.mocked(sendTourRequestEmail).mockRejectedValueOnce(
+      new Error("SMTP unavailable"),
+    );
+    const onClose = vi.fn();
+
+    render(
+      <TourRequestForm lockCity initialCity="Barcelona" onClose={onClose} />,
+    );
+
+    fireEvent.click(screen.getByLabelText("Select a date"));
+    fireEvent.change(screen.getByLabelText("Preferred time"), {
+      target: { value: "11:00 AM" },
+    });
+    fireEvent.change(screen.getByLabelText("Tour duration"), {
+      target: { value: "2 hours" },
+    });
+    fireEvent.change(
+      screen.getByPlaceholderText(
+        "Preferred route, interests, accessibility needs, anything else we should know...",
+      ),
+      {
+        target: {
+          value: "We would love a food-focused walk through the old town.",
+        },
+      },
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("How can we reach you?")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/Full name/), {
+      target: { value: "Jane Smith" },
+    });
+    fireEvent.change(screen.getByLabelText(/Email address/), {
+      target: { value: "jane@example.com" },
+    });
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: "Send request" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Failed to send tour request. Please try again later."),
+      ).toBeInTheDocument();
+    });
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("calls onSuccess on successful submit without rendering an internal toast", async () => {
+    const onClose = vi.fn();
+    const onSuccess = vi.fn();
+
+    render(
+      <TourRequestForm
+        lockCity
+        initialCity="Barcelona"
+        onClose={onClose}
+        onSuccess={onSuccess}
+      />,
+    );
+
+    fireEvent.click(screen.getByLabelText("Select a date"));
+    fireEvent.change(screen.getByLabelText("Preferred time"), {
+      target: { value: "11:00 AM" },
+    });
+    fireEvent.change(screen.getByLabelText("Tour duration"), {
+      target: { value: "2 hours" },
+    });
+    fireEvent.change(
+      screen.getByPlaceholderText(
+        "Preferred route, interests, accessibility needs, anything else we should know...",
+      ),
+      {
+        target: {
+          value: "We would love a food-focused walk through the old town.",
+        },
+      },
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("How can we reach you?")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/Full name/), {
+      target: { value: "Jane Smith" },
+    });
+    fireEvent.change(screen.getByLabelText(/Email address/), {
+      target: { value: "jane@example.com" },
+    });
+    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: "Send request" }));
+
+    await waitFor(() => {
+      expect(onSuccess).toHaveBeenCalledTimes(1);
+    });
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.queryByText("Request sent!")).not.toBeInTheDocument();
   });
 });

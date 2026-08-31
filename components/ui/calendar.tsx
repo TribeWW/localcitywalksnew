@@ -61,7 +61,11 @@ function Calendar({
         nav: cn(
           navLayout === "after"
             ? "col-span-3 row-start-2 flex min-h-11 w-full items-center justify-between"
-            : "pointer-events-none absolute inset-x-0 top-0 flex min-h-11 w-full items-center justify-between [&_.rdp-button_next]:pointer-events-auto [&_.rdp-button_previous]:pointer-events-auto",
+            : cn(
+                "pointer-events-none absolute inset-x-0 top-0 flex min-h-11 w-full items-center justify-between",
+                String.raw`[&_.rdp-button\_next]:pointer-events-auto`,
+                String.raw`[&_.rdp-button\_previous]:pointer-events-auto`,
+              ),
           defaultClassNames.nav
         ),
         button_previous: cn(

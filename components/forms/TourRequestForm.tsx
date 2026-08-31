@@ -32,6 +32,7 @@ type TourRequestFormProps =
       lockCity: true;
       initialCity: string;
       onClose: () => void;
+      onSuccess?: () => void;
       presentation?: "inline" | "modal";
       showStepHeadings?: boolean;
       elevatedLayer?: boolean;
@@ -40,6 +41,7 @@ type TourRequestFormProps =
       lockCity?: false;
       initialCity?: string;
       onClose: () => void;
+      onSuccess?: () => void;
       presentation?: "inline" | "modal";
       showStepHeadings?: boolean;
       elevatedLayer?: boolean;
@@ -81,10 +83,14 @@ function buildDefaultValues(
   };
 }
 
+const SUBMIT_EMAIL_FAILURE_ERROR =
+  "Failed to send tour request. Please try again later.";
+
 const TourRequestForm = ({
   initialCity,
   lockCity = true,
   onClose,
+  onSuccess,
   presentation = "inline",
   showStepHeadings = true,
   elevatedLayer = false,
@@ -92,6 +98,7 @@ const TourRequestForm = ({
   const [step, setStep] = useState<1 | 2>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [consentError, setConsentError] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const stepContentRef = useRef<HTMLDivElement>(null);
 
@@ -112,6 +119,7 @@ const TourRequestForm = ({
   const resetForm = useCallback(() => {
     setStep(1);
     setConsentError(false);
+    setSubmitError(null);
     form.reset(buildDefaultValues(lockCity, initialCity));
   }, [form, initialCity, lockCity]);
 
@@ -138,6 +146,7 @@ const TourRequestForm = ({
   const handleBack = () => {
     setStep(1);
     setConsentError(false);
+    setSubmitError(null);
     focusStepContent();
   };
 
@@ -149,6 +158,7 @@ const TourRequestForm = ({
 
     try {
       setIsSubmitting(true);
+      setSubmitError(null);
 
       await sendTourRequestEmail({
         fullName: values.fullName,
@@ -168,11 +178,17 @@ const TourRequestForm = ({
         consent: values.consent,
       });
 
-      setShowSuccessToast(true);
-      onClose();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        setShowSuccessToast(true);
+        onClose();
+      }
+
       resetForm();
     } catch (error) {
       console.error("Submission error:", error);
+      setSubmitError(SUBMIT_EMAIL_FAILURE_ERROR);
     } finally {
       setIsSubmitting(false);
     }
@@ -218,6 +234,7 @@ const TourRequestForm = ({
                 control={form.control}
                 isSubmitting={isSubmitting}
                 consentError={consentError}
+                submitError={submitError}
                 onBack={handleBack}
                 onConsentChange={(checked) => {
                   if (checked) setConsentError(false);
@@ -242,7 +259,7 @@ const TourRequestForm = ({
         </form>
       </Form>
 
-      {showSuccessToast ? (
+      {showSuccessToast && !onSuccess ? (
         <TourRequestSuccessToast onDismiss={() => setShowSuccessToast(false)} />
       ) : null}
     </>

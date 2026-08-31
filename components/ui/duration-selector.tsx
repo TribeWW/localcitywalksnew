@@ -33,6 +33,8 @@ interface DurationSelectorProps {
   options?: { value: string; label: string }[];
   variant?: "default" | "widget";
   elevatedLayer?: boolean;
+  /** Accessible name for the trigger when no visible label is associated. */
+  ariaLabel?: string;
 }
 
 const LEGACY_DURATION_OPTIONS = [
@@ -53,12 +55,14 @@ const DurationSelector = ({
   options,
   variant = "default",
   elevatedLayer = false,
+  ariaLabel,
 }: DurationSelectorProps) => {
   const durationOptions = options ?? LEGACY_DURATION_OPTIONS;
 
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger
+        aria-label={ariaLabel ?? placeholder}
         className={cn(
           variant === "widget"
             ? cn(

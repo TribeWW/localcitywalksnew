@@ -36,6 +36,8 @@ interface TimeSelectorProps {
   variant?: "default" | "widget";
   /** Raises the dropdown above the mobile booking drawer (`z-[80]`). */
   elevatedLayer?: boolean;
+  /** Accessible name for the trigger when no visible label is associated. */
+  ariaLabel?: string;
 }
 
 /** Legacy static times for `TourRequestForm` when `options` is not passed. */
@@ -67,6 +69,7 @@ const TimeSelector = ({
   className,
   variant = "default",
   elevatedLayer = false,
+  ariaLabel,
 }: TimeSelectorProps) => {
   const timeOptions = options ?? TIME_OPTIONS;
 
@@ -77,6 +80,7 @@ const TimeSelector = ({
       disabled={disabled || timeOptions.length === 0}
     >
       <SelectTrigger
+        aria-label={ariaLabel ?? placeholder}
         className={cn(
           variant === "widget"
             ? cn(WIDGET_FIELD_TRIGGER_CLASS, WIDGET_DROPDOWN_TRIGGER_LAYOUT_CLASS)

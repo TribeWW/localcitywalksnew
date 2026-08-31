@@ -51,6 +51,8 @@ interface DatePickerProps {
   /** Widget chrome: icon provided by `BookingWidgetField`, compact bordered trigger. */
   variant?: "default" | "widget";
   hideLeadingIcon?: boolean;
+  /** Accessible name for the trigger when no visible label is associated. */
+  ariaLabel?: string;
   /**
    * When true, raises the touch dialog above the mobile booking drawer (`z-[80]`).
    * Use inside `BookingWidgetMobileDrawer` only.
@@ -127,6 +129,7 @@ const DatePicker = ({
   variant = "default",
   hideLeadingIcon = false,
   elevatedLayer = false,
+  ariaLabel,
 }: DatePickerProps) => {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(() => resolveVisibleMonth(value, minDate));
@@ -168,6 +171,7 @@ const DatePicker = ({
     <Button
       type="button"
       variant="outline"
+      aria-label={ariaLabel ?? placeholder}
       className={cn(
         variant === "widget"
           ? cn(
