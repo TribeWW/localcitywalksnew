@@ -165,6 +165,9 @@ describe("getPendingCheckoutById", () => {
   });
 
   it("parses legacy UUID checkout id records during rollout", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-18T21:00:00.000Z"));
+
     const legacyId = "550e8400-e29b-41d4-a716-446655440000";
     const record = {
       id: legacyId,
@@ -182,6 +185,8 @@ describe("getPendingCheckoutById", () => {
     mockGet.mockResolvedValue(record);
 
     await expect(getPendingCheckoutById(legacyId)).resolves.toEqual(record);
+
+    vi.useRealTimers();
   });
 
   it("parses pre-deploy records without handoffTokenDigest", async () => {

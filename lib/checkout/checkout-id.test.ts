@@ -2,13 +2,16 @@
  * Checkout id generator + schema — WKS + 9 alphanumeric (LOC short external ref).
  */
 
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   CHECKOUT_ID_PREFIX,
   CHECKOUT_ID_SUFFIX_LENGTH,
+  CHECKOUT_ID_WKS_CUTOVER_AT_MS,
+  LEGACY_CHECKOUT_ID_SUNSET_AT_MS,
   checkoutIdSchema,
   generateCheckoutId,
+  isLegacyCheckoutIdAccepted,
   resolvableCheckoutIdSchema,
 } from "@/lib/checkout/checkout-id";
 
@@ -44,14 +47,40 @@ describe("checkoutIdSchema", () => {
 });
 
 describe("resolvableCheckoutIdSchema", () => {
-  it("accepts WKS ids and legacy UUID checkout ids", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("accepts WKS ids before and after the legacy sunset", () => {
+    vi.setSystemTime(CHECKOUT_ID_WKS_CUTOVER_AT_MS);
     expect(resolvableCheckoutIdSchema.safeParse("WKSAB12CD34E").success).toBe(
       true,
     );
+
+    vi.setSystemTime(LEGACY_CHECKOUT_ID_SUNSET_AT_MS);
+    expect(resolvableCheckoutIdSchema.safeParse("WKSAB12CD34E").success).toBe(
+      true,
+    );
+  });
+
+  it("accepts legacy UUID checkout ids only before the handoff-TTL sunset", () => {
+    vi.setSystemTime(CHECKOUT_ID_WKS_CUTOVER_AT_MS);
+    expect(isLegacyCheckoutIdAccepted()).toBe(true);
     expect(resolvableCheckoutIdSchema.safeParse(LEGACY_UUID).success).toBe(true);
+
+    vi.setSystemTime(LEGACY_CHECKOUT_ID_SUNSET_AT_MS);
+    expect(isLegacyCheckoutIdAccepted()).toBe(false);
+    expect(resolvableCheckoutIdSchema.safeParse(LEGACY_UUID).success).toBe(
+      false,
+    );
   });
 
   it("rejects malformed ids", () => {
+    vi.setSystemTime(CHECKOUT_ID_WKS_CUTOVER_AT_MS);
     expect(resolvableCheckoutIdSchema.safeParse("not-a-wks-id").success).toBe(
       false,
     );
