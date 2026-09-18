@@ -85,6 +85,19 @@ describe("parseCheckoutCancelReturn", () => {
     });
   });
 
+  it("detects a Stripe cancel return with a legacy UUID checkout id", () => {
+    const legacyId = "550e8400-e29b-41d4-a716-446655440000";
+    expect(
+      parseCheckoutCancelReturn({
+        cancelled: "1",
+        checkoutId: legacyId,
+      }),
+    ).toEqual({
+      isPaymentCancelled: true,
+      checkoutId: legacyId,
+    });
+  });
+
   it("ignores cancel flag without a valid checkout id", () => {
     expect(
       parseCheckoutCancelReturn({

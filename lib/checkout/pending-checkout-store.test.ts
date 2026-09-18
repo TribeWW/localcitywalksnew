@@ -164,6 +164,26 @@ describe("getPendingCheckoutById", () => {
     await expect(getPendingCheckoutById(checkoutId)).resolves.toEqual(record);
   });
 
+  it("parses legacy UUID checkout id records during rollout", async () => {
+    const legacyId = "550e8400-e29b-41d4-a716-446655440000";
+    const record = {
+      id: legacyId,
+      status: "pending" as const,
+      productId: "1079932",
+      date: "2026-07-15",
+      startTimeId: 4252139,
+      participants: createInput.participants,
+      quoteSnapshot: quote,
+      contact: createInput.contact,
+      handoffTokenDigest: createInput.handoffTokenDigest,
+      createdAt: "2026-07-01T12:00:00.000Z",
+      expiresAt: "2026-07-01T12:30:00.000Z",
+    };
+    mockGet.mockResolvedValue(record);
+
+    await expect(getPendingCheckoutById(legacyId)).resolves.toEqual(record);
+  });
+
   it("parses pre-deploy records without handoffTokenDigest", async () => {
     const record = {
       id: checkoutId,

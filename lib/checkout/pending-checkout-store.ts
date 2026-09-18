@@ -8,7 +8,10 @@
 import { randomUUID } from "crypto";
 import { z } from "zod";
 
-import { checkoutIdSchema, generateCheckoutId } from "@/lib/checkout/checkout-id";
+import {
+  generateCheckoutId,
+  resolvableCheckoutIdSchema,
+} from "@/lib/checkout/checkout-id";
 import { CHECKOUT_HANDOFF_TTL_SECONDS } from "@/lib/checkout/handoff-token";
 import { getPendingCheckoutRedis } from "@/lib/checkout/pending-checkout-redis";
 import {
@@ -170,7 +173,7 @@ const bookingWidgetQuoteSchema = z.object({
 });
 
 const pendingCheckoutRecordSchema = z.object({
-  id: checkoutIdSchema,
+  id: resolvableCheckoutIdSchema,
   status: z.enum(["pending", "paid", "failed", "expired"]),
   productId: tourBookingProductIdSchema,
   date: z.string(),

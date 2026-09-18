@@ -9,7 +9,7 @@ import {
   verifyCheckoutHandoffToken,
   pendingCheckoutHandoffTokenMatches,
 } from "@/lib/checkout/handoff-token";
-import { checkoutIdSchema } from "@/lib/checkout/checkout-id";
+import { resolvableCheckoutIdSchema } from "@/lib/checkout/checkout-id";
 import { getPendingCheckoutById } from "@/lib/checkout/pending-checkout-store";
 
 /** Raw search params from `/checkout` after Stripe cancel. */
@@ -57,7 +57,7 @@ export function parseCheckoutCancelReturn(
     return { isPaymentCancelled: false };
   }
 
-  const parsedId = checkoutIdSchema.safeParse(checkoutId);
+  const parsedId = resolvableCheckoutIdSchema.safeParse(checkoutId);
   if (!parsedId.success) {
     return { isPaymentCancelled: false };
   }
