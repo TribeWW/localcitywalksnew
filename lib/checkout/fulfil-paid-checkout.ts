@@ -73,7 +73,7 @@ export const FULFILMENT_PERSIST_MAX_ATTEMPTS = 3;
  * local-write retry, so a transient KV blip after a successful Bókun confirm
  * does not lose the confirmation.
  *
- * @param checkoutId - Internal pending checkout uuid
+ * @param checkoutId - Internal pending checkout id
  * @param data - Booking id + product confirmation code from Bókun confirm
  */
 async function persistBokunFulfilment(
@@ -114,7 +114,7 @@ async function persistBokunFulfilment(
  * persistence is retried locally and, if it still fails, the row is left for
  * durable recovery (logged) with the claim intact.
  *
- * @param checkoutId - Internal pending checkout uuid
+ * @param checkoutId - Internal pending checkout id
  * @param stripeSession - Completed Stripe Checkout Session from the webhook
  * @param claimToken - Fencing token for the paid-fulfilment claim to release
  */

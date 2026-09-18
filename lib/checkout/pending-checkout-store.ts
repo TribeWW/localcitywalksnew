@@ -8,6 +8,7 @@
 import { randomUUID } from "crypto";
 import { z } from "zod";
 
+import { checkoutIdSchema, generateCheckoutId } from "@/lib/checkout/checkout-id";
 import { CHECKOUT_HANDOFF_TTL_SECONDS } from "@/lib/checkout/handoff-token";
 import { getPendingCheckoutRedis } from "@/lib/checkout/pending-checkout-redis";
 import {
@@ -169,7 +170,7 @@ const bookingWidgetQuoteSchema = z.object({
 });
 
 const pendingCheckoutRecordSchema = z.object({
-  id: z.string().uuid(),
+  id: checkoutIdSchema,
   status: z.enum(["pending", "paid", "failed", "expired"]),
   productId: tourBookingProductIdSchema,
   date: z.string(),
@@ -194,7 +195,7 @@ const pendingCheckoutRecordSchema = z.object({
 /**
  * Builds the primary KV key for a pending checkout id.
  *
- * @param checkoutId - Internal checkout uuid
+ * @param checkoutId - Internal checkout id
  */
 export function buildPendingCheckoutKey(checkoutId: string): string {
   return `${PENDING_CHECKOUT_KEY_PREFIX}${checkoutId}`;
@@ -214,7 +215,7 @@ export function buildPendingCheckoutStripeIndexKey(
 /**
  * Builds the atomic paid-fulfilment claim key for a checkout id.
  *
- * @param checkoutId - Internal checkout uuid
+ * @param checkoutId - Internal checkout id
  */
 export function buildPendingCheckoutPaidClaimKey(checkoutId: string): string {
   return `${PENDING_CHECKOUT_PAID_CLAIM_PREFIX}${checkoutId}`;
@@ -248,7 +249,7 @@ return 0
  * retry can recover a fulfilment that failed after payment was recorded. The
  * returned token must be passed to `releasePendingCheckoutPaidFulfilment`.
  *
- * @param checkoutId - Internal checkout uuid
+ * @param checkoutId - Internal checkout id
  * @param ttlSeconds - Lease duration in seconds
  */
 export async function claimPendingCheckoutPaidFulfilment(
@@ -293,7 +294,7 @@ export async function claimPendingCheckoutPaidFulfilment(
  * active claim. A no-op when Redis is unconfigured (the lease expires on its
  * own).
  *
- * @param checkoutId - Internal checkout uuid
+ * @param checkoutId - Internal checkout id
  * @param token - Fencing token returned when the claim was won
  */
 export async function releasePendingCheckoutPaidFulfilment(
@@ -330,7 +331,7 @@ export type RecordPaidFulfilmentFailureResult =
  * row as `failed` so the success page can show support guidance and Stripe
  * retries can stop.
  *
- * @param checkoutId - Internal pending checkout uuid
+ * @param checkoutId - Internal pending checkout id
  * @param error - Failure code (e.g. "confirm_failed") for ops triage
  */
 export async function recordPaidFulfilmentFailure(
@@ -409,7 +410,7 @@ export async function createPendingCheckout(
   );
 
   const record: PendingCheckoutRecord = {
-    id: input.id ?? randomUUID(),
+    id: input.id ?? generateCheckoutId(),
     status: "pending",
     productId: input.productId,
     date: input.date,
@@ -436,7 +437,7 @@ export async function createPendingCheckout(
 /**
  * Loads a pending checkout by internal id.
  *
- * @param checkoutId - Internal checkout uuid
+ * @param checkoutId - Internal checkout id
  */
 export async function getPendingCheckoutById(
   checkoutId: string,
@@ -479,7 +480,7 @@ export async function getPendingCheckoutByStripeSessionId(
  * Refreshes TTL and maintains the Stripe session index when `stripeSessionId`
  * is set or changed.
  *
- * @param checkoutId - Internal checkout uuid
+ * @param checkoutId - Internal checkout id
  * @param update - Fields to merge into the stored record
  * @param options - Optional optimistic concurrency guard on current status
  */

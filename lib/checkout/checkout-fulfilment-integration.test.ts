@@ -92,7 +92,7 @@ describe("buildPaidCheckoutSessionForFulfilmentIntegration", () => {
       payment_intent: null,
       currency: "eur",
       amount_total: 24800,
-      metadata: { checkoutId: "checkout-uuid" },
+      metadata: { checkoutId: "WKSAB12CD34E" },
     });
     const create = vi.fn().mockResolvedValue({ id: "pi_test_created" });
     const stripe = {
@@ -116,7 +116,7 @@ describe("buildPaidCheckoutSessionForFulfilmentIntegration", () => {
       expect.objectContaining({
         amount: 24800,
         currency: "eur",
-        metadata: { checkoutId: "checkout-uuid" },
+        metadata: { checkoutId: "WKSAB12CD34E" },
       }),
     );
     expect(confirmStripeTestPaymentIntentMock).toHaveBeenCalledWith(

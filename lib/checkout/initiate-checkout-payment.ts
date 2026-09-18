@@ -6,8 +6,6 @@
  * `initiateCheckoutPayment` server action — no `"use server"` here.
  */
 
-import { randomUUID } from "crypto";
-
 import { computeTourBookingQuote } from "@/lib/booking/widget.actions";
 import { promoCode as promoCodeFlag } from "@/flags";
 import {
@@ -16,6 +14,7 @@ import {
 } from "@/lib/booking/widget-submit";
 import { getTourDetailById } from "@/lib/tours/detail.actions";
 import { reserveBokunCheckout, abortReservedBokunCheckout } from "@/lib/bokun/checkout";
+import { generateCheckoutId } from "@/lib/checkout/checkout-id";
 import {
   CHECKOUT_SOLD_OUT_QUOTE_ERROR,
   resolveCheckoutQuoteUnavailableMessage,
@@ -240,7 +239,7 @@ export async function executeInitiateCheckoutPayment(
   const promoCodeEnabled = await promoCodeFlag();
   const promoCodeToApply = promoCodeEnabled ? input.promoCode : undefined;
 
-  const checkoutId = randomUUID();
+  const checkoutId = generateCheckoutId();
   const productTitle =
     payload.productTitle?.trim() || tourDetail.data.title.trim() || "Tour booking";
 

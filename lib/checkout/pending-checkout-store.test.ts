@@ -59,7 +59,7 @@ const createInput = {
   handoffTokenDigest: "a".repeat(64),
 };
 
-const checkoutId = "550e8400-e29b-41d4-a716-446655440000";
+const checkoutId = "WKSAB12CD34E";
 
 function mockRedisClient() {
   getRedisMock.mockReturnValue({
@@ -91,9 +91,7 @@ describe("createPendingCheckout", () => {
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    expect(result.data.id).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-    );
+    expect(result.data.id).toMatch(/^WKS[A-Z0-9]{9}$/);
     expect(result.data.status).toBe("pending");
     expect(result.data).toMatchObject({
       productId: "1079932",

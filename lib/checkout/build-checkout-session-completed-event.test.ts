@@ -11,7 +11,7 @@ const PAID_SESSION = {
   id: "cs_test_integration",
   object: "checkout.session",
   payment_status: "paid",
-  metadata: { checkoutId: "checkout-uuid" },
+  metadata: { checkoutId: "WKSAB12CD34E" },
 } as unknown as Stripe.Checkout.Session;
 
 describe("buildCheckoutSessionCompletedEvent", () => {

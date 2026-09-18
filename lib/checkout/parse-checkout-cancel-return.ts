@@ -5,15 +5,12 @@
  * summary page can release the Bókun hold and show recovery copy.
  */
 
-import { z } from "zod";
-
 import {
   verifyCheckoutHandoffToken,
   pendingCheckoutHandoffTokenMatches,
 } from "@/lib/checkout/handoff-token";
+import { checkoutIdSchema } from "@/lib/checkout/checkout-id";
 import { getPendingCheckoutById } from "@/lib/checkout/pending-checkout-store";
-
-const checkoutIdSchema = z.string().uuid();
 
 /** Raw search params from `/checkout` after Stripe cancel. */
 export interface CheckoutCancelReturnSearchParams {

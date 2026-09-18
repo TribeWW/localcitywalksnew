@@ -41,7 +41,7 @@ import { loadCheckoutSuccess } from "@/lib/checkout/load-checkout-success";
 const SESSION_ID = "cs_test_abc123";
 
 const pendingRecord: PendingCheckoutRecord = {
-  id: "550e8400-e29b-41d4-a716-446655440000",
+  id: "WKSAB12CD34E",
   status: "paid",
   productId: "1079932",
   date: "2026-07-15",

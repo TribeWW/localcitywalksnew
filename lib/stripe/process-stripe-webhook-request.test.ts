@@ -101,7 +101,7 @@ describe("processStripeWebhookRequest", () => {
     handleStripeWebhookEventMock.mockResolvedValue({
       success: true,
       action: "checkout_paid",
-      checkoutId: "550e8400-e29b-41d4-a716-446655440000",
+      checkoutId: "WKSAB12CD34E",
       alreadyPaid: false,
     });
 

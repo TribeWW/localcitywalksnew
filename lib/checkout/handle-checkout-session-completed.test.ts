@@ -32,7 +32,7 @@ vi.mock("@/lib/checkout/pending-checkout-store", () => ({
 
 import { handleCheckoutSessionCompleted } from "@/lib/checkout/handle-checkout-session-completed";
 
-const CHECKOUT_ID = "550e8400-e29b-41d4-a716-446655440000";
+const CHECKOUT_ID = "WKSAB12CD34E";
 const SESSION_ID = "cs_test_123";
 const CLAIM_TOKEN = "claim-token-abc";
 

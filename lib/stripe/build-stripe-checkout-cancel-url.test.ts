@@ -21,18 +21,18 @@ describe("buildStripeCheckoutCancelUrl", () => {
   it("preserves handoff token and adds checkout id with cancelled flag", () => {
     const url = buildStripeCheckoutCancelUrl({
       handoffToken: "header.payload.signature",
-      checkoutId: "550e8400-e29b-41d4-a716-446655440000",
+      checkoutId: "WKSAB12CD34E",
     });
 
     expect(url).toBe(
-      "https://www.localcitywalks.com/checkout?h=header.payload.signature&checkoutId=550e8400-e29b-41d4-a716-446655440000&cancelled=1",
+      "https://www.localcitywalks.com/checkout?h=header.payload.signature&checkoutId=WKSAB12CD34E&cancelled=1",
     );
   });
 
   it("URL-encodes special characters in the handoff token", () => {
     const url = buildStripeCheckoutCancelUrl({
       handoffToken: "token+with/special=chars",
-      checkoutId: "550e8400-e29b-41d4-a716-446655440000",
+      checkoutId: "WKSAB12CD34E",
     });
 
     expect(url).toContain(
