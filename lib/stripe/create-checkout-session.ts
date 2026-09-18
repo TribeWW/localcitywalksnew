@@ -79,7 +79,7 @@ export function resolveStripeCheckoutExpiresAt(): number {
  * pending checkout id for Bókun reserve cleanup — see {@link buildStripeCheckoutCancelUrl}.
  *
  * @param handoffToken - Raw handoff token for cancel return to summary
- * @param checkoutId - Internal checkout uuid for cancel cleanup
+ * @param checkoutId - Internal checkout id for cancel cleanup
  * @param origin - Public site origin; defaults via {@link resolveCheckoutOrigin}
  */
 export function buildStripeCheckoutRedirectUrls(
@@ -105,7 +105,7 @@ export function buildStripeCheckoutRedirectUrls(
 /**
  * Stripe idempotency key for Checkout Session create — one session per checkout id.
  *
- * @param checkoutId - Internal pending-checkout uuid
+ * @param checkoutId - Internal pending-checkout id
  */
 export function buildStripeCheckoutSessionIdempotencyKey(
   checkoutId: string,

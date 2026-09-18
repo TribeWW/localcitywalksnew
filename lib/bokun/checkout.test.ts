@@ -87,7 +87,7 @@ const reserveInput: ReserveBokunCheckoutInput = {
     email: "ada@example.com",
     phone: "+34600000000",
   },
-  externalBookingReference: "550e8400-e29b-41d4-a716-446655440000",
+  externalBookingReference: "WKSAB12CD34E",
 };
 
 const optionsResponse = {
@@ -149,7 +149,7 @@ describe("buildBokunBookingRequest", () => {
     const request = buildBokunBookingRequest(reserveInput);
 
     expect(request.externalBookingReference).toBe(
-      "550e8400-e29b-41d4-a716-446655440000",
+      "WKSAB12CD34E",
     );
     expect(request.mainContactDetails).toHaveLength(4);
     expect(request.activityBookings).toEqual([
@@ -431,7 +431,7 @@ describe("reserveBokunCheckout", () => {
         confirmationCode: "LOC-T123",
         checkoutAmount: 496,
         currency: "EUR",
-        externalBookingReference: "550e8400-e29b-41d4-a716-446655440000",
+        externalBookingReference: "WKSAB12CD34E",
       },
     });
 
@@ -602,7 +602,7 @@ describe("reserveBokunCheckout", () => {
         confirmationCode: "LOC-T123",
         checkoutAmount: 400,
         currency: "EUR",
-        externalBookingReference: "550e8400-e29b-41d4-a716-446655440000",
+        externalBookingReference: "WKSAB12CD34E",
       },
     });
   });

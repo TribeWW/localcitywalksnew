@@ -11,11 +11,11 @@
  * to satisfy Bókun's options request shape. Pay still uses the real form contact.
  */
 
-import { randomUUID } from "crypto";
 import { z } from "zod";
 
 import { computeTourBookingQuote } from "@/lib/booking/widget.actions";
 import { getTourDetailById } from "@/lib/tours/detail.actions";
+import { generateCheckoutId } from "@/lib/checkout/checkout-id";
 import { verifyCheckoutHandoffToken } from "@/lib/checkout/handoff-token";
 import { handoffPayloadToQuoteInput } from "@/lib/checkout/handoff-payload-to-quote-input";
 import {
@@ -157,7 +157,7 @@ export async function runValidatePromoCode(
     quote: quoteResult.data,
     language: payload.language,
     contact: PROMO_VALIDATION_PLACEHOLDER_CONTACT,
-    externalBookingReference: randomUUID(),
+    externalBookingReference: generateCheckoutId(),
     promoCode,
   });
 

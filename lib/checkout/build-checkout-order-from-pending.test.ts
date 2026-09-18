@@ -7,7 +7,7 @@ import type { PendingCheckoutRecord } from "@/lib/checkout/pending-checkout-stor
 import { buildCheckoutOrderFromPending } from "@/lib/checkout/build-checkout-order-from-pending";
 
 const pending: PendingCheckoutRecord = {
-  id: "550e8400-e29b-41d4-a716-446655440000",
+  id: "WKSAB12CD34E",
   status: "paid",
   productId: "1079932",
   date: "2026-07-15",

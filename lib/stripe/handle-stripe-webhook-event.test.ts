@@ -40,7 +40,7 @@ vi.mock("@/lib/checkout/pending-checkout-store", () => ({
 import { handleStripeWebhookEvent } from "@/lib/stripe/handle-stripe-webhook-event";
 
 const EVENT_ID = "evt_test_checkout_completed";
-const CHECKOUT_ID = "550e8400-e29b-41d4-a716-446655440000";
+const CHECKOUT_ID = "WKSAB12CD34E";
 const CLAIM_TOKEN = "claim-token-abc";
 
 function buildEvent(

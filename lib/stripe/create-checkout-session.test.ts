@@ -56,13 +56,13 @@ describe("buildStripeCheckoutRedirectUrls", () => {
   it("returns success and cancel URLs with preserved handoff and checkout id", () => {
     const urls = buildStripeCheckoutRedirectUrls(
       "signed.token.value",
-      "550e8400-e29b-41d4-a716-446655440000",
+      "WKSAB12CD34E",
     );
 
     expect(urls.successUrl).toContain("/checkout/success?session_id=");
     expect(urls.cancelUrl).toContain("/checkout?h=signed.token.value");
     expect(urls.cancelUrl).toContain(
-      "checkoutId=550e8400-e29b-41d4-a716-446655440000",
+      "checkoutId=WKSAB12CD34E",
     );
     expect(urls.cancelUrl).toContain("cancelled=1");
   });
@@ -70,7 +70,7 @@ describe("buildStripeCheckoutRedirectUrls", () => {
   it("uses the provided checkout origin for success and cancel URLs", () => {
     const urls = buildStripeCheckoutRedirectUrls(
       "signed.token.value",
-      "550e8400-e29b-41d4-a716-446655440000",
+      "WKSAB12CD34E",
       "https://staging.localcitywalks.com",
     );
 
@@ -78,7 +78,7 @@ describe("buildStripeCheckoutRedirectUrls", () => {
       "https://staging.localcitywalks.com/checkout/success?session_id={CHECKOUT_SESSION_ID}",
     );
     expect(urls.cancelUrl).toBe(
-      "https://staging.localcitywalks.com/checkout?h=signed.token.value&checkoutId=550e8400-e29b-41d4-a716-446655440000&cancelled=1",
+      "https://staging.localcitywalks.com/checkout?h=signed.token.value&checkoutId=WKSAB12CD34E&cancelled=1",
     );
   });
 });
@@ -94,7 +94,7 @@ describe("createStripeCheckoutSession", () => {
 
   it("creates a hosted session with metadata and expires_at", async () => {
     const result = await createStripeCheckoutSession({
-      checkoutId: "550e8400-e29b-41d4-a716-446655440000",
+      checkoutId: "WKSAB12CD34E",
       quote: {
         totalAmount: 496,
         currency: "EUR",
@@ -119,11 +119,11 @@ describe("createStripeCheckoutSession", () => {
         mode: "payment",
         customer_email: "ada@example.com",
         metadata: {
-          checkoutId: "550e8400-e29b-41d4-a716-446655440000",
+          checkoutId: "WKSAB12CD34E",
         },
         payment_intent_data: {
           metadata: {
-            checkoutId: "550e8400-e29b-41d4-a716-446655440000",
+            checkoutId: "WKSAB12CD34E",
           },
         },
         expires_at: expect.any(Number),
@@ -139,7 +139,7 @@ describe("createStripeCheckoutSession", () => {
       }),
       {
         idempotencyKey: buildStripeCheckoutSessionIdempotencyKey(
-          "550e8400-e29b-41d4-a716-446655440000",
+          "WKSAB12CD34E",
         ),
       },
     );
@@ -153,7 +153,7 @@ describe("createStripeCheckoutSession", () => {
 
     await expect(
       createStripeCheckoutSession({
-        checkoutId: "550e8400-e29b-41d4-a716-446655440000",
+        checkoutId: "WKSAB12CD34E",
         quote: {
           totalAmount: 496,
           currency: "EUR",

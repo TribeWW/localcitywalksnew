@@ -66,7 +66,7 @@ import {
 } from "@/lib/checkout/handoff-token";
 
 const HANDOFF_SECRET = "test-handoff-secret-with-32-characters-min";
-const CHECKOUT_ID = "550e8400-e29b-41d4-a716-446655440000";
+const CHECKOUT_ID = "WKSAB12CD34E";
 
 function futureIsoDate(daysAhead = 7): string {
   const date = new Date();

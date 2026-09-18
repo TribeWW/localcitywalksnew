@@ -27,7 +27,7 @@ import {
   parseCheckoutCancelReturn,
 } from "@/lib/checkout/parse-checkout-cancel-return";
 
-const CHECKOUT_ID = "550e8400-e29b-41d4-a716-446655440000";
+const CHECKOUT_ID = "WKSAB12CD34E";
 const HANDOFF_SECRET = "test-handoff-secret-with-32-characters-min";
 
 const handoffInput: SignCheckoutHandoffInput = {
@@ -85,11 +85,45 @@ describe("parseCheckoutCancelReturn", () => {
     });
   });
 
+  it("detects a Stripe cancel return with a legacy UUID checkout id", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-18T21:00:00.000Z"));
+
+    const legacyId = "550e8400-e29b-41d4-a716-446655440000";
+    expect(
+      parseCheckoutCancelReturn({
+        cancelled: "1",
+        checkoutId: legacyId,
+      }),
+    ).toEqual({
+      isPaymentCancelled: true,
+      checkoutId: legacyId,
+    });
+
+    vi.useRealTimers();
+  });
+
+  it("ignores legacy UUID checkout ids after the handoff-TTL sunset", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-18T21:30:00.000Z"));
+
+    expect(
+      parseCheckoutCancelReturn({
+        cancelled: "1",
+        checkoutId: "550e8400-e29b-41d4-a716-446655440000",
+      }),
+    ).toEqual({
+      isPaymentCancelled: false,
+    });
+
+    vi.useRealTimers();
+  });
+
   it("ignores cancel flag without a valid checkout id", () => {
     expect(
       parseCheckoutCancelReturn({
         cancelled: "1",
-        checkoutId: "not-a-uuid",
+        checkoutId: "not-a-wks-id",
       }),
     ).toEqual({
       isPaymentCancelled: false,

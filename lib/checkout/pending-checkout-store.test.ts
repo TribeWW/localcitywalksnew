@@ -59,7 +59,7 @@ const createInput = {
   handoffTokenDigest: "a".repeat(64),
 };
 
-const checkoutId = "550e8400-e29b-41d4-a716-446655440000";
+const checkoutId = "WKSAB12CD34E";
 
 function mockRedisClient() {
   getRedisMock.mockReturnValue({
@@ -91,9 +91,7 @@ describe("createPendingCheckout", () => {
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    expect(result.data.id).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-    );
+    expect(result.data.id).toMatch(/^WKS[A-Z0-9]{9}$/);
     expect(result.data.status).toBe("pending");
     expect(result.data).toMatchObject({
       productId: "1079932",
@@ -164,6 +162,31 @@ describe("getPendingCheckoutById", () => {
     mockGet.mockResolvedValue(record);
 
     await expect(getPendingCheckoutById(checkoutId)).resolves.toEqual(record);
+  });
+
+  it("parses legacy UUID checkout id records during rollout", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-18T21:00:00.000Z"));
+
+    const legacyId = "550e8400-e29b-41d4-a716-446655440000";
+    const record = {
+      id: legacyId,
+      status: "pending" as const,
+      productId: "1079932",
+      date: "2026-07-15",
+      startTimeId: 4252139,
+      participants: createInput.participants,
+      quoteSnapshot: quote,
+      contact: createInput.contact,
+      handoffTokenDigest: createInput.handoffTokenDigest,
+      createdAt: "2026-07-01T12:00:00.000Z",
+      expiresAt: "2026-07-01T12:30:00.000Z",
+    };
+    mockGet.mockResolvedValue(record);
+
+    await expect(getPendingCheckoutById(legacyId)).resolves.toEqual(record);
+
+    vi.useRealTimers();
   });
 
   it("parses pre-deploy records without handoffTokenDigest", async () => {
