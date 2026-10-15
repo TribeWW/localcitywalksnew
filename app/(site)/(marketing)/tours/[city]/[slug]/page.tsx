@@ -5,7 +5,14 @@ import type { SanityReviewListItem } from "@/types/review";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { BadgeCheck, Check, Clock, MessagesSquare, Users, Star } from "lucide-react";
+import {
+  BadgeCheck,
+  Check,
+  Clock,
+  MessagesSquare,
+  Users,
+  Star,
+} from "lucide-react";
 import { getTourDetailById } from "@/lib/tours/detail.actions";
 import {
   getAllReviewRatings,
@@ -455,25 +462,6 @@ export default async function TourPage({
               </div>
             </section>
 
-            <section className="mb-12" aria-labelledby="good-to-know-heading">
-              <h2
-                id="good-to-know-heading"
-                className="mb-4 text-xl font-semibold text-nightsky"
-              >
-                Good to know
-              </h2>
-              <ul className="list-disc space-y-2 pl-5 text-base leading-[1.6] text-foreground">
-                <li>Group size limited to 15 for an intimate experience.</li>
-                <li>
-                  Not suitable for participants with severe mobility
-                  restrictions on uneven terrain.
-                </li>
-                <li>
-                  Please inform us of any dietary requirements for the tasting.
-                </li>
-              </ul>
-            </section>
-
             <section
               id="inclusions"
               className="mb-12"
@@ -517,6 +505,25 @@ export default async function TourPage({
                     aria-hidden
                   />
                   <span>Personalized recommendations</span>
+                </li>
+              </ul>
+            </section>
+
+            <section className="mb-12" aria-labelledby="good-to-know-heading">
+              <h2
+                id="good-to-know-heading"
+                className="mb-4 text-xl font-semibold text-nightsky"
+              >
+                Good to know
+              </h2>
+              <ul className="list-disc space-y-2 pl-5 text-base leading-[1.6] text-foreground">
+                <li>Group size limited to 15 for an intimate experience.</li>
+                <li>
+                  Not suitable for participants with severe mobility
+                  restrictions on uneven terrain.
+                </li>
+                <li>
+                  Please inform us of any dietary requirements for the tasting.
                 </li>
               </ul>
             </section>
