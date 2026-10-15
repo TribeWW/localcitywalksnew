@@ -5,7 +5,7 @@ import type { SanityReviewListItem } from "@/types/review";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { BadgeCheck, Clock, MessagesSquare, Users, Star } from "lucide-react";
+import { BadgeCheck, Check, Clock, MessagesSquare, Users, Star } from "lucide-react";
 import { getTourDetailById } from "@/lib/tours/detail.actions";
 import {
   getAllReviewRatings,
@@ -474,6 +474,53 @@ export default async function TourPage({
               </ul>
             </section>
 
+            <section
+              id="inclusions"
+              className="mb-12"
+              aria-labelledby="inclusions-heading"
+            >
+              <h2
+                id="inclusions-heading"
+                className="mb-4 text-xl font-semibold text-nightsky"
+              >
+                Inclusions
+              </h2>
+              <ul className="space-y-2 text-base leading-[1.6] text-foreground">
+                <li className="flex items-center gap-3">
+                  <Check
+                    size={18}
+                    className="shrink-0 text-[#16A34A]"
+                    aria-hidden
+                  />
+                  <span>{cityDisplayName} walking tour</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check
+                    size={18}
+                    className="shrink-0 text-[#16A34A]"
+                    aria-hidden
+                  />
+                  <span>Private local guide</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check
+                    size={18}
+                    className="shrink-0 text-[#16A34A]"
+                    aria-hidden
+                  />
+                  <span>Local product sampling</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check
+                    size={18}
+                    className="shrink-0 text-[#16A34A]"
+                    aria-hidden
+                  />
+                  <span>Personalized recommendations</span>
+                </li>
+              </ul>
+            </section>
+
             <section aria-labelledby="cancellation-policy-heading">
               <h2
                 id="cancellation-policy-heading"
@@ -540,7 +587,7 @@ export default async function TourPage({
                   "Yes, we offer flexible scheduling. Simply contact us with your preferred time and we'll do our best to accommodate. Most guides can adjust within a 2-hour window of the listed start time.",
               },
               {
-                question: "Can I customize the experience?",
+                question: `Can I customize this ${cityDisplayName} walking tour?`,
                 answer:
                   "Absolutely. All our private tours can be tailored to your interests. Let us know what you'd like to focus on — food, history, architecture, hidden gems — and your guide will adapt the route.",
               },
