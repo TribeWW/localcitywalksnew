@@ -16,6 +16,9 @@ interface TourImageGalleryProps {
   title: string;
 }
 
+/** Instant jump; "instant" matches the ScrollToOptions value browsers accept. */
+const SCROLL_INSTANT = "instant" as ScrollBehavior;
+
 export default function TourImageGallery({
   images,
   title,
@@ -23,22 +26,34 @@ export default function TourImageGallery({
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const trackRef = useRef<HTMLDivElement | null>(null);
+  /** Index to jump to when the Dialog portal mounts the snap strip. */
+  const pendingOpenIndexRef = useRef<number | null>(null);
 
   const safeImages = useMemo(() => images.filter(Boolean), [images]);
   const canNavigate = safeImages.length > 1;
   /** Photos beyond the four mosaic slots (only relevant when we show all four previews). */
   const remainingAfterFour = Math.max(0, safeImages.length - 4);
 
+  function scrollTrackTo(index: number, behavior: ScrollBehavior) {
+    const track = trackRef.current;
+    if (!track) return false;
+    const bounded = Math.max(0, Math.min(index, safeImages.length - 1));
+    const width = track.clientWidth;
+    if (width <= 0) return false;
+    track.scrollTo({ left: bounded * width, behavior });
+    return true;
+  }
+
   function openAt(index: number) {
-    setActiveIndex(index);
+    const bounded = Math.max(0, Math.min(index, safeImages.length - 1));
+    pendingOpenIndexRef.current = bounded;
+    setActiveIndex(bounded);
     setOpen(true);
   }
 
   function goTo(index: number) {
-    if (!trackRef.current) return;
     const bounded = Math.max(0, Math.min(index, safeImages.length - 1));
-    const target = trackRef.current.children.item(bounded) as HTMLElement | null;
-    target?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+    scrollTrackTo(bounded, "smooth");
     setActiveIndex(bounded);
   }
 
@@ -52,11 +67,30 @@ export default function TourImageGallery({
     goTo((activeIndex - 1 + safeImages.length) % safeImages.length);
   }
 
-  useEffect(() => {
-    if (!open) return;
-    goTo(activeIndex);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  /**
+   * Radix Dialog mounts portal content after open flips true, so a plain
+   * useEffect often runs while trackRef is still null. A callback ref scrolls
+   * once the snap strip exists, without sliding through earlier photos.
+   */
+  function setTrackRef(node: HTMLDivElement | null) {
+    trackRef.current = node;
+    if (!node) return;
+
+    const index = pendingOpenIndexRef.current;
+    if (index == null) return;
+
+    const apply = () => {
+      if (trackRef.current !== node) return;
+      if (scrollTrackTo(index, SCROLL_INSTANT)) {
+        pendingOpenIndexRef.current = null;
+      }
+    };
+
+    apply();
+    if (pendingOpenIndexRef.current != null) {
+      requestAnimationFrame(apply);
+    }
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -275,7 +309,15 @@ export default function TourImageGallery({
         )}
       </section>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            pendingOpenIndexRef.current = null;
+          }
+          setOpen(nextOpen);
+        }}
+      >
         <DialogContent
           showCloseButton={false}
           className="top-0 left-0 h-screen w-screen max-w-[100vw] translate-x-0 translate-y-0 rounded-none border-0 bg-black/95 p-0 sm:max-w-[100vw]"
@@ -323,9 +365,9 @@ export default function TourImageGallery({
           </div>
 
           <div
-            ref={trackRef}
+            ref={setTrackRef}
             onScroll={onTrackScroll}
-            className="flex h-full w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden"
+            className="flex h-full w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {safeImages.map((url, index) => (
               <div
