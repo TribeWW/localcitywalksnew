@@ -28,6 +28,11 @@ export default function TourImageGallery({
   const trackRef = useRef<HTMLDivElement | null>(null);
   /** Index to jump to when the Dialog portal mounts the snap strip. */
   const pendingOpenIndexRef = useRef<number | null>(null);
+  /**
+   * While next/prev animates with smooth scroll, onScroll still reports the
+   * old photo. Hold the target index here and ignore those mid move updates.
+   */
+  const programmaticTargetRef = useRef<number | null>(null);
 
   const safeImages = useMemo(() => images.filter(Boolean), [images]);
   const canNavigate = safeImages.length > 1;
@@ -47,12 +52,14 @@ export default function TourImageGallery({
   function openAt(index: number) {
     const bounded = Math.max(0, Math.min(index, safeImages.length - 1));
     pendingOpenIndexRef.current = bounded;
+    programmaticTargetRef.current = null;
     setActiveIndex(bounded);
     setOpen(true);
   }
 
   function goTo(index: number) {
     const bounded = Math.max(0, Math.min(index, safeImages.length - 1));
+    programmaticTargetRef.current = bounded;
     scrollTrackTo(bounded, "smooth");
     setActiveIndex(bounded);
   }
@@ -113,9 +120,25 @@ export default function TourImageGallery({
     if (!trackRef.current) return;
     const width = trackRef.current.clientWidth;
     if (width <= 0) return;
-    const nextIndex = Math.round(trackRef.current.scrollLeft / width);
+    const nextIndex = Math.max(
+      0,
+      Math.min(
+        Math.round(trackRef.current.scrollLeft / width),
+        safeImages.length - 1,
+      ),
+    );
+
+    const programmaticTarget = programmaticTargetRef.current;
+    if (programmaticTarget != null) {
+      if (nextIndex === programmaticTarget) {
+        programmaticTargetRef.current = null;
+      }
+      // Keep the counter on the click target until the strip arrives.
+      return;
+    }
+
     if (nextIndex !== activeIndex) {
-      setActiveIndex(Math.max(0, Math.min(nextIndex, safeImages.length - 1)));
+      setActiveIndex(nextIndex);
     }
   }
 
@@ -314,6 +337,7 @@ export default function TourImageGallery({
         onOpenChange={(nextOpen) => {
           if (!nextOpen) {
             pendingOpenIndexRef.current = null;
+            programmaticTargetRef.current = null;
           }
           setOpen(nextOpen);
         }}

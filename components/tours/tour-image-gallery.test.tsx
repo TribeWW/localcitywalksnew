@@ -78,4 +78,30 @@ describe("TourImageGallery lightbox open index", () => {
       behavior: "smooth",
     });
   });
+
+  it("keeps the target counter during smooth next while scroll is still mid move", async () => {
+    render(<TourImageGallery images={images} title="Mulhouse walk" />);
+
+    fireEvent.click(screen.getByLabelText("Open image 3 fullscreen"));
+    await waitFor(() => {
+      expect(screen.getByText("3 / 7")).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByLabelText("Next image"));
+    await waitFor(() => {
+      expect(screen.getByText("4 / 7")).toBeTruthy();
+    });
+
+    const track = document.querySelector(".snap-x");
+    expect(track).toBeTruthy();
+
+    Object.defineProperty(track as HTMLElement, "scrollLeft", {
+      configurable: true,
+      value: 2 * trackWidth,
+    });
+    fireEvent.scroll(track as Element);
+
+    expect(screen.getByText("4 / 7")).toBeTruthy();
+    expect(screen.queryByText("3 / 7")).toBeNull();
+  });
 });
