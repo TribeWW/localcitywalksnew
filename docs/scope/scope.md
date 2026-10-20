@@ -1,8 +1,8 @@
 # Scope: LocalCityWalks
 
-LocalCityWalks is a site where visitors book local walking tours. This plan covers one small slice: an inclusions section on the tour page.
+LocalCityWalks is a site where visitors book local walking tours. This plan covers the next slice: home page review cards that show which city a review is about, so praise feels real and leads into the catalogue.
 
-**Build approach:** Tracer Bullet (a thin working path on the real tour page, with the live city name, before any later breadth).
+**Build approach:** Tracer Bullet (a thin working path on the real home reviews section, with live review data, before any later breadth).
 **Workflow:** Prototype (nothing extra after /develop; you rely on the build time self check and your own eye). The project default level of rigor. `/architect` is the recommended first stop for a feature with a real decision, but skippable when you already know the build. Any feature can carry its own tag (for example `· GA`) to do more or less.
 
 _These are recommendations to keep your build orderly, not requirements. Skip anything that does not fit: if you already know how to build a feature, use `/develop` and skip `/architect`. You decide when a feature is `done`._
@@ -13,12 +13,18 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 |---|---------|-------|--------|
 | 1 | Tour detail page | Existing | existing |
 | 2 | Inclusions section | Slice 1 | done |
+| 3 | Home reviews section | Existing | existing |
+| 4 | Home review cards with city context | Slice 2 | planned |
 
 ## Existing
 
 ### 1. Tour detail page · existing
 The tour page visitors already use, including the hello banner, Good to know, cancellation, booking, and FAQ.
 code in `app/(site)/(marketing)/tours/[city]/[slug]/page.tsx`
+
+### 3. Home reviews section · existing
+The home page already loads recent reviews into a carousel style section and renders them with the shared review card.
+code in `components/home/Reviews.tsx` · `components/reviews/HomeReviewsCarousel.tsx` · `components/reviews/ReviewCard.tsx`
 
 ## Slice 1: Inclusions
 
@@ -28,11 +34,22 @@ Show the same inclusions list on every tour page, under Good to know, so visitor
 - [x] `/develop inclusions section`
 code in `app/(site)/(marketing)/tours/[city]/[slug]/page.tsx`
 
+## Slice 2: Home review cards
+
+### 4. Home review cards with city context · planned · needs a decision
+On the home page only, each review card names the city the walk was about and links into the catalogue, so visitors get proof from a real place and a path to book. Rating only reviews (stars with no written text) stay off the home page. Tour name as the main cue, reuse on tour or region pages, and extras like reviewer country stay for design or a later pass.
+**Done when:** the home page review carousel shows only reviews that have written text; each card shows the city name and links into the catalogue for that city; empty looking rating only cards no longer appear there; tour detail review cards are unchanged.
+- [ ] Design it (spec): `/architect home review cards with city context`
+
 ## Deferred
-Out of scope for this pass, kept so the plan stays honest.
+Out of scope for the current build pass, kept so the plan stays honest.
 - **Not included rows**: a line with a cross for something the tour leaves out, such as entry tickets
 - **Per tour lists**: inclusions that can differ from one tour to another
 - **FAQ wording**: the entrance tickets answer still tells visitors to look for a "What's included" section
+- **Tour name as the main cue**: city is the first ship; tour title can follow if design asks for it
+- **Shared card on tour or region pages**: this slice stays home page only
+- **Review collection or storage**: how reviews are gathered and saved stays as it is
+- **Tour detail review cards**: leave them alone unless a later design reopens reuse
 
 ## Legend
 
