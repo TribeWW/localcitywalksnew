@@ -514,6 +514,19 @@ export default async function TourPage({
                 id="good-to-know-heading"
                 className="mb-4 text-xl font-semibold text-nightsky"
               >
+                What to bring
+              </h2>
+              <ul className="list-disc space-y-2 pl-5 text-base leading-[1.6] text-foreground">
+                <li>Weather-appropriate clothing</li>
+                <li>Comfortable shoes</li>
+              </ul>
+            </section>
+
+            <section className="mb-12" aria-labelledby="good-to-know-heading">
+              <h2
+                id="good-to-know-heading"
+                className="mb-4 text-xl font-semibold text-nightsky"
+              >
                 Good to know
               </h2>
               <ul className="list-disc space-y-2 pl-5 text-base leading-[1.6] text-foreground">
