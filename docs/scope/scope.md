@@ -15,6 +15,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 2 | Inclusions section | Slice 1 | done |
 | 3 | Home reviews section | Existing | existing |
 | 4 | Home review cards with city context | Slice 2 | planned |
+| 5 | Tour photo lightbox | Slice 3 | planned |
 
 ## Existing
 
@@ -41,6 +42,13 @@ On the home page only, each review card names the city the walk was about and li
 **Done when:** the home page review carousel shows only reviews that have written text; each card shows the city name and links into the catalogue for that city; empty looking rating only cards no longer appear there; tour detail review cards are unchanged.
 - [ ] Design it (spec): `/architect home review cards with city context`
 
+## Slice 3: Tour photo lightbox
+
+### 5. Tour photo lightbox · planned · needs a decision
+Redesign the tour page photo lightbox on top of the open on the right photo fix, keeping the shared dialog, and fit the outside ticket to this gallery (tokens, thumbnail images, and how browsing stays in sync). The tour request modal stays as it is.
+**Done when:** every grid photo and the extra photos badge open on that photo, with the counter and active thumbnail matching; arrows, arrow keys, swipe, and thumbnails stay in sync; Escape, the close button, and a click on the empty black area close it, and a click on the photo or thumbnails leaves it open; with many photos the row stays centred, opens on the active thumbnail (including when you reopen), scrolls with the mouse wheel, shows a fade only where thumbnails are hidden, and loads small images; focus does not jump to close while browsing; on a phone the row sits under the photo and clears the home indicator, swipe moves one photo and does not move the page or go back, landscape and portrait photos do not shift the row, and turning the phone sideways hides the row while keeping the same photo centred; the badge stays on one line; lightbox controls and the badge share one control style, and the lightbox uses the shared modal layer.
+- [ ] Design it (spec): `/architect tour photo lightbox`
+
 ## Deferred
 Out of scope for the current build pass, kept so the plan stays honest.
 - **Not included rows**: a line with a cross for something the tour leaves out, such as entry tickets
@@ -50,6 +58,7 @@ Out of scope for the current build pass, kept so the plan stays honest.
 - **Shared card on tour or region pages**: this slice stays home page only
 - **Review collection or storage**: how reviews are gathered and saved stays as it is
 - **Tour detail review cards**: leave them alone unless a later design reopens reuse
+- **Tour request modal layer**: leave the tour request modal layer as written; the lightbox slice does not change it
 
 ## Legend
 
