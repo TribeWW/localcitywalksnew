@@ -511,7 +511,7 @@ export default async function TourPage({
 
             <section className="mb-12" aria-labelledby="good-to-know-heading">
               <h2
-                id="good-to-know-heading"
+                id="what-to-bring-heading"
                 className="mb-4 text-xl font-semibold text-nightsky"
               >
                 What to bring
