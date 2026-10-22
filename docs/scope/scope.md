@@ -14,7 +14,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 1 | Tour detail page | Existing | existing |
 | 2 | Inclusions section | Slice 1 | done |
 | 3 | Home reviews section | Existing | existing |
-| 4 | Home review cards with city context | Slice 2 | planned |
+| 4 | Home review cards with city context | Slice 2 | in-progress |
 | 5 | Tour photo lightbox | Slice 3 | planned |
 
 ## Existing
@@ -37,10 +37,15 @@ code in `app/(site)/(marketing)/tours/[city]/[slug]/page.tsx`
 
 ## Slice 2: Home review cards
 
-### 4. Home review cards with city context · planned · needs a decision
-On the home page only, each review card names the city the walk was about and links into the catalogue, so visitors get proof from a real place and a path to book. Rating only reviews (stars with no written text) stay off the home page. Tour name as the main cue, reuse on tour or region pages, and extras like reviewer country stay for design or a later pass.
-**Done when:** the home page review carousel shows only reviews that have written text; each card shows the city name and links into the catalogue for that city; empty looking rating only cards no longer appear there; tour detail review cards are unchanged.
-- [ ] Design it (spec): `/architect home review cards with city context`
+### 4. Home review cards with city context · in-progress
+On the home page only, each review card names the city and country the walk was about and links into the catalogue, so visitors get proof from a real place and a path to book. Rating only reviews (stars with no written text) stay off the home page. Tour name as the main cue and reuse on tour or region pages stay for a later pass.
+**Done when:** the home page review carousel shows only reviews that have written text; each card shows `{city}, {country}` linking to that city’s catalogue tour path; empty looking rating only cards no longer appear there; tour detail review cards are unchanged.
+- [x] Design it (spec): `/architect home review cards with city context`
+- [ ] Build it: `/develop home review cards with city context`
+   - [ ] Server enrich and filter (24 → ≤12, text + unique city/country match): AC-1, AC-3, AC-4, AC-7
+   - [ ] Home ReviewCard mockup layout, place Link, clamp / Read more: AC-2, AC-5, AC-6
+   - [ ] Unit tests for match, filter, and caps: AC-1, AC-3, AC-7
+spec [0001](../specs/0001-home-review-cards-city.md)
 
 ## Slice 3: Tour photo lightbox
 
