@@ -4,7 +4,7 @@ import { ContactInfo } from "@/components/contact/ContactInfo";
 
 const ContactSection: React.FC = () => {
   return (
-    <section id="contact" className="w-full bg-pearl-gray px-6 py-16">
+    <section id="contact" className="w-full px-6 py-16 bg-white">
       <div className="mx-auto max-w-[1140px]">
         <div className="mb-12 text-center">
           <h2 className="mb-3 text-[32px] font-bold leading-[1.3] text-nightsky">

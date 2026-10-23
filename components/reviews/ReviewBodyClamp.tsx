@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -54,7 +55,13 @@ export function ReviewBodyClamp({
   }, [text, expanded, clampClass]);
 
   return (
-    <div className={cn("relative mt-0 flex flex-col", className)}>
+    <div
+      className={cn(
+        "relative mt-0 flex min-h-[calc((var(--review-clamp-lines)+1)*1lh)] flex-col text-sm leading-[1.6]",
+        className,
+      )}
+      style={{ "--review-clamp-lines": maxLines }}
+    >
       <p
         ref={textRef}
         className={cn(
@@ -69,9 +76,16 @@ export function ReviewBodyClamp({
           type="button"
           aria-expanded={expanded}
           onClick={() => setExpanded((e) => !e)}
-          className="mt-1 hover:cursor-pointer inline-flex items-center self-start py-1 text-sm font-medium text-nightsky underline decoration-1 underline-offset-[3px] hover:opacity-90 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nightsky focus-visible:ring-offset-2"
+          className="inline-flex items-center gap-1 self-start border-0 bg-transparent p-0 text-left font-inherit text-sm leading-[1.6] text-foreground hover:cursor-pointer"
         >
-          {expanded ? "Show less" : "Read more"}
+          <span className="hover:underline decoration-1 underline-offset-[3px]">
+            {expanded ? "Show less" : "Read more"}
+          </span>
+          {expanded ? (
+            <ChevronUp className="size-3.5 shrink-0" aria-hidden />
+          ) : (
+            <ChevronDown className="size-3.5 shrink-0" aria-hidden />
+          )}
         </button>
       ) : null}
     </div>

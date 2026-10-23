@@ -67,7 +67,12 @@ export function ReviewsSection(props: ReviewsSectionProps) {
                 className="size-5 shrink-0 fill-[#0F172A] text-[#0F172A]"
                 aria-hidden
               />
-              <span>({avg.toFixed(1)}) average rating across Europe</span>
+              <span className="font-semibold text-grapes">
+                {avg.toFixed(1)}
+              </span>
+              <span className="font-normal">
+                average rating from travellers across Europe
+              </span>
             </p>
           </div>
           <HomeReviewsCarousel reviews={props.reviews} />
