@@ -41,11 +41,12 @@ code in `app/(site)/(marketing)/tours/[city]/[slug]/page.tsx`
 On the home page only, each review card names the city and country the walk was about and links into the catalogue, so visitors get proof from a real place and a path to book. Rating only reviews (stars with no written text) stay off the home page. Tour name as the main cue and reuse on tour or region pages stay for a later pass.
 **Done when:** the home page review carousel shows only reviews that have written text; each card shows `{city}, {country}` linking to that city’s catalogue tour path; empty looking rating only cards no longer appear there; tour detail review cards are unchanged.
 - [x] Design it (spec): `/architect home review cards with city context`
-- [ ] Build it: `/develop home review cards with city context`
-   - [ ] Server enrich and filter (24 → ≤12, text + unique city/country match): AC-1, AC-3, AC-4, AC-7
-   - [ ] Home ReviewCard mockup layout, place Link, clamp / Read more: AC-2, AC-5, AC-6
-   - [ ] Unit tests for match, filter, and caps: AC-1, AC-3, AC-7
+- [x] Build it: `/develop home review cards with city context`
+   - [x] Server enrich and filter (24 → ≤12, text + unique city/country match): AC-1, AC-3, AC-4, AC-7
+   - [x] Home ReviewCard mockup layout, place Link, clamp / Read more: AC-2, AC-5, AC-6
+   - [x] Unit tests for match, filter, and caps: AC-1, AC-3, AC-7
 spec [0001](../specs/0001-home-review-cards-city.md)
+code in `lib/reviews/home-reviews.ts` · `components/home/Reviews.tsx` · `components/reviews/ReviewCard.tsx`
 
 ## Slice 3: Tour photo lightbox
 

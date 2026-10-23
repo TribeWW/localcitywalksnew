@@ -67,8 +67,9 @@ export function ReviewBodyClamp({
       {showToggle ? (
         <button
           type="button"
+          aria-expanded={expanded}
           onClick={() => setExpanded((e) => !e)}
-          className="mt-2 self-start text-sm font-medium text-[#0F172A] underline decoration-1 underline-offset-[3px] hover:opacity-90"
+          className="mt-1 hover:cursor-pointer inline-flex items-center self-start py-1 text-sm font-medium text-nightsky underline decoration-1 underline-offset-[3px] hover:opacity-90 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nightsky focus-visible:ring-offset-2"
         >
           {expanded ? "Show less" : "Read more"}
         </button>

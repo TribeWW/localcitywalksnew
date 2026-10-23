@@ -2,7 +2,7 @@
 
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { SanityReviewListItem } from "@/types/review";
+import type { HomeReviewListItem } from "@/types/review";
 import { ReviewCard } from "./ReviewCard";
 
 const GAP_PX = 24;
@@ -33,7 +33,7 @@ function useCarouselPageSize(): 1 | 2 | 3 {
 }
 
 type HomeReviewsCarouselProps = {
-  reviews: SanityReviewListItem[];
+  reviews: HomeReviewListItem[];
 };
 
 /**

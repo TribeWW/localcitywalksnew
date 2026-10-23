@@ -1,5 +1,5 @@
 import { Star } from "lucide-react";
-import type { SanityReviewListItem } from "@/types/review";
+import type { HomeReviewListItem, SanityReviewListItem } from "@/types/review";
 import {
   meanStarRating,
   starDistribution,
@@ -11,13 +11,21 @@ import { TourReviewsExpandableList } from "./TourReviewsExpandableList";
 
 export type ReviewsSectionVariant = "home" | "tour" | "fallback";
 
-type ReviewsSectionProps = {
+type ReviewsSectionShared = {
   title: string;
-  reviews: SanityReviewListItem[];
   /** Pre-aggregated left-column summary; when missing or empty, uses `reviews`. */
   summary?: ReviewRatingSummary | null;
-  variant?: ReviewsSectionVariant;
 };
+
+type ReviewsSectionProps =
+  | (ReviewsSectionShared & {
+      variant: "home";
+      reviews: HomeReviewListItem[];
+    })
+  | (ReviewsSectionShared & {
+      variant?: "tour" | "fallback";
+      reviews: SanityReviewListItem[];
+    });
 
 /**
  * Render a reviews section using one of three layouts depending on `variant`.
@@ -30,23 +38,17 @@ type ReviewsSectionProps = {
  * @param variant - Layout variant: `"home"` | `"tour"` | `"fallback"` (defaults to `"tour"`)
  * @returns The section element for the selected layout, or `null` when there are no reviews or the variant does not match a supported layout
  */
-export function ReviewsSection({
-  title,
-  reviews,
-  summary,
-  variant = "tour",
-}: ReviewsSectionProps) {
+export function ReviewsSection(props: ReviewsSectionProps) {
+  const { title, reviews, summary } = props;
   if (reviews.length === 0) return null;
 
-  const isHome = variant === "home";
-  const isTourLayout = variant === "tour" || variant === "fallback";
   const precomputed =
     summary != null && summary.totalCount > 0 ? summary : null;
   const avg = precomputed
     ? precomputed.meanDisplayStars
     : meanStarRating(reviews);
 
-  if (isHome) {
+  if (props.variant === "home") {
     return (
       <section
         className="w-full bg-white px-6 py-16"
@@ -68,13 +70,15 @@ export function ReviewsSection({
               <span>({avg.toFixed(1)}) average rating across Europe</span>
             </p>
           </div>
-          <HomeReviewsCarousel reviews={reviews} />
+          <HomeReviewsCarousel reviews={props.reviews} />
         </div>
       </section>
     );
   }
 
-  if (isTourLayout) {
+  const variant = props.variant ?? "tour";
+
+  if (variant === "tour" || variant === "fallback") {
     const summaryTotal = precomputed ? precomputed.totalCount : reviews.length;
     const distribution = precomputed
       ? precomputed.distribution
