@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useMemo, useRef } from "react";
+import posthog from "posthog-js";
 import CityCard from "@/components/cards/CityCard";
 import {
   Select,
@@ -84,9 +85,15 @@ export default function ExploreCatalogClient({
 
   const handleShowMore = useCallback(async () => {
     if (hasMoreFilteredToShow) {
-      setVisibleCount((prev) =>
-        Math.min(prev + PAGE_SIZE, accumulatedList.length),
+      const nextVisibleCount = Math.min(
+        visibleCount + PAGE_SIZE,
+        accumulatedList.length,
       );
+      setVisibleCount(nextVisibleCount);
+      posthog.capture("explore_more_tours_loaded", {
+        source: "loaded_results",
+        visible_count: nextVisibleCount,
+      });
       return;
     }
     if (!hasMorePages || loadingMore) return;
@@ -110,6 +117,11 @@ export default function ExploreCatalogClient({
         if (result.totalHits != null) setTotalHitsView(result.totalHits);
         setVisibleCount((prev) => prev + enriched.length);
         setCurrentPage(nextPage);
+        posthog.capture("explore_more_tours_loaded", {
+          source: "next_page",
+          page: nextPage,
+          tours_loaded: enriched.length,
+        });
       }
     } finally {
       if (reqId === refreshRequestId.current) setLoadingMore(false);
@@ -119,6 +131,7 @@ export default function ExploreCatalogClient({
     hasMorePages,
     hasMoreFilteredToShow,
     loadingMore,
+    visibleCount,
     accumulatedList.length,
     selectedCountryCodes,
     sortAscending,
@@ -156,6 +169,10 @@ export default function ExploreCatalogClient({
           setVisibleCount(PAGE_SIZE);
           setCurrentPage(1);
           if (result.totalHits != null) setTotalHitsView(result.totalHits);
+          posthog.capture("explore_filter_changed", {
+            country_count: countryCodes.length,
+            result_count: result.totalHits ?? enriched.length,
+          });
         } else {
           setSelectedCountryCodes(previousCodes);
         }

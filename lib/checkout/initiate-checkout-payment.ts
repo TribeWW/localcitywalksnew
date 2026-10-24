@@ -6,8 +6,14 @@
  * `initiateCheckoutPayment` server action — no `"use server"` here.
  */
 
+import { SeverityNumber } from "@opentelemetry/api-logs";
 import { computeTourBookingQuote } from "@/lib/booking/widget.actions";
 import { promoCode as promoCodeFlag } from "@/flags";
+import {
+  flushPostHogLogs,
+  posthogIntegrationLogger,
+} from "@/instrumentation";
+import { getPostHogClient } from "@/lib/posthog-server";
 import {
   BOOKING_WIDGET_PRICE_MISMATCH_ERROR,
   clientQuoteMatchesServer,
@@ -49,6 +55,38 @@ export const CHECKOUT_HANDOFF_INVALID_ERROR =
 /** User-facing error when the handoff token expired. */
 export const CHECKOUT_HANDOFF_EXPIRED_ERROR =
   "This checkout link has expired. Please return to the tour page and start again.";
+
+/** Cap a telemetry flush so a stall cannot outlive this window. */
+const CHECKOUT_TELEMETRY_FLUSH_TIMEOUT_MS = 1_000;
+
+/**
+ * Returns a bounded flush promise. `flush` runs only when that promise starts,
+ * so callers can register the work with `after()` before any telemetry I/O.
+ * Failures are logged and a stall settles at the timeout.
+ */
+function flushCheckoutTelemetry(flush: () => Promise<unknown>): Promise<void> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<void>((resolve) => {
+    timeoutId = setTimeout(resolve, CHECKOUT_TELEMETRY_FLUSH_TIMEOUT_MS);
+  });
+
+  return Promise.race([
+    Promise.resolve()
+      .then(flush)
+      .then(
+        () => undefined,
+        (error: unknown) => {
+          console.warn(
+            "[checkout-payment] telemetry flush failed",
+            error instanceof Error ? error.message : String(error),
+          );
+        },
+      ),
+    timeout,
+  ]).finally(() => {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  });
+}
 
 /**
  * Maps Bókun reserve failures to customer-facing copy.
@@ -167,6 +205,11 @@ export async function releaseBokunReservationAfterPaymentFailure(
 export interface ExecuteInitiateCheckoutPaymentOptions {
   /** Resolved public origin for Stripe success/cancel redirects. */
   checkoutOrigin?: string;
+  /**
+   * Schedules work after the Stripe redirect is returned. The checkout action
+   * passes Next.js `after()` so telemetry is tracked without delaying Pay.
+   */
+  scheduleAfterResponse?: (task: () => Promise<void>) => void;
 }
 
 /**
@@ -394,6 +437,43 @@ export async function executeInitiateCheckoutPayment(
       amount: appliedQuote.totalAmount,
       currency: appliedQuote.currency,
     });
+
+    const scheduleAfterResponse =
+      options?.scheduleAfterResponse ??
+      ((task: () => Promise<void>) => {
+        void task();
+      });
+
+    const posthog = getPostHogClient();
+    if (posthog) {
+      posthog.capture({
+        distinctId: checkoutId,
+        event: "checkout_payment_started",
+        properties: {
+          product_id: payload.productId,
+          has_promo: Boolean(promoCodeToApply),
+          amount: appliedQuote.totalAmount,
+          currency: appliedQuote.currency,
+        },
+      });
+      scheduleAfterResponse(() =>
+        flushCheckoutTelemetry(() => posthog.flush()),
+      );
+    }
+
+    posthogIntegrationLogger.emit({
+      body: "Checkout payment session created",
+      severityNumber: SeverityNumber.INFO,
+      attributes: {
+        event: "checkout_payment_session_created",
+        checkout_id: checkoutId,
+        product_id: payload.productId,
+        has_promo: Boolean(promoCodeToApply),
+        amount: appliedQuote.totalAmount,
+        currency: appliedQuote.currency,
+      },
+    });
+    scheduleAfterResponse(() => flushCheckoutTelemetry(() => flushPostHogLogs()));
 
     return {
       success: true,

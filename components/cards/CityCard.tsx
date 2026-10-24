@@ -8,6 +8,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Star } from "lucide-react";
+import posthog from "posthog-js";
 import { upsizeBokunCardImageUrl } from "@/lib/bokun/pick-bokun-card-image-url";
 import { slugifyForUrl } from "@/lib/utils";
 import {
@@ -39,7 +40,16 @@ function LegacyCityCardItem({
 }) {
   return (
     <div className="w-full overflow-hidden rounded-xl bg-white shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-lg">
-      <Link href={href} className="block">
+      <Link
+        href={href}
+        className="block"
+        onClick={() =>
+          posthog.capture("tour_card_selected", {
+            tour_path: href,
+            card_variant: "legacy",
+          })
+        }
+      >
         <div className="relative aspect-[3/2] w-full">
           <Image
             src={image}
@@ -93,6 +103,12 @@ function MinimalCityCardItem({
     <Link
       href={href}
       className="group block w-full cursor-pointer rounded-xl shadow-sm transition-transform duration-200 ease-in-out hover:-translate-y-1 hover:shadow-xl"
+      onClick={() =>
+        posthog.capture("tour_card_selected", {
+          tour_path: href,
+          card_variant: "enriched",
+        })
+      }
     >
       <div className="relative aspect-[3/2] overflow-hidden rounded-xl md:aspect-[4/5]">
         <Image

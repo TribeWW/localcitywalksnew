@@ -4,6 +4,7 @@ import React, { useCallback, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import posthog from "posthog-js";
 import TourRequestConfigureStep from "@/components/forms/TourRequestConfigureStep";
 import TourRequestContactStep from "@/components/forms/TourRequestContactStep";
 import TourRequestSuccessToast from "@/components/forms/TourRequestSuccessToast";
@@ -173,6 +174,13 @@ const TourRequestForm = ({
         consent: values.consent,
       });
 
+      posthog.capture("custom_tour_request_submitted", {
+        participant_count:
+          values.adults + values.youth + values.children + values.infants,
+        has_preferred_date: Boolean(values.preferredDate),
+        presentation,
+      });
+
       if (onSuccess) {
         onSuccess();
       } else {
@@ -182,6 +190,7 @@ const TourRequestForm = ({
 
       resetForm();
     } catch (error) {
+      posthog.captureException(error);
       console.error("Submission error:", error);
       setSubmitError(SUBMIT_EMAIL_FAILURE_ERROR);
     } finally {

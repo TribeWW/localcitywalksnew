@@ -14,8 +14,8 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 1 | Tour detail page | Existing | existing |
 | 2 | Inclusions section | Slice 1 | done |
 | 3 | Home reviews section | Existing | existing |
-| 4 | Home review cards with city context | Slice 2 | planned |
-| 5 | Tour photo lightbox | Slice 3 | planned |
+| 4 | Home review cards with city context | Slice 2 | in-progress |
+| 5 | Tour photo lightbox | Slice 3 | in-progress |
 
 ## Existing
 
@@ -37,17 +37,27 @@ code in `app/(site)/(marketing)/tours/[city]/[slug]/page.tsx`
 
 ## Slice 2: Home review cards
 
-### 4. Home review cards with city context · planned · needs a decision
-On the home page only, each review card names the city the walk was about and links into the catalogue, so visitors get proof from a real place and a path to book. Rating only reviews (stars with no written text) stay off the home page. Tour name as the main cue, reuse on tour or region pages, and extras like reviewer country stay for design or a later pass.
-**Done when:** the home page review carousel shows only reviews that have written text; each card shows the city name and links into the catalogue for that city; empty looking rating only cards no longer appear there; tour detail review cards are unchanged.
-- [ ] Design it (spec): `/architect home review cards with city context`
+### 4. Home review cards with city context · in-progress
+On the home page only, each review card names the city and country the walk was about and links into the catalogue, so visitors get proof from a real place and a path to book. Rating only reviews (stars with no written text) stay off the home page. Tour name as the main cue and reuse on tour or region pages stay for a later pass.
+**Done when:** the home page review carousel shows only reviews that have written text; each card shows `{city}, {country}` linking to that city’s catalogue tour path; empty looking rating only cards no longer appear there; tour detail review cards are unchanged.
+- [x] Design it (spec): `/architect home review cards with city context`
+- [ ] Build it: `/develop home review cards with city context`
+   - [ ] Server enrich and filter (24 → ≤12, text + unique city/country match): AC-1, AC-3, AC-4, AC-7
+   - [ ] Home ReviewCard mockup layout, place Link, clamp / Read more: AC-2, AC-5, AC-6
+   - [ ] Unit tests for match, filter, and caps: AC-1, AC-3, AC-7
+spec [0001](../specs/0001-home-review-cards-city.md)
 
 ## Slice 3: Tour photo lightbox
 
-### 5. Tour photo lightbox · planned · needs a decision
+### 5. Tour photo lightbox · in-progress
 Redesign the tour page photo lightbox on top of the open on the right photo fix, keeping the shared dialog, and fit the outside ticket to this gallery (tokens, thumbnail images, and how browsing stays in sync). The tour request modal stays as it is.
-**Done when:** every grid photo and the extra photos badge open on that photo, with the counter and active thumbnail matching; arrows, arrow keys, swipe, and thumbnails stay in sync; Escape, the close button, and a click on the empty black area close it, and a click on the photo or thumbnails leaves it open; with many photos the row stays centred, opens on the active thumbnail (including when you reopen), scrolls with the mouse wheel, shows a fade only where thumbnails are hidden, and loads small images; focus does not jump to close while browsing; on a phone the row sits under the photo and clears the home indicator, swipe moves one photo and does not move the page or go back, landscape and portrait photos do not shift the row, and turning the phone sideways hides the row while keeping the same photo centred; the badge stays on one line; lightbox controls and the badge share one control style, and the lightbox uses the shared modal layer.
-- [ ] Design it (spec): `/architect tour photo lightbox`
+**Done when:** every grid photo and the extra photos badge open on that photo, with the counter and active thumbnail matching; arrows, arrow keys, swipe, and thumbnails stay in sync and wrap; Escape, the close button, and a click on the empty black area close it, and a click on the photo or thumbnails leaves it open; from 768px up the thumbnail row stays centred, opens on the active thumbnail (including when you reopen), scrolls with the mouse wheel, shows a fade only where thumbnails are hidden, and loads small images; focus does not jump to close while browsing; under 768px there is no thumbnail row and no arrows, swipe moves one photo and does not move the page or go back, and the photo clears the home indicator; both badges stay on one line and share the frosted control surface with close and the arrows; the lightbox uses the shared dialog. The tour request modal stays as it is.
+- [x] Design it (spec): `/architect tour photo lightbox`
+- [ ] Build it: `/develop tour photo lightbox`
+   - [ ] Lightbox shell on the live gallery (tokens, open, move, close, phone frame): AC-1, AC-2, AC-3, AC-5, AC-6, AC-8, AC-10
+   - [ ] Desktop thumbnail row (small images, centre, wheel, fade): AC-4, AC-5, AC-7
+   - [ ] Grid badges on one line with the frosted control surface: AC-9
+spec [0002](../specs/0002-tour-photo-lightbox.md)
 
 ## Deferred
 Out of scope for the current build pass, kept so the plan stays honest.
