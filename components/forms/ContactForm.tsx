@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import posthog from "posthog-js";
 import {
   Form,
   FormControl,
@@ -114,9 +115,13 @@ const ContactForm = ({ showHeading = false, className }: ContactFormProps) => {
         description:
           "We'll get back to you within one business day. Please also check your spam folder, just in case.",
       });
+      posthog.capture("contact_form_submitted", {
+        subject_category: values.subject,
+      });
 
       form.reset();
     } catch (error) {
+      posthog.captureException(error);
       toast("Failed to send message. Please try again later. " + error, {
         className: "bg-destructive text-white",
       });

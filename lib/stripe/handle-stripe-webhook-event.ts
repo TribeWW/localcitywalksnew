@@ -6,15 +6,47 @@
  * other event types.
  */
 
+import { SeverityNumber } from "@opentelemetry/api-logs";
 import type Stripe from "stripe";
 
+import {
+  flushPostHogLogs,
+  posthogIntegrationLogger,
+} from "@/instrumentation";
 import { fulfilPaidCheckout } from "@/lib/checkout/fulfil-paid-checkout";
 import { handleCheckoutSessionCompleted } from "@/lib/checkout/handle-checkout-session-completed";
+import { getPostHogClient } from "@/lib/posthog-server";
 import { recordPaidFulfilmentFailure } from "@/lib/checkout/pending-checkout-store";
 import {
   claimStripeWebhookEvent,
   releaseStripeWebhookEventClaim,
 } from "@/lib/stripe/stripe-webhook-idempotency";
+
+async function captureCheckoutPaymentCompleted(
+  checkoutId: string,
+  alreadyPaid: boolean,
+): Promise<void> {
+  const posthog = getPostHogClient();
+  if (posthog) {
+    posthog.capture({
+      distinctId: checkoutId,
+      event: "checkout_payment_completed",
+      properties: { already_paid: alreadyPaid },
+    });
+    await posthog.flush();
+  }
+
+  posthogIntegrationLogger.emit({
+    body: "Checkout payment fulfilled",
+    severityNumber: SeverityNumber.INFO,
+    attributes: {
+      event: "checkout_payment_fulfilled",
+      checkout_id: checkoutId,
+      already_paid: alreadyPaid,
+    },
+  });
+  await flushPostHogLogs();
+}
 
 export type HandleStripeWebhookEventResult =
   | {
@@ -72,6 +104,10 @@ export async function handleStripeWebhookEvent(
   // Only the delivery that won the atomic claim advances to Bókun fulfilment;
   // a concurrent loser acknowledges without re-confirming the reservation.
   if (!paymentResult.shouldFulfil) {
+    await captureCheckoutPaymentCompleted(
+      paymentResult.checkoutId,
+      paymentResult.alreadyPaid,
+    );
     return {
       success: true,
       action: "checkout_paid",
@@ -108,6 +144,11 @@ export async function handleStripeWebhookEvent(
     await releaseStripeWebhookEventClaim(event.id);
     return fulfilmentResult;
   }
+
+  await captureCheckoutPaymentCompleted(
+    paymentResult.checkoutId,
+    paymentResult.alreadyPaid,
+  );
 
   return {
     success: true,

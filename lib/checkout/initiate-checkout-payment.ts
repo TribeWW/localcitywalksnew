@@ -6,8 +6,14 @@
  * `initiateCheckoutPayment` server action — no `"use server"` here.
  */
 
+import { SeverityNumber } from "@opentelemetry/api-logs";
 import { computeTourBookingQuote } from "@/lib/booking/widget.actions";
 import { promoCode as promoCodeFlag } from "@/flags";
+import {
+  flushPostHogLogs,
+  posthogIntegrationLogger,
+} from "@/instrumentation";
+import { getPostHogClient } from "@/lib/posthog-server";
 import {
   BOOKING_WIDGET_PRICE_MISMATCH_ERROR,
   clientQuoteMatchesServer,
@@ -394,6 +400,35 @@ export async function executeInitiateCheckoutPayment(
       amount: appliedQuote.totalAmount,
       currency: appliedQuote.currency,
     });
+
+    const posthog = getPostHogClient();
+    if (posthog) {
+      posthog.capture({
+        distinctId: checkoutId,
+        event: "checkout_payment_started",
+        properties: {
+          product_id: payload.productId,
+          has_promo: Boolean(promoCodeToApply),
+          amount: appliedQuote.totalAmount,
+          currency: appliedQuote.currency,
+        },
+      });
+      await posthog.flush();
+    }
+
+    posthogIntegrationLogger.emit({
+      body: "Checkout payment session created",
+      severityNumber: SeverityNumber.INFO,
+      attributes: {
+        event: "checkout_payment_session_created",
+        checkout_id: checkoutId,
+        product_id: payload.productId,
+        has_promo: Boolean(promoCodeToApply),
+        amount: appliedQuote.totalAmount,
+        currency: appliedQuote.currency,
+      },
+    });
+    await flushPostHogLogs();
 
     return {
       success: true,

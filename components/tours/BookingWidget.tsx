@@ -18,6 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { useForm, type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
+import posthog from "posthog-js";
 import {
   getTourAvailabilities,
   getTourBookingQuote,
@@ -569,8 +570,15 @@ export default function BookingWidget({
         return;
       }
 
+      posthog.capture("booking_checkout_started", {
+        product_id: productId,
+        total_amount: quote.totalAmount,
+        currency: quote.currency,
+        participant_count: totalParticipants,
+      });
       window.location.assign(result.redirectUrl);
     } catch (error) {
+      posthog.captureException(error);
       console.error("Booking widget checkout handoff error:", error);
       toast.error("Unable to continue to checkout. Please try again later.");
     } finally {
