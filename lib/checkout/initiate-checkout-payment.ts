@@ -56,6 +56,36 @@ export const CHECKOUT_HANDOFF_INVALID_ERROR =
 export const CHECKOUT_HANDOFF_EXPIRED_ERROR =
   "This checkout link has expired. Please return to the tour page and start again.";
 
+/** Cap a detached telemetry flush so a stall cannot outlive this window. */
+const CHECKOUT_TELEMETRY_FLUSH_TIMEOUT_MS = 1_000;
+
+/**
+ * Runs a telemetry flush outside the checkout result.
+ * Failures are logged and a stall settles at the timeout, so neither can
+ * enter the payment error path or delay the Stripe redirect.
+ */
+function flushCheckoutTelemetry(flush: Promise<unknown>): void {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<void>((resolve) => {
+    timeoutId = setTimeout(resolve, CHECKOUT_TELEMETRY_FLUSH_TIMEOUT_MS);
+  });
+
+  void Promise.race([
+    Promise.resolve(flush).then(
+      () => undefined,
+      (error: unknown) => {
+        console.warn(
+          "[checkout-payment] telemetry flush failed",
+          error instanceof Error ? error.message : String(error),
+        );
+      },
+    ),
+    timeout,
+  ]).finally(() => {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  });
+}
+
 /**
  * Maps Bókun reserve failures to customer-facing copy.
  *
@@ -413,7 +443,7 @@ export async function executeInitiateCheckoutPayment(
           currency: appliedQuote.currency,
         },
       });
-      await posthog.flush();
+      flushCheckoutTelemetry(posthog.flush());
     }
 
     posthogIntegrationLogger.emit({
@@ -428,7 +458,7 @@ export async function executeInitiateCheckoutPayment(
         currency: appliedQuote.currency,
       },
     });
-    await flushPostHogLogs();
+    flushCheckoutTelemetry(flushPostHogLogs());
 
     return {
       success: true,

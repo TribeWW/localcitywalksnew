@@ -85,16 +85,14 @@ export default function ExploreCatalogClient({
 
   const handleShowMore = useCallback(async () => {
     if (hasMoreFilteredToShow) {
-      setVisibleCount((prev) => {
-        const nextVisibleCount = Math.min(
-          prev + PAGE_SIZE,
-          accumulatedList.length,
-        );
-        posthog.capture("explore_more_tours_loaded", {
-          source: "loaded_results",
-          visible_count: nextVisibleCount,
-        });
-        return nextVisibleCount;
+      const nextVisibleCount = Math.min(
+        visibleCount + PAGE_SIZE,
+        accumulatedList.length,
+      );
+      setVisibleCount(nextVisibleCount);
+      posthog.capture("explore_more_tours_loaded", {
+        source: "loaded_results",
+        visible_count: nextVisibleCount,
       });
       return;
     }
@@ -133,6 +131,7 @@ export default function ExploreCatalogClient({
     hasMorePages,
     hasMoreFilteredToShow,
     loadingMore,
+    visibleCount,
     accumulatedList.length,
     selectedCountryCodes,
     sortAscending,

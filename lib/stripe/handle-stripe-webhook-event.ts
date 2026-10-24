@@ -22,6 +22,33 @@ import {
   releaseStripeWebhookEventClaim,
 } from "@/lib/stripe/stripe-webhook-idempotency";
 
+/** Cap each telemetry flush so a stall cannot hold the webhook acknowledgement. */
+const WEBHOOK_TELEMETRY_FLUSH_TIMEOUT_MS = 1_000;
+
+/**
+ * Awaits a telemetry flush without letting it reject or wait without a bound.
+ */
+async function flushWebhookTelemetry(flush: Promise<unknown>): Promise<void> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      flush,
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error("telemetry flush timed out"));
+        }, WEBHOOK_TELEMETRY_FLUSH_TIMEOUT_MS);
+      }),
+    ]);
+  } catch (error) {
+    console.warn(
+      "[stripe-webhook] telemetry flush failed",
+      error instanceof Error ? error.message : String(error),
+    );
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  }
+}
+
 async function captureCheckoutPaymentCompleted(
   checkoutId: string,
   alreadyPaid: boolean,
@@ -33,7 +60,7 @@ async function captureCheckoutPaymentCompleted(
       event: "checkout_payment_completed",
       properties: { already_paid: alreadyPaid },
     });
-    await posthog.flush();
+    await flushWebhookTelemetry(posthog.flush());
   }
 
   posthogIntegrationLogger.emit({
@@ -45,7 +72,7 @@ async function captureCheckoutPaymentCompleted(
       already_paid: alreadyPaid,
     },
   });
-  await flushPostHogLogs();
+  await flushWebhookTelemetry(flushPostHogLogs());
 }
 
 export type HandleStripeWebhookEventResult =
