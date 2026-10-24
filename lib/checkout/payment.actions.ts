@@ -9,6 +9,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import { after } from "next/server";
 
 import { runInitiateCheckoutPayment } from "@/lib/checkout/initiate-checkout-payment";
 import { resolveCheckoutOrigin } from "@/lib/stripe/checkout-origin";
@@ -26,5 +27,10 @@ export async function initiateCheckoutPayment(
   const requestHeaders = await headers();
   const checkoutOrigin = resolveCheckoutOrigin({ headers: requestHeaders });
 
-  return runInitiateCheckoutPayment(input, { checkoutOrigin });
+  return runInitiateCheckoutPayment(input, {
+    checkoutOrigin,
+    scheduleAfterResponse: (task) => {
+      after(task);
+    },
+  });
 }

@@ -560,6 +560,64 @@ describe("executeInitiateCheckoutPayment — pipeline invariants", () => {
     expect(abortReservedBokunCheckoutMock).not.toHaveBeenCalled();
   });
 
+  it("starts both flushes only when the registered after() task runs", async () => {
+    const tasks: Array<() => Promise<void>> = [];
+    const flush = vi.fn().mockRejectedValue(new Error("posthog down"));
+    getPostHogClientMock.mockReturnValue({ capture: vi.fn(), flush });
+    flushPostHogLogsMock.mockRejectedValue(new Error("logs down"));
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const result = await executeInitiateCheckoutPayment(paymentInput, {
+      scheduleAfterResponse: (task) => {
+        tasks.push(task);
+      },
+    });
+
+    expect(result).toEqual({
+      success: true,
+      redirectUrl: "https://checkout.stripe.test/cs_test_123",
+    });
+    expect(flush).not.toHaveBeenCalled();
+    expect(flushPostHogLogsMock).not.toHaveBeenCalled();
+    expect(tasks).toHaveLength(2);
+    expect(abortReservedBokunCheckoutMock).not.toHaveBeenCalled();
+
+    await Promise.all(tasks.map((task) => task()));
+
+    expect(flush).toHaveBeenCalledOnce();
+    expect(flushPostHogLogsMock).toHaveBeenCalledOnce();
+    expect(warn).toHaveBeenCalledTimes(2);
+    warn.mockRestore();
+  });
+
+  it("settles a stalled registered flush without delaying the redirect", async () => {
+    vi.useFakeTimers();
+    const tasks: Array<() => Promise<void>> = [];
+    getPostHogClientMock.mockReturnValue({
+      capture: vi.fn(),
+      flush: () => new Promise(() => {}),
+    });
+    flushPostHogLogsMock.mockImplementation(() => new Promise(() => {}));
+
+    const started = Date.now();
+    const result = await executeInitiateCheckoutPayment(paymentInput, {
+      scheduleAfterResponse: (task) => {
+        tasks.push(task);
+      },
+    });
+
+    expect(Date.now() - started).toBeLessThan(200);
+    expect(result).toEqual({
+      success: true,
+      redirectUrl: "https://checkout.stripe.test/cs_test_123",
+    });
+    expect(tasks).toHaveLength(2);
+
+    const pending = Promise.all(tasks.map((task) => task()));
+    await vi.runAllTimersAsync();
+    await expect(pending).resolves.toEqual([undefined, undefined]);
+  });
+
   it("forwards promoCode into reserveBokunCheckout and createPendingCheckout", async () => {
     const result = await executeInitiateCheckoutPayment({
       ...paymentInput,
