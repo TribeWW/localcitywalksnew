@@ -35,17 +35,8 @@ export type PageMetadataDefaults = {
   };
 };
 
-function pick(override: string | null | undefined, fallback: string): string;
-function pick(
-  override: string | null | undefined,
-  fallback: string | undefined,
-): string | undefined;
-function pick(
-  override: string | null | undefined,
-  fallback: string | undefined,
-): string | undefined {
-  const trimmed = override?.trim();
-  return trimmed ? trimmed : fallback;
+function pick(override: string | null | undefined, fallback: string): string {
+  return override?.trim() || fallback;
 }
 
 /**
@@ -63,7 +54,7 @@ export function buildPageMetadata(
 ): Metadata {
   const title = pick(overrides?.seoTitle, defaults.title);
   const description = pick(overrides?.metaDescription, defaults.description);
-  const keywords = pick(overrides?.focusKeyword, defaults.keywords);
+  const keywords = overrides?.focusKeyword?.trim() || defaults.keywords;
   const shareTitle = pick(overrides?.ogTitle, title);
   const shareDescription = pick(overrides?.ogDescription, description);
 
