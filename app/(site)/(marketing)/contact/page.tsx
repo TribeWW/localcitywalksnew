@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import ContactForm from "@/components/forms/ContactForm";
 import { ContactInfo } from "@/components/contact/ContactInfo";
 import { CustomTourPromoCard } from "@/components/contact/CustomTourPromoCard";
 import { buildContactPageMetadata } from "@/lib/contact/page-metadata";
+import { getPageSeo } from "@/lib/pages/page-seo";
+import { PAGE_DOCUMENT_IDS } from "@/sanity/schemaTypes/page.helpers";
 
-export const metadata = buildContactPageMetadata();
+export async function generateMetadata(): Promise<Metadata> {
+  return buildContactPageMetadata(await getPageSeo(PAGE_DOCUMENT_IDS.contact));
+}
 
 export default function ContactPage() {
   return (

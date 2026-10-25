@@ -4,6 +4,10 @@
 
 import type { Metadata } from "next";
 import { absoluteUrl } from "@/lib/site";
+import {
+  buildPageMetadata,
+  type PageSeoOverrides,
+} from "@/lib/pages/page-metadata";
 
 /** Contact page `<title>` and Open Graph title. */
 export const CONTACT_PAGE_TITLE = "Contact us | LocalCityWalks";
@@ -21,33 +25,20 @@ const CONTACT_OG_IMAGE_URL = absoluteUrl("/guide.png");
 
 /**
  * Builds Next.js metadata for `/contact` including canonical, Open Graph, and Twitter tags.
+ *
+ * @param overrides - Published Sanity `contactPage` fields; empty fields keep the defaults
  */
-export function buildContactPageMetadata(): Metadata {
-  return {
-    title: CONTACT_PAGE_TITLE,
-    description: CONTACT_PAGE_DESCRIPTION,
-    keywords: CONTACT_PAGE_KEYWORDS,
-    alternates: {
-      canonical: CONTACT_PAGE_URL,
-    },
-    openGraph: {
+export function buildContactPageMetadata(
+  overrides: PageSeoOverrides | null = null,
+): Metadata {
+  return buildPageMetadata(
+    {
       title: CONTACT_PAGE_TITLE,
       description: CONTACT_PAGE_DESCRIPTION,
-      url: CONTACT_PAGE_URL,
-      type: "website",
-      siteName: "LocalCityWalks",
-      images: [
-        {
-          url: CONTACT_OG_IMAGE_URL,
-          alt: CONTACT_PAGE_TITLE,
-        },
-      ],
+      keywords: CONTACT_PAGE_KEYWORDS,
+      canonicalUrl: CONTACT_PAGE_URL,
+      ogImage: { url: CONTACT_OG_IMAGE_URL },
     },
-    twitter: {
-      card: "summary_large_image",
-      title: CONTACT_PAGE_TITLE,
-      description: CONTACT_PAGE_DESCRIPTION,
-      images: [CONTACT_OG_IMAGE_URL],
-    },
-  };
+    overrides,
+  );
 }

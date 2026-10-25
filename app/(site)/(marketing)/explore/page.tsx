@@ -1,11 +1,16 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import Image from "next/image";
 import ExploreCatalog from "@/components/explore/ExploreCatalog";
 import ExploreCatalogSkeleton from "@/components/explore/ExploreCatalogSkeleton";
 import { ExploreJsonLdSection } from "@/components/seo/ExploreJsonLdSection";
 import { buildExplorePageMetadata } from "@/lib/explore/page-metadata";
+import { getPageSeo } from "@/lib/pages/page-seo";
+import { PAGE_DOCUMENT_IDS } from "@/sanity/schemaTypes/page.helpers";
 
-export const metadata = buildExplorePageMetadata();
+export async function generateMetadata(): Promise<Metadata> {
+  return buildExplorePageMetadata(await getPageSeo(PAGE_DOCUMENT_IDS.explore));
+}
 
 /**
  * ISR for `/explore` (1 hour).

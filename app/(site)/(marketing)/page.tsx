@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import AboutUs from "@/components/home/AboutUs";
 import ContactSection from "@/components/home/ContactSection";
@@ -8,6 +9,13 @@ import StepsSection from "@/components/home/StepsSection";
 import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
 import Image from "next/image";
 import Link from "next/link";
+import { buildHomePageMetadata } from "@/lib/home/page-metadata";
+import { getPageSeo } from "@/lib/pages/page-seo";
+import { PAGE_DOCUMENT_IDS } from "@/sanity/schemaTypes/page.helpers";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return buildHomePageMetadata(await getPageSeo(PAGE_DOCUMENT_IDS.home));
+}
 
 /**
  * Renders the landing page layout with the reviews section.

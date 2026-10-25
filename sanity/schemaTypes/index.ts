@@ -3,6 +3,7 @@ import { city } from "./city";
 import { country } from "./country";
 import { faqItem } from "./faqItem";
 import { homeSpotlight } from "./homeSpotlight";
+import { page } from "./page";
 import { promoBanner } from "./promoBanner";
 import { region } from "./region";
 import { review } from "./review";
@@ -14,6 +15,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     country,
     faqItem,
     homeSpotlight,
+    page,
     promoBanner,
     region,
     review,

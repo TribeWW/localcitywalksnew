@@ -5,7 +5,8 @@ import { Toaster } from "sonner";
 
 import Script from "next/script";
 import { config } from "@/lib/config";
-import { SITE_URL, absoluteUrl } from "@/lib/site";
+import { SITE_URL } from "@/lib/site";
+import { buildHomePageMetadata } from "@/lib/home/page-metadata";
 
 // Environment variables for analytics
 const GA4_ID = config.analytics.ga4Id;
@@ -39,36 +40,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Book Guided Walking Tours with Trusted Local Guides - LocalCityWalks",
-  description:
-    "Discover cities like a local. Small group walking tours led by trusted local guides. Real stories, real connections, real cities.",
-  alternates: {
-    canonical: absoluteUrl("/"),
-  },
-  openGraph: {
-    title:
-      "Book Guided Walking Tours with Trusted Local Guides - LocalCityWalks",
-    description:
-      "Discover cities like a local. Small group walking tours led by trusted local guides. Real stories, real connections, real cities.",
-    url: absoluteUrl("/"),
-    type: "website",
-    siteName: "LocalCityWalks",
-    images: [
-      {
-        url: absoluteUrl("/guide.png"),
-        height: 630,
-        alt: "Book Guided Walking Tours with Trusted Local Guides - LocalCityWalks",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title:
-      "Book Guided Walking Tours with Trusted Local Guides - LocalCityWalks",
-    description:
-      "Discover cities like a local. Small group walking tours led by trusted local guides. Real stories, real connections, real cities.",
-    images: [absoluteUrl("/guide.png")],
-  },
+  ...buildHomePageMetadata(),
   icons: {
     icon: [
       {
@@ -170,9 +142,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           }}
         />
       </head>
-      <body
-        className={`${outfit.className} antialiased min-h-screen bg-white`}
-      >
+      <body className={`${outfit.className} antialiased min-h-screen bg-white`}>
         {/* Google Tag Manager (noscript) */}
         {loadThirdPartyScripts && GTM_ID && (
           <noscript>

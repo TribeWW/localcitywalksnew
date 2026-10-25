@@ -5,6 +5,10 @@
 import type { Metadata } from "next";
 import { EXPLORE_PAGE_URL } from "@/lib/structured-data/explore";
 import { absoluteUrl } from "@/lib/site";
+import {
+  buildPageMetadata,
+  type PageSeoOverrides,
+} from "@/lib/pages/page-metadata";
 
 /** Explore page `<title>` and Open Graph title. */
 export const EXPLORE_PAGE_TITLE =
@@ -24,33 +28,20 @@ const EXPLORE_OG_IMAGE_URL = absoluteUrl("/guide.png");
 
 /**
  * Builds Next.js metadata for `/explore` including canonical, Open Graph, and Twitter tags.
+ *
+ * @param overrides - Published Sanity `explorePage` fields; empty fields keep the defaults
  */
-export function buildExplorePageMetadata(): Metadata {
-  return {
-    title: EXPLORE_PAGE_TITLE,
-    description: EXPLORE_PAGE_DESCRIPTION,
-    keywords: EXPLORE_PAGE_KEYWORDS,
-    alternates: {
-      canonical: EXPLORE_PAGE_URL,
-    },
-    openGraph: {
+export function buildExplorePageMetadata(
+  overrides: PageSeoOverrides | null = null,
+): Metadata {
+  return buildPageMetadata(
+    {
       title: EXPLORE_PAGE_TITLE,
       description: EXPLORE_PAGE_DESCRIPTION,
-      url: EXPLORE_PAGE_URL,
-      type: "website",
-      siteName: "LocalCityWalks",
-      images: [
-        {
-          url: EXPLORE_OG_IMAGE_URL,
-          alt: EXPLORE_PAGE_TITLE,
-        },
-      ],
+      keywords: EXPLORE_PAGE_KEYWORDS,
+      canonicalUrl: EXPLORE_PAGE_URL,
+      ogImage: { url: EXPLORE_OG_IMAGE_URL },
     },
-    twitter: {
-      card: "summary_large_image",
-      title: EXPLORE_PAGE_TITLE,
-      description: EXPLORE_PAGE_DESCRIPTION,
-      images: [EXPLORE_OG_IMAGE_URL],
-    },
-  };
+    overrides,
+  );
 }

@@ -14,7 +14,7 @@ import {schema} from './sanity/schemaTypes'
 import {structure} from './sanity/structure'
 
 /** Schema types edited only via fixed-id Desk items — hide from global Create. */
-const SINGLETON_TEMPLATE_IDS = new Set(['homeSpotlight', 'promoBanner'])
+const SINGLETON_TEMPLATE_IDS = new Set(['homeSpotlight', 'page', 'promoBanner'])
 
 export default defineConfig({
   basePath: '/studio',
@@ -35,6 +35,11 @@ export default defineConfig({
         (templateItem) => !SINGLETON_TEMPLATE_IDS.has(templateItem.templateId),
       )
     },
+    /** Page SEO documents use fixed ids, so a copy or a delete orphans them. */
+    actions: (prev, {schemaType}) =>
+      schemaType === 'page'
+        ? prev.filter(({action}) => action !== 'duplicate' && action !== 'delete')
+        : prev,
   },
   plugins: [
     structureTool({structure}),
