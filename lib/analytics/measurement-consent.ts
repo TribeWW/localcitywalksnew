@@ -1,7 +1,7 @@
 import type { PostHog } from "posthog-js";
 
 /** iubenda purpose ID for "Measurement" (analytics). */
-export const IUBENDA_MEASUREMENT_PURPOSE_ID = "4";
+const IUBENDA_MEASUREMENT_PURPOSE_ID = "4";
 
 /**
  * The iubenda callbacks in `app/layout.tsx` can fire before PostHog loads, so
@@ -40,7 +40,7 @@ export function hasMeasurementConsent(preference: unknown): boolean {
   return consent === true;
 }
 
-export function applyMeasurementConsent(
+function applyMeasurementConsent(
   client: ConsentClient,
   granted: boolean,
 ) {
