@@ -56,6 +56,7 @@ async function loadInstrumentationClient() {
 describe("instrumentation-client", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
     posthogInit.mockReset();
     posthogMock.opt_in_capturing.mockReset();
     posthogMock.opt_out_capturing.mockReset();
@@ -252,5 +253,53 @@ describe("instrumentation-client", () => {
 
     expect(posthogInit).toHaveBeenCalledTimes(1);
     expect(posthogMock.setInternalOrTestUser).not.toHaveBeenCalled();
+  });
+
+  it("forces a full reload on soft navigation to ?internal=off after PostHog started", async () => {
+    stubConfiguredEnv();
+    await loadInstrumentationClient();
+    const replace = vi.fn();
+    vi.stubGlobal("location", {
+      origin: "http://localhost",
+      replace,
+    });
+
+    const { onRouterTransitionStart } = await import("./instrumentation-client");
+    onRouterTransitionStart("/tours?internal=off");
+
+    expect(replace).toHaveBeenCalledWith("/tours?internal=off");
+    expect(window.localStorage.getItem(TRACKING_DISABLED_STORAGE_KEY)).toBe(
+      "true",
+    );
+    vi.unstubAllGlobals();
+  });
+
+  it("marks internal on soft navigation to ?internal=1 while PostHog is running", async () => {
+    stubConfiguredEnv();
+    await loadInstrumentationClient();
+    posthogMock.setInternalOrTestUser.mockClear();
+
+    const { onRouterTransitionStart } = await import("./instrumentation-client");
+    onRouterTransitionStart("/?internal=1");
+
+    expect(posthogMock.setInternalOrTestUser).toHaveBeenCalledTimes(1);
+  });
+
+  it("ignores soft navigations without the internal parameter", async () => {
+    stubConfiguredEnv();
+    await loadInstrumentationClient();
+    const replace = vi.fn();
+    vi.stubGlobal("location", {
+      origin: "http://localhost",
+      replace,
+    });
+    posthogMock.setInternalOrTestUser.mockClear();
+
+    const { onRouterTransitionStart } = await import("./instrumentation-client");
+    onRouterTransitionStart("/paris");
+
+    expect(replace).not.toHaveBeenCalled();
+    expect(posthogMock.setInternalOrTestUser).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
   });
 });

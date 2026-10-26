@@ -22,6 +22,16 @@ export type InternalTrackingState = {
   markInternal: boolean;
 };
 
+/** `window.localStorage` access can throw (blocked / private mode); treat as missing. */
+export function getBrowserLocalStorage(): StorageLike | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
 function readStorage(storage: StorageLike, key: string): string | null {
   try {
     return storage.getItem(key);
@@ -49,9 +59,7 @@ function writeStorage(
  */
 export function resolveInternalTrackingState(
   search: string = typeof window !== "undefined" ? window.location.search : "",
-  storage: StorageLike | null = typeof window !== "undefined"
-    ? window.localStorage
-    : null,
+  storage: StorageLike | null = getBrowserLocalStorage(),
 ): InternalTrackingState {
   const value = new URLSearchParams(search).get(INTERNAL_QUERY_PARAM);
 
@@ -85,4 +93,41 @@ type InternalClient = Pick<PostHog, "setInternalOrTestUser">;
 /** Marks the current PostHog person as an internal / test user. */
 export function markInternalOrTestUser(client: InternalClient): void {
   client.setInternalOrTestUser();
+}
+
+/**
+ * Soft (App Router) navigations do not re-run `instrumentation-client`. When the
+ * URL gains `?internal=off` / `?internal=1`, decide whether to force a full
+ * document load (so PostHog can start or stay stopped) or only re-apply the
+ * internal marker on an already-running client.
+ *
+ * Full reload is required for off: cookie-banner `opt_out_capturing` would keep
+ * cookieless counting, which is not what the off link means.
+ */
+export type InternalTrackingNavAction = "none" | "reload" | "mark_internal";
+
+export function planInternalTrackingNavAction(
+  search: string,
+  posthogStarted: boolean,
+  storage: StorageLike | null = getBrowserLocalStorage(),
+): InternalTrackingNavAction {
+  const value = new URLSearchParams(search).get(INTERNAL_QUERY_PARAM);
+  if (value !== "off" && value !== "1") return "none";
+
+  const { disabled, markInternal } = resolveInternalTrackingState(
+    search,
+    storage,
+  );
+
+  if (disabled) return posthogStarted ? "reload" : "none";
+  if (!posthogStarted) return "reload";
+  return markInternal ? "mark_internal" : "none";
+}
+
+export function searchFromUrl(url: string, base: string = "http://localhost"): string {
+  try {
+    return new URL(url, base).search;
+  } catch {
+    return "";
+  }
 }
