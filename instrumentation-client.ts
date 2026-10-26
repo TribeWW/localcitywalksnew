@@ -1,4 +1,5 @@
 import posthog from "posthog-js";
+import { syncMeasurementConsent } from "@/lib/analytics/measurement-consent";
 
 const projectToken = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
 const apiHost = process.env.NEXT_PUBLIC_POSTHOG_HOST;
@@ -13,10 +14,13 @@ if (!projectToken || !apiHost) {
     );
   }
 } else {
+  // Cookieless until the iubenda Measurement purpose is accepted.
   posthog.init(projectToken, {
     api_host: apiHost,
     defaults: "2026-01-30",
     capture_exceptions: true,
+    cookieless_mode: "on_reject",
     debug: process.env.NODE_ENV === "development",
   });
+  syncMeasurementConsent(posthog);
 }

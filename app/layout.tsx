@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 
 import Script from "next/script";
 import { config } from "@/lib/config";
+import { iubendaPreferenceCallback } from "@/lib/analytics/measurement-consent";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
 
 // Environment variables for analytics
@@ -117,7 +118,11 @@ export default function RootLayout({
                   siteId: Number(${JSON.stringify(IUBENDA_SITE_ID)}),
                   cookiePolicyId: Number(${JSON.stringify(IUBENDA_COOKIE_POLICY_ID)}),
                   lang: "en",
-                  floatingPreferencesButtonDisplay: false
+                  floatingPreferencesButtonDisplay: false,
+                  callback: Object.assign({}, _iub.csConfiguration.callback, {
+                    onPreferenceExpressedOrNotNeeded: ${iubendaPreferenceCallback},
+                    onPreferenceExpressed: ${iubendaPreferenceCallback}
+                  })
                 });
               `}
               </Script>
