@@ -57,10 +57,10 @@ export function ReviewBodyClamp({
   return (
     <div
       className={cn(
-        "relative mt-0 flex min-h-[calc((var(--review-clamp-lines)+1)*1lh)] flex-col text-sm leading-[1.6]",
+        "relative mt-0 flex flex-col text-sm leading-[1.6]",
         className,
       )}
-      style={{ "--review-clamp-lines": maxLines }}
+      style={{ minHeight: `calc((${maxLines} + 1) * 1lh)` }}
     >
       <p
         ref={textRef}
