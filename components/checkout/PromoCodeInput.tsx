@@ -11,6 +11,7 @@
 
 import { useState } from "react";
 import { Check, X } from "lucide-react";
+import posthog from "posthog-js";
 
 import { Input } from "@/components/ui/input";
 import { formatCataloguePriceAmount } from "@/lib/bokun/format-catalogue-price";
@@ -112,7 +113,13 @@ export function PromoCodeInput({
       setApplied(nextApplied);
       setStatus("applied");
       onAppliedChange?.(nextApplied);
-    } catch {
+      posthog.capture("promo_code_applied", {
+        currency,
+        discount_amount: nextApplied.discountAmount,
+        discounted_amount: nextApplied.discountedAmount,
+      });
+    } catch (error) {
+      posthog.captureException(error);
       setApplied(null);
       setStatus("unavailable");
     }
@@ -122,6 +129,10 @@ export function PromoCodeInput({
    * Clears the applied promo and restores the idle input.
    */
   function handleRemove() {
+    posthog.capture("promo_code_removed", {
+      currency,
+      discount_amount: applied?.discountAmount,
+    });
     setCode("");
     setApplied(null);
     setStatus("idle");
