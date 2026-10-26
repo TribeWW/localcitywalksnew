@@ -6,6 +6,10 @@ import {
   searchFromUrl,
 } from "@/lib/analytics/internal-tracking";
 import { syncMeasurementConsent } from "@/lib/analytics/measurement-consent";
+import {
+  isSanityStudioPath,
+  pathnameFromUrl,
+} from "@/lib/analytics/studio-path";
 
 const projectToken = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
 const apiHost = process.env.NEXT_PUBLIC_POSTHOG_HOST;
@@ -42,28 +46,66 @@ if (!projectToken || !apiHost) {
   }
 } else {
   const { disabled, markInternal } = resolveInternalTrackingState();
+  const onStudio = isSanityStudioPath(window.location.pathname);
 
-  // `?internal=off` (and its stored flag) skip init entirely — not the same as
-  // cookie-banner reject, which uses cookieless counting via opt_out_capturing.
-  if (!disabled) {
+  // Skip CMS: PostHog (and its chat widget) stay off /studio. Public-site only.
+  // `?internal=off` also skips init — not the same as cookie-banner reject.
+  if (!disabled && !onStudio) {
     startPostHog(markInternal);
   }
 }
 
+type RouterTransitionType = "push" | "replace" | "traverse";
+
+/** Full document load that mirrors App Router push vs replace/traverse history. */
+function navigateWithFullLoad(url: string, navigationType: RouterTransitionType) {
+  if (navigationType === "push") {
+    window.location.assign(url);
+    return;
+  }
+  window.location.replace(url);
+}
+
 /**
  * Soft navigations do not re-run this module. Re-apply `?internal=` here, and
- * force a full document load when PostHog must start or stop for that browser.
+ * force a full document load when PostHog must start or stop (internal links or
+ * entering / leaving Sanity Studio).
  */
-export function onRouterTransitionStart(url: string) {
+export function onRouterTransitionStart(
+  url: string,
+  navigationType: RouterTransitionType = "replace",
+) {
   if (!projectToken || !apiHost) return;
 
+  // Use href (not origin) so relative, query-only, and fragment-only targets
+  // keep the current pathname when resolved.
+  const currentUrl = window.location.href;
+  const targetPath = pathnameFromUrl(url, currentUrl);
+  const goingToStudio = isSanityStudioPath(targetPath);
+  const onStudio = isSanityStudioPath(window.location.pathname);
+
+  if (goingToStudio && posthogStarted) {
+    navigateWithFullLoad(url, navigationType);
+    return;
+  }
+
+  if (!goingToStudio && onStudio && !posthogStarted) {
+    const { disabled } = resolveInternalTrackingState(
+      searchFromUrl(url, currentUrl),
+    );
+    if (!disabled) {
+      navigateWithFullLoad(url, navigationType);
+      return;
+    }
+  }
+
   const action = planInternalTrackingNavAction(
-    searchFromUrl(url, window.location.origin),
+    searchFromUrl(url, currentUrl),
     posthogStarted,
   );
 
   if (action === "reload") {
-    window.location.replace(url);
+    navigateWithFullLoad(url, navigationType);
     return;
   }
   if (action === "mark_internal") {
