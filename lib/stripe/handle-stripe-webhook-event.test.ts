@@ -7,7 +7,7 @@
  * - Acknowledges unhandled event types without error
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type Stripe from "stripe";
 
 const claimStripeWebhookEventMock = vi.fn();
@@ -15,6 +15,8 @@ const releaseStripeWebhookEventClaimMock = vi.fn();
 const handleCheckoutSessionCompletedMock = vi.fn();
 const fulfilPaidCheckoutMock = vi.fn();
 const recordPaidFulfilmentFailureMock = vi.fn();
+const getPostHogClientMock = vi.fn();
+const flushPostHogLogsMock = vi.fn();
 
 vi.mock("@/lib/stripe/stripe-webhook-idempotency", () => ({
   claimStripeWebhookEvent: (...args: unknown[]) =>
@@ -35,6 +37,15 @@ vi.mock("@/lib/checkout/fulfil-paid-checkout", () => ({
 vi.mock("@/lib/checkout/pending-checkout-store", () => ({
   recordPaidFulfilmentFailure: (...args: unknown[]) =>
     recordPaidFulfilmentFailureMock(...args),
+}));
+
+vi.mock("@/lib/posthog-server", () => ({
+  getPostHogClient: () => getPostHogClientMock(),
+}));
+
+vi.mock("@/instrumentation", () => ({
+  flushPostHogLogs: () => flushPostHogLogsMock(),
+  posthogIntegrationLogger: { emit: vi.fn() },
 }));
 
 import { handleStripeWebhookEvent } from "@/lib/stripe/handle-stripe-webhook-event";
@@ -93,6 +104,14 @@ describe("handleStripeWebhookEvent", () => {
       attemptCount: 1,
       exhausted: false,
     });
+    getPostHogClientMock.mockReset();
+    getPostHogClientMock.mockReturnValue(null);
+    flushPostHogLogsMock.mockReset();
+    flushPostHogLogsMock.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("short-circuits duplicate Stripe event ids", async () => {
@@ -241,5 +260,44 @@ describe("handleStripeWebhookEvent", () => {
 
     expect(fulfilPaidCheckoutMock).not.toHaveBeenCalled();
     expect(releaseStripeWebhookEventClaimMock).not.toHaveBeenCalled();
+  });
+
+  it("returns checkout_paid when both telemetry flushes fail", async () => {
+    getPostHogClientMock.mockReturnValue({
+      capture: vi.fn(),
+      flush: vi.fn().mockRejectedValue(new Error("posthog down")),
+    });
+    flushPostHogLogsMock.mockRejectedValue(new Error("logs down"));
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    await expect(handleStripeWebhookEvent(buildEvent())).resolves.toEqual({
+      success: true,
+      action: "checkout_paid",
+      checkoutId: CHECKOUT_ID,
+      alreadyPaid: false,
+      productConfirmationCode: "LOC-P456",
+    });
+    expect(warn).toHaveBeenCalledTimes(2);
+    warn.mockRestore();
+  });
+
+  it("returns checkout_paid when both telemetry flushes stall", async () => {
+    vi.useFakeTimers();
+    getPostHogClientMock.mockReturnValue({
+      capture: vi.fn(),
+      flush: () => new Promise(() => {}),
+    });
+    flushPostHogLogsMock.mockImplementation(() => new Promise(() => {}));
+
+    const pending = handleStripeWebhookEvent(buildEvent());
+    await vi.runAllTimersAsync();
+
+    await expect(pending).resolves.toEqual({
+      success: true,
+      action: "checkout_paid",
+      checkoutId: CHECKOUT_ID,
+      alreadyPaid: false,
+      productConfirmationCode: "LOC-P456",
+    });
   });
 });

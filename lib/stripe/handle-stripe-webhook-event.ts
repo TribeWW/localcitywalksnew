@@ -6,15 +6,74 @@
  * other event types.
  */
 
+import { SeverityNumber } from "@opentelemetry/api-logs";
 import type Stripe from "stripe";
 
+import {
+  flushPostHogLogs,
+  posthogIntegrationLogger,
+} from "@/instrumentation";
 import { fulfilPaidCheckout } from "@/lib/checkout/fulfil-paid-checkout";
 import { handleCheckoutSessionCompleted } from "@/lib/checkout/handle-checkout-session-completed";
+import { getPostHogClient } from "@/lib/posthog-server";
 import { recordPaidFulfilmentFailure } from "@/lib/checkout/pending-checkout-store";
 import {
   claimStripeWebhookEvent,
   releaseStripeWebhookEventClaim,
 } from "@/lib/stripe/stripe-webhook-idempotency";
+
+/** Cap each telemetry flush so a stall cannot hold the webhook acknowledgement. */
+const WEBHOOK_TELEMETRY_FLUSH_TIMEOUT_MS = 1_000;
+
+/**
+ * Awaits a telemetry flush without letting it reject or wait without a bound.
+ */
+async function flushWebhookTelemetry(flush: Promise<unknown>): Promise<void> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      flush,
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error("telemetry flush timed out"));
+        }, WEBHOOK_TELEMETRY_FLUSH_TIMEOUT_MS);
+      }),
+    ]);
+  } catch (error) {
+    console.warn(
+      "[stripe-webhook] telemetry flush failed",
+      error instanceof Error ? error.message : String(error),
+    );
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  }
+}
+
+async function captureCheckoutPaymentCompleted(
+  checkoutId: string,
+  alreadyPaid: boolean,
+): Promise<void> {
+  const posthog = getPostHogClient();
+  if (posthog) {
+    posthog.capture({
+      distinctId: checkoutId,
+      event: "checkout_payment_completed",
+      properties: { already_paid: alreadyPaid },
+    });
+    await flushWebhookTelemetry(posthog.flush());
+  }
+
+  posthogIntegrationLogger.emit({
+    body: "Checkout payment fulfilled",
+    severityNumber: SeverityNumber.INFO,
+    attributes: {
+      event: "checkout_payment_fulfilled",
+      checkout_id: checkoutId,
+      already_paid: alreadyPaid,
+    },
+  });
+  await flushWebhookTelemetry(flushPostHogLogs());
+}
 
 export type HandleStripeWebhookEventResult =
   | {
@@ -72,6 +131,10 @@ export async function handleStripeWebhookEvent(
   // Only the delivery that won the atomic claim advances to Bókun fulfilment;
   // a concurrent loser acknowledges without re-confirming the reservation.
   if (!paymentResult.shouldFulfil) {
+    await captureCheckoutPaymentCompleted(
+      paymentResult.checkoutId,
+      paymentResult.alreadyPaid,
+    );
     return {
       success: true,
       action: "checkout_paid",
@@ -108,6 +171,11 @@ export async function handleStripeWebhookEvent(
     await releaseStripeWebhookEventClaim(event.id);
     return fulfilmentResult;
   }
+
+  await captureCheckoutPaymentCompleted(
+    paymentResult.checkoutId,
+    paymentResult.alreadyPaid,
+  );
 
   return {
     success: true,

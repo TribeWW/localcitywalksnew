@@ -1,4 +1,3 @@
-import { Star } from "lucide-react";
 import type { HomeReviewListItem, SanityReviewListItem } from "@/types/review";
 import {
   meanStarRating,
@@ -7,6 +6,7 @@ import {
 } from "@/lib/reviews/review-summary";
 import { FallbackReviewsNotice } from "./FallbackReviewsNotice";
 import { HomeReviewsCarousel } from "./HomeReviewsCarousel";
+import { RatingDisplay } from "./RatingDisplay";
 import { TourReviewsExpandableList } from "./TourReviewsExpandableList";
 
 export type ReviewsSectionVariant = "home" | "tour" | "fallback";
@@ -63,16 +63,17 @@ export function ReviewsSection(props: ReviewsSectionProps) {
               {title}
             </h2>
             <p className="flex flex-wrap items-center justify-center gap-2 text-lg leading-relaxed text-muted-foreground">
-              <Star
-                className="size-5 shrink-0 fill-[#0F172A] text-[#0F172A]"
-                aria-hidden
-              />
-              <span className="font-semibold text-grapes">
-                {avg.toFixed(1)}
-              </span>
-              <span className="font-normal">
-                average rating from travellers across Europe
-              </span>
+              <RatingDisplay
+                variant="score"
+                value={avg}
+                className="gap-2"
+                starClassName="size-5 fill-[#0F172A] text-[#0F172A]"
+                valueClassName="font-semibold text-grapes"
+              >
+                <span className="font-normal">
+                  average rating from travellers across Europe
+                </span>
+              </RatingDisplay>
             </p>
           </div>
           <HomeReviewsCarousel reviews={props.reviews} />
@@ -116,19 +117,20 @@ export function ReviewsSection(props: ReviewsSectionProps) {
 
           <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-[280px_1fr]">
             <div>
-              <div className="mb-6 flex items-baseline gap-2 font-sans">
-                <Star
-                  className="size-5 shrink-0 fill-[#0F172A] text-[#0F172A]"
-                  aria-hidden
-                />
-                <span className="text-[32px] font-bold leading-none text-[#0F172A]">
-                  {avg.toFixed(1)}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  {variant === "fallback"
-                    ? "based on recent reviews"
-                    : `based on ${summaryTotal} ${summaryTotal === 1 ? "review" : "reviews"}`}
-                </span>
+              <div className="mb-6 font-sans">
+                <RatingDisplay
+                  variant="score"
+                  value={avg}
+                  className="items-baseline gap-2"
+                  starClassName="size-5 fill-[#0F172A] text-[#0F172A]"
+                  valueClassName="text-[32px] font-bold leading-none text-[#0F172A]"
+                >
+                  <span className="text-sm text-muted-foreground">
+                    {variant === "fallback"
+                      ? "based on recent reviews"
+                      : `based on ${summaryTotal} ${summaryTotal === 1 ? "review" : "reviews"}`}
+                  </span>
+                </RatingDisplay>
               </div>
 
               <ul className="list-none space-y-3 p-0">

@@ -1,23 +1,10 @@
-import { Star } from "lucide-react";
 import Link from "next/link";
 import type { HomeReviewListItem, SanityReviewListItem } from "@/types/review";
 import { cn } from "@/lib/utils";
 import { formatPublicReviewAuthorName } from "@/lib/reviews/review-author";
 import { formatExperienceDate } from "@/lib/reviews/review-date";
+import { RatingDisplay } from "./RatingDisplay";
 import { ReviewBodyClamp } from "./ReviewBodyClamp";
-
-/**
- * Normalize a numeric rating to a whole number between 0 and 5.
- *
- * Rounds the input to the nearest integer and clamps the result to the 0–5 range.
- *
- * @returns An integer between 0 and 5 inclusive. Returns `0` for non-finite inputs.
- */
-function clampRating(rating: number): number {
-  const n = Math.round(Number(rating));
-  if (!Number.isFinite(n)) return 0;
-  return Math.min(5, Math.max(0, n));
-}
 
 export type ReviewCardPresentation = "default" | "home" | "tourDetail";
 
@@ -45,7 +32,6 @@ type ReviewCardProps =
 export function ReviewCard(props: ReviewCardProps) {
   const { review } = props;
   const presentation = props.presentation ?? "default";
-  const stars = clampRating(review.rating);
   const dateLabel = formatExperienceDate(review.experienceDate);
   const body = review.body?.trim();
   const isHome = props.presentation === "home";
@@ -54,29 +40,13 @@ export function ReviewCard(props: ReviewCardProps) {
   const branded = isHome || isTourDetail;
 
   const starsRow = (
-    <div
-      className={cn("mb-4 flex gap-1", branded ? "" : "text-foreground")}
-      aria-label={
-        stars > 0 ? `${stars} out of 5 stars` : "No star rating shown"
-      }
-    >
-      {Array.from({ length: 5 }).map((_, i) => {
-        const filled = i < stars;
-
-        return (
-          <Star
-            key={i}
-            className={cn(
-              "size-[14px] shrink-0",
-              branded && (filled ? "text-nightsky" : "text-border"),
-            )}
-            fill={filled ? "currentColor" : "none"}
-            color={branded ? undefined : "currentColor"}
-            aria-hidden
-          />
-        );
-      })}
-    </div>
+    <RatingDisplay
+      variant="stars"
+      value={review.rating}
+      className={cn("mb-4", branded ? "" : "text-foreground")}
+      filledStarClassName={branded ? "text-nightsky" : undefined}
+      emptyStarClassName={branded ? "text-border" : undefined}
+    />
   );
 
   if (props.presentation === "home") {
