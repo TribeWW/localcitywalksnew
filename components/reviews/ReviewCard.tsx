@@ -63,7 +63,7 @@ export function ReviewCard(props: ReviewCardProps) {
         <p className="text-xs leading-relaxed text-muted-foreground">
           <Link
             href={homeReview.cityHref}
-            className="  decoration-1 text-muted hover:underline underline-offset-[3px] hover:opacity-90 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nightsky focus-visible:ring-offset-2"
+            className="  decoration-1 muted-foreground hover:underline underline-offset-[3px] hover:opacity-90 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nightsky focus-visible:ring-offset-2"
           >
             {homeReview.cityName}, {homeReview.countryName}
           </Link>
