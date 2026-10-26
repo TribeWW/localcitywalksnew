@@ -38,8 +38,11 @@ function stubConfiguredEnv() {
   vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "https://eu.i.posthog.com");
 }
 
-function visit(search: string) {
-  window.history.replaceState({}, "", `/${search}`);
+function visit(pathAndSearch: string) {
+  const path = pathAndSearch.startsWith("/")
+    ? pathAndSearch
+    : `/${pathAndSearch}`;
+  window.history.replaceState({}, "", path);
 }
 
 function expressPreference(preference: unknown) {
@@ -178,6 +181,24 @@ describe("instrumentation-client", () => {
     expect(posthogMock.opt_in_capturing).toHaveBeenCalledTimes(1);
   });
 
+  it("skips init on Sanity Studio routes", async () => {
+    stubConfiguredEnv();
+    visit("/studio");
+
+    await loadInstrumentationClient();
+
+    expect(posthogInit).not.toHaveBeenCalled();
+  });
+
+  it("skips init on nested Sanity Studio routes", async () => {
+    stubConfiguredEnv();
+    visit("/studio/structure");
+
+    await loadInstrumentationClient();
+
+    expect(posthogInit).not.toHaveBeenCalled();
+  });
+
   it("skips init and remembers the choice when ?internal=off is set", async () => {
     stubConfiguredEnv();
     visit("?internal=off");
@@ -261,6 +282,7 @@ describe("instrumentation-client", () => {
     const replace = vi.fn();
     vi.stubGlobal("location", {
       origin: "http://localhost",
+      pathname: "/tours",
       replace,
     });
 
@@ -291,6 +313,7 @@ describe("instrumentation-client", () => {
     const replace = vi.fn();
     vi.stubGlobal("location", {
       origin: "http://localhost",
+      pathname: "/",
       replace,
     });
     posthogMock.setInternalOrTestUser.mockClear();
@@ -300,6 +323,43 @@ describe("instrumentation-client", () => {
 
     expect(replace).not.toHaveBeenCalled();
     expect(posthogMock.setInternalOrTestUser).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+
+  it("forces a full reload when soft-navigating into /studio with PostHog running", async () => {
+    stubConfiguredEnv();
+    await loadInstrumentationClient();
+    const replace = vi.fn();
+    vi.stubGlobal("location", {
+      origin: "http://localhost",
+      pathname: "/",
+      replace,
+    });
+
+    const { onRouterTransitionStart } = await import("./instrumentation-client");
+    onRouterTransitionStart("/studio");
+
+    expect(replace).toHaveBeenCalledWith("/studio");
+    vi.unstubAllGlobals();
+  });
+
+  it("forces a full reload when leaving /studio so PostHog can start on the public site", async () => {
+    stubConfiguredEnv();
+    visit("/studio");
+    await loadInstrumentationClient();
+    expect(posthogInit).not.toHaveBeenCalled();
+
+    const replace = vi.fn();
+    vi.stubGlobal("location", {
+      origin: "http://localhost",
+      pathname: "/studio",
+      replace,
+    });
+
+    const { onRouterTransitionStart } = await import("./instrumentation-client");
+    onRouterTransitionStart("/tours");
+
+    expect(replace).toHaveBeenCalledWith("/tours");
     vi.unstubAllGlobals();
   });
 });

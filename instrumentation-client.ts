@@ -6,6 +6,10 @@ import {
   searchFromUrl,
 } from "@/lib/analytics/internal-tracking";
 import { syncMeasurementConsent } from "@/lib/analytics/measurement-consent";
+import {
+  isSanityStudioPath,
+  pathnameFromUrl,
+} from "@/lib/analytics/studio-path";
 
 const projectToken = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
 const apiHost = process.env.NEXT_PUBLIC_POSTHOG_HOST;
@@ -42,23 +46,45 @@ if (!projectToken || !apiHost) {
   }
 } else {
   const { disabled, markInternal } = resolveInternalTrackingState();
+  const onStudio = isSanityStudioPath(window.location.pathname);
 
-  // `?internal=off` (and its stored flag) skip init entirely — not the same as
-  // cookie-banner reject, which uses cookieless counting via opt_out_capturing.
-  if (!disabled) {
+  // Skip CMS: PostHog (and its chat widget) stay off /studio. Public-site only.
+  // `?internal=off` also skips init — not the same as cookie-banner reject.
+  if (!disabled && !onStudio) {
     startPostHog(markInternal);
   }
 }
 
 /**
  * Soft navigations do not re-run this module. Re-apply `?internal=` here, and
- * force a full document load when PostHog must start or stop for that browser.
+ * force a full document load when PostHog must start or stop (internal links or
+ * entering / leaving Sanity Studio).
  */
 export function onRouterTransitionStart(url: string) {
   if (!projectToken || !apiHost) return;
 
+  const origin = window.location.origin;
+  const targetPath = pathnameFromUrl(url, origin);
+  const goingToStudio = isSanityStudioPath(targetPath);
+  const onStudio = isSanityStudioPath(window.location.pathname);
+
+  if (goingToStudio && posthogStarted) {
+    window.location.replace(url);
+    return;
+  }
+
+  if (!goingToStudio && onStudio && !posthogStarted) {
+    const { disabled } = resolveInternalTrackingState(
+      searchFromUrl(url, origin),
+    );
+    if (!disabled) {
+      window.location.replace(url);
+      return;
+    }
+  }
+
   const action = planInternalTrackingNavAction(
-    searchFromUrl(url, window.location.origin),
+    searchFromUrl(url, origin),
     posthogStarted,
   );
 
