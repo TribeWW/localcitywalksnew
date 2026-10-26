@@ -1,20 +1,14 @@
-import {
-  getAllReviewRatings,
-  getRecentReviews,
-} from "@/lib/reviews/reviews.actions";
+import { getAllReviewRatings } from "@/lib/reviews/reviews.actions";
+import { loadHomeReviews } from "@/lib/reviews/home-reviews";
 import { ReviewsSection } from "@/components/reviews/ReviewsSection";
 
-const HOME_RECENT_REVIEW_LIMIT = 12;
-
 /**
- * Render the home page reviews block using recent global reviews.
- *
- * Fetches up to HOME_RECENT_REVIEW_LIMIT recent reviews and site-wide rating
- * summary; renders ReviewsSection or `null` when no reviews are available.
+ * Home page reviews. Loads enriched written reviews and the site wide rating
+ * summary. Renders nothing when no card survives the filter.
  */
 export default async function Reviews() {
   const [reviews, allRatings] = await Promise.all([
-    getRecentReviews(HOME_RECENT_REVIEW_LIMIT),
+    loadHomeReviews(),
     getAllReviewRatings(),
   ]);
   if (reviews.length === 0) return null;

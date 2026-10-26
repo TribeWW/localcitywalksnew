@@ -11,7 +11,6 @@ import {
   Clock,
   MessagesSquare,
   Users,
-  Star,
 } from "lucide-react";
 import { getTourDetailById } from "@/lib/tours/detail.actions";
 import {
@@ -23,6 +22,7 @@ import {
 import { slugifyForUrl } from "@/lib/utils";
 import { meanStarRating } from "@/lib/reviews/review-summary";
 import { FallbackReviewInfoTooltip } from "@/components/reviews/FallbackReviewInfoTooltip";
+import { RatingDisplay } from "@/components/reviews/RatingDisplay";
 import { ReviewsSection } from "@/components/reviews/ReviewsSection";
 import {
   Breadcrumb,
@@ -347,15 +347,13 @@ export default async function TourPage({
             <div>
               {heroReviewStats ? (
                 <div className="mb-3 flex items-center gap-1.5">
-                  <Star
-                    size={14}
-                    className="text-nightsky"
-                    fill="currentColor"
-                    aria-hidden
+                  <RatingDisplay
+                    variant="score"
+                    value={heroReviewStats.ratingLabel}
+                    className="gap-1.5"
+                    starClassName="size-[14px] fill-nightsky text-nightsky"
+                    valueClassName="text-[14px] font-semibold text-nightsky"
                   />
-                  <span className="text-[14px] font-semibold text-nightsky">
-                    {heroReviewStats.ratingLabel}
-                  </span>
                   <a
                     href="#tour-reviews"
                     className="cursor-pointer text-[14px] text-muted-foreground underline decoration-border hover:text-nightsky underline-offset-2"

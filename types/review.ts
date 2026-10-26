@@ -10,3 +10,13 @@ export type SanityReviewListItem = {
   authorName: string;
   body: string | null;
 };
+
+/**
+ * Home carousel row. City fields come from a unique published city match
+ * and are not stored on the review document.
+ */
+export type HomeReviewListItem = SanityReviewListItem & {
+  cityName: string;
+  countryName: string;
+  cityHref: string;
+};

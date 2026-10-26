@@ -1,5 +1,4 @@
-import { Star } from "lucide-react";
-import type { SanityReviewListItem } from "@/types/review";
+import type { HomeReviewListItem, SanityReviewListItem } from "@/types/review";
 import {
   meanStarRating,
   starDistribution,
@@ -7,17 +6,26 @@ import {
 } from "@/lib/reviews/review-summary";
 import { FallbackReviewsNotice } from "./FallbackReviewsNotice";
 import { HomeReviewsCarousel } from "./HomeReviewsCarousel";
+import { RatingDisplay } from "./RatingDisplay";
 import { TourReviewsExpandableList } from "./TourReviewsExpandableList";
 
 export type ReviewsSectionVariant = "home" | "tour" | "fallback";
 
-type ReviewsSectionProps = {
+type ReviewsSectionShared = {
   title: string;
-  reviews: SanityReviewListItem[];
   /** Pre-aggregated left-column summary; when missing or empty, uses `reviews`. */
   summary?: ReviewRatingSummary | null;
-  variant?: ReviewsSectionVariant;
 };
+
+type ReviewsSectionProps =
+  | (ReviewsSectionShared & {
+      variant: "home";
+      reviews: HomeReviewListItem[];
+    })
+  | (ReviewsSectionShared & {
+      variant?: "tour" | "fallback";
+      reviews: SanityReviewListItem[];
+    });
 
 /**
  * Render a reviews section using one of three layouts depending on `variant`.
@@ -30,23 +38,17 @@ type ReviewsSectionProps = {
  * @param variant - Layout variant: `"home"` | `"tour"` | `"fallback"` (defaults to `"tour"`)
  * @returns The section element for the selected layout, or `null` when there are no reviews or the variant does not match a supported layout
  */
-export function ReviewsSection({
-  title,
-  reviews,
-  summary,
-  variant = "tour",
-}: ReviewsSectionProps) {
+export function ReviewsSection(props: ReviewsSectionProps) {
+  const { title, reviews, summary } = props;
   if (reviews.length === 0) return null;
 
-  const isHome = variant === "home";
-  const isTourLayout = variant === "tour" || variant === "fallback";
   const precomputed =
     summary != null && summary.totalCount > 0 ? summary : null;
   const avg = precomputed
     ? precomputed.meanDisplayStars
     : meanStarRating(reviews);
 
-  if (isHome) {
+  if (props.variant === "home") {
     return (
       <section
         className="w-full bg-white px-6 py-16"
@@ -61,20 +63,28 @@ export function ReviewsSection({
               {title}
             </h2>
             <p className="flex flex-wrap items-center justify-center gap-2 text-lg leading-relaxed text-muted-foreground">
-              <Star
-                className="size-5 shrink-0 fill-[#0F172A] text-[#0F172A]"
-                aria-hidden
-              />
-              <span>({avg.toFixed(1)}) average rating across Europe</span>
+              <RatingDisplay
+                variant="score"
+                value={avg}
+                className="gap-2"
+                starClassName="size-5 fill-[#0F172A] text-[#0F172A]"
+                valueClassName="font-semibold text-grapes"
+              >
+                <span className="font-normal">
+                  average rating from travellers across Europe
+                </span>
+              </RatingDisplay>
             </p>
           </div>
-          <HomeReviewsCarousel reviews={reviews} />
+          <HomeReviewsCarousel reviews={props.reviews} />
         </div>
       </section>
     );
   }
 
-  if (isTourLayout) {
+  const variant = props.variant ?? "tour";
+
+  if (variant === "tour" || variant === "fallback") {
     const summaryTotal = precomputed ? precomputed.totalCount : reviews.length;
     const distribution = precomputed
       ? precomputed.distribution
@@ -107,19 +117,20 @@ export function ReviewsSection({
 
           <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-[280px_1fr]">
             <div>
-              <div className="mb-6 flex items-baseline gap-2 font-sans">
-                <Star
-                  className="size-5 shrink-0 fill-[#0F172A] text-[#0F172A]"
-                  aria-hidden
-                />
-                <span className="text-[32px] font-bold leading-none text-[#0F172A]">
-                  {avg.toFixed(1)}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  {variant === "fallback"
-                    ? "based on recent reviews"
-                    : `based on ${summaryTotal} ${summaryTotal === 1 ? "review" : "reviews"}`}
-                </span>
+              <div className="mb-6 font-sans">
+                <RatingDisplay
+                  variant="score"
+                  value={avg}
+                  className="items-baseline gap-2"
+                  starClassName="size-5 fill-[#0F172A] text-[#0F172A]"
+                  valueClassName="text-[32px] font-bold leading-none text-[#0F172A]"
+                >
+                  <span className="text-sm text-muted-foreground">
+                    {variant === "fallback"
+                      ? "based on recent reviews"
+                      : `based on ${summaryTotal} ${summaryTotal === 1 ? "review" : "reviews"}`}
+                  </span>
+                </RatingDisplay>
               </div>
 
               <ul className="list-none space-y-3 p-0">
