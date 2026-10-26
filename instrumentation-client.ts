@@ -55,41 +55,57 @@ if (!projectToken || !apiHost) {
   }
 }
 
+type RouterTransitionType = "push" | "replace" | "traverse";
+
+/** Full document load that mirrors App Router push vs replace/traverse history. */
+function navigateWithFullLoad(url: string, navigationType: RouterTransitionType) {
+  if (navigationType === "push") {
+    window.location.assign(url);
+    return;
+  }
+  window.location.replace(url);
+}
+
 /**
  * Soft navigations do not re-run this module. Re-apply `?internal=` here, and
  * force a full document load when PostHog must start or stop (internal links or
  * entering / leaving Sanity Studio).
  */
-export function onRouterTransitionStart(url: string) {
+export function onRouterTransitionStart(
+  url: string,
+  navigationType: RouterTransitionType = "replace",
+) {
   if (!projectToken || !apiHost) return;
 
-  const origin = window.location.origin;
-  const targetPath = pathnameFromUrl(url, origin);
+  // Use href (not origin) so relative, query-only, and fragment-only targets
+  // keep the current pathname when resolved.
+  const currentUrl = window.location.href;
+  const targetPath = pathnameFromUrl(url, currentUrl);
   const goingToStudio = isSanityStudioPath(targetPath);
   const onStudio = isSanityStudioPath(window.location.pathname);
 
   if (goingToStudio && posthogStarted) {
-    window.location.replace(url);
+    navigateWithFullLoad(url, navigationType);
     return;
   }
 
   if (!goingToStudio && onStudio && !posthogStarted) {
     const { disabled } = resolveInternalTrackingState(
-      searchFromUrl(url, origin),
+      searchFromUrl(url, currentUrl),
     );
     if (!disabled) {
-      window.location.replace(url);
+      navigateWithFullLoad(url, navigationType);
       return;
     }
   }
 
   const action = planInternalTrackingNavAction(
-    searchFromUrl(url, origin),
+    searchFromUrl(url, currentUrl),
     posthogStarted,
   );
 
   if (action === "reload") {
-    window.location.replace(url);
+    navigateWithFullLoad(url, navigationType);
     return;
   }
   if (action === "mark_internal") {

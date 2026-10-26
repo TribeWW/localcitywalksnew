@@ -280,19 +280,44 @@ describe("instrumentation-client", () => {
     stubConfiguredEnv();
     await loadInstrumentationClient();
     const replace = vi.fn();
+    const assign = vi.fn();
     vi.stubGlobal("location", {
+      href: "http://localhost/tours",
       origin: "http://localhost",
       pathname: "/tours",
       replace,
+      assign,
     });
 
     const { onRouterTransitionStart } = await import("./instrumentation-client");
-    onRouterTransitionStart("/tours?internal=off");
+    onRouterTransitionStart("/tours?internal=off", "replace");
 
     expect(replace).toHaveBeenCalledWith("/tours?internal=off");
+    expect(assign).not.toHaveBeenCalled();
     expect(window.localStorage.getItem(TRACKING_DISABLED_STORAGE_KEY)).toBe(
       "true",
     );
+    vi.unstubAllGlobals();
+  });
+
+  it("uses assign for push navigations so the previous page stays in history", async () => {
+    stubConfiguredEnv();
+    await loadInstrumentationClient();
+    const replace = vi.fn();
+    const assign = vi.fn();
+    vi.stubGlobal("location", {
+      href: "http://localhost/",
+      origin: "http://localhost",
+      pathname: "/",
+      replace,
+      assign,
+    });
+
+    const { onRouterTransitionStart } = await import("./instrumentation-client");
+    onRouterTransitionStart("/studio", "push");
+
+    expect(assign).toHaveBeenCalledWith("/studio");
+    expect(replace).not.toHaveBeenCalled();
     vi.unstubAllGlobals();
   });
 
@@ -312,6 +337,7 @@ describe("instrumentation-client", () => {
     await loadInstrumentationClient();
     const replace = vi.fn();
     vi.stubGlobal("location", {
+      href: "http://localhost/",
       origin: "http://localhost",
       pathname: "/",
       replace,
@@ -331,13 +357,14 @@ describe("instrumentation-client", () => {
     await loadInstrumentationClient();
     const replace = vi.fn();
     vi.stubGlobal("location", {
+      href: "http://localhost/",
       origin: "http://localhost",
       pathname: "/",
       replace,
     });
 
     const { onRouterTransitionStart } = await import("./instrumentation-client");
-    onRouterTransitionStart("/studio");
+    onRouterTransitionStart("/studio", "replace");
 
     expect(replace).toHaveBeenCalledWith("/studio");
     vi.unstubAllGlobals();
@@ -351,15 +378,40 @@ describe("instrumentation-client", () => {
 
     const replace = vi.fn();
     vi.stubGlobal("location", {
+      href: "http://localhost/studio",
       origin: "http://localhost",
       pathname: "/studio",
       replace,
+      assign: vi.fn(),
     });
 
     const { onRouterTransitionStart } = await import("./instrumentation-client");
-    onRouterTransitionStart("/tours");
+    onRouterTransitionStart("/tours", "push");
 
-    expect(replace).toHaveBeenCalledWith("/tours");
+    expect(window.location.assign).toHaveBeenCalledWith("/tours");
+    expect(replace).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+
+  it("keeps the current pathname when soft-navigating with a query-only internal link", async () => {
+    stubConfiguredEnv();
+    await loadInstrumentationClient();
+    const replace = vi.fn();
+    vi.stubGlobal("location", {
+      href: "http://localhost/tours/paris",
+      origin: "http://localhost",
+      pathname: "/tours/paris",
+      replace,
+      assign: vi.fn(),
+    });
+
+    const { onRouterTransitionStart } = await import("./instrumentation-client");
+    onRouterTransitionStart("?internal=off", "replace");
+
+    expect(replace).toHaveBeenCalledWith("?internal=off");
+    expect(window.localStorage.getItem(TRACKING_DISABLED_STORAGE_KEY)).toBe(
+      "true",
+    );
     vi.unstubAllGlobals();
   });
 });

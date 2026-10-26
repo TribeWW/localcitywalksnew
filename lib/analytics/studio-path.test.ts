@@ -25,4 +25,13 @@ describe("pathnameFromUrl", () => {
       "/studio",
     );
   });
+
+  it("keeps the current pathname for query-only and fragment-only targets", () => {
+    expect(
+      pathnameFromUrl("?internal=off", "https://example.com/tours/paris"),
+    ).toBe("/tours/paris");
+    expect(pathnameFromUrl("#panel", "https://example.com/studio")).toBe(
+      "/studio",
+    );
+  });
 });

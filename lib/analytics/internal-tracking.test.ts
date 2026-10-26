@@ -144,4 +144,10 @@ describe("searchFromUrl", () => {
       "?internal=1",
     );
   });
+
+  it("resolves query-only targets against the current URL", () => {
+    expect(
+      searchFromUrl("?internal=1", "https://example.com/tours/paris"),
+    ).toBe("?internal=1");
+  });
 });
