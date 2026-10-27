@@ -134,4 +134,18 @@
   .btn-default {
     @apply inline-flex items-center justify-center px-8 py-3  font-semibold rounded-md transition-colors duration-200;
   }
+
+  /**
+   * Frosted photo control surface for tour gallery badges, close, and arrows.
+   * Spec 0002 tokens: fill, border, blur.
+   */
+  .photo-control {
+    --photo-control-bg: rgba(255, 255, 255, 0.9);
+    --photo-control-border: rgba(255, 255, 255, 0.3);
+    --photo-control-blur: 8px;
+    background-color: var(--photo-control-bg);
+    border: 1.5px solid var(--photo-control-border);
+    backdrop-filter: blur(var(--photo-control-blur));
+    -webkit-backdrop-filter: blur(var(--photo-control-blur));
+  }
 }

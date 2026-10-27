@@ -54,11 +54,12 @@ code in `lib/reviews/home-reviews.ts` · `components/home/Reviews.tsx` · `compo
 Redesign the tour page photo lightbox on top of the open on the right photo fix, keeping the shared dialog, and fit the outside ticket to this gallery (tokens, thumbnail images, and how browsing stays in sync). The tour request modal stays as it is.
 **Done when:** every grid photo and the extra photos badge open on that photo, with the counter and active thumbnail matching; arrows, arrow keys, swipe, and thumbnails stay in sync and wrap; Escape, the close button, and a click on the empty black area close it, and a click on the photo or thumbnails leaves it open; from 768px up the thumbnail row stays centred, opens on the active thumbnail (including when you reopen), scrolls with the mouse wheel, shows a fade only where thumbnails are hidden, and loads small images; focus does not jump to close while browsing; under 768px there is no thumbnail row and no arrows, swipe moves one photo and does not move the page or go back, and the photo clears the home indicator; both badges stay on one line and share the frosted control surface with close and the arrows; the lightbox uses the shared dialog. The tour request modal stays as it is.
 - [x] Design it (spec): `/architect tour photo lightbox`
-- [ ] Build it: `/develop tour photo lightbox`
-   - [ ] Lightbox shell on the live gallery (tokens, open, move, close, phone frame): AC-1, AC-2, AC-3, AC-5, AC-6, AC-8, AC-10
-   - [ ] Desktop thumbnail row (small images, centre, wheel, fade): AC-4, AC-5, AC-7
-   - [ ] Grid badges on one line with the frosted control surface: AC-9
-spec [0002](../specs/0002-tour-photo-lightbox.md)
+- [x] Build it: `/develop tour photo lightbox`
+   - [x] Lightbox shell on the live gallery (tokens, open, move, close, phone frame): AC-1, AC-2, AC-3, AC-5, AC-6, AC-8, AC-10
+   - [x] Desktop thumbnail row (small images, centre, wheel, fade): AC-4, AC-5, AC-7
+   - [x] Grid badges on one line with the frosted control surface: AC-9
+spec [0002](../specs/0002-tour-photo-lightbox/index.md)
+code in `components/tours/tour-image-gallery.tsx` · `app/globals.css` · `lib/bokun/resize-bokun-lightbox-thumbnail-url.ts`
 
 ## Deferred
 Out of scope for the current build pass, kept so the plan stays honest.

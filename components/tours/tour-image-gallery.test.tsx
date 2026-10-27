@@ -23,6 +23,14 @@ const images = [
   "/photo-7.jpg",
 ];
 
+const bokunImages = [
+  "https://imgcdn.bokun.tools/a.jpg?w=660&h=660",
+  "https://imgcdn.bokun.tools/b.jpg?w=660&h=660",
+  "https://imgcdn.bokun.tools/c.jpg?w=660&h=660",
+  "https://imgcdn.bokun.tools/d.jpg?w=660&h=660",
+  "https://imgcdn.bokun.tools/e.jpg?w=660&h=660",
+];
+
 describe("TourImageGallery lightbox open index", () => {
   const trackWidth = 800;
   let scrollToMock: ReturnType<typeof vi.fn>;
@@ -36,6 +44,7 @@ describe("TourImageGallery lightbox open index", () => {
       },
     });
     HTMLElement.prototype.scrollTo = scrollToMock;
+    HTMLElement.prototype.scrollBy = scrollToMock;
   });
 
   afterEach(() => {
@@ -56,6 +65,20 @@ describe("TourImageGallery lightbox open index", () => {
         left: 2 * trackWidth,
         behavior: "instant",
       });
+    });
+  });
+
+  it("opens photo 4 from the extra photos badge", async () => {
+    render(<TourImageGallery images={images} title="Mulhouse walk" />);
+
+    fireEvent.click(
+      screen.getByLabelText(
+        "Open gallery fullscreen, 3 more photos not shown in preview",
+      ),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("4 / 7")).toBeTruthy();
     });
   });
 
@@ -103,5 +126,99 @@ describe("TourImageGallery lightbox open index", () => {
 
     expect(screen.getByText("4 / 7")).toBeTruthy();
     expect(screen.queryByText("3 / 7")).toBeNull();
+  });
+
+  it("wraps from last to first with an instant strip jump", async () => {
+    render(<TourImageGallery images={images} title="Mulhouse walk" />);
+
+    fireEvent.click(screen.getByLabelText("Open image 3 fullscreen"));
+    await waitFor(() => {
+      expect(screen.getByText("3 / 7")).toBeTruthy();
+    });
+
+    // Jump to last via thumbnail, then next wraps.
+    fireEvent.click(screen.getByLabelText("Go to image 7"));
+    await waitFor(() => {
+      expect(screen.getByText("7 / 7")).toBeTruthy();
+    });
+
+    scrollToMock.mockClear();
+    fireEvent.click(screen.getByLabelText("Next image"));
+
+    await waitFor(() => {
+      expect(screen.getByText("1 / 7")).toBeTruthy();
+    });
+    expect(scrollToMock).toHaveBeenCalledWith({
+      left: 0,
+      behavior: "instant",
+    });
+  });
+
+  it("jumps instantly when a far thumbnail is clicked", async () => {
+    render(<TourImageGallery images={images} title="Mulhouse walk" />);
+
+    fireEvent.click(screen.getByLabelText("Open image 3 fullscreen"));
+    await waitFor(() => {
+      expect(screen.getByText("3 / 7")).toBeTruthy();
+    });
+
+    scrollToMock.mockClear();
+    fireEvent.click(screen.getByLabelText("Go to image 7"));
+
+    await waitFor(() => {
+      expect(screen.getByText("7 / 7")).toBeTruthy();
+    });
+    expect(scrollToMock).toHaveBeenCalledWith({
+      left: 6 * trackWidth,
+      behavior: "instant",
+    });
+  });
+
+  it("keeps a failed photo in the count and does not remove its URL", async () => {
+    render(<TourImageGallery images={images} title="Mulhouse walk" />);
+
+    fireEvent.click(screen.getByLabelText("Open image 3 fullscreen"));
+    await waitFor(() => {
+      expect(screen.getByText("3 / 7")).toBeTruthy();
+    });
+
+    const mainPhoto = screen
+      .getAllByAltText("Mulhouse walk image 3")
+      .find((node) => node.hasAttribute("data-photo-chrome"));
+    expect(mainPhoto).toBeTruthy();
+    fireEvent.error(mainPhoto as HTMLElement);
+
+    expect(screen.getByText("3 / 7")).toBeTruthy();
+    expect(screen.getByLabelText("Go to image 3")).toBeTruthy();
+  });
+
+  it("does not set the booking stacked overlay marker", async () => {
+    render(<TourImageGallery images={images} title="Mulhouse walk" />);
+
+    fireEvent.click(screen.getByLabelText("Open image 3 fullscreen"));
+    await waitFor(() => {
+      expect(screen.getByText("3 / 7")).toBeTruthy();
+    });
+
+    expect(
+      document.querySelector("[data-booking-stacked-overlay]"),
+    ).toBeNull();
+    expect(screen.getByLabelText("Close photos")).toBeTruthy();
+    expect(screen.getByText("Tour photos")).toBeTruthy();
+  });
+
+  it("loads small Bókun addresses on desktop thumbnails", async () => {
+    render(<TourImageGallery images={bokunImages} title="Mulhouse walk" />);
+
+    fireEvent.click(screen.getByLabelText("Open image 3 fullscreen"));
+    await waitFor(() => {
+      expect(screen.getByText("3 / 5")).toBeTruthy();
+    });
+
+    const thumb = document.querySelector(
+      'img[src*="w=160"][src*="h=112"]',
+    ) as HTMLImageElement | null;
+    expect(thumb).toBeTruthy();
+    expect(thumb?.src).toContain("imgcdn.bokun.tools");
   });
 });
