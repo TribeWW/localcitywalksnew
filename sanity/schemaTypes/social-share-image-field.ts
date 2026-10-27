@@ -8,7 +8,7 @@ import { apiVersion } from "../env";
 import { PAGE_SEO_FIELDSET_NAME } from "./page-seo-fields.helpers";
 import {
   validateSocialShareImageAlt,
-  validateSocialShareImageSize,
+  validateSocialShareImageSizeFromFetch,
 } from "./social-share-image-field.helpers";
 
 type DefineSocialShareImageFieldOptions = {
@@ -68,8 +68,9 @@ export function defineSocialShareImageField(
           const assetRef = image?.asset?._ref;
           if (!assetRef) return true;
 
-          const dimensions = await fetchAssetDimensions(context, assetRef);
-          return validateSocialShareImageSize(dimensions);
+          return validateSocialShareImageSizeFromFetch(() =>
+            fetchAssetDimensions(context, assetRef),
+          );
         })
         .warning(),
   });

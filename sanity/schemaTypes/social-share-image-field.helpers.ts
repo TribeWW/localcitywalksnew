@@ -9,6 +9,9 @@ export const SOCIAL_SHARE_SIZE_WARNING = "Image is smaller than 1200×630 px.";
 
 export const SOCIAL_SHARE_ALT_WARNING = "Add text describing the image.";
 
+export const SOCIAL_SHARE_DIMENSIONS_FETCH_WARNING =
+  "Could not verify image dimensions. Please try again.";
+
 export type ImageDimensions = {
   width?: number | null;
   height?: number | null;
@@ -37,6 +40,19 @@ export function validateSocialShareImageSize(
   }
 
   return true;
+}
+
+/**
+ * Runs size validation after fetching dimensions; warns when the fetch rejects.
+ */
+export async function validateSocialShareImageSizeFromFetch(
+  fetchDimensions: () => Promise<ImageDimensions | null | undefined>,
+): Promise<true | string> {
+  try {
+    return validateSocialShareImageSize(await fetchDimensions());
+  } catch {
+    return SOCIAL_SHARE_DIMENSIONS_FETCH_WARNING;
+  }
 }
 
 /**

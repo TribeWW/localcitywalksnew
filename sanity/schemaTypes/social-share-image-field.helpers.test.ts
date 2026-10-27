@@ -5,11 +5,13 @@
 import { describe, expect, it } from "vitest";
 import {
   SOCIAL_SHARE_ALT_WARNING,
+  SOCIAL_SHARE_DIMENSIONS_FETCH_WARNING,
   SOCIAL_SHARE_MIN_HEIGHT,
   SOCIAL_SHARE_MIN_WIDTH,
   SOCIAL_SHARE_SIZE_WARNING,
   validateSocialShareImageAlt,
   validateSocialShareImageSize,
+  validateSocialShareImageSizeFromFetch,
 } from "./social-share-image-field.helpers";
 
 describe("validateSocialShareImageSize", () => {
@@ -39,6 +41,31 @@ describe("validateSocialShareImageSize", () => {
     expect(
       validateSocialShareImageSize({ width: 1200, height: 629 }),
     ).toBe(SOCIAL_SHARE_SIZE_WARNING);
+  });
+});
+
+describe("validateSocialShareImageSizeFromFetch", () => {
+  it("preserves size validation when dimensions resolve", async () => {
+    await expect(
+      validateSocialShareImageSizeFromFetch(async () => ({
+        width: 1600,
+        height: 900,
+      })),
+    ).resolves.toBe(true);
+    await expect(
+      validateSocialShareImageSizeFromFetch(async () => ({
+        width: 800,
+        height: 400,
+      })),
+    ).resolves.toBe(SOCIAL_SHARE_SIZE_WARNING);
+  });
+
+  it("warns when the dimensions fetch rejects", async () => {
+    await expect(
+      validateSocialShareImageSizeFromFetch(async () => {
+        throw new Error("network");
+      }),
+    ).resolves.toBe(SOCIAL_SHARE_DIMENSIONS_FETCH_WARNING);
   });
 });
 
