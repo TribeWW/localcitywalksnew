@@ -20,6 +20,7 @@ const posthogMock = vi.hoisted(() => {
     opt_out_capturing: vi.fn(() => {
       status = "denied";
     }),
+    startSessionRecording: vi.fn(),
     setInternalOrTestUser: vi.fn(),
     resetStatus: () => {
       status = "pending";
@@ -63,6 +64,7 @@ describe("instrumentation-client", () => {
     posthogInit.mockReset();
     posthogMock.opt_in_capturing.mockReset();
     posthogMock.opt_out_capturing.mockReset();
+    posthogMock.startSessionRecording.mockReset();
     posthogMock.setInternalOrTestUser.mockReset();
     posthogMock.resetStatus();
     window.localStorage.clear();
@@ -123,15 +125,20 @@ describe("instrumentation-client", () => {
 
     expect(posthogMock.opt_in_capturing).not.toHaveBeenCalled();
     expect(posthogMock.opt_out_capturing).not.toHaveBeenCalled();
+    expect(posthogMock.startSessionRecording).not.toHaveBeenCalled();
   });
 
-  it("opts in when the banner accepts Measurement", async () => {
+  it("opts in and starts session recording on the same page when Measurement is accepted", async () => {
     stubConfiguredEnv();
     await loadInstrumentationClient();
 
     expressPreference({ purposes: { "1": true, "4": true } });
 
     expect(posthogMock.opt_in_capturing).toHaveBeenCalledTimes(1);
+    expect(posthogMock.startSessionRecording).toHaveBeenCalledTimes(1);
+    expect(
+      posthogMock.startSessionRecording.mock.invocationCallOrder[0],
+    ).toBeGreaterThan(posthogMock.opt_in_capturing.mock.invocationCallOrder[0]);
     expect(posthogMock.opt_out_capturing).not.toHaveBeenCalled();
   });
 
@@ -143,6 +150,7 @@ describe("instrumentation-client", () => {
 
     expect(posthogMock.opt_out_capturing).toHaveBeenCalledTimes(1);
     expect(posthogMock.opt_in_capturing).not.toHaveBeenCalled();
+    expect(posthogMock.startSessionRecording).not.toHaveBeenCalled();
   });
 
   it("applies a returning visitor's stored choice that iubenda reported before init", async () => {
@@ -155,6 +163,22 @@ describe("instrumentation-client", () => {
 
     expect(posthogMock.opt_out_capturing).toHaveBeenCalledTimes(1);
     expect(posthogMock.opt_in_capturing).not.toHaveBeenCalled();
+    expect(posthogMock.startSessionRecording).not.toHaveBeenCalled();
+  });
+
+  it("starts session recording when a returning visitor's stored Accept is applied at init", async () => {
+    stubConfiguredEnv();
+    (window as unknown as Record<string, unknown>)[IUBENDA_PREFERENCE_KEY] = {
+      preference: { purposes: { "4": true } },
+    };
+
+    await loadInstrumentationClient();
+
+    expect(posthogMock.opt_in_capturing).toHaveBeenCalledTimes(1);
+    expect(posthogMock.startSessionRecording).toHaveBeenCalledTimes(1);
+    expect(
+      posthogMock.startSessionRecording.mock.invocationCallOrder[0],
+    ).toBeGreaterThan(posthogMock.opt_in_capturing.mock.invocationCallOrder[0]);
   });
 
   it("follows a later change from the cookie settings link", async () => {
@@ -165,6 +189,7 @@ describe("instrumentation-client", () => {
     expressPreference({ purposes: { "4": false } });
 
     expect(posthogMock.opt_in_capturing).toHaveBeenCalledTimes(1);
+    expect(posthogMock.startSessionRecording).toHaveBeenCalledTimes(1);
     expect(posthogMock.opt_out_capturing).toHaveBeenCalledTimes(1);
     expect(
       posthogMock.opt_out_capturing.mock.invocationCallOrder[0],
@@ -179,6 +204,7 @@ describe("instrumentation-client", () => {
     expressPreference({ purposes: { "4": true } });
 
     expect(posthogMock.opt_in_capturing).toHaveBeenCalledTimes(1);
+    expect(posthogMock.startSessionRecording).toHaveBeenCalledTimes(1);
   });
 
   it("skips init on Sanity Studio routes", async () => {

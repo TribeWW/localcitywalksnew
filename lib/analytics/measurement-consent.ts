@@ -19,7 +19,10 @@ type BufferedPreference = { preference?: unknown };
 
 type ConsentClient = Pick<
   PostHog,
-  "get_explicit_consent_status" | "opt_in_capturing" | "opt_out_capturing"
+  | "get_explicit_consent_status"
+  | "opt_in_capturing"
+  | "opt_out_capturing"
+  | "startSessionRecording"
 >;
 
 /** Inline script body that records iubenda preferences for `syncMeasurementConsent`. */
@@ -45,8 +48,17 @@ function applyMeasurementConsent(
   granted: boolean,
 ) {
   const status = client.get_explicit_consent_status();
-  if (granted && status !== "granted") client.opt_in_capturing();
-  if (!granted && status !== "denied") client.opt_out_capturing();
+  if (granted) {
+    if (status === "granted") return;
+    // `opt_in_capturing` flips analytics on, but with cookieless `on_reject` the
+    // recorder often stays idle until the next document load. Start it here so
+    // Accept / Cookie settings begin recording on the same page (including
+    // single-page visits that never navigate).
+    client.opt_in_capturing();
+    client.startSessionRecording();
+    return;
+  }
+  if (status !== "denied") client.opt_out_capturing();
 }
 
 export function syncMeasurementConsent(
