@@ -14,6 +14,7 @@ export const structure: StructureResolver = (S) =>
   S.list()
     .title("Content")
     .items([
+      S.documentTypeListItem("page").title("Pages"),
       S.listItem()
         .title("Home spotlight")
         .icon(Star)
