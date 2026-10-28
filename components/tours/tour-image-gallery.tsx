@@ -28,6 +28,10 @@ interface TourImageGalleryProps {
 /** Instant jump; "instant" matches the ScrollToOptions value browsers accept. */
 const SCROLL_INSTANT = "instant" as ScrollBehavior;
 
+/** Lightbox photo aspect ratio (900 × 600 → 3:2). */
+const LIGHTBOX_PHOTO_WIDTH = 900;
+const LIGHTBOX_PHOTO_HEIGHT = 600;
+
 const PHOTO_CONTROL_ICON =
   "photo-control size-10 shrink-0 rounded-full text-nightsky shadow-none hover:bg-white/95 hover:text-nightsky";
 
@@ -54,9 +58,7 @@ export default function TourImageGallery({
   const programmaticTargetRef = useRef<number | null>(null);
   /** Backdrop close only when pointer down and up both hit a backdrop mark. */
   const backdropPointerDownRef = useRef(false);
-  const backdropPointerStartRef = useRef<{ x: number; y: number } | null>(
-    null,
-  );
+  const backdropPointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const skipThumbCentreSmoothRef = useRef(false);
 
   const safeImages = useMemo(() => images.filter(Boolean), [images]);
@@ -123,9 +125,7 @@ export default function TourImageGallery({
     const rowRect = row.getBoundingClientRect();
     const thumbRect = thumb.getBoundingClientRect();
     const delta =
-      thumbRect.left +
-      thumbRect.width / 2 -
-      (rowRect.left + rowRect.width / 2);
+      thumbRect.left + thumbRect.width / 2 - (rowRect.left + rowRect.width / 2);
     if (Math.abs(delta) < 1) {
       updateThumbFade();
       return true;
@@ -280,7 +280,7 @@ export default function TourImageGallery({
     if (!(target instanceof HTMLElement)) return false;
     return Boolean(
       target.closest("[data-photo-backdrop]") &&
-        !target.closest("[data-photo-chrome]"),
+      !target.closest("[data-photo-chrome]"),
     );
   }
 
@@ -500,9 +500,7 @@ export default function TourImageGallery({
                   sizes="(max-width: 767px) 1px, 26vw"
                 />
                 {remainingAfterFour > 0 ? (
-                  <div
-                    className={cn(badgeClass, "absolute bottom-3 right-3")}
-                  >
+                  <div className={cn(badgeClass, "absolute bottom-3 right-3")}>
                     <Eye className="size-4" aria-hidden />
                     <span>{`+${remainingAfterFour} photos`}</span>
                   </div>
@@ -554,7 +552,10 @@ export default function TourImageGallery({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className={cn(PHOTO_CONTROL_ICON, "absolute right-4 top-1/2 -translate-y-1/2")}
+                className={cn(
+                  PHOTO_CONTROL_ICON,
+                  "absolute right-4 top-1/2 -translate-y-1/2",
+                )}
                 aria-label="Close photos"
               >
                 <X className="size-5" aria-hidden />
@@ -630,11 +631,16 @@ export default function TourImageGallery({
                         <Image
                           src={url}
                           alt={`${title} image ${index + 1}`}
-                          width={1600}
-                          height={1200}
+                          width={LIGHTBOX_PHOTO_WIDTH}
+                          height={LIGHTBOX_PHOTO_HEIGHT}
                           data-photo-chrome
                           onError={() => markImageFailed(index)}
-                          className="h-auto max-h-full w-full rounded-lg object-contain md:w-auto md:max-h-[calc(100dvh-4rem-6.5rem)]"
+                          className={cn(
+                            "h-auto rounded-lg object-contain",
+                            // Fill the stage; keep 900×600 ratio (max-* alone never enlarges).
+                            "w-[min(100%,calc((100dvh-4rem-1.5rem)*900/600))] max-h-[calc(100dvh-4rem-1.5rem)]",
+                            "md:w-[min(100%,calc((100dvh-4rem-6.5rem)*900/600))] md:max-h-[calc(100dvh-4rem-6.5rem)]",
+                          )}
                           sizes="(max-width: 767px) calc(100vw - 16px), calc(100vw - 128px)"
                           priority={index === activeIndex}
                         />
