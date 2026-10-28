@@ -41,9 +41,7 @@ export default function TourImageGallery({
 }: TourImageGalleryProps) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [failedIndexes, setFailedIndexes] = useState<Set<number>>(
-    () => new Set(),
-  );
+  const [failedUrls, setFailedUrls] = useState<Set<string>>(() => new Set());
   const [thumbFade, setThumbFade] = useState({ left: false, right: false });
 
   const trackRef = useRef<HTMLDivElement | null>(null);
@@ -66,11 +64,11 @@ export default function TourImageGallery({
   /** Photos beyond the four mosaic slots (only relevant when we show all four previews). */
   const remainingAfterFour = Math.max(0, safeImages.length - 4);
 
-  function markImageFailed(index: number) {
-    setFailedIndexes((prev) => {
-      if (prev.has(index)) return prev;
+  function markImageFailed(url: string) {
+    setFailedUrls((prev) => {
+      if (prev.has(url)) return prev;
       const next = new Set(prev);
-      next.add(index);
+      next.add(url);
       return next;
     });
   }
