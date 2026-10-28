@@ -530,9 +530,8 @@ export default function TourImageGallery({
           aria-describedby={undefined}
           onOpenAutoFocus={(event) => {
             event.preventDefault();
-            if (event.currentTarget instanceof HTMLElement) {
-              event.currentTarget.focus();
-            }
+            const target = event.currentTarget as HTMLElement | null;
+            target?.focus({ preventScroll: true });
           }}
           className={cn(
             "top-0 left-0 z-[60] flex h-dvh w-screen max-w-[100vw] translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 bg-transparent p-0 shadow-none sm:max-w-[100vw]",
