@@ -221,4 +221,89 @@ describe("TourImageGallery lightbox open index", () => {
     expect(thumb).toBeTruthy();
     expect(thumb?.src).toContain("imgcdn.bokun.tools");
   });
+
+  it("scrolls the overflowing thumbnail row after openAt", async () => {
+    const scrollByMock = vi.fn();
+    HTMLElement.prototype.scrollBy = scrollByMock;
+
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+      function (this: HTMLElement) {
+        const label = this.getAttribute("aria-label") ?? "";
+        const thumbMatch = label.match(/^Go to image (\d+)$/);
+        if (thumbMatch) {
+          const index = Number(thumbMatch[1]) - 1;
+          const left = index * 88;
+          return {
+            x: left,
+            y: 0,
+            left,
+            top: 0,
+            width: 80,
+            height: 56,
+            right: left + 80,
+            bottom: 56,
+            toJSON() {
+              return {};
+            },
+          } as DOMRect;
+        }
+
+        if (
+          this.classList.contains("gap-2") &&
+          this.classList.contains("overflow-x-auto")
+        ) {
+          return {
+            x: 0,
+            y: 0,
+            left: 0,
+            top: 0,
+            width: 200,
+            height: 56,
+            right: 200,
+            bottom: 56,
+            toJSON() {
+              return {};
+            },
+          } as DOMRect;
+        }
+
+        return {
+          x: 0,
+          y: 0,
+          left: 0,
+          top: 0,
+          width: 0,
+          height: 0,
+          right: 0,
+          bottom: 0,
+          toJSON() {
+            return {};
+          },
+        } as DOMRect;
+      },
+    );
+
+    render(<TourImageGallery images={images} title="Mulhouse walk" />);
+
+    fireEvent.click(screen.getByLabelText("Open image 3 fullscreen"));
+
+    await waitFor(() => {
+      expect(screen.getByText("3 / 7")).toBeTruthy();
+    });
+
+    await waitFor(() => {
+      expect(scrollByMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          behavior: "instant",
+          left: expect.any(Number),
+        }),
+      );
+    });
+
+    const thumbCentreCall = scrollByMock.mock.calls.find(
+      (call) =>
+        call[0]?.behavior === "instant" && typeof call[0]?.left === "number",
+    );
+    expect(thumbCentreCall?.[0].left).not.toBe(0);
+  });
 });

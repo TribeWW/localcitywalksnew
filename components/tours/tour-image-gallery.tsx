@@ -87,23 +87,38 @@ export default function TourImageGallery({
     return Math.abs(from - to) === 1;
   }
 
+  /** Smooth when allowed; instant when the user prefers reduced motion. */
+  function getAnimatedScrollBehavior(): ScrollBehavior {
+    if (
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return SCROLL_INSTANT;
+    }
+    return "smooth";
+  }
+
   function updateThumbFade() {
     const row = thumbRowRef.current;
     if (!row) {
-      setThumbFade({ left: false, right: false });
+      setThumbFade((prev) =>
+        !prev.left && !prev.right ? prev : { left: false, right: false },
+      );
       return;
     }
     const maxScroll = row.scrollWidth - row.clientWidth;
-    setThumbFade({
-      left: row.scrollLeft > 1,
-      right: maxScroll - row.scrollLeft > 1,
-    });
+    const left = row.scrollLeft > 1;
+    const right = maxScroll - row.scrollLeft > 1;
+    setThumbFade((prev) =>
+      prev.left === left && prev.right === right ? prev : { left, right },
+    );
   }
 
-  function centreActiveThumbnail(behavior: ScrollBehavior) {
+  function centreActiveThumbnail(behavior: ScrollBehavior): boolean {
     const row = thumbRowRef.current;
     const thumb = thumbButtonRefs.current[activeIndex];
-    if (!row || !thumb) return;
+    if (!row || !thumb) return false;
 
     const rowRect = row.getBoundingClientRect();
     const thumbRect = thumb.getBoundingClientRect();
@@ -113,12 +128,13 @@ export default function TourImageGallery({
       (rowRect.left + rowRect.width / 2);
     if (Math.abs(delta) < 1) {
       updateThumbFade();
-      return;
+      return true;
     }
     row.scrollBy({ left: delta, behavior });
     if (behavior === SCROLL_INSTANT) {
       updateThumbFade();
     }
+    return true;
   }
 
   function openAt(index: number) {
@@ -133,7 +149,7 @@ export default function TourImageGallery({
   function goTo(index: number) {
     const bounded = Math.max(0, Math.min(index, safeImages.length - 1));
     const behavior = isStripNeighbor(activeIndex, bounded)
-      ? "smooth"
+      ? getAnimatedScrollBehavior()
       : SCROLL_INSTANT;
     programmaticTargetRef.current = bounded;
     scrollTrackTo(bounded, behavior);
@@ -183,9 +199,16 @@ export default function TourImageGallery({
 
   function setThumbRowRef(node: HTMLDivElement | null) {
     thumbRowRef.current = node;
-    if (node) {
-      requestAnimationFrame(updateThumbFade);
-    }
+    if (!node) return;
+    requestAnimationFrame(() => {
+      updateThumbFade();
+      if (
+        skipThumbCentreSmoothRef.current &&
+        centreActiveThumbnail(SCROLL_INSTANT)
+      ) {
+        skipThumbCentreSmoothRef.current = false;
+      }
+    });
   }
 
   useEffect(() => {
@@ -209,9 +232,8 @@ export default function TourImageGallery({
     if (!open) return;
     const behavior = skipThumbCentreSmoothRef.current
       ? SCROLL_INSTANT
-      : "smooth";
-    centreActiveThumbnail(behavior);
-    if (skipThumbCentreSmoothRef.current) {
+      : getAnimatedScrollBehavior();
+    if (centreActiveThumbnail(behavior) && skipThumbCentreSmoothRef.current) {
       skipThumbCentreSmoothRef.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -506,7 +528,10 @@ export default function TourImageGallery({
           overlayClassName="z-[60] bg-[rgba(0,0,0,0.96)]"
           tabIndex={-1}
           aria-describedby={undefined}
-          onOpenAutoFocus={(event) => event.preventDefault()}
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            event.currentTarget.focus();
+          }}
           className={cn(
             "top-0 left-0 z-[60] flex h-dvh w-screen max-w-[100vw] translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 bg-transparent p-0 shadow-none sm:max-w-[100vw]",
             "data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100",
@@ -597,7 +622,7 @@ export default function TourImageGallery({
                       {failed ? (
                         <div
                           data-photo-chrome
-                          className="h-full max-h-full w-full max-w-full rounded-lg bg-black/40 md:max-h-[calc(100dvh-4rem-5.5rem)]"
+                          className="h-full max-h-full w-full max-w-full rounded-lg bg-black/40 md:max-h-[calc(100dvh-4rem-6.5rem)]"
                           aria-hidden
                         />
                       ) : (
@@ -608,7 +633,7 @@ export default function TourImageGallery({
                           height={1200}
                           data-photo-chrome
                           onError={() => markImageFailed(index)}
-                          className="h-auto max-h-full w-full rounded-lg object-contain md:w-auto md:max-h-[calc(100dvh-4rem-5.5rem)]"
+                          className="h-auto max-h-full w-full rounded-lg object-contain md:w-auto md:max-h-[calc(100dvh-4rem-6.5rem)]"
                           sizes="(max-width: 767px) calc(100vw - 16px), calc(100vw - 128px)"
                           priority={index === activeIndex}
                         />

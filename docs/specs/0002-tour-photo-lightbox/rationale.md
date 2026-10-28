@@ -8,7 +8,7 @@ The tour page already shows a photo grid and a full screen lightbox. Clicking a 
 
 What is still weak is the picture and the browsing around it. There is no thumbnail row, the dark margin does not close the lightbox, focus can land on close, and the grid badges do not share a control surface with the lightbox. A phone can also let a sideways swipe move the page or go back.
 
-Photos are Bókun image addresses. The page passes one list: the hero, plus up to eight gallery photos, wigit merth duplicates removed. There is no per photo caption in that data. The tour request modal stays as it is. The booking drawer uses its own higher layer and must not treat the lightbox as one of its overlays.
+Photos are Bókun image addresses. The page passes one list: the hero, plus up to eight gallery photos, with duplicates removed. There is no per photo caption in that data. The tour request modal stays as it is. The booking drawer uses its own higher layer and must not treat the lightbox as one of its overlays.
 
 Not deciding leaves the lightbox looking unlike the mockup, and leaves the close, focus, and thumbnail behavior to whoever builds it next.
 
