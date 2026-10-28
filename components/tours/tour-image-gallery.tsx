@@ -612,7 +612,7 @@ export default function TourImageGallery({
                 className="flex h-full w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               >
                 {safeImages.map((url, index) => {
-                  const failed = failedIndexes.has(index);
+                  const failed = failedUrls.has(url);
                   return (
                     <div
                       key={`${url}-slide-${index}`}
@@ -632,7 +632,7 @@ export default function TourImageGallery({
                           width={LIGHTBOX_PHOTO_WIDTH}
                           height={LIGHTBOX_PHOTO_HEIGHT}
                           data-photo-chrome
-                          onError={() => markImageFailed(index)}
+                          onError={() => markImageFailed(url)}
                           className={cn(
                             "h-auto rounded-lg object-contain",
                             // Fill the stage; keep 900×600 ratio (max-* alone never enlarges).
@@ -671,7 +671,7 @@ export default function TourImageGallery({
                   >
                     {safeImages.map((url, index) => {
                       const thumbUrl = resizeBokunLightboxThumbnailUrl(url);
-                      const failed = failedIndexes.has(index);
+                      const failed = failedUrls.has(url);
                       const isActive = index === activeIndex;
                       return (
                         <button
