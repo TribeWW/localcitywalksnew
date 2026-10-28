@@ -697,6 +697,7 @@ export default function TourImageGallery({
                               loading="lazy"
                               className="object-cover"
                               sizes="80px"
+                              onError={() => markImageFailed(url)}
                             />
                           )}
                         </button>
