@@ -8,7 +8,7 @@ The tour page already shows a photo grid and a full screen lightbox. Clicking a 
 
 What is still weak is the picture and the browsing around it. There is no thumbnail row, the dark margin does not close the lightbox, focus can land on close, and the grid badges do not share a control surface with the lightbox. A phone can also let a sideways swipe move the page or go back.
 
-Photos are Bókun image addresses. The page passes one list: the hero, plus up to eight gallery photos, with duplicates removed. There is no per photo caption in that data. The tour request modal stays as it is. The booking drawer uses its own higher layer and must not treat the lightbox as one of its overlays.
+Photos are Bókun image addresses. The page passes one list: the hero, plus up to eight gallery photos, wigit merth duplicates removed. There is no per photo caption in that data. The tour request modal stays as it is. The booking drawer uses its own higher layer and must not treat the lightbox as one of its overlays.
 
 Not deciding leaves the lightbox looking unlike the mockup, and leaves the close, focus, and thumbnail behavior to whoever builds it next.
 
@@ -19,10 +19,12 @@ Not deciding leaves the lightbox looking unlike the mockup, and leaves the close
 Keep `TourImageGallery`, the shared dialog, the scroll strip, and the open on the clicked photo behavior. Apply the mockup picture and the locked browsing rules inside that component. Add only the photo control surface to the existing stylesheet.
 
 **Pros**:
+
 - The open on the clicked photo fix, the dialog focus trap, and the current tests stay.
 - One component change, reverted by reverting one commit.
 
 **Cons**:
+
 - The phone screen will not match the mockup frame, because the row and the caption stay off.
 - A linear strip cannot animate the wrap from the last photo to the first without flying through every photo, so that move jumps.
 
@@ -31,10 +33,12 @@ Keep `TourImageGallery`, the shared dialog, the scroll strip, and the open on th
 Port the mockup component as the lightbox, including its hand built overlay, and retire the dialog usage in the gallery.
 
 **Pros**:
+
 - The overlay markup matches the harness line for line.
 - Backdrop clicks, the thumbnail mask, and the wheel handler come across unchanged.
 
 **Cons**:
+
 - You lose the shared dialog (portal, focus trap, and focus return) that the scope keeps.
 - The harness focuses close, stops at the ends, and shows a phone row and a caption, which you ruled out.
 
@@ -43,10 +47,12 @@ Port the mockup component as the lightbox, including its hand built overlay, and
 Use the existing gallery, but also take the mockup's phone row, caption, end stops, and initial focus on close.
 
 **Pros**:
+
 - Desktop and phone would both follow the harness.
 - Arrow buttons could disable at the ends, which the harness already draws.
 
 **Cons**:
+
 - It drops wrap, the focus rule, and the phone layout you confirmed after seeing the mockup.
 - The caption would have to show the tour title or the alt text (`title image 3`), and Bókun gives this page no real caption.
 

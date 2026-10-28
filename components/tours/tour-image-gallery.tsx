@@ -309,7 +309,7 @@ export default function TourImageGallery({
       <button
         type="button"
         onClick={() => openAt(0)}
-        className="relative mb-10 h-[260px] w-full overflow-hidden rounded-xl bg-white shadow-sm md:hidden"
+        className="relative mb-10 h-[260px] w-full cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm md:hidden"
         aria-label="Open image gallery fullscreen"
       >
         <Image
@@ -333,7 +333,7 @@ export default function TourImageGallery({
           <button
             type="button"
             onClick={() => openAt(0)}
-            className="relative h-[420px] w-full overflow-hidden rounded-xl bg-white shadow-sm"
+            className="relative h-[420px] w-full cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm"
             aria-label="Open image gallery fullscreen"
           >
             <Image
@@ -352,7 +352,7 @@ export default function TourImageGallery({
                 key={i}
                 type="button"
                 onClick={() => openAt(i)}
-                className="relative overflow-hidden rounded-xl bg-white shadow-sm"
+                className="relative cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm"
                 aria-label={`Open image ${i + 1} fullscreen`}
               >
                 <Image
@@ -370,7 +370,7 @@ export default function TourImageGallery({
             <button
               type="button"
               onClick={() => openAt(0)}
-              className="relative col-span-6 row-span-2 overflow-hidden rounded-xl bg-white shadow-sm"
+              className="relative col-span-6 row-span-2 cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm"
               aria-label="Open image 1 fullscreen"
             >
               <Image
@@ -385,7 +385,7 @@ export default function TourImageGallery({
             <button
               type="button"
               onClick={() => openAt(1)}
-              className="relative col-span-6 row-start-1 overflow-hidden rounded-xl bg-white shadow-sm"
+              className="relative col-span-6 row-start-1 cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm"
               aria-label="Open image 2 fullscreen"
             >
               <Image
@@ -399,7 +399,7 @@ export default function TourImageGallery({
             <button
               type="button"
               onClick={() => openAt(2)}
-              className="relative col-span-6 row-start-2 overflow-hidden rounded-xl bg-white shadow-sm"
+              className="relative col-span-6 row-start-2 cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm"
               aria-label="Open image 3 fullscreen"
             >
               <Image
@@ -416,7 +416,7 @@ export default function TourImageGallery({
             <button
               type="button"
               onClick={() => openAt(0)}
-              className="relative col-span-6 overflow-hidden rounded-xl bg-white shadow-sm"
+              className="relative col-span-6 cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm"
               aria-label="Open image 1 fullscreen"
             >
               <Image
@@ -432,7 +432,7 @@ export default function TourImageGallery({
             <button
               type="button"
               onClick={() => openAt(1)}
-              className="relative col-span-3 overflow-hidden rounded-xl bg-white shadow-sm"
+              className="relative col-span-3 cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm"
               aria-label="Open image 2 fullscreen"
             >
               <Image
@@ -448,7 +448,7 @@ export default function TourImageGallery({
               <button
                 type="button"
                 onClick={() => openAt(2)}
-                className="relative overflow-hidden rounded-xl bg-white shadow-sm"
+                className="relative cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm"
                 aria-label="Open image 3 fullscreen"
               >
                 <Image
@@ -463,7 +463,7 @@ export default function TourImageGallery({
               <button
                 type="button"
                 onClick={() => openAt(3)}
-                className="relative overflow-hidden rounded-xl bg-white shadow-sm"
+                className="relative cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm"
                 aria-label={
                   remainingAfterFour > 0
                     ? `Open gallery fullscreen, ${remainingAfterFour} more photos not shown in preview`
