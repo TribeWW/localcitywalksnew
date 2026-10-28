@@ -49,16 +49,15 @@ export function TourReviewsExpandableList({
     const id = scrollToReviewIdRef.current;
     scrollToReviewIdRef.current = null;
     if (!id) return;
-    const el = document.querySelector(`[data-tour-review-id="${CSS.escape(id)}"]`);
+    const el = document.querySelector(
+      `[data-tour-review-id="${CSS.escape(id)}"]`,
+    );
     el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [visibleCount]);
 
   return (
     <div className="flex min-w-0 flex-col">
-      <ul
-        id="tour-review-cards"
-        className="flex list-none flex-col gap-4 p-0"
-      >
+      <ul id="tour-review-cards" className="flex list-none flex-col gap-4 p-0">
         {visible.map((review) => (
           <li key={review._id} data-tour-review-id={review._id}>
             <ReviewCard review={review} presentation={presentation} />
@@ -70,7 +69,7 @@ export function TourReviewsExpandableList({
         <div className="mt-8 text-center">
           <button
             type="button"
-            className="text-sm font-semibold text-[#0F172A] underline decoration-1 underline-offset-[3px]"
+            className="text-sm font-semibold text-[#0F172A] underline decoration-1 underline-offset-[3px] cursor-pointer"
             aria-expanded={false}
             aria-controls="tour-review-cards"
             onClick={handleReadMore}
