@@ -32,6 +32,14 @@ const SCROLL_INSTANT = "instant" as ScrollBehavior;
 const LIGHTBOX_PHOTO_WIDTH = 900;
 const LIGHTBOX_PHOTO_HEIGHT = 600;
 
+/**
+ * Desktop lightbox chrome (arrows, thumb row, roomier photo stage).
+ * Needs width and height so a phone turned sideways (wide but short) stays
+ * on the mobile frame: one photo, no thumbs, no arrows (AC-3).
+ */
+const DESKTOP_LIGHTBOX =
+  "[@media(min-width:768px)_and_(min-height:500px)]";
+
 const PHOTO_CONTROL_ICON =
   "photo-control size-10 shrink-0 rounded-full text-nightsky shadow-none hover:bg-white/95 hover:text-nightsky";
 
@@ -569,7 +577,8 @@ export default function TourImageGallery({
               data-photo-backdrop
               className={cn(
                 "relative flex min-h-0 flex-1 items-center",
-                "px-2 pb-[max(24px,env(safe-area-inset-bottom))] md:px-16 md:pb-0",
+                "px-2 pb-[max(24px,env(safe-area-inset-bottom))]",
+                `${DESKTOP_LIGHTBOX}:px-16 ${DESKTOP_LIGHTBOX}:pb-0`,
               )}
             >
               {canNavigate ? (
@@ -582,7 +591,8 @@ export default function TourImageGallery({
                     onClick={goPrev}
                     className={cn(
                       PHOTO_CONTROL_ICON,
-                      "absolute left-4 top-1/2 z-20 hidden -translate-y-1/2 md:inline-flex",
+                      "absolute left-4 top-1/2 z-20 hidden -translate-y-1/2",
+                      `${DESKTOP_LIGHTBOX}:inline-flex`,
                     )}
                     aria-label="Previous image"
                   >
@@ -596,7 +606,8 @@ export default function TourImageGallery({
                     onClick={goNext}
                     className={cn(
                       PHOTO_CONTROL_ICON,
-                      "absolute right-4 top-1/2 z-20 hidden -translate-y-1/2 md:inline-flex",
+                      "absolute right-4 top-1/2 z-20 hidden -translate-y-1/2",
+                      `${DESKTOP_LIGHTBOX}:inline-flex`,
                     )}
                     aria-label="Next image"
                   >
@@ -622,7 +633,10 @@ export default function TourImageGallery({
                       {failed ? (
                         <div
                           data-photo-chrome
-                          className="h-full max-h-full w-full max-w-full rounded-lg bg-black/40 md:max-h-[calc(100dvh-4rem-6.5rem)]"
+                          className={cn(
+                            "h-full max-h-full w-full max-w-full rounded-lg bg-black/40",
+                            `${DESKTOP_LIGHTBOX}:max-h-[calc(100dvh-4rem-6.5rem)]`,
+                          )}
                           aria-hidden
                         />
                       ) : (
@@ -637,7 +651,8 @@ export default function TourImageGallery({
                             "h-auto rounded-lg object-contain",
                             // Fill the stage; keep 900×600 ratio (max-* alone never enlarges).
                             "w-[min(100%,calc((100dvh-4rem-1.5rem)*900/600))] max-h-[calc(100dvh-4rem-1.5rem)]",
-                            "md:w-[min(100%,calc((100dvh-4rem-6.5rem)*900/600))] md:max-h-[calc(100dvh-4rem-6.5rem)]",
+                            `${DESKTOP_LIGHTBOX}:w-[min(100%,calc((100dvh-4rem-6.5rem)*900/600))]`,
+                            `${DESKTOP_LIGHTBOX}:max-h-[calc(100dvh-4rem-6.5rem)]`,
                           )}
                           sizes="(max-width: 767px) calc(100vw - 16px), calc(100vw - 128px)"
                           priority={index === activeIndex}
@@ -652,7 +667,10 @@ export default function TourImageGallery({
             {canNavigate ? (
               <div
                 data-photo-chrome
-                className="relative z-10 hidden w-full shrink-0 justify-center px-4 pb-[max(24px,env(safe-area-inset-bottom))] pt-3 md:flex"
+                className={cn(
+                  "relative z-10 hidden w-full shrink-0 justify-center px-4 pb-[max(24px,env(safe-area-inset-bottom))] pt-3",
+                  `${DESKTOP_LIGHTBOX}:flex`,
+                )}
               >
                 <div
                   className={cn(
