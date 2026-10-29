@@ -50,12 +50,19 @@ function AccordionTrigger({
 function AccordionContent({
   className,
   children,
+  forceMount,
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Content>) {
   return (
     <AccordionPrimitive.Content
       data-slot="accordion-content"
-      className="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
+      forceMount={forceMount}
+      className={cn(
+        "overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down",
+        // forceMount keeps closed panels in the DOM; hide them on the Content
+        // node (data-state lives here, not on the inner className wrapper).
+        forceMount && "data-[state=closed]:hidden",
+      )}
       {...props}
     >
       <div className={cn("pt-0 pb-4", className)}>{children}</div>

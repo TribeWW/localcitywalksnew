@@ -26,7 +26,7 @@ export default function FaqAccordion({ items }: FaqAccordionProps) {
           </AccordionTrigger>
           <AccordionContent
             forceMount
-            className="pb-4 pr-6 text-[15px] leading-6 text-foreground sm:pb-5 sm:text-base data-[state=closed]:hidden"
+            className="pb-4 pr-6 text-[15px] leading-6 text-foreground sm:pb-5 sm:text-base"
           >
             {item.answer}
           </AccordionContent>
