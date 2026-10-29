@@ -24,7 +24,10 @@ export default function FaqAccordion({ items }: FaqAccordionProps) {
           <AccordionTrigger className=" py-4 pr-1 text-[15px] leading-6 font-semibold text-nightsky hover:underline cursor-pointer sm:py-6 sm:text-base">
             {item.question}
           </AccordionTrigger>
-          <AccordionContent className="pb-4 pr-6 text-[15px] leading-6 text-foreground sm:pb-5 sm:text-base">
+          <AccordionContent
+            forceMount
+            className="pb-4 pr-6 text-[15px] leading-6 text-foreground sm:pb-5 sm:text-base data-[state=closed]:hidden"
+          >
             {item.answer}
           </AccordionContent>
         </AccordionItem>
