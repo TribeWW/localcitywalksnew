@@ -3,6 +3,10 @@
 import { client } from "@/sanity/lib/client";
 import { writeClient } from "@/sanity/lib/write-client";
 import { transformSearchProductToCityCard } from "@/lib/bokun/transform-search-product-to-city-card";
+import {
+  DRAFT_PREFIX,
+  docsInCityIdentityGroup,
+} from "@/lib/cities/city-doc-identity";
 import { cityCodeLookupCandidates } from "@/lib/cities/legacy-city-code";
 import { slugifyForUrl, stripAccents } from "@/lib/utils";
 import { BokunProduct, CitySyncResult } from "@/types/bokun";
@@ -486,31 +490,6 @@ type LegacyCityDoc = {
   cityCode?: string | null;
   country?: { _ref?: string } | null;
 };
-
-const DRAFT_PREFIX = "drafts.";
-
-/** Published + draft `_id` pair for the same Sanity city identity. */
-function cityDocIdentityIds(rawId: string): {
-  publishedId: string;
-  draftId: string;
-} {
-  const publishedId = rawId.startsWith(DRAFT_PREFIX)
-    ? rawId.slice(DRAFT_PREFIX.length)
-    : rawId;
-  return {
-    publishedId,
-    draftId: rawId.startsWith(DRAFT_PREFIX) ? rawId : `${DRAFT_PREFIX}${publishedId}`,
-  };
-}
-
-/** Docs in `allDocs` that share the selected city's published/draft identity. */
-function docsInCityIdentityGroup(
-  allDocs: LegacyCityDoc[],
-  rawId: string,
-): LegacyCityDoc[] {
-  const { publishedId, draftId } = cityDocIdentityIds(rawId);
-  return allDocs.filter((doc) => doc._id === publishedId || doc._id === draftId);
-}
 
 /**
  * Finds country-linked (or any) city docs stored under pre-fold codes such as
