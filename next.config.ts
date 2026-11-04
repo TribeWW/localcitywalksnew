@@ -30,6 +30,24 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  /**
+   * Old city slugs produced before Latin letter folding (ø→o, ł→l).
+   * Keep permanent so search engines and shared links land on the corrected paths.
+   */
+  async redirects() {
+    return [
+      {
+        source: "/tours/troms/:path*",
+        destination: "/tours/tromso/:path*",
+        permanent: true,
+      },
+      {
+        source: "/tours/wroc-aw/:path*",
+        destination: "/tours/wroclaw/:path*",
+        permanent: true,
+      },
+    ];
+  },
   webpack: (config) => {
     config.ignoreWarnings = [
       ...(config.ignoreWarnings ?? []),
