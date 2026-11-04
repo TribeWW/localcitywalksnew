@@ -183,16 +183,33 @@ async function syncTourPagePathsFromProducts(
       // perspective; use `raw` so drafts are visible (same as
       // `app/api/dev/delete-all-cities/route.ts`). Match canonical or
       // pre-fold legacy cityCodes (troms / wroc-aw) case-insensitively.
+      // Prefer an exact canonical cityCode match; only then fall back to a
+      // country-linked legacy doc so we never rename legacy when canonical exists.
       const cityName = nameByCityCode.get(cityCode) ?? "";
       const lookupCodes = cityCodeLookupCandidates(cityCode, cityName);
-      const doc = await writeClient.fetch<{
-        _id: string;
-        cityCode?: string | null;
-      } | null>(
-        `*[_type == "city" && lower(cityCode) in $lookupCodes] | order(defined(country) desc)[0]{ _id, cityCode }`,
+      const matches = await writeClient.fetch<
+        Array<{
+          _id: string;
+          cityCode?: string | null;
+          country?: { _ref?: string } | null;
+        }>
+      >(
+        `*[_type == "city" && lower(cityCode) in $lookupCodes]{ _id, cityCode, country }`,
         { lookupCodes },
         { perspective: "raw" },
       );
+      const canonicalLower = cityCode.toLowerCase();
+      const exactMatches = matches.filter(
+        (d) => (d.cityCode ?? "").toLowerCase() === canonicalLower,
+      );
+      const legacyMatches = matches.filter(
+        (d) => (d.cityCode ?? "").toLowerCase() !== canonicalLower,
+      );
+      const pickPreferred = (
+        list: typeof matches,
+      ): (typeof matches)[number] | undefined =>
+        list.find((d) => d.country?._ref) ?? list[0];
+      const doc = pickPreferred(exactMatches) ?? pickPreferred(legacyMatches);
       if (!doc?._id) {
         console.warn(
           `[City Sync] No city document for cityCode="${cityCode}" (tourPagePath not patched).`,
@@ -203,7 +220,8 @@ async function syncTourPagePathsFromProducts(
       const patch: { tourPagePath: string; cityCode?: string } = {
         tourPagePath,
       };
-      if ((doc.cityCode ?? "").toLowerCase() !== cityCode.toLowerCase()) {
+      // Only upgrade cityCode when we selected a legacy doc (no canonical existed).
+      if ((doc.cityCode ?? "").toLowerCase() !== canonicalLower) {
         patch.cityCode = cityCode;
       }
       await writeClient.patch(doc._id).set(patch).commit();
@@ -469,6 +487,31 @@ type LegacyCityDoc = {
   country?: { _ref?: string } | null;
 };
 
+const DRAFT_PREFIX = "drafts.";
+
+/** Published + draft `_id` pair for the same Sanity city identity. */
+function cityDocIdentityIds(rawId: string): {
+  publishedId: string;
+  draftId: string;
+} {
+  const publishedId = rawId.startsWith(DRAFT_PREFIX)
+    ? rawId.slice(DRAFT_PREFIX.length)
+    : rawId;
+  return {
+    publishedId,
+    draftId: rawId.startsWith(DRAFT_PREFIX) ? rawId : `${DRAFT_PREFIX}${publishedId}`,
+  };
+}
+
+/** Docs in `allDocs` that share the selected city's published/draft identity. */
+function docsInCityIdentityGroup(
+  allDocs: LegacyCityDoc[],
+  rawId: string,
+): LegacyCityDoc[] {
+  const { publishedId, draftId } = cityDocIdentityIds(rawId);
+  return allDocs.filter((doc) => doc._id === publishedId || doc._id === draftId);
+}
+
 /**
  * Finds country-linked (or any) city docs stored under pre-fold codes such as
  * `troms` / `wroc-aw`, patches `cityCode` to the canonical folded value, and
@@ -481,13 +524,15 @@ async function reconcileLegacyCityCodes(
   upgraded: string[];
   existingCanonical: string[];
   errors: CitySyncResult["errors"];
+  /** True when the all-city legacy lookup failed; callers must skip create. */
+  lookupFailed: boolean;
 }> {
   const upgraded: string[] = [];
   const existingCanonical: string[] = [];
   const errors: CitySyncResult["errors"] = [];
 
   if (cities.length === 0) {
-    return { upgraded, existingCanonical, errors };
+    return { upgraded, existingCanonical, errors, lookupFailed: false };
   }
 
   const candidatesByCanonical = new Map<string, string[]>();
@@ -505,7 +550,7 @@ async function reconcileLegacyCityCodes(
     ...new Set([...candidatesByCanonical.values()].flat()),
   ];
   if (allLookupCodes.length === 0) {
-    return { upgraded, existingCanonical, errors };
+    return { upgraded, existingCanonical, errors, lookupFailed: false };
   }
 
   let docs: LegacyCityDoc[] = [];
@@ -516,8 +561,18 @@ async function reconcileLegacyCityCodes(
       { perspective: "raw", next: { revalidate: 0 } },
     );
   } catch (error) {
-    console.error("[City Sync] Error querying cities for legacy reconcile:", error);
-    return { upgraded, existingCanonical, errors };
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    console.error(
+      "[City Sync] Error querying cities for legacy reconcile:",
+      error,
+    );
+    errors.push({
+      type: "city",
+      identifier: "LEGACY_LOOKUP",
+      error: errorMessage,
+    });
+    return { upgraded, existingCanonical, errors, lookupFailed: true };
   }
 
   const docsByCode = new Map<string, LegacyCityDoc[]>();
@@ -544,28 +599,38 @@ async function reconcileLegacyCityCodes(
 
     existingCanonical.push(canonical);
 
-    const storedCode = (match.cityCode ?? "").toLowerCase();
-    if (storedCode === canonical) continue;
+    // Upgrade only noncanonical draft/published siblings of this identity.
+    // Unrelated legacy docs (other ids) stay unchanged.
+    const identityGroup = docsInCityIdentityGroup(docs, match._id);
+    const noncanonicalVersions = identityGroup.filter(
+      (doc) => (doc.cityCode ?? "").toLowerCase() !== canonical,
+    );
+    if (noncanonicalVersions.length === 0) continue;
 
     const city = cityByCanonical.get(canonical);
     if (!city) continue;
 
-    try {
-      await writeClient.patch(match._id).set({ cityCode: city.cityCode }).commit();
-      upgraded.push(city.cityCode);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      errors.push({
-        type: "city",
-        identifier: city.cityCode,
-        error: errorMessage,
-      });
-      console.error(
-        `[City Sync] Failed to upgrade legacy cityCode "${storedCode}" → "${city.cityCode}":`,
-        error,
-      );
+    let didUpgrade = false;
+    for (const doc of noncanonicalVersions) {
+      const storedCode = (doc.cityCode ?? "").toLowerCase();
+      try {
+        await writeClient.patch(doc._id).set({ cityCode: city.cityCode }).commit();
+        didUpgrade = true;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+        errors.push({
+          type: "city",
+          identifier: city.cityCode,
+          error: errorMessage,
+        });
+        console.error(
+          `[City Sync] Failed to upgrade legacy cityCode "${storedCode}" → "${city.cityCode}" on "${doc._id}":`,
+          error,
+        );
+      }
     }
+    if (didUpgrade) upgraded.push(city.cityCode);
   }
 
   if (upgraded.length > 0) {
@@ -575,10 +640,8 @@ async function reconcileLegacyCityCodes(
     );
   }
 
-  return { upgraded, existingCanonical, errors };
+  return { upgraded, existingCanonical, errors, lookupFailed: false };
 }
-
-const DRAFT_PREFIX = "drafts.";
 
 /**
  * Generates a deterministic document ID for a city from its cityCode.
@@ -846,13 +909,20 @@ export async function syncCitiesFromProducts(
       ]),
     ];
 
-    // Step 6: Filter out existing cities to get only new ones
-    const citiesToCreate = allCities.filter(
-      (city) => !existingCityCodes.includes(city.cityCode.toLowerCase()),
-    );
-
-    // Step 7: Create missing cities (with country reference)
-    const createResult = await createCities(citiesToCreate);
+    // Step 6–7: Create missing cities only when legacy lookup succeeded.
+    // A failed all-city query would otherwise miss legacy codes and spawn
+    // duplicate drafts (e.g. drafts.city-tromso beside city-troms).
+    let createResult = emptyCitySyncResult();
+    if (!legacyResult.lookupFailed) {
+      const citiesToCreate = allCities.filter(
+        (city) => !existingCityCodes.includes(city.cityCode.toLowerCase()),
+      );
+      createResult = await createCities(citiesToCreate);
+    } else {
+      console.warn(
+        "[City Sync] Skipping city creation this run: legacy city lookup failed.",
+      );
+    }
 
     // Step 8: Backfill / update `tourPagePath` on city docs (footer city links)
     const tourPathResult = await syncTourPagePathsFromProducts(products);
