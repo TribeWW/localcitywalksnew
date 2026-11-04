@@ -9,6 +9,9 @@ export function cn(...inputs: ClassValue[]) {
  * Letters that stay whole under NFD (no combining mark to strip).
  * Map each to the closest plain Latin form before accent stripping.
  * Covers Nordic, Polish, German, and Icelandic city names used in URLs.
+ *
+ * City sync must still find Sanity docs stored under the pre-fold codes
+ * (e.g. troms, wroc-aw); see `lib/cities/legacy-city-code.ts`.
  */
 const LATIN_LETTER_FOLDS: Record<string, string> = {
   ø: "o",

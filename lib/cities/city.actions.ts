@@ -3,6 +3,7 @@
 import { client } from "@/sanity/lib/client";
 import { writeClient } from "@/sanity/lib/write-client";
 import { transformSearchProductToCityCard } from "@/lib/bokun/transform-search-product-to-city-card";
+import { cityCodeLookupCandidates } from "@/lib/cities/legacy-city-code";
 import { slugifyForUrl, stripAccents } from "@/lib/utils";
 import { BokunProduct, CitySyncResult } from "@/types/bokun";
 import { syncTourSeoFromProducts } from "@/lib/tours/seo-sync.actions";
@@ -164,32 +165,48 @@ async function syncTourPagePathsFromProducts(
   const errors: CitySyncResult["errors"] = [];
 
   const pathByCityCode = new Map<string, string>();
+  const nameByCityCode = new Map<string, string>();
   for (const product of products) {
     const cityCode = cityCodeFromProduct(product);
     const path = tourPagePathFromProduct(product);
     if (!cityCode || !path) continue;
     if (!pathByCityCode.has(cityCode)) pathByCityCode.set(cityCode, path);
+    const cityName = product.googlePlace?.city?.trim();
+    if (cityName && !nameByCityCode.has(cityCode)) {
+      nameByCityCode.set(cityCode, cityName);
+    }
   }
 
   for (const [cityCode, tourPagePath] of pathByCityCode) {
     try {
       // Draft cities (`drafts.city-*`) are excluded from the default API
       // perspective; use `raw` so drafts are visible (same as
-      // `app/api/dev/delete-all-cities/route.ts`). Match cityCode case-insensitively
-      // in case Studio or legacy data used different casing.
-      const docId = await writeClient.fetch<string | null>(
-        `*[_type == "city" && lower(cityCode) == lower($cityCode)][0]._id`,
-        { cityCode },
+      // `app/api/dev/delete-all-cities/route.ts`). Match canonical or
+      // pre-fold legacy cityCodes (troms / wroc-aw) case-insensitively.
+      const cityName = nameByCityCode.get(cityCode) ?? "";
+      const lookupCodes = cityCodeLookupCandidates(cityCode, cityName);
+      const doc = await writeClient.fetch<{
+        _id: string;
+        cityCode?: string | null;
+      } | null>(
+        `*[_type == "city" && lower(cityCode) in $lookupCodes] | order(defined(country) desc)[0]{ _id, cityCode }`,
+        { lookupCodes },
         { perspective: "raw" },
       );
-      if (!docId) {
+      if (!doc?._id) {
         console.warn(
           `[City Sync] No city document for cityCode="${cityCode}" (tourPagePath not patched).`,
         );
         continue;
       }
 
-      await writeClient.patch(docId).set({ tourPagePath }).commit();
+      const patch: { tourPagePath: string; cityCode?: string } = {
+        tourPagePath,
+      };
+      if ((doc.cityCode ?? "").toLowerCase() !== cityCode.toLowerCase()) {
+        patch.cityCode = cityCode;
+      }
+      await writeClient.patch(doc._id).set(patch).commit();
       patched.push(cityCode);
     } catch (error) {
       const errorMessage =
@@ -446,6 +463,121 @@ export async function getExistingCities(
   }
 }
 
+type LegacyCityDoc = {
+  _id: string;
+  cityCode?: string | null;
+  country?: { _ref?: string } | null;
+};
+
+/**
+ * Finds country-linked (or any) city docs stored under pre-fold codes such as
+ * `troms` / `wroc-aw`, patches `cityCode` to the canonical folded value, and
+ * returns those canonical codes so sync reuses the editorial record instead of
+ * creating `drafts.city-tromso`-style duplicates.
+ */
+async function reconcileLegacyCityCodes(
+  cities: CityFromProduct[],
+): Promise<{
+  upgraded: string[];
+  existingCanonical: string[];
+  errors: CitySyncResult["errors"];
+}> {
+  const upgraded: string[] = [];
+  const existingCanonical: string[] = [];
+  const errors: CitySyncResult["errors"] = [];
+
+  if (cities.length === 0) {
+    return { upgraded, existingCanonical, errors };
+  }
+
+  const candidatesByCanonical = new Map<string, string[]>();
+  const cityByCanonical = new Map<string, CityFromProduct>();
+  for (const city of cities) {
+    const canonical = city.cityCode.toLowerCase();
+    cityByCanonical.set(canonical, city);
+    candidatesByCanonical.set(
+      canonical,
+      cityCodeLookupCandidates(city.cityCode, city.name),
+    );
+  }
+
+  const allLookupCodes = [
+    ...new Set([...candidatesByCanonical.values()].flat()),
+  ];
+  if (allLookupCodes.length === 0) {
+    return { upgraded, existingCanonical, errors };
+  }
+
+  let docs: LegacyCityDoc[] = [];
+  try {
+    docs = await writeClient.fetch<LegacyCityDoc[]>(
+      `*[_type == "city" && lower(cityCode) in $codes]{ _id, cityCode, country }`,
+      { codes: allLookupCodes },
+      { perspective: "raw", next: { revalidate: 0 } },
+    );
+  } catch (error) {
+    console.error("[City Sync] Error querying cities for legacy reconcile:", error);
+    return { upgraded, existingCanonical, errors };
+  }
+
+  const docsByCode = new Map<string, LegacyCityDoc[]>();
+  for (const doc of docs) {
+    const key = (doc.cityCode ?? "").toLowerCase();
+    if (!key) continue;
+    const list = docsByCode.get(key) ?? [];
+    list.push(doc);
+    docsByCode.set(key, list);
+  }
+
+  const pickPreferred = (list: LegacyCityDoc[]): LegacyCityDoc | undefined =>
+    list.find((doc) => doc.country?._ref) ?? list[0];
+
+  for (const [canonical, candidates] of candidatesByCanonical) {
+    const exactMatches = docsByCode.get(canonical) ?? [];
+    const legacyMatches = candidates
+      .filter((code) => code !== canonical)
+      .flatMap((code) => docsByCode.get(code) ?? []);
+
+    const match =
+      pickPreferred(exactMatches) ?? pickPreferred(legacyMatches);
+    if (!match) continue;
+
+    existingCanonical.push(canonical);
+
+    const storedCode = (match.cityCode ?? "").toLowerCase();
+    if (storedCode === canonical) continue;
+
+    const city = cityByCanonical.get(canonical);
+    if (!city) continue;
+
+    try {
+      await writeClient.patch(match._id).set({ cityCode: city.cityCode }).commit();
+      upgraded.push(city.cityCode);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      errors.push({
+        type: "city",
+        identifier: city.cityCode,
+        error: errorMessage,
+      });
+      console.error(
+        `[City Sync] Failed to upgrade legacy cityCode "${storedCode}" → "${city.cityCode}":`,
+        error,
+      );
+    }
+  }
+
+  if (upgraded.length > 0) {
+    console.log(
+      `[City Sync] Upgraded ${upgraded.length} legacy cityCode(s):`,
+      upgraded.join(", "),
+    );
+  }
+
+  return { upgraded, existingCanonical, errors };
+}
+
 const DRAFT_PREFIX = "drafts.";
 
 /**
@@ -700,26 +832,35 @@ export async function syncCitiesFromProducts(
     // Step 3: Migrate existing cities without country (patch with country/cityCode/countryCode)
     const migrationResult = await migrateCitiesWithoutCountry(allCities);
 
-    // Step 4: Check which cities already exist in Sanity (by cityCode)
-    const existingCityCodes = await getExistingCities(
-      allCities.map((c) => c.cityCode)
-    );
+    // Step 4: Reuse country-linked docs still on pre-fold codes (troms, wroc-aw)
+    const legacyResult = await reconcileLegacyCityCodes(allCities);
 
-    // Step 5: Filter out existing cities to get only new ones
+    // Step 5: Check which cities already exist in Sanity (by cityCode)
+    const existingFromQuery = await getExistingCities(
+      allCities.map((c) => c.cityCode),
+    );
+    const existingCityCodes = [
+      ...new Set([
+        ...existingFromQuery.map((code) => code.toLowerCase()),
+        ...legacyResult.existingCanonical,
+      ]),
+    ];
+
+    // Step 6: Filter out existing cities to get only new ones
     const citiesToCreate = allCities.filter(
-      (city) => !existingCityCodes.includes(city.cityCode)
+      (city) => !existingCityCodes.includes(city.cityCode.toLowerCase()),
     );
 
-    // Step 6: Create missing cities (with country reference)
+    // Step 7: Create missing cities (with country reference)
     const createResult = await createCities(citiesToCreate);
 
-    // Step 7: Backfill / update `tourPagePath` on city docs (footer city links)
+    // Step 8: Backfill / update `tourPagePath` on city docs (footer city links)
     const tourPathResult = await syncTourPagePathsFromProducts(products);
 
-    // Step 8: Auto-provision Tour SEO shell documents for new Bokun products
+    // Step 9: Auto-provision Tour SEO shell documents for new Bokun products
     const tourSeoResult = await syncTourSeoFromProducts(products);
 
-    // Step 9: Combine country, migration, city, tour path, and tour SEO results
+    // Step 10: Combine country, migration, legacy, city, tour path, and tour SEO results
     return {
       countries: {
         created: countryResult.created,
@@ -727,7 +868,7 @@ export async function syncCitiesFromProducts(
       },
       cities: {
         created: createResult.cities.created,
-        updated: migrationResult.migrated,
+        updated: [...migrationResult.migrated, ...legacyResult.upgraded],
         existing: existingCityCodes,
         tourPagePathsPatched: tourPathResult.patched,
       },
@@ -738,6 +879,7 @@ export async function syncCitiesFromProducts(
       errors: [
         ...countryResult.errors,
         ...migrationResult.errors,
+        ...legacyResult.errors,
         ...createResult.errors,
         ...tourPathResult.errors,
         ...tourSeoResult.errors,
