@@ -1,7 +1,9 @@
 name: Linear PR Updates
 
+# pull_request_target so fork PRs can use LINEAR_API_KEY.
+# Keep this job metadata-only: do not check out or run pull request code.
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, closed]
 
 permissions:
@@ -19,7 +21,8 @@ jobs:
 
     steps:
       - name: Post update to Linear
-        uses: actions/github-script@v7
+        # actions/github-script@v7 (v7.1.0)
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
         with:
@@ -28,7 +31,8 @@ jobs:
 
             // Find the Linear issue ID in the branch or PR title
             const text = `${pr.head.ref} ${pr.title}`;
-            const match = text.match(/\b([A-Z][A-Z0-9]+-\d+)\b/);
+            // Underscore is a separator (ABC-123_fix); reject embedded alphanumerics.
+            const match = text.match(/(?<![A-Za-z0-9])([A-Z][A-Z0-9]+-\d+)(?![A-Za-z0-9])/);
 
             if (!match) {
               core.info('No Linear issue ID found. Skipping.');
