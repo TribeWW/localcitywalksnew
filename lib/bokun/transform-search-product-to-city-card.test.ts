@@ -56,6 +56,38 @@ describe("transformSearchProductToCityCard", () => {
 
     expect(card.defaultRateId).toBe(2199582);
   });
+
+  it("folds special city letters into plain URL slugs while keeping display names", () => {
+    const tromso = transformSearchProductToCityCard({
+      id: "1",
+      title: "Tromsø Harbor Walk",
+      keyPhoto,
+      googlePlace: {
+        city: "Tromsø",
+        country: "Norway",
+        countryCode: "NO",
+        cityCode: "Tromsø",
+      },
+    });
+    expect(tromso.cityName).toBe("Tromsø");
+    expect(tromso.citySlug).toBe("tromso");
+    expect(tromso.slug).toBe("tromso-harbor-walk-1");
+
+    const wroclaw = transformSearchProductToCityCard({
+      id: "2",
+      title: "Wrocław Old Town Walk",
+      keyPhoto,
+      googlePlace: {
+        city: "Wrocław",
+        country: "Poland",
+        countryCode: "PL",
+        cityCode: "Wrocław",
+      },
+    });
+    expect(wroclaw.cityName).toBe("Wrocław");
+    expect(wroclaw.citySlug).toBe("wroclaw");
+    expect(wroclaw.slug).toBe("wroclaw-old-town-walk-2");
+  });
 });
 
 describe("mapSearchProductsToCityCards", () => {

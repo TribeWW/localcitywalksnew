@@ -6,7 +6,44 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Removes diacritical marks (accents) from a string.
+ * Letters that stay whole under NFD (no combining mark to strip).
+ * Map each to the closest plain Latin form before accent stripping.
+ * Covers Nordic, Polish, German, and Icelandic city names used in URLs.
+ */
+const LATIN_LETTER_FOLDS: Record<string, string> = {
+  ø: "o",
+  Ø: "O",
+  ł: "l",
+  Ł: "L",
+  æ: "ae",
+  Æ: "Ae",
+  œ: "oe",
+  Œ: "Oe",
+  ß: "ss",
+  ẞ: "SS",
+  ð: "d",
+  Ð: "D",
+  þ: "th",
+  Þ: "Th",
+  đ: "d",
+  Đ: "D",
+};
+
+const LATIN_LETTER_FOLD_PATTERN = new RegExp(
+  `[${Object.keys(LATIN_LETTER_FOLDS).join("")}]`,
+  "g",
+);
+
+function foldLatinLetters(str: string): string {
+  return str.replace(
+    LATIN_LETTER_FOLD_PATTERN,
+    (ch) => LATIN_LETTER_FOLDS[ch] ?? ch,
+  );
+}
+
+/**
+ * Removes diacritical marks (accents) from a string, and folds letters that
+ * do not decompose under NFD (ø, ł, æ, ß, …) into plain Latin forms.
  * Use for city codes and slugs; also the sitewide footer city link strip (sort + label).
  * Do not use for general CMS display or tour titles unless product asks for it.
  *
@@ -14,9 +51,13 @@ export function cn(...inputs: ClassValue[]) {
  * stripAccents("Córdoba") // "Cordoba"
  * stripAccents("Zürich")  // "Zurich"
  * stripAccents("Montréal") // "Montreal"
+ * stripAccents("Tromsø") // "Tromso"
+ * stripAccents("Wrocław") // "Wroclaw"
  */
 export function stripAccents(str: string): string {
-  return str.normalize("NFD").replace(/\p{Mark}/gu, "");
+  return foldLatinLetters(str)
+    .normalize("NFD")
+    .replace(/\p{Mark}/gu, "");
 }
 
 /**
