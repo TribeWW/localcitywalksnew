@@ -8,10 +8,7 @@
 
 import { defineField, defineType } from "sanity";
 import { FileText } from "lucide-react";
-import {
-  definePageSeoFields,
-  definePageSeoFieldset,
-} from "./page-seo-fields";
+import { definePageSeoFields, definePageSeoFieldset } from "./page-seo-fields";
 
 /** Sanity document type for site pages (`page`). */
 export const page = defineType({

@@ -21,8 +21,10 @@ function startPostHog(markInternal: boolean) {
   if (!projectToken || !apiHost) return;
 
   // Cookieless until the iubenda Measurement purpose is accepted.
+  // First-party `/lcw-cobble` rewrite (next.config); keep absolute host for server SDK.
   posthog.init(projectToken, {
-    api_host: apiHost,
+    api_host: "/lcw-cobble",
+    ui_host: "https://eu.posthog.com",
     defaults: "2026-01-30",
     capture_exceptions: true,
     cookieless_mode: "on_reject",
