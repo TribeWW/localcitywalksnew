@@ -110,7 +110,8 @@ describe("instrumentation-client", () => {
     await loadInstrumentationClient();
 
     expect(posthogInit).toHaveBeenCalledWith("phc_test", {
-      api_host: "https://eu.i.posthog.com",
+      api_host: "/lcw-cobble",
+      ui_host: "https://eu.posthog.com",
       defaults: "2026-01-30",
       capture_exceptions: true,
       cookieless_mode: "on_reject",

@@ -48,6 +48,28 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  /**
+   * First-party PostHog EU proxy. Browser SDK uses api_host `/lcw-cobble`.
+   * Static and array must stay above the catch-all so assets hit eu-assets.
+   */
+  async rewrites() {
+    return [
+      {
+        source: "/lcw-cobble/static/:path*",
+        destination: "https://eu-assets.i.posthog.com/static/:path*",
+      },
+      {
+        source: "/lcw-cobble/array/:path*",
+        destination: "https://eu-assets.i.posthog.com/array/:path*",
+      },
+      {
+        source: "/lcw-cobble/:path*",
+        destination: "https://eu.i.posthog.com/:path*",
+      },
+    ];
+  },
+  // PostHog API paths end with a slash (`/e/`, `/flags/`); avoid 308 round trips.
+  skipTrailingSlashRedirect: true,
   webpack: (config) => {
     config.ignoreWarnings = [
       ...(config.ignoreWarnings ?? []),
