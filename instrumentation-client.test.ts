@@ -33,6 +33,12 @@ vi.mock("posthog-js", () => ({
   default: posthogMock,
 }));
 
+const installTranslationDomGuard = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/dom/translation-dom-guard", () => ({
+  installTranslationDomGuard,
+}));
+
 function stubConfiguredEnv() {
   vi.stubEnv("NODE_ENV", "production");
   vi.stubEnv("NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN", "phc_test");
@@ -100,6 +106,16 @@ describe("instrumentation-client", () => {
     expect(posthogInit).not.toHaveBeenCalled();
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
+  });
+
+  it("installs the translation DOM guard even when PostHog env is missing", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN", "");
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "");
+
+    await loadInstrumentationClient();
+
+    expect(installTranslationDomGuard).toHaveBeenCalledOnce();
   });
 
   it("initializes PostHog when the project token and API host are configured", async () => {

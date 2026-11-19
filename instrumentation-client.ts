@@ -10,6 +10,10 @@ import {
   isSanityStudioPath,
   pathnameFromUrl,
 } from "@/lib/analytics/studio-path";
+import { installTranslationDomGuard } from "@/lib/dom/translation-dom-guard";
+
+// Before hydration, so translated pages do not crash React on node removal.
+installTranslationDomGuard();
 
 const projectToken = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
 const apiHost = process.env.NEXT_PUBLIC_POSTHOG_HOST;
